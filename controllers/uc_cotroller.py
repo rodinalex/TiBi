@@ -34,23 +34,29 @@ class UCController(QObject):
 
         # Connect UI signals
         self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
+
         self.unit_cell_panel.save_btn.clicked.connect(self.save_unit_cell)
         self.unit_cell_panel.delete_btn.clicked.connect(self.delete_unit_cell)
+        self.unit_cell_panel.add_btn.clicked.connect(self.add_site)
+
+        self.site_panel.save_btn.clicked.connect(self.save_site)
+        self.site_panel.delete_btn.clicked.connect(self.delete_site)
 
     def add_unit_cell(self):
         name = "New Unit Cell"
         v1 = BasisVector(1, 0, 0)
         v2 = BasisVector(0, 1, 0)
         v3 = BasisVector(0, 0, 1)
+
         new_cell = UnitCell(name, v1, v2, v3)
+
         self.model[new_cell.id] = new_cell
-        new_cell_id = new_cell.id
         self.tree_view.refresh_tree()
-        self.tree_view.select_unit_cell(new_cell_id)
+        self.tree_view.select_unit_cell(new_cell.id)
 
     def save_unit_cell(self):
         # Store current selection
-        selected_id = self.selection["unit_cell"]
+        selected_uc = self.selection["unit_cell"]
 
         name = self.unit_cell_panel.model["name"]
         v1 = BasisVector(
@@ -69,223 +75,58 @@ class UCController(QObject):
             float(self.unit_cell_panel.model["v3z"]),
         )
         sites = self.unit_cell_panel.model["sites"]
-        id = self.selection["unit_cell"]
-        updated_uc = UnitCell(name, v1, v2, v3, sites, id)
-        self.model[updated_uc.id] = updated_uc
+
+        updated_uc = UnitCell(name, v1, v2, v3, sites, selected_uc)
+
+        self.model[selected_uc] = updated_uc
         self.tree_view.refresh_tree()
-        self.tree_view.select_unit_cell(selected_id)
+        self.tree_view.select_unit_cell(selected_uc)
 
     def delete_unit_cell(self):
-        del self.model[self.selection["unit_cell"]]
+        selected_uc = self.selection["unit_cell"]
+        del self.model[selected_uc]
         self.tree_view.refresh_tree()
 
-    # def add_unit_cell(self, name="New Unit Cell"):
-    #     """Add a new unit cell to the model"""
-    #     v1 = BasisVector(1, 0, 0)
-    #     v2 = BasisVector(0, 1, 0)
-    #     v3 = BasisVector(0, 0, 1)
+    def add_site(self):
+        name = "New Site"
+        c1 = 0
+        c2 = 0
+        c3 = 0
+        new_site = Site(name, c1, c2, c3)
 
-    #     new_cell = UnitCell(name, v1, v2, v3)
-    #     self.model[new_cell.id] = new_cell
+        unit_cell = self.model[self.selection["unit_cell"]]
+        unit_cell.sites[new_site.id] = new_site
+        self.tree_view.refresh_tree()
+        self.tree_view.select_site(unit_cell.id, new_site.id)
 
-    #     if self.tree_view:
-    #         self.tree_view.add_unit_cell_item(new_cell)
+    def save_site(self):
+        # Store the current selection
+        selected_uc = self.selection["unit_cell"]
+        selected_site = self.selection["site"]
+        name = self.site_panel.model["name"]
+        c1 = float(self.site_panel.model["c1"])
+        c2 = float(self.site_panel.model["c2"])
+        c3 = float(self.site_panel.model["c3"])
+        states = self.site_panel.model["states"]
 
-    #     self.model_updated.emit()
-    #     return new_cell.id
+        updated_site = Site(name, c1, c2, c3, states, selected_site)
 
-    # def edit_unit_cell(
-    #     self, unit_cell_id: uuid.UUID, name=None, v1=None, v2=None, v3=None
-    # ):
-    #     """Edit an existing unit cell"""
-    #     if unit_cell_id not in self.model:
-    #         return False
+        self.model[selected_uc].sites[selected_site] = updated_site
+        self.tree_view.refresh_tree()
+        self.tree_view.select_site(selected_uc, selected_site)
 
-    #     unit_cell = self.model[unit_cell_id]
+    def delete_site(self):
+        selected_uc = self.selection["unit_cell"]
+        selected_site = self.selection["site"]
+        del self.model[selected_uc].sites[selected_site]
+        self.tree_view.refresh_tree()
+        self.tree_view.select_unit_cell(selected_uc)
 
-    #     if name is not None:
-    #         unit_cell.name = name
+    def add_state(self):
+        pass
 
-    #     if v1 is not None:
-    #         unit_cell.v1 = v1
+    def edit_state(self):
+        pass
 
-    #     if v2 is not None:
-    #         unit_cell.v2 = v2
-
-    #     if v3 is not None:
-    #         unit_cell.v3 = v3
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
-
-    # def delete_unit_cell(self, unit_cell_id: uuid.UUID):
-    #     """Delete a unit cell from the model"""
-    #     if unit_cell_id not in self.model:
-    #         return False
-
-    #     del self.model[unit_cell_id]
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
-
-    # def add_site(
-    #     self, unit_cell_id: uuid.UUID, name="New Site", c1=0.0, c2=0.0, c3=0.0
-    # ):
-    #     """Add a new site to a unit cell"""
-    #     if unit_cell_id not in self.model:
-    #         return None
-
-    #     unit_cell = self.model[unit_cell_id]
-    #     new_site = Site(name, c1, c2, c3)
-    #     unit_cell.sites[new_site.id] = new_site
-
-    #     if self.tree_view:
-    #         self.tree_view.add_site_item(unit_cell_id, new_site)
-
-    #     self.model_updated.emit()
-    #     return new_site.id
-
-    # def edit_site(
-    #     self,
-    #     unit_cell_id: uuid.UUID,
-    #     site_id: uuid.UUID,
-    #     name=None,
-    #     c1=None,
-    #     c2=None,
-    #     c3=None,
-    # ):
-    #     """Edit an existing site"""
-    #     if unit_cell_id not in self.model:
-    #         return False
-
-    #     unit_cell = self.model[unit_cell_id]
-
-    #     if site_id not in unit_cell.sites:
-    #         return False
-
-    #     site = unit_cell.sites[site_id]
-
-    #     if name is not None:
-    #         site.name = name
-
-    #     if c1 is not None:
-    #         site.c1 = c1
-
-    #     if c2 is not None:
-    #         site.c2 = c2
-
-    #     if c3 is not None:
-    #         site.c3 = c3
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
-
-    # def delete_site(self, unit_cell_id: uuid.UUID, site_id: uuid.UUID):
-    #     """Delete a site from a unit cell"""
-    #     if unit_cell_id not in self.model:
-    #         return False
-
-    #     unit_cell = self.model[unit_cell_id]
-
-    #     if site_id not in unit_cell.sites:
-    #         return False
-
-    #     del unit_cell.sites[site_id]
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
-
-    # def add_state(
-    #     self, unit_cell_id: uuid.UUID, site_id: uuid.UUID, name="New State", energy=0.0
-    # ):
-    #     """Add a new state to a site"""
-    #     if unit_cell_id not in self.model:
-    #         return None
-
-    #     unit_cell = self.model[unit_cell_id]
-
-    #     if site_id not in unit_cell.sites:
-    #         return None
-
-    #     site = unit_cell.sites[site_id]
-    #     new_state = State(name, energy)
-    #     site.states[new_state.id] = new_state
-
-    #     if self.tree_view:
-    #         self.tree_view.add_state_item(unit_cell_id, site_id, new_state)
-
-    #     self.model_updated.emit()
-    #     return new_state.id
-
-    # def edit_state(
-    #     self,
-    #     unit_cell_id: uuid.UUID,
-    #     site_id: uuid.UUID,
-    #     state_id: uuid.UUID,
-    #     name=None,
-    #     energy=None,
-    # ):
-    #     """Edit an existing state"""
-    #     if unit_cell_id not in self.model:
-    #         return False
-
-    #     unit_cell = self.model[unit_cell_id]
-
-    #     if site_id not in unit_cell.sites:
-    #         return False
-
-    #     site = unit_cell.sites[site_id]
-
-    #     if state_id not in site.states:
-    #         return False
-
-    #     state = site.states[state_id]
-
-    #     if name is not None:
-    #         state.name = name
-
-    #     if energy is not None:
-    #         state.energy = energy
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
-
-    # def delete_state(
-    #     self, unit_cell_id: uuid.UUID, site_id: uuid.UUID, state_id: uuid.UUID
-    # ):
-    #     """Delete a state from a site"""
-    #     if unit_cell_id not in self.model:
-    #         return False
-
-    #     unit_cell = self.model[unit_cell_id]
-
-    #     if site_id not in unit_cell.sites:
-    #         return False
-
-    #     site = unit_cell.sites[site_id]
-
-    #     if state_id not in site.states:
-    #         return False
-
-    #     del site.states[state_id]
-
-    #     if self.tree_view:
-    #         self.tree_view.refresh_tree()
-
-    #     self.model_updated.emit()
-    #     return True
+    def delete_state(self):
+        pass

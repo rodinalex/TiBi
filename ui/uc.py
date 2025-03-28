@@ -72,7 +72,7 @@ class UnitCellUI(QWidget):
 
         # Connect tree view signals to show appropriate panels
         self.tree_view_panel.unit_cell_selected.connect(self.show_unit_cell_panel)
-        # self.tree_view_panel.site_selected.connect(self.show_site_panel)
+        self.tree_view_panel.site_selected.connect(self.show_site_panel)
         # self.tree_view_panel.state_selected.connect(self.show_state_panel)
 
         # Update panel forms whenever the models register an update
@@ -82,48 +82,47 @@ class UnitCellUI(QWidget):
 
     def show_unit_cell_panel(self, unit_cell_id):
         """Display the unit cell panel and load selected unit cell data"""
-        if unit_cell_id in unit_cells:
-            # Save the current selection
-            self.selection["unit_cell"] = unit_cell_id
-            self.selection["site"] = None
-            self.selection["state"] = None
+        # Save the current selection
+        self.selection["unit_cell"] = unit_cell_id
+        self.selection["site"] = None
+        self.selection["state"] = None
 
-            uc = unit_cells[unit_cell_id]
-            # Update the model based on the selected element.
-            # The corresponding update function to update the fields is fired automatically.
-            unit_cell_model.update(
-                {
-                    "name": uc.name,
-                    "v1x": uc.v1.x,
-                    "v1y": uc.v1.y,
-                    "v1z": uc.v1.z,
-                    "v2x": uc.v2.x,
-                    "v2y": uc.v2.y,
-                    "v2z": uc.v2.z,
-                    "v3x": uc.v3.x,
-                    "v3y": uc.v3.y,
-                    "v3z": uc.v3.z,
-                    "sites": uc.sites,
-                }
-            )
-            self.form_stack.setCurrentWidget(self.unit_cell_panel)
+        uc = unit_cells[unit_cell_id]
+        # Update the model based on the selected element.
+        # The corresponding update function to update the fields is fired automatically.
+        unit_cell_model.update(
+            {
+                "name": uc.name,
+                "v1x": uc.v1.x,
+                "v1y": uc.v1.y,
+                "v1z": uc.v1.z,
+                "v2x": uc.v2.x,
+                "v2y": uc.v2.y,
+                "v2z": uc.v2.z,
+                "v3x": uc.v3.x,
+                "v3y": uc.v3.y,
+                "v3z": uc.v3.z,
+                "sites": uc.sites,
+            }
+        )
+        self.form_stack.setCurrentWidget(self.unit_cell_panel)
 
-    # def show_site_panel(self, unit_cell_id, site_id):
-    #     """Display the site panel and load selected site data"""
-    #     if unit_cell_id in unit_cells:
-    #         uc = unit_cells[unit_cell_id]
-    #         if site_id in uc.sites:
-    #             # Save the current selection
-    #             self.current_unit_cell_id = unit_cell_id
-    #             self.current_site_id = site_id
-    #             self.current_state_id = None
+    def show_site_panel(self, unit_cell_id, site_id):
+        """Display the site panel and load selected site data"""
+        # Save the current selection
+        self.selection["unit_cell"] = unit_cell_id
+        self.selection["site"] = site_id
+        self.selection["state"] = None
 
-    #             site = uc.sites[site_id]
-    #             # Update the form model
-    #             site_model.update(
-    #                 {"name": site.name, "c1": site.c1, "c2": site.c2, "c3": site.c3}
-    #             )
-    #             self.form_stack.setCurrentWidget(self.site_panel)
+        uc = unit_cells[unit_cell_id]
+        site = uc.sites[site_id]
+
+        # Update the form model
+        # The corresponding update function to update the fields is fired automatically.
+        site_model.update(
+            {"name": site.name, "c1": site.c1, "c2": site.c2, "c3": site.c3}
+        )
+        self.form_stack.setCurrentWidget(self.site_panel)
 
     # def show_state_panel(self, unit_cell_id, site_id, state_id):
     #     """Display the state panel and load selected state data"""

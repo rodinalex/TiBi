@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from src.tibitypes import UnitCell, Site, State
 import uuid
 
@@ -120,6 +120,42 @@ class TreeViewPanel(QWidget):
                 index = item.index()
                 self.tree_view.setCurrentIndex(index)
                 return
+
+    def select_site(self, unit_cell_id, site_id):
+        """Select a site in the tree view."""
+        for row in range(self.root_node.rowCount()):
+            unit_cell_item = self.root_node.child(row)
+            if unit_cell_item.data(Qt.UserRole + 2) == unit_cell_id:
+                # Found the unit cell, now search for the site
+                for site_row in range(unit_cell_item.rowCount()):
+                    site_item = unit_cell_item.child(site_row)
+                    if site_item.data(Qt.UserRole + 2) == site_id:
+                        # Select this site
+                        index = self.tree_model.indexFromItem(site_item)
+                        self.tree_view.selectionModel().setCurrentIndex(
+                            index, QItemSelectionModel.ClearAndSelect
+                        )
+                        return  # Stop after selecting
+
+    def select_state(self, unit_cell_id, site_id, state_id):
+        """Select a state in the tree view."""
+        for row in range(self.root_node.rowCount()):
+            unit_cell_item = self.root_node.child(row)
+            if unit_cell_item.data(Qt.UserRole + 2) == unit_cell_id:
+                # Found the unit cell, now search for the site
+                for site_row in range(unit_cell_item.rowCount()):
+                    site_item = unit_cell_item.child(site_row)
+                    if site_item.data(Qt.UserRole + 2) == site_id:
+                        # Found the site, now search for the state
+                        for state_row in range(site_item.rowCount()):
+                            state_item = site_item.child(state_row)
+                            if state_item.data(Qt.UserRole + 2) == state_id:
+                                # Select this state
+                                index = self.tree_model.indexFromItem(state_item)
+                                self.tree_view.selectionModel().setCurrentIndex(
+                                    index, QItemSelectionModel.ClearAndSelect
+                                )
+                                return  # Stop after selecting
 
     # def add_unit_cell_item(self, unit_cell):
     #     """Add a unit cell to the tree view"""
