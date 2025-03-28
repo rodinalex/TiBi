@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QFormLayout,
     QLabel,
+    QPushButton,
 )
 from PySide6.QtGui import QDoubleValidator
 from models.uc_models import UCFormModel
@@ -34,9 +35,18 @@ class UnitCellPanel(QWidget):
             y.setValidator(QDoubleValidator())
             z.setValidator(QDoubleValidator())
 
-            x.textChanged.connect(lambda t: self.update_model(v + "x", float(t)))
-            y.textChanged.connect(lambda t: self.update_model(v + "y", float(t)))
-            z.textChanged.connect(lambda t: self.update_model(v + "z", float(t)))
+            x.textChanged.connect(
+                lambda t: self.update_model(v + "x", self.safe_float(t, v + "x"))
+            )
+            y.textChanged.connect(
+                lambda t: self.update_model(v + "y", self.safe_float(t, v + "y"))
+            )
+            z.textChanged.connect(
+                lambda t: self.update_model(v + "z", self.safe_float(t, v + "z"))
+            )
+
+            # IMPLEMENT editingFinished() signal from the text boxes
+            # z.editingFinished().connect()
 
             layout.addWidget(x)
             layout.addWidget(y)
@@ -52,16 +62,28 @@ class UnitCellPanel(QWidget):
         form_layout.addRow(QLabel("v<sub>2</sub>:"), self.v2_layout)
         form_layout.addRow(QLabel("v<sub>3</sub>:"), self.v3_layout)
 
+        # Buttons for actions
+        button_layout = QHBoxLayout()
+        self.add_btn = QPushButton("Add Site")
+        self.save_btn = QPushButton("Save")
+        self.delete_btn = QPushButton("Delete")
+        button_layout.addWidget(self.add_btn)
+        button_layout.addWidget(self.save_btn)
+        button_layout.addWidget(self.delete_btn)
+
+        # Main layout
         layout = QVBoxLayout(self)
         layout.addLayout(form_layout)
+        layout.addLayout(button_layout)
 
         # Sync the UI with the model
         self.update_ui()
-        model.signals.updated.connect(self.update_ui)
 
+    # Update model when the fields are being changed
     def update_model(self, key, value):
         self.model[key] = value
 
+    # Use the model to fill the form fields
     def update_ui(self):
         self.name.setText(self.model["name"])
 
@@ -76,3 +98,13 @@ class UnitCellPanel(QWidget):
         self.v3[0].setText(str(self.model["v3x"]))
         self.v3[1].setText(str(self.model["v3y"]))
         self.v3[2].setText(str(self.model["v3z"]))
+
+    def safe_float(self, text, key):
+        """Safely convert text to float, handling invalid inputs"""
+        try:
+            if text:
+                return float(text)
+            return 0.0
+        except ValueError:
+            # Return the previous value or 0.0 if conversion fails
+            return self.model.get(key, 0.0)

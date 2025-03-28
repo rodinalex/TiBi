@@ -11,32 +11,18 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QFormLayout,
     QLabel,
+    QStackedWidget,
 )
 from PySide6.QtGui import QPalette, QColor
+from PySide6.QtCore import Qt
 from models.uc_models import UCFormModel
-from src.tibitypes import UnitCell
-from ui.unit_cell_panel import UnitCellPanel
-from ui.tree_view import TreeViewPanel
-
-# Data Models
-unit_cell_model = UCFormModel(
-    name="New Unit Cell",
-    v1x=1.0,
-    v1y=0.0,
-    v1z=0.0,
-    v2x=0.0,
-    v2y=1.0,
-    v2z=0.0,
-    v3x=0.0,
-    v3y=0.0,
-    v3z=1.0,
-)
-
-site_model = UCFormModel(name="New Site", c1=0.0, c2=0.0, c3=0.0)
-state_model = UCFormModel(name="New State", energy=0.0)
-
-# Unit Cell collection
-unit_cells = {}
+from src.tibitypes import UnitCell, BasisVector
+from controllers.uc_cotroller import UCController
+from ui.UC.unit_cell_panel import UnitCellPanel
+from ui.UC.site_panel import SitePanel
+from ui.UC.state_panel import StatePanel
+from ui.UC.tree_view import TreeViewPanel
+from ui.uc import UnitCellUI
 
 
 class MainWindow(QMainWindow):
@@ -45,8 +31,25 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("TiBi")
         self.setFixedSize(QSize(1000, 800))
 
-        self.unit_cell_panel = UnitCellPanel(unit_cell_model)
-        self.tree_view_panel = TreeViewPanel(unit_cells)
+        # Initialize UI panels
+        self.uc = UnitCellUI()
+        # Initialize controller with tree view
+
+        # # Connect action buttons to controller methods
+        # # Unit cell panel buttons
+        # self.unit_cell_panel.add_btn.clicked.connect(self.add_unit_cell)
+        # self.unit_cell_panel.apply_btn.clicked.connect(self.apply_unit_cell_changes)
+        # self.unit_cell_panel.delete_btn.clicked.connect(self.delete_unit_cell)
+
+        # # Site panel buttons
+        # self.site_panel.add_btn.clicked.connect(self.add_site)
+        # self.site_panel.apply_btn.clicked.connect(self.apply_site_changes)
+        # self.site_panel.delete_btn.clicked.connect(self.delete_site)
+
+        # # State panel buttons
+        # self.state_panel.add_btn.clicked.connect(self.add_state)
+        # self.state_panel.apply_btn.clicked.connect(self.apply_state_changes)
+        # self.state_panel.delete_btn.clicked.connect(self.delete_state)
 
         # Main Layout
         main_view = QWidget()
@@ -56,15 +59,18 @@ class MainWindow(QMainWindow):
         mid_layout = QVBoxLayout()
         right_layout = QVBoxLayout()
 
-        left_layout.addWidget(Color("red"), stretch=2)
-        left_layout.addWidget(self.unit_cell_panel, stretch=1)
-        left_layout.addWidget(Color("red"), stretch=1)
+        # Left column for hierarchical view and form panels
+        # left_layout.addWidget(self.tree_view_panel, stretch=2)
+        # left_layout.addWidget(self.form_stack, stretch=1)
+        left_layout.addWidget(self.uc)
 
-        mid_layout.addWidget(Color("red"))
-        mid_layout.addWidget(Color("green"))
+        # Placeholder widgets for middle and right columns
+        # Will be replaced with actual components later
+        mid_layout.addWidget(PlaceholderWidget("3D Visualization"))
+        mid_layout.addWidget(PlaceholderWidget("Hopping Parameters"))
 
-        right_layout.addWidget(Color("red"))
-        right_layout.addWidget(Color("green"))
+        right_layout.addWidget(PlaceholderWidget("Computation Options"))
+        right_layout.addWidget(PlaceholderWidget("Computation Input"))
 
         main_layout.addLayout(left_layout, stretch=3)
         main_layout.addLayout(mid_layout, stretch=5)
@@ -72,15 +78,158 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_view)
 
+    #     # Add a demo unit cell to start with
+    #     self.add_demo_data()
 
-class Color(QWidget):
-    def __init__(self, color):
+    # def add_demo_data(self):
+    #     """Add some demo data to show functionality"""
+    #     # Add a unit cell
+    #     uc_id = self.controller.add_unit_cell("Silicon")
+
+    #     # Add some sites
+    #     site1_id = self.controller.add_site(uc_id, "Si1", 0.0, 0.0, 0.0)
+    #     site2_id = self.controller.add_site(uc_id, "Si2", 0.25, 0.25, 0.25)
+
+    #     # Add some states
+    #     self.controller.add_state(uc_id, site1_id, "s orbital", -10.0)
+    #     self.controller.add_state(uc_id, site1_id, "p orbital", -5.0)
+    #     self.controller.add_state(uc_id, site2_id, "s orbital", -10.0)
+    #     self.controller.add_state(uc_id, site2_id, "p orbital", -5.0)
+
+    # # Action handler methods
+    # def add_unit_cell(self):
+    #     """Handle adding a new unit cell"""
+    #     name = unit_cell_model["name"]
+    #     v1 = BasisVector(
+    #         float(unit_cell_model["v1x"]),
+    #         float(unit_cell_model["v1y"]),
+    #         float(unit_cell_model["v1z"]),
+    #     )
+    #     v2 = BasisVector(
+    #         float(unit_cell_model["v2x"]),
+    #         float(unit_cell_model["v2y"]),
+    #         float(unit_cell_model["v2z"]),
+    #     )
+    #     v3 = BasisVector(
+    #         float(unit_cell_model["v3x"]),
+    #         float(unit_cell_model["v3y"]),
+    #         float(unit_cell_model["v3z"]),
+    #     )
+
+    #     new_uc_id = self.controller.add_unit_cell(name)
+    #     self.controller.edit_unit_cell(new_uc_id, name=name, v1=v1, v2=v2, v3=v3)
+
+    # def apply_unit_cell_changes(self):
+    #     """Apply changes to the currently selected unit cell"""
+    #     if self.current_unit_cell_id:
+    #         name = unit_cell_model["name"]
+    #         v1 = BasisVector(
+    #             float(unit_cell_model["v1x"]),
+    #             float(unit_cell_model["v1y"]),
+    #             float(unit_cell_model["v1z"]),
+    #         )
+    #         v2 = BasisVector(
+    #             float(unit_cell_model["v2x"]),
+    #             float(unit_cell_model["v2y"]),
+    #             float(unit_cell_model["v2z"]),
+    #         )
+    #         v3 = BasisVector(
+    #             float(unit_cell_model["v3x"]),
+    #             float(unit_cell_model["v3y"]),
+    #             float(unit_cell_model["v3z"]),
+    #         )
+
+    #         self.controller.edit_unit_cell(
+    #             self.current_unit_cell_id, name=name, v1=v1, v2=v2, v3=v3
+    #         )
+
+    # def delete_unit_cell(self):
+    #     """Handle deleting the selected unit cell"""
+    #     if self.current_unit_cell_id:
+    #         self.controller.delete_unit_cell(self.current_unit_cell_id)
+    #         self.current_unit_cell_id = None
+    #         self.current_site_id = None
+    #         self.current_state_id = None
+
+    # def add_site(self):
+    #     """Handle adding a new site to the selected unit cell"""
+    #     if self.current_unit_cell_id:
+    #         name = site_model["name"]
+    #         c1 = float(site_model["c1"])
+    #         c2 = float(site_model["c2"])
+    #         c3 = float(site_model["c3"])
+
+    #         self.controller.add_site(self.current_unit_cell_id, name, c1, c2, c3)
+
+    # def apply_site_changes(self):
+    #     """Apply changes to the currently selected site"""
+    #     if self.current_unit_cell_id and self.current_site_id:
+    #         name = site_model["name"]
+    #         c1 = float(site_model["c1"])
+    #         c2 = float(site_model["c2"])
+    #         c3 = float(site_model["c3"])
+
+    #         self.controller.edit_site(
+    #             self.current_unit_cell_id, self.current_site_id, name, c1, c2, c3
+    #         )
+
+    # def delete_site(self):
+    #     """Handle deleting the selected site"""
+    #     if self.current_unit_cell_id and self.current_site_id:
+    #         self.controller.delete_site(self.current_unit_cell_id, self.current_site_id)
+    #         self.current_site_id = None
+    #         self.current_state_id = None
+
+    # def add_state(self):
+    #     """Handle adding a new state to the selected site"""
+    #     if self.current_unit_cell_id and self.current_site_id:
+    #         name = state_model["name"]
+    #         energy = float(state_model["energy"])
+
+    #         self.controller.add_state(
+    #             self.current_unit_cell_id, self.current_site_id, name, energy
+    #         )
+
+    # def apply_state_changes(self):
+    #     """Apply changes to the currently selected state"""
+    #     if self.current_unit_cell_id and self.current_site_id and self.current_state_id:
+    #         name = state_model["name"]
+    #         energy = float(state_model["energy"])
+
+    #         self.controller.edit_state(
+    #             self.current_unit_cell_id,
+    #             self.current_site_id,
+    #             self.current_state_id,
+    #             name,
+    #             energy,
+    #         )
+
+    # def delete_state(self):
+    #     """Handle deleting the selected state"""
+    #     if self.current_unit_cell_id and self.current_site_id and self.current_state_id:
+    #         self.controller.delete_state(
+    #             self.current_unit_cell_id, self.current_site_id, self.current_state_id
+    #         )
+    #         self.current_state_id = None
+
+
+class PlaceholderWidget(QWidget):
+    """Placeholder widget with a label to show where future components will go"""
+
+    def __init__(self, name):
         super().__init__()
         self.setAutoFillBackground(True)
 
+        # Set background color
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
+        palette.setColor(QPalette.Window, QColor("#f0f0f0"))
         self.setPalette(palette)
+
+        # Add a label
+        layout = QVBoxLayout(self)
+        label = QLabel(f"[{name}]")
+        label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label)
 
 
 app = QApplication(sys.argv)

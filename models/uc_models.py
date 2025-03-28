@@ -20,3 +20,12 @@ class UCFormModel(UserDict):
         if val != previous:  # There is a change.
             self.signals.updated.emit()  # Emit the signal.
             # print(f"Setting {key} to {val}")
+            
+    def update(self, d):
+        """Update multiple values and emit the signal only once"""
+        for key, val in d.items():
+            previous = self.get(key)
+            super().__setitem__(key, val)
+            
+        # Emit the signal once after all updates
+        self.signals.updated.emit()

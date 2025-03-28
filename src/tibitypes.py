@@ -13,7 +13,7 @@ class BasisVector:
 class State:
     name: str
     energy: float
-    id: uuid.UUID = field(default_factory=uuid.uuid4, init=False)
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
@@ -23,7 +23,7 @@ class Site:
     c2: float
     c3: float
     states: dict[uuid.UUID, State] = field(default_factory=dict)
-    id: uuid.UUID = field(default_factory=uuid.uuid4, init=False)
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
@@ -33,4 +33,4 @@ class UnitCell:
     v2: BasisVector
     v3: BasisVector
     sites: dict[uuid.UUID, Site] = field(default_factory=dict)
-    id: uuid.UUID = field(default_factory=uuid.uuid4, init=False)
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
