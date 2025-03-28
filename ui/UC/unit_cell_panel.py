@@ -58,9 +58,9 @@ class UnitCellPanel(QWidget):
         self.v2_layout, self.v2 = create_vector_row("v2")
         self.v3_layout, self.v3 = create_vector_row("v3")
 
-        form_layout.addRow(QLabel("v<sub>1</sub>:"), self.v1_layout)
-        form_layout.addRow(QLabel("v<sub>2</sub>:"), self.v2_layout)
-        form_layout.addRow(QLabel("v<sub>3</sub>:"), self.v3_layout)
+        form_layout.addRow("v<sub>1</sub>:", self.v1_layout)
+        form_layout.addRow("v<sub>2</sub>:", self.v2_layout)
+        form_layout.addRow("v<sub>3</sub>:", self.v3_layout)
 
         # Buttons for actions
         button_layout = QHBoxLayout()

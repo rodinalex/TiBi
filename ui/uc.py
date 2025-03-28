@@ -34,7 +34,6 @@ state_model = UCFormModel(name="New State", energy=0.0)
 unit_cells = {}
 
 selection = dict(unit_cell=None, site=None, state=None)
-# selection = {"unit_cell": None, "site": None, "state": None}
 
 
 class UnitCellUI(QWidget):
@@ -73,7 +72,7 @@ class UnitCellUI(QWidget):
         # Connect tree view signals to show appropriate panels
         self.tree_view_panel.unit_cell_selected.connect(self.show_unit_cell_panel)
         self.tree_view_panel.site_selected.connect(self.show_site_panel)
-        # self.tree_view_panel.state_selected.connect(self.show_state_panel)
+        self.tree_view_panel.state_selected.connect(self.show_state_panel)
 
         # Update panel forms whenever the models register an update
         unit_cell_model.signals.updated.connect(self.unit_cell_panel.update_ui)
@@ -124,19 +123,18 @@ class UnitCellUI(QWidget):
         )
         self.form_stack.setCurrentWidget(self.site_panel)
 
-    # def show_state_panel(self, unit_cell_id, site_id, state_id):
-    #     """Display the state panel and load selected state data"""
-    #     if unit_cell_id in unit_cells:
-    #         uc = unit_cells[unit_cell_id]
-    #         if site_id in uc.sites:
-    #             site = uc.sites[site_id]
-    #             if state_id in site.states:
-    #                 # Save the current selection
-    #                 self.current_unit_cell_id = unit_cell_id
-    #                 self.current_site_id = site_id
-    #                 self.current_state_id = state_id
+    def show_state_panel(self, unit_cell_id, site_id, state_id):
+        """Display the state panel and load selected state data"""
+        # Save the current selection
+        self.selection["unit_cell"] = unit_cell_id
+        self.selection["site"] = site_id
+        self.selection["state"] = state_id
 
-    #                 state = site.states[state_id]
-    #                 # Update the form model
-    #                 state_model.update({"name": state.name, "energy": state.energy})
-    #                 self.form_stack.setCurrentWidget(self.state_panel)
+        uc = unit_cells[unit_cell_id]
+        site = uc.sites[site_id]
+        state = site.states[state_id]
+
+        # Update the form model
+        # The corresponding update function to update the fields is fired automatically.
+        state_model.update({"name": state.name, "energy": state.energy})
+        self.form_stack.setCurrentWidget(self.state_panel)

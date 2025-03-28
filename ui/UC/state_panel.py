@@ -36,9 +36,9 @@ class StatePanel(QWidget):
 
         # Buttons for actions
         button_layout = QHBoxLayout()
-        self.apply_btn = QPushButton("Apply Changes")
+        self.save_btn = QPushButton("Save")
         self.delete_btn = QPushButton("Delete")
-        button_layout.addWidget(self.apply_btn)
+        button_layout.addWidget(self.save_btn)
         button_layout.addWidget(self.delete_btn)
 
         # Main layout

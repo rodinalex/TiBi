@@ -41,6 +41,10 @@ class UCController(QObject):
 
         self.site_panel.save_btn.clicked.connect(self.save_site)
         self.site_panel.delete_btn.clicked.connect(self.delete_site)
+        self.site_panel.add_btn.clicked.connect(self.add_state)
+
+        self.state_panel.save_btn.clicked.connect(self.save_state)
+        self.state_panel.delete_btn.clicked.connect(self.delete_state)
 
     def add_unit_cell(self):
         name = "New Unit Cell"
@@ -123,10 +127,34 @@ class UCController(QObject):
         self.tree_view.select_unit_cell(selected_uc)
 
     def add_state(self):
-        pass
+        name = "New State"
+        energy = 0
+        new_state = State(name, energy)
+        unit_cell = self.model[self.selection["unit_cell"]]
+        site = unit_cell.sites[self.selection["site"]]
+        site.states[new_state.id] = new_state
+        self.tree_view.refresh_tree()
+        self.tree_view.select_state(unit_cell.id, site.id, new_state.id)
 
-    def edit_state(self):
-        pass
+    def save_state(self):
+        selected_uc = self.selection["unit_cell"]
+        selected_site = self.selection["site"]
+        selected_state = self.selection["state"]
+        name = self.state_panel.model["name"]
+        energy = self.state_panel.model["energy"]
+
+        updated_state = State(name, energy)
+
+        self.model[selected_uc].sites[selected_site].states[
+            selected_state
+        ] = updated_state
+        self.tree_view.refresh_tree()
+        self.tree_view.select_state(selected_uc, selected_site, selected_state)
 
     def delete_state(self):
-        pass
+        selected_uc = self.selection["unit_cell"]
+        selected_site = self.selection["site"]
+        selected_state = self.selection["state"]
+        del self.model[selected_uc].sites[selected_site].states[selected_state]
+        self.tree_view.refresh_tree()
+        self.tree_view.select_site(selected_uc, selected_site)
