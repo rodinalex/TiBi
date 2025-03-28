@@ -22,6 +22,7 @@ from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view import TreeViewPanel
+from ui.UC.unit_cell_plot import UnitCellPlot
 from ui.uc import UnitCellUI
 
 
@@ -29,11 +30,13 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1000, 800))
+        self.setFixedSize(QSize(1200, 800))  # Slightly wider to accommodate 3D plot
 
         # Initialize UI panels
         self.uc = UnitCellUI()
-        # Initialize controller with tree view
+        
+        # Initialize the plot
+        self.unit_cell_plot = UnitCellPlot()
 
         # # Connect action buttons to controller methods
         # # Unit cell panel buttons
@@ -64,10 +67,15 @@ class MainWindow(QMainWindow):
         # left_layout.addWidget(self.form_stack, stretch=1)
         left_layout.addWidget(self.uc)
 
-        # Placeholder widgets for middle and right columns
-        # Will be replaced with actual components later
-        mid_layout.addWidget(PlaceholderWidget("3D Visualization"))
-        mid_layout.addWidget(PlaceholderWidget("Hopping Parameters"))
+        # 3D visualization for the unit cell
+        mid_layout.addWidget(self.unit_cell_plot, stretch=3)
+        
+        # Connect signals to update the plot when unit cell or site is selected
+        self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
+        self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
+        
+        # Placeholder for hopping parameters (to be implemented later)
+        mid_layout.addWidget(PlaceholderWidget("Hopping Parameters"), stretch=1)
 
         right_layout.addWidget(PlaceholderWidget("Computation Options"))
         right_layout.addWidget(PlaceholderWidget("Computation Input"))
@@ -77,9 +85,53 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(right_layout, stretch=3)
 
         self.setCentralWidget(main_view)
-
-    #     # Add a demo unit cell to start with
-    #     self.add_demo_data()
+        
+    def update_plot(self, unit_cell_id):
+        """Update the 3D plot with the selected unit cell"""
+        if unit_cell_id in self.uc.controller.model:
+            unit_cell = self.uc.controller.model[unit_cell_id]
+            self.unit_cell_plot.set_unit_cell(unit_cell)
+            
+    def highlight_site(self, unit_cell_id, site_id):
+        """Highlight the selected site in the 3D plot"""
+        # First update the plot with the current unit cell
+        self.update_plot(unit_cell_id)
+        # Then highlight the specific site
+        self.unit_cell_plot.select_site(site_id)
+        
+    def add_demo_unit_cell(self):
+        """Add a demo unit cell with sites for testing visualization"""
+        # This method can be called from the Python console after loading the app
+        # for easily adding a test unit cell with sites
+        
+        from src.tibitypes import UnitCell, Site, BasisVector
+        
+        # Create a simple cubic unit cell
+        v1 = BasisVector(1.0, 0.0, 0.0)
+        v2 = BasisVector(0.0, 1.0, 0.0)
+        v3 = BasisVector(0.0, 0.0, 1.0)
+        demo_uc = UnitCell("Demo Cubic Cell", v1, v2, v3)
+        
+        # Add sites at different positions
+        sites = [
+            Site("Corner", 0.0, 0.0, 0.0),
+            Site("Face Center X", 0.5, 0.0, 0.0),
+            Site("Face Center Y", 0.0, 0.5, 0.0),
+            Site("Face Center Z", 0.0, 0.0, 0.5),
+            Site("Body Center", 0.5, 0.5, 0.5)
+        ]
+        
+        for site in sites:
+            demo_uc.sites[site.id] = site
+            
+        # Add the unit cell to the model
+        self.uc.controller.model[demo_uc.id] = demo_uc
+        
+        # Refresh the tree and select this unit cell
+        self.uc.tree_view_panel.refresh_tree()
+        self.uc.tree_view_panel.select_unit_cell(demo_uc.id)
+        
+        return demo_uc.id
 
     # def add_demo_data(self):
     #     """Add some demo data to show functionality"""
@@ -234,5 +286,9 @@ class PlaceholderWidget(QWidget):
 
 app = QApplication(sys.argv)
 window = MainWindow()
+
+# Create a demo unit cell for testing the visualization
+window.add_demo_unit_cell()
+
 window.show()
 app.exec()
