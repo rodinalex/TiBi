@@ -3,7 +3,6 @@ from PySide6.QtCore import QObject, Signal
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from ui.UC.tree_view import TreeViewPanel
 
-# from models.uc_models import UCFormModel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
@@ -17,7 +16,7 @@ class UCController(QObject):
 
     def __init__(
         self,
-        model: dict[uuid.UUID, UnitCell],  # All the unit cells in the system
+        unit_cells: dict[uuid.UUID, UnitCell],  # All the unit cells in the system
         unit_cell_panel: UnitCellPanel,
         site_panel: SitePanel,
         state_panel: StatePanel,
@@ -25,7 +24,7 @@ class UCController(QObject):
         selection,
     ):
         super().__init__()
-        self.model = model
+        self.unit_cells = unit_cells
         self.unit_cell_panel = unit_cell_panel
         self.site_panel = site_panel
         self.state_panel = state_panel
@@ -54,7 +53,7 @@ class UCController(QObject):
 
         new_cell = UnitCell(name, v1, v2, v3)
 
-        self.model[new_cell.id] = new_cell
+        self.unit_cells[new_cell.id] = new_cell
         self.tree_view.refresh_tree()
         self.tree_view.select_unit_cell(new_cell.id)
 
@@ -88,13 +87,13 @@ class UCController(QObject):
 
         updated_uc = UnitCell(name, v1, v2, v3, sites, selected_uc)
 
-        self.model[selected_uc] = updated_uc
+        self.unit_cells[selected_uc] = updated_uc
         self.tree_view.refresh_tree()
         self.tree_view.select_unit_cell(selected_uc)
 
     def delete_unit_cell(self):
         selected_uc = self.selection["unit_cell"]
-        del self.model[selected_uc]
+        del self.unit_cells[selected_uc]
         self.tree_view.refresh_tree()
 
     def add_site(self):
@@ -104,7 +103,7 @@ class UCController(QObject):
         c3 = 0
         new_site = Site(name, c1, c2, c3)
 
-        unit_cell = self.model[self.selection["unit_cell"]]
+        unit_cell = self.unit_cells[self.selection["unit_cell"]]
         unit_cell.sites[new_site.id] = new_site
         self.tree_view.refresh_tree()
         self.tree_view.select_site(unit_cell.id, new_site.id)
@@ -121,14 +120,14 @@ class UCController(QObject):
 
         updated_site = Site(name, c1, c2, c3, states, selected_site)
 
-        self.model[selected_uc].sites[selected_site] = updated_site
+        self.unit_cells[selected_uc].sites[selected_site] = updated_site
         self.tree_view.refresh_tree()
         self.tree_view.select_site(selected_uc, selected_site)
 
     def delete_site(self):
         selected_uc = self.selection["unit_cell"]
         selected_site = self.selection["site"]
-        del self.model[selected_uc].sites[selected_site]
+        del self.unit_cells[selected_uc].sites[selected_site]
         self.tree_view.refresh_tree()
         self.tree_view.select_unit_cell(selected_uc)
 
@@ -136,7 +135,7 @@ class UCController(QObject):
         name = "New State"
         energy = 0
         new_state = State(name, energy)
-        unit_cell = self.model[self.selection["unit_cell"]]
+        unit_cell = self.unit_cells[self.selection["unit_cell"]]
         site = unit_cell.sites[self.selection["site"]]
         site.states[new_state.id] = new_state
         self.tree_view.refresh_tree()
@@ -151,7 +150,7 @@ class UCController(QObject):
 
         updated_state = State(name, energy)
 
-        self.model[selected_uc].sites[selected_site].states[
+        self.unit_cells[selected_uc].sites[selected_site].states[
             selected_state
         ] = updated_state
         self.tree_view.refresh_tree()
@@ -161,6 +160,6 @@ class UCController(QObject):
         selected_uc = self.selection["unit_cell"]
         selected_site = self.selection["site"]
         selected_state = self.selection["state"]
-        del self.model[selected_uc].sites[selected_site].states[selected_state]
+        del self.unit_cells[selected_uc].sites[selected_site].states[selected_state]
         self.tree_view.refresh_tree()
         self.tree_view.select_site(selected_uc, selected_site)

@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 import uuid
+from typing import Tuple
+import numpy as np
 
 
 @dataclass
@@ -15,6 +17,14 @@ class State:
     name: str
     energy: float
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
+@dataclass
+class Hopping:
+    s1: State
+    s2: State
+    displacement: Tuple[int, int, int]
+    amplitude: np.complex128
 
 
 @dataclass

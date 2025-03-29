@@ -59,8 +59,8 @@ class MainWindow(QMainWindow):
 
     def update_plot(self, unit_cell_id):
         """Update the 3D plot with the selected unit cell"""
-        if unit_cell_id in self.uc.controller.model:
-            unit_cell = self.uc.controller.model[unit_cell_id]
+        if unit_cell_id in self.uc.unit_cells:
+            unit_cell = self.uc.unit_cells[unit_cell_id]
             self.unit_cell_plot.set_unit_cell(unit_cell)
 
     def highlight_site(self, unit_cell_id, site_id):

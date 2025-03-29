@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
-    QPushButton,
     QStackedWidget,
 )
 from models.uc_models import UCFormModel
@@ -47,6 +46,9 @@ class UnitCellUI(QWidget):
         # Track currently selected items
         self.selection = selection
 
+        # Existing unit cells
+        self.unit_cells = unit_cells
+
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel(unit_cell_model)
         self.site_panel = SitePanel(site_model)
@@ -55,7 +57,7 @@ class UnitCellUI(QWidget):
 
         # Initialize controller with tree view
         self.controller = UCController(
-            unit_cells,
+            self.unit_cells,
             self.unit_cell_panel,
             self.site_panel,
             self.state_panel,
