@@ -7,6 +7,7 @@ class BasisVector:
     x: float
     y: float
     z: float
+    is_periodic: bool = False
 
 
 @dataclass

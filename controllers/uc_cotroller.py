@@ -63,21 +63,27 @@ class UCController(QObject):
         selected_uc = self.selection["unit_cell"]
 
         name = self.unit_cell_panel.model["name"]
+
         v1 = BasisVector(
             float(self.unit_cell_panel.model["v1x"]),
             float(self.unit_cell_panel.model["v1y"]),
             float(self.unit_cell_panel.model["v1z"]),
+            self.unit_cell_panel.model["v1periodic"],
         )
         v2 = BasisVector(
             float(self.unit_cell_panel.model["v2x"]),
             float(self.unit_cell_panel.model["v2y"]),
             float(self.unit_cell_panel.model["v2z"]),
+            self.unit_cell_panel.model["v2periodic"],
         )
+
         v3 = BasisVector(
             float(self.unit_cell_panel.model["v3x"]),
             float(self.unit_cell_panel.model["v3y"]),
             float(self.unit_cell_panel.model["v3z"]),
+            self.unit_cell_panel.model["v3periodic"],
         )
+
         sites = self.unit_cell_panel.model["sites"]
 
         updated_uc = UnitCell(name, v1, v2, v3, sites, selected_uc)

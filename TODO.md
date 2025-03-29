@@ -15,21 +15,15 @@ In the present version, the GUI consists of 3 columns
 
 
 - Middle column for visualization and (potentially) hopping parameter setting
-  - The top panel shows an interactive 3D unit cell plot with selectable sites
+  - The top panel shows an interactive 3D unit cell plot with selectable sites (✅ IMPLEMENTED)
   - The bottom could be a table for hopping elements. To be implemented later
 - Right column for computation options and input. The panels will be decided on and implemented later
 
 ## Immediate Tasks
 
-- Complete the unfinished UI components:
-  - Finish `SitePanel` implementation with coordinate form fields
-  - Complete `StatePanel` with energy input
-  - Add proper layout to `TreeViewPanel` to display hierarchy
-
-- Implement controller functionality:
-  - Complete the `UCController` methods for unit cell, site, and state CRUD operations
-  - Connect controller actions to UI events (buttons, tree selection)
-  - Enable proper data persistence between UI panels
+- ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
+include the unit cell as a parallelepiped, as well as any of the sites found inside of it
+- Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
 <!-- 
 ## Core Functionality
 
