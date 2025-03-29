@@ -24,6 +24,9 @@ unit_cell_model = UCFormModel(
     v3x=0.0,
     v3y=0.0,
     v3z=1.0,
+    v1periodic=False,
+    v2periodic=False,
+    v3periodic=False,
     sites={},
 )
 
@@ -101,6 +104,9 @@ class UnitCellUI(QWidget):
                 "v3x": uc.v3.x,
                 "v3y": uc.v3.y,
                 "v3z": uc.v3.z,
+                "v1periodic": uc.v1.is_periodic,
+                "v2periodic": uc.v2.is_periodic,
+                "v3periodic": uc.v2.is_periodic,
                 "sites": uc.sites,
             }
         )

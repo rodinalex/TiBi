@@ -1,12 +1,14 @@
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
+    QCheckBox,
     QWidget,
     QLineEdit,
     QFormLayout,
     QLabel,
     QPushButton,
 )
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QDoubleValidator
 from models.uc_models import UCFormModel
 
@@ -30,6 +32,7 @@ class UnitCellPanel(QWidget):
             x = QLineEdit()
             y = QLineEdit()
             z = QLineEdit()
+            c = QCheckBox()
 
             x.setValidator(QDoubleValidator())
             y.setValidator(QDoubleValidator())
@@ -44,14 +47,18 @@ class UnitCellPanel(QWidget):
             z.textChanged.connect(
                 lambda t: self.update_model(v + "z", self.safe_float(t, v + "z"))
             )
-
+            c.checkStateChanged.connect(
+                lambda t: self.update_model(v + "periodic", t == Qt.Checked)
+            )
             # IMPLEMENT editingFinished() signal from the text boxes
             # z.editingFinished().connect()
 
             layout.addWidget(x)
             layout.addWidget(y)
             layout.addWidget(z)
-            return layout, (x, y, z)
+            layout.addWidget(c)
+            layout.addWidget(QLabel("Periodic"))
+            return layout, (x, y, z, c)
 
         # Create vector input rows
         self.v1_layout, self.v1 = create_vector_row("v1")
@@ -90,14 +97,17 @@ class UnitCellPanel(QWidget):
         self.v1[0].setText(str(self.model["v1x"]))
         self.v1[1].setText(str(self.model["v1y"]))
         self.v1[2].setText(str(self.model["v1z"]))
+        self.v1[3].setChecked(bool(self.model["v1periodic"]))
 
         self.v2[0].setText(str(self.model["v2x"]))
         self.v2[1].setText(str(self.model["v2y"]))
         self.v2[2].setText(str(self.model["v2z"]))
+        self.v2[3].setChecked(bool(self.model["v2periodic"]))
 
         self.v3[0].setText(str(self.model["v3x"]))
         self.v3[1].setText(str(self.model["v3y"]))
         self.v3[2].setText(str(self.model["v3z"]))
+        self.v3[3].setChecked(bool(self.model["v3periodic"]))
 
     def safe_float(self, text, key):
         """Safely convert text to float, handling invalid inputs"""

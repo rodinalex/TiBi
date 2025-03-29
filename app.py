@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1200, 800))  # Slightly wider to accommodate 3D plot
+        self.setFixedSize(QSize(1200, 900))  # Slightly wider to accommodate 3D plot
 
         # Initialize UI panels
         self.uc = UnitCellUI()
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.uc)
 
         # 3D visualization for the unit cell
-        mid_layout.addWidget(self.unit_cell_plot, stretch=3)
+        mid_layout.addWidget(self.unit_cell_plot, stretch=1)
 
         # Connect signals to update the plot when unit cell or site is selected
         self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
@@ -92,9 +92,6 @@ class PlaceholderWidget(QWidget):
 
 app = QApplication(sys.argv)
 window = MainWindow()
-
-# Create a demo unit cell for testing the visualization
-# window.add_demo_unit_cell()
 
 window.show()
 app.exec()
