@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import (
-    QApplication,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -8,23 +7,19 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QLabel,
     QFrame,
-    QDialog,
-    QLineEdit,
-    QFormLayout,
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
-    QSpinBox,
-    QDoubleSpinBox,
-    QCheckBox,
 )
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 import numpy as np
 from src.tibitypes import Hopping
 
+from ui.HOPPING.matrix import HoppingMatrix
 
-class HoppingMatrix(QWidget):
+
+class HoppingPanel(QWidget):
     """
     Widget for displaying and editing hopping terms between states in a unit cell.
     Displays a grid of buttons, where each button corresponds to a pair of states.
@@ -51,6 +46,7 @@ class HoppingMatrix(QWidget):
         container_layout = QHBoxLayout(self.content_container)
 
         # --- Matrix Panel ---
+        # self.matrix_panel = HoppingMatrix()
         self.matrix_panel = QWidget()
         matrix_layout = QVBoxLayout(self.matrix_panel)
 
@@ -75,6 +71,19 @@ class HoppingMatrix(QWidget):
         self.details_label = QLabel("Select a cell to edit hopping parameters")
         details_layout.addWidget(self.details_label)
 
+        # Table manipulation buttons at the top
+        table_buttons_layout = QHBoxLayout()
+
+        self.add_row_btn = QPushButton("Add")
+        self.add_row_btn.clicked.connect(self.add_empty_row)
+        table_buttons_layout.addWidget(self.add_row_btn)
+
+        self.remove_row_btn = QPushButton("Remove")
+        self.remove_row_btn.clicked.connect(self.remove_selected_hopping)
+        table_buttons_layout.addWidget(self.remove_row_btn)
+
+        details_layout.addLayout(table_buttons_layout)
+
         # Table for hopping details
         self.hopping_table = QTableWidget(0, 4)  # 4 columns: d1, d2, d3, amplitude
         self.hopping_table.setHorizontalHeaderLabels(["d₁", "d₂", "d₃", "Amplitude"])
@@ -85,55 +94,13 @@ class HoppingMatrix(QWidget):
         # Make the table columns resize to content
         self.hopping_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        details_layout.addWidget(self.hopping_table)
+        # Enable editing in the table
+        self.hopping_table.setEditTriggers(
+            QTableWidget.DoubleClicked | QTableWidget.EditKeyPressed
+        )
+        self.hopping_table.cellChanged.connect(self.on_table_cell_changed)
 
-        # Form for adding new hopping
-        form_widget = QWidget()
-        form_layout = QFormLayout(form_widget)
-
-        # Displacement vector inputs
-        d_layout = QHBoxLayout()
-
-        self.d1_spin = QSpinBox()
-        self.d2_spin = QSpinBox()
-        self.d3_spin = QSpinBox()
-
-        d_layout.addWidget(QLabel("d<sub>1</sub>:"))
-        d_layout.addWidget(self.d1_spin)
-        d_layout.addWidget(QLabel("d<sub>2</sub>:"))
-        d_layout.addWidget(self.d2_spin)
-        d_layout.addWidget(QLabel("d<sub>3</sub>:"))
-        d_layout.addWidget(self.d3_spin)
-
-        # Add the grouped row to the form layout
-        form_layout.addRow(d_layout)
-
-        # Complex amplitude inputs
-        amp_layout = QHBoxLayout()
-
-        self.amp_real = QDoubleSpinBox()
-        self.amp_real.setSingleStep(0.1)
-
-        self.amp_imag = QDoubleSpinBox()
-        self.amp_imag.setSingleStep(0.1)
-
-        amp_layout.addWidget(self.amp_real)
-        amp_layout.addWidget(QLabel("+ i"))
-        amp_layout.addWidget(self.amp_imag)
-        form_layout.addRow("Amplitude:", amp_layout)
-        # Add and remove buttons
-        button_layout = QHBoxLayout()
-
-        self.add_hopping_btn = QPushButton("Add")
-        self.add_hopping_btn.clicked.connect(self.add_hopping)
-        button_layout.addWidget(self.add_hopping_btn)
-
-        self.remove_hopping_btn = QPushButton("Remove")
-        self.remove_hopping_btn.clicked.connect(self.remove_selected_hopping)
-        button_layout.addWidget(self.remove_hopping_btn)
-
-        form_layout.addRow(button_layout)
-        details_layout.addWidget(form_widget)
+        details_layout.addWidget(self.hopping_table, stretch=1)
 
         # Add both panels to container
         container_layout.addWidget(self.matrix_panel, 1)
@@ -438,63 +405,366 @@ class HoppingMatrix(QWidget):
             self.hopping_table.setItem(idx, 2, d3_item)
             self.hopping_table.setItem(idx, 3, amp_item)
 
-    def add_hopping(self):
-        """Adds a new hopping between the selected states."""
+    def add_empty_row(self):
+        """Adds an empty row to the hopping table for user input."""
         if not self.selected_state1 or not self.selected_state2:
             return
 
-        # Get values from input fields
-        displacement = (
-            self.d1_spin.value(),
-            self.d2_spin.value(),
-            self.d3_spin.value(),
-        )
+        # Temporarily disconnect cell changed signal to prevent triggering while adding cells
+        self.hopping_table.cellChanged.disconnect(self.on_table_cell_changed)
 
-        amplitude = complex(self.amp_real.value(), self.amp_imag.value())
+        try:
+            # Get the current row count and add a new row
+            row_idx = self.hopping_table.rowCount()
+            self.hopping_table.insertRow(row_idx)
 
-        # Create new hopping
-        new_hopping = Hopping(
-            s1=self.selected_state1,
-            s2=self.selected_state2,
-            displacement=displacement,
-            amplitude=amplitude,
-        )
+            # Add default items (editable)
+            for col in range(3):  # displacement columns
+                item = QTableWidgetItem("0")
+                self.hopping_table.setItem(row_idx, col, item)
 
-        # Find row and col for the selected states
-        row = self.states.index(self.selected_state1)
-        col = self.states.index(self.selected_state2)
+            # Add default amplitude
+            amp_item = QTableWidgetItem("0.0 + 0.0j")
+            self.hopping_table.setItem(row_idx, 3, amp_item)
 
-        # Add to hopping data
-        if (row, col) not in self.hopping_data:
-            self.hopping_data[(row, col)] = []
+            # Select the newly added row
+            self.hopping_table.selectRow(row_idx)
 
-        self.hopping_data[(row, col)].append(new_hopping)
+            # Create a new hopping with default values
+            matrix_row = self.states.index(self.selected_state1)
+            matrix_col = self.states.index(self.selected_state2)
 
-        # Also add the hermitian conjugate hopping to ensure symmetry
-        if row != col:  # Only if not on diagonal
-            # Create conjugate hopping
-            conj_displacement = (-displacement[0], -displacement[1], -displacement[2])
-            conj_amplitude = amplitude.conjugate()
+            displacement = (0, 0, 0)
+            amplitude = complex(0.0, 0.0)
 
-            conj_hopping = Hopping(
+            # Create new hopping
+            new_hopping = Hopping(
+                s1=self.selected_state1,
+                s2=self.selected_state2,
+                displacement=displacement,
+                amplitude=amplitude,
+            )
+
+            # Add to hopping data
+            if (matrix_row, matrix_col) not in self.hopping_data:
+                self.hopping_data[(matrix_row, matrix_col)] = []
+
+            self.hopping_data[(matrix_row, matrix_col)].append(new_hopping)
+
+            # Add hermitian conjugate if needed
+            if matrix_row != matrix_col:
+                conj_hopping = Hopping(
+                    s1=self.selected_state2,
+                    s2=self.selected_state1,
+                    displacement=(0, 0, 0),
+                    amplitude=complex(0.0, 0.0),
+                )
+
+                if (matrix_col, matrix_row) not in self.hopping_data:
+                    self.hopping_data[(matrix_col, matrix_row)] = []
+
+                self.hopping_data[(matrix_col, matrix_row)].append(conj_hopping)
+
+            # Update UI
+            self.refresh_button_colors()
+
+            # Emit signal
+            self.hopping_added.emit(new_hopping)
+        finally:
+            # Reconnect signal
+            self.hopping_table.cellChanged.connect(self.on_table_cell_changed)
+
+    def on_table_cell_changed(self, row, column):
+        """Handle edits in the table cells."""
+        # Temporarily disconnect to prevent recursive calls
+        self.hopping_table.cellChanged.disconnect(self.on_table_cell_changed)
+
+        try:
+            if not self.selected_state1 or not self.selected_state2:
+                return
+
+            matrix_row = self.states.index(self.selected_state1)
+            matrix_col = self.states.index(self.selected_state2)
+
+            # Ensure hopping_data dictionary has an entry for this cell
+            if (matrix_row, matrix_col) not in self.hopping_data:
+                self.hopping_data[(matrix_row, matrix_col)] = []
+
+            # Ensure we have all cells in this row populated before proceeding
+            all_cells_populated = True
+            for col in range(4):
+                item = self.hopping_table.item(row, col)
+                if item is None:
+                    all_cells_populated = False
+                    # Create default cell if missing
+                    default_value = "0" if col < 3 else "0.0 + 0.0j"
+                    self.hopping_table.setItem(
+                        row, col, QTableWidgetItem(default_value)
+                    )
+
+            # Only continue processing if all cells are now available
+            if all_cells_populated:
+                # If we're modifying an existing row
+                if row < len(self.hopping_data[(matrix_row, matrix_col)]):
+                    self.update_existing_hopping(row, column, matrix_row, matrix_col)
+                else:
+                    # If we're dealing with a new row, create a new hopping
+                    self.create_new_hopping_from_row(row, matrix_row, matrix_col)
+
+                # Update UI
+                self.refresh_button_colors()
+        finally:
+            # Reconnect the signal
+            self.hopping_table.cellChanged.connect(self.on_table_cell_changed)
+
+    def update_existing_hopping(self, row, column, matrix_row, matrix_col):
+        """Update an existing hopping based on table cell edit."""
+        # Get the current hopping
+        hopping = self.hopping_data[(matrix_row, matrix_col)][row]
+
+        # Get values from all cells in this row
+        try:
+            d1 = int(self.hopping_table.item(row, 0).text())
+            d2 = int(self.hopping_table.item(row, 1).text())
+            d3 = int(self.hopping_table.item(row, 2).text())
+
+            # Parse complex amplitude
+            amp_text = self.hopping_table.item(row, 3).text()
+            # Handle complex number formats like "1.0 + 2.0j" or "1.0+2.0j" or "1.0,2.0"
+            amp_text = amp_text.replace(" ", "").replace("j", "").replace("i", "")
+
+            if "+" in amp_text:
+                parts = amp_text.split("+")
+                real = float(parts[0])
+                imag = float(parts[1])
+            elif "," in amp_text:
+                parts = amp_text.split(",")
+                real = float(parts[0])
+                imag = float(parts[1])
+            else:
+                real = float(amp_text)
+                imag = 0.0
+
+            amplitude = complex(real, imag)
+
+            # Create displacement tuple
+            displacement = (d1, d2, d3)
+
+            # Update hopping
+            old_hopping = hopping
+
+            # Create new hopping with updated values
+            new_hopping = Hopping(
+                s1=self.selected_state1,
+                s2=self.selected_state2,
+                displacement=displacement,
+                amplitude=amplitude,
+            )
+
+            # Replace the old hopping
+            self.hopping_data[(matrix_row, matrix_col)][row] = new_hopping
+
+            # Update the conjugate hopping for symmetry
+            if matrix_row != matrix_col:
+                self.update_conjugate_hopping(
+                    old_hopping, new_hopping, matrix_row, matrix_col
+                )
+
+            # Emit signal
+            self.hopping_added.emit(new_hopping)
+
+        except (ValueError, IndexError) as e:
+            print(f"Error updating hopping: {e}")
+            # Revert to previous values if parsing fails
+            self.populate_hopping_table(matrix_row, matrix_col)
+
+    def create_new_hopping_from_row(self, row, matrix_row, matrix_col):
+        """Create a new hopping from a table row."""
+        try:
+            # Safety checks for items
+            for col in range(4):
+                if self.hopping_table.item(row, col) is None:
+                    default_value = "0" if col < 3 else "0.0 + 0.0j"
+                    self.hopping_table.setItem(
+                        row, col, QTableWidgetItem(default_value)
+                    )
+
+            # Get values from the table cells
+            d1 = int(self.hopping_table.item(row, 0).text())
+            d2 = int(self.hopping_table.item(row, 1).text())
+            d3 = int(self.hopping_table.item(row, 2).text())
+
+            # Parse complex amplitude
+            amp_text = self.hopping_table.item(row, 3).text()
+            amp_text = amp_text.replace(" ", "").replace("j", "").replace("i", "")
+
+            try:
+                if "+" in amp_text:
+                    parts = amp_text.split("+")
+                    real = float(parts[0])
+                    imag = float(parts[1])
+                elif "," in amp_text:
+                    parts = amp_text.split(",")
+                    real = float(parts[0])
+                    imag = float(parts[1])
+                else:
+                    real = float(amp_text)
+                    imag = 0.0
+            except (ValueError, IndexError):
+                # If parsing fails, default to zero
+                real = 0.0
+                imag = 0.0
+
+            amplitude = complex(real, imag)
+            displacement = (d1, d2, d3)
+
+            # Check if this is a duplicate displacement
+            is_duplicate = False
+            for existing_hopping in self.hopping_data.get((matrix_row, matrix_col), []):
+                if existing_hopping.displacement == displacement:
+                    is_duplicate = True
+                    break
+
+            if is_duplicate:
+                print(
+                    f"Duplicate displacement {displacement} - updating existing entry"
+                )
+                # Find and update the existing entry instead of creating a new one
+                for idx, existing_hopping in enumerate(
+                    self.hopping_data[(matrix_row, matrix_col)]
+                ):
+                    if existing_hopping.displacement == displacement:
+                        new_hopping = Hopping(
+                            s1=self.selected_state1,
+                            s2=self.selected_state2,
+                            displacement=displacement,
+                            amplitude=amplitude,
+                        )
+                        self.hopping_data[(matrix_row, matrix_col)][idx] = new_hopping
+
+                        # Update the conjugate if needed
+                        if matrix_row != matrix_col:
+                            self.update_conjugate_for_displacement(
+                                displacement, amplitude, matrix_row, matrix_col
+                            )
+                        break
+            else:
+                # Create new hopping
+                new_hopping = Hopping(
+                    s1=self.selected_state1,
+                    s2=self.selected_state2,
+                    displacement=displacement,
+                    amplitude=amplitude,
+                )
+
+                # Add to hopping data
+                self.hopping_data[(matrix_row, matrix_col)].append(new_hopping)
+
+                # Add the hermitian conjugate for symmetry
+                if matrix_row != matrix_col:
+                    conj_displacement = (-d1, -d2, -d3)
+                    conj_amplitude = amplitude.conjugate()
+
+                    conj_hopping = Hopping(
+                        s1=self.selected_state2,
+                        s2=self.selected_state1,
+                        displacement=conj_displacement,
+                        amplitude=conj_amplitude,
+                    )
+
+                    if (matrix_col, matrix_row) not in self.hopping_data:
+                        self.hopping_data[(matrix_col, matrix_row)] = []
+
+                    self.hopping_data[(matrix_col, matrix_row)].append(conj_hopping)
+
+            # Emit signal for either case
+            self.hopping_added.emit(new_hopping)
+
+            # Format the display of the amplitude nicely
+            amp_item = self.hopping_table.item(row, 3)
+            amp_item.setText(f"{amplitude.real:.2f} + {amplitude.imag:.2f}j")
+
+        except (ValueError, IndexError, AttributeError) as e:
+            print(f"Error creating hopping: {e}")
+            # Don't remove the row, just populate with defaults
+            for col in range(4):
+                if self.hopping_table.item(row, col) is None:
+                    default_value = "0" if col < 3 else "0.0 + 0.0j"
+                    self.hopping_table.setItem(
+                        row, col, QTableWidgetItem(default_value)
+                    )
+
+    def update_conjugate_for_displacement(
+        self, displacement, amplitude, matrix_row, matrix_col
+    ):
+        """Update the conjugate hopping for a specific displacement."""
+        conj_displacement = (-displacement[0], -displacement[1], -displacement[2])
+        conj_amplitude = amplitude.conjugate()
+
+        # Look for existing conjugate with this displacement
+        found = False
+
+        if (matrix_col, matrix_row) in self.hopping_data:
+            for idx, hopping in enumerate(self.hopping_data[(matrix_col, matrix_row)]):
+                if hopping.displacement == conj_displacement:
+                    # Update the existing conjugate
+                    new_conj = Hopping(
+                        s1=self.selected_state2,
+                        s2=self.selected_state1,
+                        displacement=conj_displacement,
+                        amplitude=conj_amplitude,
+                    )
+
+                    self.hopping_data[(matrix_col, matrix_row)][idx] = new_conj
+                    found = True
+                    break
+
+        # If not found, create new conjugate
+        if not found:
+            new_conj = Hopping(
                 s1=self.selected_state2,
                 s2=self.selected_state1,
                 displacement=conj_displacement,
                 amplitude=conj_amplitude,
             )
 
-            # Add to hopping data
-            if (col, row) not in self.hopping_data:
-                self.hopping_data[(col, row)] = []
+            if (matrix_col, matrix_row) not in self.hopping_data:
+                self.hopping_data[(matrix_col, matrix_row)] = []
 
-            self.hopping_data[(col, row)].append(conj_hopping)
+            self.hopping_data[(matrix_col, matrix_row)].append(new_conj)
 
-        # Update UI
-        self.refresh_button_colors()
-        self.populate_hopping_table(row, col)
+    def update_conjugate_hopping(
+        self, old_hopping, new_hopping, matrix_row, matrix_col
+    ):
+        """Update the conjugate hopping when the original is modified."""
+        # Find the conjugate hopping
+        old_conj_displacement = (
+            -old_hopping.displacement[0],
+            -old_hopping.displacement[1],
+            -old_hopping.displacement[2],
+        )
 
-        # Emit signal
-        self.hopping_added.emit(new_hopping)
+        if (matrix_col, matrix_row) in self.hopping_data:
+            for i, h in enumerate(self.hopping_data[(matrix_col, matrix_row)]):
+                if h.displacement == old_conj_displacement:
+                    # Create new conjugate
+                    new_conj_displacement = (
+                        -new_hopping.displacement[0],
+                        -new_hopping.displacement[1],
+                        -new_hopping.displacement[2],
+                    )
+                    new_conj_amplitude = new_hopping.amplitude.conjugate()
+
+                    new_conj_hopping = Hopping(
+                        s1=self.selected_state2,
+                        s2=self.selected_state1,
+                        displacement=new_conj_displacement,
+                        amplitude=new_conj_amplitude,
+                    )
+
+                    # Replace the old conjugate
+                    self.hopping_data[(matrix_col, matrix_row)][i] = new_conj_hopping
+                    break
 
     def remove_selected_hopping(self):
         """Removes the selected hopping from the table."""

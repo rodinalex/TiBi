@@ -10,6 +10,7 @@ from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view import TreeViewPanel
 
 from controllers.uc_cotroller import UCController
+from src.tibitypes import get_states
 
 # Data Models
 unit_cell_model = UCFormModel(
@@ -113,6 +114,7 @@ class UnitCellUI(QWidget):
             }
         )
         self.form_stack.setCurrentWidget(self.unit_cell_panel)
+        print(get_states(uc))
 
     def show_site_panel(self, unit_cell_id, site_id):
         """Display the site panel and load selected site data"""

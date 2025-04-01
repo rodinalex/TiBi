@@ -156,33 +156,3 @@ class TreeViewPanel(QWidget):
                                     index, QItemSelectionModel.ClearAndSelect
                                 )
                                 return  # Stop after selecting
-
-    # def add_unit_cell_item(self, unit_cell):
-    #     """Add a unit cell to the tree view"""
-    #     unit_cell_item = self.create_tree_item(unit_cell, "unit_cell", unit_cell.id)
-    #     self.root_node.appendRow(unit_cell_item)
-
-    # def add_site_item(self, unit_cell_id, site):
-    #     """Add a site to a unit cell in the tree"""
-    #     # Find the unit cell item
-    #     for i in range(self.root_node.rowCount()):
-    #         unit_cell_item = self.root_node.child(i)
-    #         if unit_cell_item.data(Qt.UserRole + 2) == unit_cell_id:
-    #             site_item = self.create_tree_item(site, "site", site.id)
-    #             unit_cell_item.appendRow(site_item)
-    #             break
-
-    # def add_state_item(self, unit_cell_id, site_id, state):
-    #     """Add a state to a site in the tree"""
-    #     # Find the unit cell item
-    #     for i in range(self.root_node.rowCount()):
-    #         unit_cell_item = self.root_node.child(i)
-    #         if unit_cell_item.data(Qt.UserRole + 2) == unit_cell_id:
-    #             # Find the site item
-    #             for j in range(unit_cell_item.rowCount()):
-    #                 site_item = unit_cell_item.child(j)
-    #                 if site_item.data(Qt.UserRole + 2) == site_id:
-    #                     state_item = self.create_tree_item(state, "state", state.id)
-    #                     site_item.appendRow(state_item)
-    #                     break
-    #             break
