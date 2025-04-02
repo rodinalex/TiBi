@@ -10,11 +10,11 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDoubleValidator
-from models.uc_models import UCFormModel
+from models.uc_models import DataModel
 
 
 class UnitCellPanel(QWidget):
-    def __init__(self, model: UCFormModel):
+    def __init__(self, model: DataModel):
         super().__init__()
 
         self.model = model

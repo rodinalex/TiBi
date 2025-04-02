@@ -3,8 +3,6 @@ import uuid
 from typing import Tuple
 import numpy as np
 
-# from models.uc_models import StateCoupling
-
 
 @dataclass
 class BasisVector:
@@ -46,13 +44,15 @@ class UnitCell:
     v2: BasisVector
     v3: BasisVector
     sites: dict[uuid.UUID, Site] = field(default_factory=dict)
-    # couplings: StateCoupling = field(default_factory=StateCoupling)
+    hoppings: dict[Tuple[State, State], np.complex128] = field(default_factory=dict)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 def get_states(uc: UnitCell):
-    all_sites = list(uc.sites.values())
-    res = []
-    for s in all_sites:
-        res += list(s.states.values())
-    return res
+    states = []
+    state_info = []
+    for site_id, site in uc.sites.items():
+        for state_id, state in site.states.items():
+            states.append(state)
+            state_info.append((site.name, state.name, state_id))
+    return (states, state_info)

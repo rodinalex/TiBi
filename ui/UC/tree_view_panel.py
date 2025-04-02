@@ -7,6 +7,7 @@ import uuid
 
 class TreeViewPanel(QWidget):
     # Define signals
+    none_selected = Signal()
     unit_cell_selected = Signal(uuid.UUID)
     site_selected = Signal(uuid.UUID, uuid.UUID)  # unit_cell_id, site_id
     state_selected = Signal(
@@ -89,6 +90,7 @@ class TreeViewPanel(QWidget):
         """Handle tree item selection"""
         indexes = selected.indexes()
         if not indexes:
+            self.none_selected.emit()
             return
 
         # Get the selected item

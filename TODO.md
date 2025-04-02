@@ -21,6 +21,7 @@ In the present version, the GUI consists of 3 columns
 
 ## Immediate Tasks
 
+
 - ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
 include the unit cell as a parallelepiped, as well as any of the sites found inside of it
 - Add hopping machinery:
@@ -30,6 +31,9 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
   - Selecting a unit cell from the tree brings up the relevant hopping matrix panel
   - Rows and columns should have stationary labels so that when the user scrolls along the matrix, they can still see which states they are working with. Perhaps have the labels for the columns be vertical to preserve space.
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
+
+## Reminders
+- Add Hoppings field to the UC model
 <!-- 
 ## Core Functionality
 

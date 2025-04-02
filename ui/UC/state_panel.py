@@ -8,11 +8,11 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtGui import QDoubleValidator
-from models.uc_models import UCFormModel
+from models.uc_models import DataModel
 
 
 class StatePanel(QWidget):
-    def __init__(self, model: UCFormModel):
+    def __init__(self, model: DataModel):
         super().__init__()
 
         self.model = model
@@ -30,7 +30,7 @@ class StatePanel(QWidget):
         self.energy.setValidator(QDoubleValidator())
         # Safely convert text to float, handling invalid inputs
         self.energy.textChanged.connect(
-            lambda t: self.update_model("energy", self.safe_float(t))
+            lambda t: self.update_model("energy", self.safe_float(t, "energy"))
         )
         form_layout.addRow("Energy:", self.energy)
 
@@ -58,7 +58,7 @@ class StatePanel(QWidget):
         self.name.setText(self.model["name"])
         self.energy.setText(str(self.model["energy"]))
 
-    def safe_float(self, text):
+    def safe_float(self, text, key):
         """Safely convert text to float, handling invalid inputs"""
         try:
             if text:
@@ -66,4 +66,4 @@ class StatePanel(QWidget):
             return 0.0
         except ValueError:
             # Return the previous value or 0.0 if conversion fails
-            return self.model.get("energy", 0.0)
+            return self.model.get(key, 0.0)

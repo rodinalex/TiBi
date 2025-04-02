@@ -1,8 +1,7 @@
 import uuid
 from PySide6.QtCore import QObject, Signal
 from src.tibitypes import UnitCell, Site, State, BasisVector
-from ui.UC.tree_view import TreeViewPanel
-
+from ui.UC.tree_view_panel import TreeViewPanel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
@@ -148,7 +147,7 @@ class UCController(QObject):
         name = self.state_panel.model["name"]
         energy = self.state_panel.model["energy"]
 
-        updated_state = State(name, energy)
+        updated_state = State(name, energy, selected_state)
 
         self.unit_cells[selected_uc].sites[selected_site].states[
             selected_state

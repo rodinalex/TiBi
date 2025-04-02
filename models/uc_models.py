@@ -10,8 +10,9 @@ class DataModelSignals(QObject):
     updated = Signal()
 
 
-# Models for form fields
-class UCFormModel(UserDict):
+# General Data Model used for storing dataclasses as dictionaries.
+# Emits a signal when updated to trigger synchronization
+class DataModel(UserDict):
     # Initialize as a regular dictionary + data signals
     def __init__(self, *args, **kwargs):
         self.signals = DataModelSignals()
@@ -19,19 +20,20 @@ class UCFormModel(UserDict):
 
     def __setitem__(self, key, val):
         previous = self.get(key)  # Get the existing value.
-        super().__setitem__(key, val)  # Set the value.
         if val != previous:  # There is a change.
+            super().__setitem__(key, val)  # Set the value.
             self.signals.updated.emit()  # Emit the signal.
-            # print(f"Setting {key} to {val}")
 
     def update(self, d):
         """Update multiple values and emit the signal only once"""
+        changed = False
         for key, val in d.items():
             previous = self.get(key)
-            super().__setitem__(key, val)
-
-        # Emit the signal once after all updates
-        self.signals.updated.emit()
+            if val != previous:
+                super().__setitem__(key, val)
+                changed = True  # Track if anything changed
+        if changed:
+            self.signals.updated.emit()
 
 
 # # Model for state coupling
