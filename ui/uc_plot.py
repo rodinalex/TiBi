@@ -8,7 +8,7 @@ import pyqtgraph.opengl as gl
 class UnitCellPlot(QWidget):
     """
     A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
-    
+
     Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
     The visualization supports rotation, zooming, and site selection. The coordinate
     system shows the unit cell basis vectors and a reference grid.
@@ -72,13 +72,13 @@ class UnitCellPlot(QWidget):
     def set_unit_cell(self, unit_cell):
         """
         Set or update the unit cell to be displayed in the 3D view.
-        
+
         This method handles the complete process of updating the visualization:
         1. Stores the new unit cell reference
         2. Clears existing visualization elements
         3. Creates new visualization elements for the unit cell and its sites
         4. Updates the coordinate axes to match the unit cell basis vectors
-        
+
         Args:
             unit_cell: The UnitCell object to display, or None to clear the view
         """
@@ -101,7 +101,7 @@ class UnitCellPlot(QWidget):
     def _update_axes(self):
         """
         Update the coordinate axes to match the unit cell basis vectors.
-        
+
         Creates visual representations of the unit cell's basis vectors as colored
         lines extending from the origin. This helps users understand the orientation
         and dimensions of the unit cell in 3D space.
@@ -130,7 +130,7 @@ class UnitCellPlot(QWidget):
     def _plot_unit_cell(self):
         """
         Plot the unit cell as a wireframe parallelepiped.
-        
+
         Creates a 3D wireframe representation of the unit cell using the three
         basis vectors to define the shape. The parallelepiped is drawn as a set
         of 12 lines connecting 8 vertices in 3D space.
@@ -193,7 +193,7 @@ class UnitCellPlot(QWidget):
     def _plot_sites(self):
         """
         Plot all sites (atoms) within the unit cell as spheres.
-        
+
         Each site is represented as a colored sphere positioned according to
         its fractional coordinates within the unit cell. Sites can be selected
         and will change color when highlighted. Each sphere stores a reference
@@ -230,12 +230,12 @@ class UnitCellPlot(QWidget):
     def select_site(self, site_id):
         """
         Highlight a selected site by changing its color.
-        
+
         This method is called when a site is selected, either from clicking on it
         in the 3D view or from selecting it in the tree view. It changes the color
         of the selected site to make it stand out and resets any previously selected
         site back to the default color.
-        
+
         Args:
             site_id: The UUID of the site to highlight, or None to deselect all sites
         """

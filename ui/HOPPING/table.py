@@ -7,58 +7,13 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 import numpy as np
 
 
-class IntegerTableItem(QTableWidgetItem):
-    """
-    Custom QTableWidgetItem that enforces integer values.
-    
-    Displays integers centered in the cell and ensures that any text entered
-    by the user is converted to an integer. If conversion fails, defaults to 0.
-    """
-    def __init__(self, value=0):
-        super().__init__(str(value))
-        self.setTextAlignment(Qt.AlignCenter)
-    
-    def data(self, role):
-        if role == Qt.EditRole or role == Qt.DisplayRole:
-            try:
-                return int(self.text())
-            except ValueError:
-                return 0
-        return super().data(role)
-
-
-class FloatTableItem(QTableWidgetItem):
-    """
-    Custom QTableWidgetItem that enforces floating-point values.
-    
-    Displays floats centered in the cell and ensures that any text entered
-    by the user is converted to a float. If conversion fails, defaults to 0.0.
-    """
-    def __init__(self, value=0.0):
-        super().__init__(str(value))
-        self.setTextAlignment(Qt.AlignCenter)
-    
-    def data(self, role):
-        if role == Qt.EditRole or role == Qt.DisplayRole:
-            try:
-                return float(self.text())
-            except ValueError:
-                return 0.0
-        return super().data(role)
-
-
 class HoppingTable(QWidget):
-    """
-    Table widget for editing hopping parameters between quantum states.
-    
-    Allows adding, removing, and editing hopping terms with displacement vectors (d₁,d₂,d₃)
-    and complex amplitudes (real and imaginary parts). Uses custom table items to enforce
-    proper data types (integer for displacements, float for amplitudes).
-    """
+
+    hoppings_saved = Signal()
 
     def __init__(self):
         super().__init__()
@@ -112,14 +67,14 @@ class HoppingTable(QWidget):
             row_index = self.hopping_table.rowCount()
             self.hopping_table.insertRow(row_index)
 
-            self.hopping_table.setItem(row_index, 0, IntegerTableItem(d1))
-            self.hopping_table.setItem(row_index, 1, IntegerTableItem(d2))
-            self.hopping_table.setItem(row_index, 2, IntegerTableItem(d3))
+            self.hopping_table.setItem(row_index, 0, QTableWidgetItem(str(d1)))
+            self.hopping_table.setItem(row_index, 1, QTableWidgetItem(str(d2)))
+            self.hopping_table.setItem(row_index, 2, QTableWidgetItem(str(d3)))
             self.hopping_table.setItem(
-                row_index, 3, FloatTableItem(np.real(amplitude))
+                row_index, 3, QTableWidgetItem(str(np.real(amplitude)))
             )
             self.hopping_table.setItem(
-                row_index, 4, FloatTableItem(np.imag(amplitude))
+                row_index, 4, QTableWidgetItem(str(np.imag(amplitude)))
             )
 
     def add_empty_row(self):
@@ -128,11 +83,11 @@ class HoppingTable(QWidget):
         self.hopping_table.insertRow(row_index)
 
         # Pre-fill with default values
-        self.hopping_table.setItem(row_index, 0, IntegerTableItem(0))
-        self.hopping_table.setItem(row_index, 1, IntegerTableItem(0))
-        self.hopping_table.setItem(row_index, 2, IntegerTableItem(0))
-        self.hopping_table.setItem(row_index, 3, FloatTableItem(0.0))
-        self.hopping_table.setItem(row_index, 4, FloatTableItem(0.0))
+        self.hopping_table.setItem(row_index, 0, QTableWidgetItem("0"))
+        self.hopping_table.setItem(row_index, 1, QTableWidgetItem("0"))
+        self.hopping_table.setItem(row_index, 2, QTableWidgetItem("0"))
+        self.hopping_table.setItem(row_index, 3, QTableWidgetItem("0.0"))
+        self.hopping_table.setItem(row_index, 4, QTableWidgetItem("0.0"))
 
     def remove_selected_coupling(self):
         """Remove selected row(s) from the table"""

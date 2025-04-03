@@ -22,12 +22,13 @@ class MainWindow(QMainWindow):
     """
     Main application window that sets up the overall UI layout and coordinates interactions
     between different components.
-    
+
     The layout consists of three columns:
     - Left column: Unit cell hierarchy tree view and property panels
     - Middle column: 3D visualization and hopping matrix
     - Right column: Computation options (placeholder for future functionality)
     """
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TiBi")
@@ -79,11 +80,11 @@ class MainWindow(QMainWindow):
     def update_plot(self, unit_cell_id):
         """
         Update the 3D plot with the selected unit cell.
-        
+
         This method is called when a unit cell is selected in the tree view.
         It retrieves the selected unit cell from the model and passes it to the
         3D visualization panel for display.
-        
+
         Args:
             unit_cell_id: UUID of the selected unit cell
         """
@@ -97,11 +98,11 @@ class MainWindow(QMainWindow):
     def highlight_site(self, unit_cell_id, site_id):
         """
         Highlight the selected site in the 3D plot.
-        
+
         This method is called when a site is selected in the tree view.
         It first updates the plot to show the correct unit cell, then tells
         the plot to highlight the specific site with a different color.
-        
+
         Args:
             unit_cell_id: UUID of the unit cell containing the site
             site_id: UUID of the site to highlight
