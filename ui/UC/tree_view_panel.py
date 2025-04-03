@@ -74,12 +74,8 @@ class TreeViewPanel(QWidget):
         as user data, allowing for easy retrieval during selection events.
 
         Note: For better performance, prefer the more specific update methods:
-        - update_unit_cell()
-        - update_site()
-        - update_state()
-        - remove_unit_cell()
-        - remove_site()
-        - remove_state()
+        - update_tree_item()
+        - remove_tree_ite ()
         """
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
@@ -119,37 +115,16 @@ class TreeViewPanel(QWidget):
             The QStandardItem if found, None otherwise
         """
         if item_type == "unit_cell":
-            # Search unit cells (top level)
-            for row in range(self.root_node.rowCount()):
-                item = self.root_node.child(row)
-                if item.data(Qt.UserRole + 2) == item_id:
-                    return item
+            parent = self.root_node
+        elif item_type == "site":
+            parent = self.find_item_by_id(parent_id, "unit_cell")
+        else:
+            parent = self.find_item_by_id(parent_id, "site", grandparent_id)
 
-        elif item_type == "site" and parent_id is not None:
-            # Find the parent unit cell first
-            unit_cell_item = self.find_item_by_id(parent_id, "unit_cell")
-            if unit_cell_item:
-                # Search sites under the unit cell
-                for row in range(unit_cell_item.rowCount()):
-                    item = unit_cell_item.child(row)
-                    if item.data(Qt.UserRole + 2) == item_id:
-                        return item
-
-        elif (
-            item_type == "state"
-            and parent_id is not None
-            and grandparent_id is not None
-        ):
-            # Find the parent site first
-            site_item = self.find_item_by_id(parent_id, "site", grandparent_id)
-            if site_item:
-                # Search states under the site
-                for row in range(site_item.rowCount()):
-                    item = site_item.child(row)
-                    if item.data(Qt.UserRole + 2) == item_id:
-                        return item
-
-        return None
+        for row in range(parent.rowCount()):
+            item = parent.child(row)
+            if item.data(Qt.UserRole + 2) == item_id:
+                return item
 
     def update_tree_item(self, uc_id, site_id=None, state_id=None):
         """
