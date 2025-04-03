@@ -6,6 +6,19 @@ import uuid
 
 
 class TreeViewPanel(QWidget):
+    """
+    Tree view panel for displaying and selecting the unit cell hierarchy.
+    
+    This panel displays a hierarchical tree showing unit cells, their sites,
+    and the states at each site. It handles selection events and emits signals
+    when different types of nodes are selected, allowing other components to
+    respond appropriately.
+    
+    The tree has three levels:
+    1. Unit cells
+    2. Sites within a unit cell
+    3. States within a site
+    """
     # Define signals
     none_selected = Signal()
     unit_cell_selected = Signal(uuid.UUID)
@@ -49,7 +62,16 @@ class TreeViewPanel(QWidget):
         self.refresh_tree()
 
     def refresh_tree(self):
-        """Rebuild the tree from the current data model"""
+        """
+        Rebuild the entire tree from the current data model.
+        
+        This method clears the existing tree and reconstructs it based on the
+        current state of the unit_cells dictionary. It creates a hierarchical
+        structure with three levels: unit cells, sites, and states.
+        
+        Each node in the tree stores the corresponding object, type, and UUID
+        as user data, allowing for easy retrieval during selection events.
+        """
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
 
@@ -88,7 +110,20 @@ class TreeViewPanel(QWidget):
 
     # Determine which node is being selected and fire the appropriate Signal
     def on_selection_changed(self, selected, deselected):
-        """Handle tree item selection"""
+        """
+        Handle tree item selection events and emit appropriate signals.
+        
+        This method is called when the user selects a node in the tree view.
+        It determines what type of node was selected (unit cell, site, or state)
+        and emits the corresponding signal with the relevant IDs.
+        
+        For site and state selections, it retrieves the parent and grandparent
+        IDs to provide the complete context of the selection.
+        
+        Args:
+            selected: The newly selected items
+            deselected: The previously selected items that are now deselected
+        """
         indexes = selected.indexes()
         if not indexes:
             self.none_selected.emit()

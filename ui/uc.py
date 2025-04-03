@@ -10,6 +10,17 @@ from controllers.uc_cotroller import UCController
 
 
 class UnitCellUI(QWidget):
+    """
+    Main UI component for managing unit cells, sites, and states.
+    
+    This widget combines a tree view of the unit cell hierarchy with dynamically
+    swappable panels for editing properties of the selected tree node. It handles
+    the data models and coordinates interactions between the tree view and detail panels.
+    
+    The UI consists of two main parts:
+    1. Tree view panel showing the hierarchy of unit cells, sites, and states
+    2. Form panel that changes depending on what is selected in the tree
+    """
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
@@ -89,17 +100,30 @@ class UnitCellUI(QWidget):
         self.form_stack.setCurrentWidget(self.info_label)
 
     def show_unit_cell_panel(self, unit_cell_id):
-        """Display the unit cell panel and load selected unit cell data"""
-        # Save the current selection
-
+        """
+        Display the unit cell panel and load selected unit cell data.
+        
+        This method is called when a unit cell is selected in the tree view.
+        It updates the selection model, populates the unit cell form with data
+        from the selected unit cell, and switches the stacked widget to show
+        the unit cell editing panel.
+        
+        The reactive data binding system ensures that when the model is updated,
+        the UI components are automatically refreshed to match.
+        
+        Args:
+            unit_cell_id: UUID of the selected unit cell
+        """
+        # Update the current selection state
         self.selection["unit_cell"] = unit_cell_id
         self.selection["site"] = None
         self.selection["state"] = None
 
+        # Get the selected unit cell
         uc = self.unit_cells[unit_cell_id]
 
-        # Update the form model
-        # The corresponding update function to update the fields is fired automatically.
+        # Update the form model with all unit cell properties
+        # The form will automatically update due to the reactive data binding
         self.unit_cell_model.update(
             {
                 "name": uc.name,
@@ -117,7 +141,7 @@ class UnitCellUI(QWidget):
                 "v3periodic": uc.v3.is_periodic,
             }
         )
-        # Set the appropriate panel
+        # Switch to the unit cell panel
         self.form_stack.setCurrentWidget(self.unit_cell_panel)
 
     def show_site_panel(self, unit_cell_id, site_id):

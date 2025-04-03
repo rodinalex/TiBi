@@ -12,6 +12,16 @@ from models.uc_models import DataModel
 
 
 class SitePanel(QWidget):
+    """
+    Form panel for editing site properties.
+    
+    This panel provides a form interface for editing a site's properties:
+    - Name
+    - Fractional coordinates (c1, c2, c3) within the unit cell
+    
+    It includes validation to ensure coordinates are valid floating-point numbers
+    and uses reactive data binding to keep the UI and model in sync.
+    """
     def __init__(self, model: DataModel):
         super().__init__()
 

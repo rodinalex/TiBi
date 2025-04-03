@@ -67,13 +67,20 @@ class HoppingPanel(QWidget):
         layout.addWidget(self.panel_stack)
 
     def set_uc_id(self, uc_id: uuid.UUID):
+        """
+        Called when a unit cell is selected in the tree view.
+        Updates the hopping panel to display the selected unit cell's states and hoppings.
+        
+        Args:
+            uc_id: UUID of the selected unit cell, or None if no unit cell is selected
+        """
         self.uc_id = uc_id
-        # Deselect states when any selection occurs in the tree (even if within the same unit cell).
-        # Clear the hopping data also and redraw the couplings table
+        # Reset state selections and clear existing data
         self.selected_state1 = None
         self.selected_state2 = None
-        self.hopping_data = None
-        # Clearing the table because no site pair is selected
+        self.hopping_data = None  # Will be populated with the unit cell's hopping data if a valid selection exists
+        
+        # Clear the table since no state pair is selected yet
         self.table.set_state_coupling([])
         self.table.table_title.setText("")
         # If no unit cell selected, hide the panels
@@ -95,27 +102,70 @@ class HoppingPanel(QWidget):
                 self.panel_stack.setCurrentWidget(self.panel)
 
     def handle_pair_selection(self, s1, s2):
-        self.selected_state1 = s1[2]
-        self.selected_state2 = s2[2]
+        """
+        Called when a button is clicked in the hopping matrix.
+        Updates the table to display hopping terms between the selected states.
+        
+        Args:
+            s1: Tuple of (site_name, state_name, state_id) for the destination state (row)
+            s2: Tuple of (site_name, state_name, state_id) for the source state (column)
+        """
+        # Store the UUIDs of the selected states
+        self.selected_state1 = s1[2]  # Destination state UUID
+        self.selected_state2 = s2[2]  # Source state UUID
+        
+        # Retrieve existing hopping terms between these states, or empty list if none exist
         state_coupling = self.hopping_data.get(
             (self.selected_state1, self.selected_state2), []
         )
+        
+        # Update the table with the retrieved hopping terms
         self.table.set_state_coupling(state_coupling)
+        
+        # Update the table title to show the selected states (source → destination)
         self.table.table_title.setText(f"{s2[0]}.{s2[1]} → {s1[0]}.{s1[1]}")
 
     def save_couplings(self):
-        """Extract table data and store it in self.table.state_coupling"""
+        """
+        Extracts data from the hopping table and saves it to the unit cell model.
+        
+        Reads all rows from the table, converting cell values to the appropriate types:
+        - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
+        - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
+        
+        If any conversion fails (invalid input), the operation is aborted and
+        the table is reset to the last valid state.
+        """
         new_couplings = []
-        for row in range(self.table.hopping_table.rowCount()):
-            d1 = int(self.table.hopping_table.item(row, 0).text())
-            d2 = int(self.table.hopping_table.item(row, 1).text())
-            d3 = int(self.table.hopping_table.item(row, 2).text())
-            re = float(self.table.hopping_table.item(row, 3).text())
-            im = float(self.table.hopping_table.item(row, 4).text())
+        try:
+            # Extract values from each row in the table
+            for row in range(self.table.hopping_table.rowCount()):
+                # Get displacement vector components (integers)
+                d1 = int(self.table.hopping_table.item(row, 0).text())
+                d2 = int(self.table.hopping_table.item(row, 1).text())
+                d3 = int(self.table.hopping_table.item(row, 2).text())
+                
+                # Get complex amplitude components (floats)
+                re = float(self.table.hopping_table.item(row, 3).text())
+                im = float(self.table.hopping_table.item(row, 4).text())
 
-            amplitude = np.complex128(re + im * 1j)
+                # Create the complex amplitude
+                amplitude = np.complex128(re + im * 1j)
 
-            new_couplings.append(((d1, d2, d3), amplitude))
-        self.hopping_data[(self.selected_state1, self.selected_state2)] = new_couplings
-        self.unit_cells[self.uc_id].hoppings = self.hopping_data
-        self.table.set_state_coupling(new_couplings)
+                # Add this coupling to the new list
+                new_couplings.append(((d1, d2, d3), amplitude))
+                
+            # Update the data model with the new couplings
+            self.hopping_data[(self.selected_state1, self.selected_state2)] = new_couplings
+            
+            # Update the unit cell model (important for persistence)
+            self.unit_cells[self.uc_id].hoppings = self.hopping_data
+            
+            # Refresh the table with the new data
+            self.table.set_state_coupling(new_couplings)
+            
+            # Update the matrix to show the new coupling state
+            self.matrix.refresh_matrix()
+        except ValueError:
+            # If there's an error parsing inputs, revert to the last valid state
+            self.table.set_state_coupling(self.hopping_data.get((self.selected_state1, self.selected_state2), []))

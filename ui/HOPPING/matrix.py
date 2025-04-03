@@ -11,7 +11,16 @@ from PySide6.QtCore import Qt, Signal
 
 
 class HoppingMatrix(QWidget):
-    # A Signal notifying which pair of states is being selected for coupling modification
+    """
+    A grid of buttons representing possible hopping connections between quantum states.
+    
+    Each button in the grid represents a possible hopping between two states.
+    The rows represent the destination states and columns represent the source states.
+    Buttons are colored differently based on whether a hopping exists or not.
+    """
+    
+    # Signal emitted when a button is clicked, carrying the source and destination state info
+    # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
     button_clicked = Signal(object, object)
 
     def __init__(self, hopping_data):
@@ -55,11 +64,16 @@ class HoppingMatrix(QWidget):
         self.refresh_matrix()
 
     def refresh_matrix(self):
+        """
+        Refreshes the entire matrix grid by removing all existing buttons and recreating them.
+        Updates button colors based on whether hoppings exist between states.
+        """
         # Clear existing widgets in grid layout
         while self.grid_layout.count():
             item = self.grid_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+                
         # Configure grid layout to center the content
         self.grid_layout.setAlignment(Qt.AlignCenter)
 
@@ -91,10 +105,11 @@ class HoppingMatrix(QWidget):
                 # (columns multiply annihilation operators, rows multiply creation)
                 btn.setToolTip(f"{state2[0]}.{state2[1]} → {state1[0]}.{state1[1]}")
 
-                # Button click can only be bound to a function with no arguments.
-                # The bound function itself emits a button_clicked signal that carries
-                # the states corrsponding to the appropriate grid entry
-                # Use lambda with default args to capture correct ii,jj values
+                # Button click handler implementation:
+                # 1. Qt buttons can only connect to argumentless functions
+                # 2. We use a lambda with default arguments to capture the current ii,jj values
+                # 3. When button is clicked, the lambda emits a signal with the source and destination states
+                # 4. This approach avoids the "closure capture" problem with lambda in loops
                 btn.clicked.connect(
                     lambda checked=False, row=ii, col=jj: self.button_clicked.emit(
                         self.states[row], self.states[col]
@@ -103,11 +118,6 @@ class HoppingMatrix(QWidget):
 
                 self.grid_layout.addWidget(btn, ii, jj)
                 self.buttons[(ii, jj)] = btn
-        # Force update the layout
-        # self.content_widget.setLayout(self.grid_layout)
-        # self.content_widget.update()
-        # self.update()
-
         # Update button colors based on existing hoppings
 
         self.refresh_button_colors()
