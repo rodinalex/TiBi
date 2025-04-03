@@ -6,10 +6,16 @@ import pyqtgraph.opengl as gl
 
 
 class UnitCellPlot(QWidget):
-    """A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support."""
+    """
+    A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
+    
+    Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
+    The visualization supports rotation, zooming, and site selection. The coordinate
+    system shows the unit cell basis vectors and a reference grid.
+    """
 
     # Signals for interacting with other components
-    site_selected = Signal(object)  # Emits site ID when clicked
+    site_selected = Signal(object)  # Emits site ID when a site is selected
 
     def __init__(self):
         super().__init__()
@@ -64,7 +70,18 @@ class UnitCellPlot(QWidget):
         layout.addWidget(self.view)
 
     def set_unit_cell(self, unit_cell):
-        """Set or update the unit cell to be displayed."""
+        """
+        Set or update the unit cell to be displayed in the 3D view.
+        
+        This method handles the complete process of updating the visualization:
+        1. Stores the new unit cell reference
+        2. Clears existing visualization elements
+        3. Creates new visualization elements for the unit cell and its sites
+        4. Updates the coordinate axes to match the unit cell basis vectors
+        
+        Args:
+            unit_cell: The UnitCell object to display, or None to clear the view
+        """
         self.unit_cell = unit_cell
         # Clear previous plot items except axes and grid
         for key, item in list(self.plot_items.items()):
@@ -82,7 +99,13 @@ class UnitCellPlot(QWidget):
         self._update_axes()
 
     def _update_axes(self):
-        """Update the coordinate axes to match the unit cell basis vectors."""
+        """
+        Update the coordinate axes to match the unit cell basis vectors.
+        
+        Creates visual representations of the unit cell's basis vectors as colored
+        lines extending from the origin. This helps users understand the orientation
+        and dimensions of the unit cell in 3D space.
+        """
         if not self.unit_cell:
             return
 
@@ -105,7 +128,13 @@ class UnitCellPlot(QWidget):
             self.plot_items[f"axis_{ii}"] = axis
 
     def _plot_unit_cell(self):
-        """Plot the unit cell parallelepiped."""
+        """
+        Plot the unit cell as a wireframe parallelepiped.
+        
+        Creates a 3D wireframe representation of the unit cell using the three
+        basis vectors to define the shape. The parallelepiped is drawn as a set
+        of 12 lines connecting 8 vertices in 3D space.
+        """
         if not self.unit_cell:
             return
 
@@ -162,7 +191,14 @@ class UnitCellPlot(QWidget):
         self.plot_items["unit_cell_edges"] = unit_cell_edges
 
     def _plot_sites(self):
-        """Plot all sites within the unit cell."""
+        """
+        Plot all sites (atoms) within the unit cell as spheres.
+        
+        Each site is represented as a colored sphere positioned according to
+        its fractional coordinates within the unit cell. Sites can be selected
+        and will change color when highlighted. Each sphere stores a reference
+        to its corresponding site ID for interaction.
+        """
         if not self.unit_cell or not self.unit_cell.sites:
             return
 
@@ -192,14 +228,24 @@ class UnitCellPlot(QWidget):
             self.plot_items[f"site_{site_id}"] = sphere
 
     def select_site(self, site_id):
-        """Highlight a selected site."""
-        # Reset previously selected site
+        """
+        Highlight a selected site by changing its color.
+        
+        This method is called when a site is selected, either from clicking on it
+        in the 3D view or from selecting it in the tree view. It changes the color
+        of the selected site to make it stand out and resets any previously selected
+        site back to the default color.
+        
+        Args:
+            site_id: The UUID of the site to highlight, or None to deselect all sites
+        """
+        # Reset previously selected site to default color
         if self.selected_site:
             prev_sphere = self.plot_items.get(f"site_{self.selected_site}")
             if prev_sphere:
                 prev_sphere.setColor(self.site_color)
 
-        # Highlight new selected site
+        # Highlight new selected site with the highlight color
         self.selected_site = site_id
         if site_id:
             sphere = self.plot_items.get(f"site_{site_id}")

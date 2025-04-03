@@ -10,11 +10,24 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDoubleValidator
-from models.uc_models import UCFormModel
+from models.uc_models import DataModel
 
 
 class UnitCellPanel(QWidget):
-    def __init__(self, model: UCFormModel):
+    """
+    Form panel for editing unit cell properties.
+
+    This panel provides a form interface for editing a unit cell's properties:
+    - Name
+    - Three basis vectors (v1, v2, v3) with x, y, z components
+    - Periodicity flags for each basis vector
+
+    The panel uses a reactive data binding approach, where UI components are
+    automatically updated when the model changes, and model updates trigger
+    appropriate UI refreshes.
+    """
+
+    def __init__(self, model: DataModel):
         super().__init__()
 
         self.model = model
