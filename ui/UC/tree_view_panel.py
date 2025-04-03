@@ -71,6 +71,14 @@ class TreeViewPanel(QWidget):
         
         Each node in the tree stores the corresponding object, type, and UUID
         as user data, allowing for easy retrieval during selection events.
+        
+        Note: For better performance, prefer the more specific update methods:
+        - update_unit_cell()
+        - update_site()
+        - update_state()
+        - remove_unit_cell()
+        - remove_site()
+        - remove_state()
         """
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
@@ -95,6 +103,192 @@ class TreeViewPanel(QWidget):
                         state, item_type="state", item_id=state_id
                     )
                     site_item.appendRow(state_item)
+                    
+    def find_item_by_id(self, item_id, item_type, parent_id=None, grandparent_id=None):
+        """
+        Find a tree item by its ID and type.
+        
+        Args:
+            item_id: UUID of the item to find
+            item_type: Type of the item ("unit_cell", "site", or "state")
+            parent_id: UUID of the parent item (for site or state)
+            grandparent_id: UUID of the grandparent item (for state)
+            
+        Returns:
+            The QStandardItem if found, None otherwise
+        """
+        if item_type == "unit_cell":
+            # Search unit cells (top level)
+            for row in range(self.root_node.rowCount()):
+                item = self.root_node.child(row)
+                if item.data(Qt.UserRole + 2) == item_id:
+                    return item
+                    
+        elif item_type == "site" and parent_id is not None:
+            # Find the parent unit cell first
+            unit_cell_item = self.find_item_by_id(parent_id, "unit_cell")
+            if unit_cell_item:
+                # Search sites under the unit cell
+                for row in range(unit_cell_item.rowCount()):
+                    item = unit_cell_item.child(row)
+                    if item.data(Qt.UserRole + 2) == item_id:
+                        return item
+                        
+        elif item_type == "state" and parent_id is not None and grandparent_id is not None:
+            # Find the parent site first
+            site_item = self.find_item_by_id(parent_id, "site", grandparent_id)
+            if site_item:
+                # Search states under the site
+                for row in range(site_item.rowCount()):
+                    item = site_item.child(row)
+                    if item.data(Qt.UserRole + 2) == item_id:
+                        return item
+                        
+        return None
+        
+    def update_unit_cell(self, uc_id):
+        """
+        Update or add a unit cell in the tree without rebuilding the entire tree.
+        
+        Args:
+            uc_id: UUID of the unit cell to update
+        """
+        if uc_id not in self.unit_cells:
+            return
+            
+        unit_cell = self.unit_cells[uc_id]
+        
+        # Check if the unit cell already exists in the tree
+        unit_cell_item = self.find_item_by_id(uc_id, "unit_cell")
+        
+        if unit_cell_item:
+            # Update existing unit cell
+            unit_cell_item.setText(unit_cell.name)
+            unit_cell_item.setData(unit_cell, Qt.UserRole)
+        else:
+            # Add new unit cell
+            unit_cell_item = self.create_tree_item(
+                unit_cell, item_type="unit_cell", item_id=uc_id
+            )
+            self.root_node.appendRow(unit_cell_item)
+            
+    def update_site(self, uc_id, site_id):
+        """
+        Update or add a site in the tree without rebuilding the entire tree.
+        
+        Args:
+            uc_id: UUID of the parent unit cell
+            site_id: UUID of the site to update
+        """
+        if uc_id not in self.unit_cells or site_id not in self.unit_cells[uc_id].sites:
+            return
+            
+        unit_cell = self.unit_cells[uc_id]
+        site = unit_cell.sites[site_id]
+        
+        # Get the parent unit cell item
+        unit_cell_item = self.find_item_by_id(uc_id, "unit_cell")
+        if not unit_cell_item:
+            # Parent doesn't exist, add it first
+            self.update_unit_cell(uc_id)
+            unit_cell_item = self.find_item_by_id(uc_id, "unit_cell")
+            if not unit_cell_item:
+                return  # Still can't find parent, abort
+        
+        # Check if the site already exists in the tree
+        site_item = self.find_item_by_id(site_id, "site", uc_id)
+        
+        if site_item:
+            # Update existing site
+            site_item.setText(site.name)
+            site_item.setData(site, Qt.UserRole)
+        else:
+            # Add new site
+            site_item = self.create_tree_item(
+                site, item_type="site", item_id=site_id
+            )
+            unit_cell_item.appendRow(site_item)
+            
+    def update_state(self, uc_id, site_id, state_id):
+        """
+        Update or add a state in the tree without rebuilding the entire tree.
+        
+        Args:
+            uc_id: UUID of the grandparent unit cell
+            site_id: UUID of the parent site
+            state_id: UUID of the state to update
+        """
+        if (uc_id not in self.unit_cells or 
+            site_id not in self.unit_cells[uc_id].sites or
+            state_id not in self.unit_cells[uc_id].sites[site_id].states):
+            return
+            
+        unit_cell = self.unit_cells[uc_id]
+        site = unit_cell.sites[site_id]
+        state = site.states[state_id]
+        
+        # Get the parent site item
+        site_item = self.find_item_by_id(site_id, "site", uc_id)
+        if not site_item:
+            # Parent doesn't exist, add it first
+            self.update_site(uc_id, site_id)
+            site_item = self.find_item_by_id(site_id, "site", uc_id)
+            if not site_item:
+                return  # Still can't find parent, abort
+        
+        # Check if the state already exists in the tree
+        state_item = self.find_item_by_id(state_id, "state", site_id, uc_id)
+        
+        if state_item:
+            # Update existing state
+            state_item.setText(state.name)
+            state_item.setData(state, Qt.UserRole)
+        else:
+            # Add new state
+            state_item = self.create_tree_item(
+                state, item_type="state", item_id=state_id
+            )
+            site_item.appendRow(state_item)
+            
+    def remove_unit_cell(self, uc_id):
+        """
+        Remove a unit cell from the tree.
+        
+        Args:
+            uc_id: UUID of the unit cell to remove
+        """
+        unit_cell_item = self.find_item_by_id(uc_id, "unit_cell")
+        if unit_cell_item:
+            self.root_node.removeRow(unit_cell_item.row())
+            
+    def remove_site(self, uc_id, site_id):
+        """
+        Remove a site from the tree.
+        
+        Args:
+            uc_id: UUID of the parent unit cell
+            site_id: UUID of the site to remove
+        """
+        unit_cell_item = self.find_item_by_id(uc_id, "unit_cell")
+        if unit_cell_item:
+            site_item = self.find_item_by_id(site_id, "site", uc_id)
+            if site_item:
+                unit_cell_item.removeRow(site_item.row())
+                
+    def remove_state(self, uc_id, site_id, state_id):
+        """
+        Remove a state from the tree.
+        
+        Args:
+            uc_id: UUID of the grandparent unit cell
+            site_id: UUID of the parent site
+            state_id: UUID of the state to remove
+        """
+        site_item = self.find_item_by_id(site_id, "site", uc_id)
+        if site_item:
+            state_item = self.find_item_by_id(state_id, "state", site_id, uc_id)
+            if state_item:
+                site_item.removeRow(state_item.row())
 
     def create_tree_item(self, item, item_type, item_id):
         """Create a QStandardItem for tree with metadata"""

@@ -88,8 +88,8 @@ class UCController(QObject):
         new_cell = UnitCell(name, v1, v2, v3)
         self.unit_cells[new_cell.id] = new_cell
         
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_unit_cell(new_cell.id)
         self.tree_view.select_unit_cell(new_cell.id)
 
     def save_unit_cell(self):
@@ -126,8 +126,8 @@ class UCController(QObject):
         current_uc.v3.z = float(self.unit_cell_panel.model["v3z"])
         current_uc.v3.is_periodic = self.unit_cell_panel.model["v3periodic"]
 
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_unit_cell(selected_uc_id)
         self.tree_view.select_unit_cell(selected_uc_id)
 
     def delete_unit_cell(self):
@@ -143,8 +143,8 @@ class UCController(QObject):
         # Remove the unit cell from the model
         del self.unit_cells[selected_uc_id]
         
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective removal instead of full refresh)
+        self.tree_view.remove_unit_cell(selected_uc_id)
 
     def add_site(self):
         """
@@ -165,8 +165,8 @@ class UCController(QObject):
         current_uc = self.unit_cells[selected_uc_id]
         current_uc.sites[new_site.id] = new_site
         
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_site(selected_uc_id, new_site.id)
         self.tree_view.select_site(selected_uc_id, new_site.id)
 
     def save_site(self):
@@ -189,8 +189,8 @@ class UCController(QObject):
         current_site.c2 = float(self.site_panel.model["c2"])
         current_site.c3 = float(self.site_panel.model["c3"])
 
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_site(selected_uc_id, selected_site_id)
         self.tree_view.select_site(selected_uc_id, selected_site_id)
 
     def delete_site(self):
@@ -208,8 +208,8 @@ class UCController(QObject):
         # Remove the site from the unit cell
         del self.unit_cells[selected_uc_id].sites[selected_site_id]
         
-        # Update UI and select the parent unit cell
-        self.tree_view.refresh_tree()
+        # Update UI and select the parent unit cell (selective removal instead of full refresh)
+        self.tree_view.remove_site(selected_uc_id, selected_site_id)
         self.tree_view.select_unit_cell(selected_uc_id)
 
     def add_state(self):
@@ -231,8 +231,8 @@ class UCController(QObject):
         current_site = current_uc.sites[selected_site_id]
         current_site.states[new_state.id] = new_state
         
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_state(selected_uc_id, selected_site_id, new_state.id)
         self.tree_view.select_state(selected_uc_id, selected_site_id, new_state.id)
 
     def save_state(self):
@@ -255,8 +255,8 @@ class UCController(QObject):
         current_state.name = self.state_panel.model["name"]
         current_state.energy = self.state_panel.model["energy"]
 
-        # Update UI
-        self.tree_view.refresh_tree()
+        # Update UI (selective update instead of full refresh)
+        self.tree_view.update_state(selected_uc_id, selected_site_id, selected_state_id)
         self.tree_view.select_state(selected_uc_id, selected_site_id, selected_state_id)
 
     def delete_state(self):
@@ -278,6 +278,6 @@ class UCController(QObject):
             .states[selected_state_id]
         )
         
-        # Update UI and select the parent site
-        self.tree_view.refresh_tree()
+        # Update UI and select the parent site (selective removal instead of full refresh)
+        self.tree_view.remove_state(selected_uc_id, selected_site_id, selected_state_id)
         self.tree_view.select_site(selected_uc_id, selected_site_id)
