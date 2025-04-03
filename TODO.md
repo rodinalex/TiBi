@@ -24,17 +24,10 @@ In the present version, the GUI consists of 3 columns
 
 - ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
 include the unit cell as a parallelepiped, as well as any of the sites found inside of it
-- Add hopping machinery:
-  - For a given cell containing the total of N states (across all sites), Hoppings will be described using an N by N matrix. Each matrix element will be a "list" (or some variation of it) of displacement vectors (since hoppings can connect different unit cells of the crystal) and the corresponding amplitude.
-  - The hoppings matrix will be added to the UnitCell datatype. The size of the matrix should change dynamically as the contents of the unit cell change
-  - The hopping panel at the bottom should include a scrollable "matrix" of N by N square buttons. Clicking each button opens a table (in the same bottom panel somewhere) that shows all the hoppings between the states corresponding to the row and the column of the clicked button. The color of the button should reflect whether there are any hoppings between the states or not. The table could have 4 columns corresponding to displacement along basis vectors 1, 2, and 3, as well as the complex hopping amplitude. To preserve the Hermitian nature of the hopping matrix, when adding a hopping to element (j,k), a corresponding hopping should be added to (k,j) with displacements reversed and the amplitude as the complex conjugate.
-  - Selecting a unit cell from the tree brings up the relevant hopping matrix panel
-  - Rows and columns should have stationary labels so that when the user scrolls along the matrix, they can still see which states they are working with. Perhaps have the labels for the columns be vertical to preserve space.
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
 
 ## Reminders
 - Check that the displacements are unique in coupling table
-- Add the title to the table to show which states are being coupled
 - Add button coloring
 - Add "Hermitian Check"
 <!-- 

@@ -74,8 +74,6 @@ class HoppingPanel(QWidget):
         self.panel_stack.addWidget(self.panel)
         layout.addWidget(self.panel_stack)
 
-        # UI Signals
-
     def set_uc_id(self, uc_id: uuid.UUID):
         self.uc_id = uc_id
         # Deselect states when any selection occurs in the tree (even if within the same unit cell).
@@ -85,6 +83,7 @@ class HoppingPanel(QWidget):
         self.hopping_data = None
         # Clearing the table because no site pair is selected
         self.table.set_state_coupling([])
+        self.table.table_title.setText("")
         # If no unit cell selected, hide the panels
         if uc_id == None:
             self.panel_stack.setCurrentWidget(self.info_label)
@@ -93,7 +92,7 @@ class HoppingPanel(QWidget):
             # Get the states and their "info" from inside the unit cell
             new_states, new_info = get_states(uc)
             # Use the states and the info to construct the hopping matrix grid
-            self.matrix.set_states(new_states, new_info)
+            self.matrix.set_states(new_info)
             # Extract the hopping data
             self.hopping_data = DataModel(uc.hoppings)
             # If there are no states in the unit cell, hide the panels
