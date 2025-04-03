@@ -13,15 +13,40 @@ from PySide6.QtCore import Qt, Signal
 class HoppingMatrix(QWidget):
     """
     A grid of buttons representing possible hopping connections between quantum states.
-    
+
     Each button in the grid represents a possible hopping between two states.
     The rows represent the destination states and columns represent the source states.
     Buttons are colored differently based on whether a hopping exists or not.
     """
-    
+
     # Signal emitted when a button is clicked, carrying the source and destination state info
     # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
     button_clicked = Signal(object, object)
+
+    # Button style constants
+    BUTTON_STYLE_DEFAULT = """
+        QPushButton {
+            background-color: #e0e0e0;
+            border: 1px solid #aaaaaa;
+            border-radius: 3px;
+        }
+        QPushButton:hover {
+            background-color: #d0d0d0;
+            border: 1px solid #777777;
+        }
+    """
+
+    BUTTON_STYLE_HAS_HOPPING = """
+        QPushButton {
+            background-color: #4a86e8;
+            border: 1px solid #2a56b8;
+            border-radius: 3px;
+        }
+        QPushButton:hover {
+            background-color: #3a76d8;
+            border: 1px solid #1a46a8;
+        }
+    """
 
     def __init__(self, hopping_data):
         super().__init__()
@@ -73,7 +98,7 @@ class HoppingMatrix(QWidget):
             item = self.grid_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-                
+
         # Configure grid layout to center the content
         self.grid_layout.setAlignment(Qt.AlignCenter)
 
@@ -83,19 +108,8 @@ class HoppingMatrix(QWidget):
             for jj in range(len(self.states)):
                 btn = QPushButton("")
                 btn.setFixedSize(20, 20)
-                btn.setStyleSheet(
-                    """
-                    QPushButton {
-                        background-color: #e0e0e0;
-                        border: 1px solid #aaaaaa;
-                        border-radius: 3px;
-                    }
-                    QPushButton:hover {
-                        background-color: #d0d0d0;
-                        border: 1px solid #777777;
-                    }
-                """
-                )
+                # Apply the default style (no hopping initially)
+                self.apply_button_style(btn, False)
 
                 # Set tooltip to show both states when hovering.
                 state1 = self.states[ii]
@@ -122,44 +136,37 @@ class HoppingMatrix(QWidget):
 
         self.refresh_button_colors()
 
+    def apply_button_style(self, button, has_hopping):
+        """
+        Apply the appropriate style to a button based on whether it has hoppings.
+
+        Args:
+            button: The QPushButton to style
+            has_hopping: Boolean indicating whether the button represents a connection with hoppings
+        """
+        style = (
+            self.BUTTON_STYLE_HAS_HOPPING if has_hopping else self.BUTTON_STYLE_DEFAULT
+        )
+        button.setStyleSheet(style)
+
     def refresh_button_colors(self):
-        """Updates button colors based on whether hoppings exist."""
+        """
+        Updates button colors based on whether hoppings exist between states.
+
+        Iterates through all buttons in the grid and applies the appropriate style
+        based on whether there are any hopping terms defined for the corresponding
+        state pair.
+        """
         if not self.buttons:
             return
 
         # Iterate through all buttons and update their colors
         for pos, btn in self.buttons.items():
             ii, jj = pos
-            s1 = self.states[ii][2]
-            s2 = self.states[jj][2]
+            s1 = self.states[ii][2]  # Destination state ID
+            s2 = self.states[jj][2]  # Source state ID
             hop = self.hopping_data.get((s1, s2), [])
-            if hop != []:
-                # Has hoppings - blue
-                btn.setStyleSheet(
-                    """
-                    QPushButton {
-                        background-color: #4a86e8;
-                        border: 1px solid #2a56b8;
-                        border-radius: 3px;
-                    }
-                    QPushButton:hover {
-                        background-color: #3a76d8;
-                        border: 1px solid #1a46a8;
-                    }
-                """
-                )
-            else:
-                # No hoppings - gray
-                btn.setStyleSheet(
-                    """
-                    QPushButton {
-                        background-color: #e0e0e0;
-                        border: 1px solid #aaaaaa;
-                        border-radius: 3px;
-                    }
-                    QPushButton:hover {
-                        background-color: #d0d0d0;
-                        border: 1px solid #777777;
-                    }
-                """
-                )
+            has_hopping = hop != []
+
+            # Apply the appropriate style based on hopping existence
+            self.apply_button_style(btn, has_hopping)
