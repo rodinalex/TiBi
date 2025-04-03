@@ -86,6 +86,7 @@ class TreeViewPanel(QWidget):
 
         return tree_item
 
+    # Determine which node is being selected and fire the appropriate Signal
     def on_selection_changed(self, selected, deselected):
         """Handle tree item selection"""
         indexes = selected.indexes()
@@ -114,6 +115,7 @@ class TreeViewPanel(QWidget):
         else:  # unit_cell
             self.unit_cell_selected.emit(item_id)
 
+    # Programmatically select a unit cell--useful when deleting or addint items
     def select_unit_cell(self, unit_cell_id):
         """Selects a unit cell by its ID after tree refresh"""
         for row in range(self.root_node.rowCount()):
@@ -123,6 +125,7 @@ class TreeViewPanel(QWidget):
                 self.tree_view.setCurrentIndex(index)
                 return
 
+    # Programmatically select a site cell--useful when deleting or addint items
     def select_site(self, unit_cell_id, site_id):
         """Select a site in the tree view."""
         for row in range(self.root_node.rowCount()):
@@ -139,6 +142,7 @@ class TreeViewPanel(QWidget):
                         )
                         return  # Stop after selecting
 
+    # Programmatically select a state --useful when deleting or addint items
     def select_state(self, unit_cell_id, site_id, state_id):
         """Select a state in the tree view."""
         for row in range(self.root_node.rowCount()):

@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.unit_cell_plot = UnitCellPlot()
 
         # Initialize the hopping panel
-        self.hopping = HoppingPanel(self.uc.unit_cells, self.uc.tree_view_panel)
+        self.hopping = HoppingPanel(self.uc.unit_cells)
 
         # Main Layout
         main_view = QWidget()
@@ -53,18 +53,10 @@ class MainWindow(QMainWindow):
         # Connect signals to update the plot when unit cell or site is selected
         self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
         self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
-
-        # Set up hopping controller with a reference to the same selection dictionary
-        # self.hopping_controller = HoppingController(
-        #     unit_cells=self.uc.unit_cells,
-        #     hopping_matrix=self.hopping_matrix,
-        #     selection=self.uc.selection,
-        # )
-
-        # Connect signals for hopping management
-        # self.uc.tree_view_panel.unit_cell_selected.connect(
-        #     self.hopping_controller.update_hopping_view
-        # )
+        # Notify the hopping block when the selection changes
+        self.uc.selection.signals.updated.connect(
+            lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
+        )
 
         right_layout.addWidget(PlaceholderWidget("Computation Options"))
         right_layout.addWidget(PlaceholderWidget("Computation Input"))
@@ -97,26 +89,6 @@ class MainWindow(QMainWindow):
                     self.unit_cell_plot.select_site(site_id)
         except Exception as e:
             print(f"Error highlighting site: {e}")
-
-    def debug_selection(self, unit_cell_id):
-        pass
-        # """Debug method to verify selection is updated"""
-        # print("DEBUG: Unit cell selected in MainWindow:", unit_cell_id)
-        # print("DEBUG: Current selection in self.uc.selection:", self.uc.selection)
-
-        # # Also check if this unit cell has states
-        # if unit_cell_id in self.uc.unit_cells:
-        #     uc = self.uc.unit_cells[unit_cell_id]
-        #     print(f"DEBUG: Unit cell {uc.name} has {len(uc.sites)} sites")
-
-        #     # Count total states
-        #     total_states = 0
-        #     for site_id, site in uc.sites.items():
-        #         states_in_site = len(site.states)
-        #         total_states += states_in_site
-        #         print(f"DEBUG: Site {site.name} has {states_in_site} states")
-
-        # print(f"DEBUG: Total states in unit cell: {total_states}")
 
 
 class PlaceholderWidget(QWidget):

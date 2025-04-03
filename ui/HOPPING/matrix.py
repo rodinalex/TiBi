@@ -7,15 +7,22 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from src.tibitypes import State
 
 
 class HoppingMatrix(QWidget):
+    # A Signal notifying which pair of states is being selected for coupling modification
+    button_clicked = Signal(State, State)
+
     def __init__(self):
         super().__init__()
+        # Store tuples of (site_name, state_name, state_id).
+        # We do NOT need the complete state structure here
         self.states = []
-        self.state_info = []  # Store tuples of (site_name, state_name, state_id)
+
+        self.state_info = []
+        # Keep all the grid buttons as we will change their appearance based on the coupling
         self.buttons = {}
         layout = QVBoxLayout(self)
 
@@ -40,7 +47,7 @@ class HoppingMatrix(QWidget):
         self.refresh_matrix()
 
     def set_states(self, new_states, new_info):
-        """Setter for states that also refreshes the matrix"""
+        """Setter for states that also refreshes the matrix. Occurs on every tree selection"""
         self.states = new_states
         self.state_info = new_info
         self.refresh_matrix()
@@ -74,19 +81,25 @@ class HoppingMatrix(QWidget):
                 """
                 )
 
-                # Set tooltip to show both states when hovering
+                # Set tooltip to show both states when hovering.
                 state1_info = self.state_info[ii]
                 state2_info = self.state_info[jj]
+                # Show the state and site names.
+                # From second quantization, the hopping goes FROM column INTO row
+                # (columns multiply annihilation operators, rows multiply creation)
                 btn.setToolTip(
-                    f"{state1_info[0]}.{state1_info[1]} → {state2_info[0]}.{state2_info[1]}"
+                    f"{state2_info[0]}.{state2_info[1]} → {state1_info[0]}.{state1_info[1]}"
                 )
 
+                # Button click can be bound to a function with no arguments.
+                # The bound function itself emits a button_clicked signal that carries
+                # the states corrsponding to the appropriate grid entry
                 # Use lambda with default args to capture correct i,j values
-                # btn.clicked.connect(
-                #     lambda checked=False, row=i, col=j: self.show_hopping_details(
-                #         row, col
-                #     )
-                # )
+                btn.clicked.connect(
+                    lambda checked=False, row=ii, col=jj: self.button_clicked.emit(
+                        self.states[row], self.states[col]
+                    )
+                )
 
                 self.grid_layout.addWidget(btn, ii, jj)
                 self.buttons[(ii, jj)] = btn

@@ -10,9 +10,6 @@ from ui.UC.state_panel import StatePanel
 class UCController(QObject):
     """Controller to manage UnitCells, Sites, and States with tree view integration."""
 
-    # Define signals
-    model_updated = Signal()
-
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],  # All the unit cells in the system
@@ -58,41 +55,32 @@ class UCController(QObject):
 
     def save_unit_cell(self):
         # Store current selection
-        selected_uc = self.selection["unit_cell"]
+        selected_uc_id = self.selection["unit_cell"]
+        current_uc = self.unit_cells[selected_uc_id]
 
-        name = self.unit_cell_panel.model["name"]
+        current_uc.name = self.unit_cell_panel.model["name"]
 
-        v1 = BasisVector(
-            float(self.unit_cell_panel.model["v1x"]),
-            float(self.unit_cell_panel.model["v1y"]),
-            float(self.unit_cell_panel.model["v1z"]),
-            self.unit_cell_panel.model["v1periodic"],
-        )
-        v2 = BasisVector(
-            float(self.unit_cell_panel.model["v2x"]),
-            float(self.unit_cell_panel.model["v2y"]),
-            float(self.unit_cell_panel.model["v2z"]),
-            self.unit_cell_panel.model["v2periodic"],
-        )
+        current_uc.v1.x = float(self.unit_cell_panel.model["v1x"])
+        current_uc.v1.y = float(self.unit_cell_panel.model["v1y"])
+        current_uc.v1.z = float(self.unit_cell_panel.model["v1z"])
+        current_uc.v1.periodic = self.unit_cell_panel.model["v1periodic"]
 
-        v3 = BasisVector(
-            float(self.unit_cell_panel.model["v3x"]),
-            float(self.unit_cell_panel.model["v3y"]),
-            float(self.unit_cell_panel.model["v3z"]),
-            self.unit_cell_panel.model["v3periodic"],
-        )
+        current_uc.v2.x = float(self.unit_cell_panel.model["v2x"])
+        current_uc.v2.y = float(self.unit_cell_panel.model["v2y"])
+        current_uc.v2.z = float(self.unit_cell_panel.model["v2z"])
+        current_uc.v2.periodic = self.unit_cell_panel.model["v2periodic"]
 
-        sites = self.unit_cell_panel.model["sites"]
+        current_uc.v3.x = float(self.unit_cell_panel.model["v3x"])
+        current_uc.v3.y = float(self.unit_cell_panel.model["v3y"])
+        current_uc.v3.z = float(self.unit_cell_panel.model["v3z"])
+        current_uc.v3.periodic = self.unit_cell_panel.model["v3periodic"]
 
-        updated_uc = UnitCell(name, v1, v2, v3, sites, selected_uc)
-
-        self.unit_cells[selected_uc] = updated_uc
         self.tree_view.refresh_tree()
-        self.tree_view.select_unit_cell(selected_uc)
+        self.tree_view.select_unit_cell(selected_uc_id)
 
     def delete_unit_cell(self):
-        selected_uc = self.selection["unit_cell"]
-        del self.unit_cells[selected_uc]
+        selected_uc_id = self.selection["unit_cell"]
+        del self.unit_cells[selected_uc_id]
         self.tree_view.refresh_tree()
 
     def add_site(self):
@@ -102,63 +90,71 @@ class UCController(QObject):
         c3 = 0
         new_site = Site(name, c1, c2, c3)
 
-        unit_cell = self.unit_cells[self.selection["unit_cell"]]
-        unit_cell.sites[new_site.id] = new_site
+        selected_uc_id = self.selection["unit_cell"]
+        current_uc = self.unit_cells[selected_uc_id]
+
+        current_uc.sites[new_site.id] = new_site
         self.tree_view.refresh_tree()
-        self.tree_view.select_site(unit_cell.id, new_site.id)
+        self.tree_view.select_site(selected_uc_id, new_site.id)
 
     def save_site(self):
         # Store the current selection
-        selected_uc = self.selection["unit_cell"]
-        selected_site = self.selection["site"]
-        name = self.site_panel.model["name"]
-        c1 = float(self.site_panel.model["c1"])
-        c2 = float(self.site_panel.model["c2"])
-        c3 = float(self.site_panel.model["c3"])
-        states = self.site_panel.model["states"]
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        current_uc = self.unit_cells[selected_uc_id]
+        current_site = current_uc.sites[selected_site_id]
 
-        updated_site = Site(name, c1, c2, c3, states, selected_site)
+        current_site.name = self.site_panel.model["name"]
+        current_site.c1 = float(self.site_panel.model["c1"])
+        current_site.c2 = float(self.site_panel.model["c2"])
+        current_site.c3 = float(self.site_panel.model["c3"])
 
-        self.unit_cells[selected_uc].sites[selected_site] = updated_site
         self.tree_view.refresh_tree()
-        self.tree_view.select_site(selected_uc, selected_site)
+        self.tree_view.select_site(selected_uc_id, selected_site_id)
 
     def delete_site(self):
-        selected_uc = self.selection["unit_cell"]
-        selected_site = self.selection["site"]
-        del self.unit_cells[selected_uc].sites[selected_site]
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        del self.unit_cells[selected_uc_id].sites[selected_site_id]
         self.tree_view.refresh_tree()
-        self.tree_view.select_unit_cell(selected_uc)
+        self.tree_view.select_unit_cell(selected_uc_id)
 
     def add_state(self):
         name = "New State"
         energy = 0
         new_state = State(name, energy)
-        unit_cell = self.unit_cells[self.selection["unit_cell"]]
-        site = unit_cell.sites[self.selection["site"]]
-        site.states[new_state.id] = new_state
+
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        current_uc = self.unit_cells[selected_uc_id]
+        current_site = current_uc.sites[selected_site_id]
+
+        current_site.states[new_state.id] = new_state
         self.tree_view.refresh_tree()
-        self.tree_view.select_state(unit_cell.id, site.id, new_state.id)
+        self.tree_view.select_state(selected_uc_id, selected_site_id, new_state.id)
 
     def save_state(self):
-        selected_uc = self.selection["unit_cell"]
-        selected_site = self.selection["site"]
-        selected_state = self.selection["state"]
-        name = self.state_panel.model["name"]
-        energy = self.state_panel.model["energy"]
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        selected_state_id = self.selection["state"]
+        current_uc = self.unit_cells[selected_uc_id]
+        current_site = current_uc.sites[selected_site_id]
+        current_state = current_site.states[selected_state_id]
 
-        updated_state = State(name, energy, selected_state)
+        current_state.name = self.state_panel.model["name"]
+        current_state.energy = self.state_panel.model["energy"]
 
-        self.unit_cells[selected_uc].sites[selected_site].states[
-            selected_state
-        ] = updated_state
         self.tree_view.refresh_tree()
-        self.tree_view.select_state(selected_uc, selected_site, selected_state)
+        self.tree_view.select_state(selected_uc_id, selected_site_id, selected_state_id)
 
     def delete_state(self):
-        selected_uc = self.selection["unit_cell"]
-        selected_site = self.selection["site"]
-        selected_state = self.selection["state"]
-        del self.unit_cells[selected_uc].sites[selected_site].states[selected_state]
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        selected_state_id = self.selection["state"]
+        del (
+            self.unit_cells[selected_uc_id]
+            .sites[selected_site_id]
+            .states[selected_state_id]
+        )
         self.tree_view.refresh_tree()
-        self.tree_view.select_site(selected_uc, selected_site)
+        self.tree_view.select_site(selected_uc_id, selected_site_id)

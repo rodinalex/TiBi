@@ -33,7 +33,10 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
 
 ## Reminders
-- Add Hoppings field to the UC model
+- Check that the displacements are unique in coupling table
+- Add the title to the table to show which states are being coupled
+- Add button coloring
+- Add "Hermitian Check"
 <!-- 
 ## Core Functionality
 

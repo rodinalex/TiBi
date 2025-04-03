@@ -1,4 +1,4 @@
-from collections import UserDict
+from collections import UserDict, UserList
 from PySide6.QtCore import QObject, Signal
 from typing import Tuple
 from src.tibitypes import State
@@ -36,17 +36,56 @@ class DataModel(UserDict):
             self.signals.updated.emit()
 
 
-# # Model for state coupling
-# class StateCoupling(UserDict):
-#     # Initialize as a regular dictionary + data signals
-#     def __init__(self, *args, **kwargs):
-#         self.signals = DataModelSignals()
-#         super().__init__(*args, **kwargs)
+class ListModelSignals(QObject):
+    updated = Signal()
 
-#     def __setitem__(self, key: Tuple[State, State], amps: list[np.complex128]):
-#         s1, s2 = key
-#         previous = self.get(key, [])  # Get the existing value.
-#         super().__setitem__((s1, s2), amps)
-#         super().__setitem__((s2, s1), [np.conj(x) for x in amps])
-#         if amps != previous:
-#             self.signals.updated.emit()
+
+# General List Mode used for storing data
+# Emits a signal when updated to trigger synchronization
+class ListModel(UserList):
+    def __init__(self, *args):
+        self.signals = ListModelSignals()
+        super().__init__(*args)
+
+    def append(self, item):
+        super().append(item)
+        print("Signal emitted!")  # Debugging
+        self.signals.updated.emit()
+
+    def extend(self, iterable):
+        super().extend(iterable)
+        self.signals.updated.emit()
+
+    def insert(self, index, item):
+        super().insert(index, item)
+        self.signals.updated.emit()
+
+    def remove(self, item):
+        super().remove(item)
+        self.signals.updated.emit()
+
+    def pop(self, index=-1):
+        item = super().pop(index)
+        self.signals.updated.emit()
+        return item  # Ensure pop still returns the removed element
+
+    def clear(self):
+        super().clear()
+        self.signals.updated.emit()
+
+    def __setitem__(self, index, item):
+        if self[index] != item:
+            super().__setitem__(index, item)
+            self.signals.updated.emit()
+
+    def __delitem__(self, index):
+        super().__delitem__(index)
+        self.signals.updated.emit()
+
+    def sort(self, *args, **kwargs):
+        super().sort(*args, **kwargs)
+        self.signals.updated.emit()
+
+    def reverse(self):
+        super().reverse()
+        self.signals.updated.emit()

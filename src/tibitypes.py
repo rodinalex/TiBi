@@ -20,14 +20,6 @@ class State:
 
 
 @dataclass
-class Hopping:
-    s1: State
-    s2: State
-    displacement: Tuple[int, int, int]
-    amplitude: np.complex128
-
-
-@dataclass
 class Site:
     name: str
     c1: float
@@ -44,7 +36,9 @@ class UnitCell:
     v2: BasisVector
     v3: BasisVector
     sites: dict[uuid.UUID, Site] = field(default_factory=dict)
-    hoppings: dict[Tuple[State, State], np.complex128] = field(default_factory=dict)
+    hoppings: dict[
+        Tuple[uuid.UUID, uuid.UUID], list[Tuple[Tuple[int, int, int], np.complex128]]
+    ] = field(default_factory=dict)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 

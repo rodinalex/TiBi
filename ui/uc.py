@@ -15,7 +15,7 @@ class UnitCellUI(QWidget):
         super().__init__()
         layout = QVBoxLayout(self)
 
-        # Initialize the data models
+        # Initialize the data models for fields and tick boxes
         self.unit_cell_model = DataModel(
             name="New Unit Cell",
             v1x=1.0,
@@ -30,15 +30,13 @@ class UnitCellUI(QWidget):
             v1periodic=False,
             v2periodic=False,
             v3periodic=False,
-            sites={},
-            # ADD HOPPING FIELD FOR THE MODEL
         )
 
-        self.site_model = DataModel(name="New Site", c1=0.0, c2=0.0, c3=0.0, states={})
+        self.site_model = DataModel(name="New Site", c1=0.0, c2=0.0, c3=0.0)
         self.state_model = DataModel(name="New State", energy=0.0)
 
         # Track currently selected items
-        self.selection = dict(unit_cell=None, site=None, state=None)
+        self.selection = DataModel(unit_cell=None, site=None, state=None)
 
         # Existing unit cells
         self.unit_cells = {}
@@ -118,7 +116,6 @@ class UnitCellUI(QWidget):
                 "v1periodic": uc.v1.is_periodic,
                 "v2periodic": uc.v2.is_periodic,
                 "v3periodic": uc.v3.is_periodic,
-                "sites": uc.sites,
             }
         )
         # Set the appropriate panel
@@ -141,7 +138,6 @@ class UnitCellUI(QWidget):
                 "c1": site.c1,
                 "c2": site.c2,
                 "c3": site.c3,
-                "states": site.states,
             }
         )
         # Set the appropriate panel
