@@ -12,15 +12,16 @@ from controllers.uc_cotroller import UCController
 class UnitCellUI(QWidget):
     """
     Main UI component for managing unit cells, sites, and states.
-    
+
     This widget combines a tree view of the unit cell hierarchy with dynamically
     swappable panels for editing properties of the selected tree node. It handles
     the data models and coordinates interactions between the tree view and detail panels.
-    
+
     The UI consists of two main parts:
     1. Tree view panel showing the hierarchy of unit cells, sites, and states
     2. Form panel that changes depending on what is selected in the tree
     """
+
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
@@ -102,15 +103,15 @@ class UnitCellUI(QWidget):
     def show_unit_cell_panel(self, unit_cell_id):
         """
         Display the unit cell panel and load selected unit cell data.
-        
+
         This method is called when a unit cell is selected in the tree view.
         It updates the selection model, populates the unit cell form with data
         from the selected unit cell, and switches the stacked widget to show
         the unit cell editing panel.
-        
+
         The reactive data binding system ensures that when the model is updated,
         the UI components are automatically refreshed to match.
-        
+
         Args:
             unit_cell_id: UUID of the selected unit cell
         """

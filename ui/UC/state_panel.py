@@ -13,15 +13,16 @@ from models.uc_models import DataModel
 class StatePanel(QWidget):
     """
     Form panel for editing quantum state properties.
-    
+
     This panel provides a form interface for editing a quantum state's properties:
     - Name
     - Energy (in eV)
-    
+
     It includes validation for the energy field to ensure it's a valid
     floating-point number and uses reactive data binding to keep the UI
     and model in sync.
     """
+
     def __init__(self, model: DataModel):
         super().__init__()
 
