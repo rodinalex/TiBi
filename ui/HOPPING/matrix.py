@@ -8,21 +8,18 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt, Signal
-from src.tibitypes import State
-import uuid
-from typing import Tuple
 
 
 class HoppingMatrix(QWidget):
     # A Signal notifying which pair of states is being selected for coupling modification
     button_clicked = Signal(object, object)
 
-    def __init__(self):
+    def __init__(self, hopping_data):
         super().__init__()
         # Store tuples of (site_name, state_name, state_id).
         # We do NOT need the complete state structure here
         self.states = []
-
+        self.hopping_data = hopping_data
         # Keep all the grid buttons as we will change their appearance based on the coupling
         self.buttons = {}
         layout = QVBoxLayout(self)
@@ -50,6 +47,11 @@ class HoppingMatrix(QWidget):
     def set_states(self, new_states):
         """Setter for states that also refreshes the matrix. Occurs on every tree selection"""
         self.states = new_states
+        self.refresh_matrix()
+
+    def set_hopping_data(self, new_hopping_data):
+        """Setter for hopping data that also refreshes the matrix. Occurs on every tree selection"""
+        self.hopping_data = new_hopping_data
         self.refresh_matrix()
 
     def refresh_matrix(self):
@@ -106,47 +108,48 @@ class HoppingMatrix(QWidget):
         # self.content_widget.update()
         # self.update()
 
-    # Update button colors based on existing hoppings
+        # Update button colors based on existing hoppings
 
-    #     self.refresh_button_colors()
+        self.refresh_button_colors()
 
-    # def refresh_button_colors(self):
-    #     """Updates button colors based on whether hoppings exist."""
-    #     if not self.buttons:
-    #         return
+    def refresh_button_colors(self):
+        """Updates button colors based on whether hoppings exist."""
+        if not self.buttons:
+            return
 
-    #     # Iterate through all buttons and update their colors
-    #     for pos, btn in self.buttons.items():
-    #         i, j = pos
-
-
-#         if pos in self.hopping_data and self.hopping_data[pos]:
-#             # Has hoppings - blue
-#             btn.setStyleSheet(
-#                 """
-#                 QPushButton {
-#                     background-color: #4a86e8;
-#                     border: 1px solid #2a56b8;
-#                     border-radius: 3px;
-#                 }
-#                 QPushButton:hover {
-#                     background-color: #3a76d8;
-#                     border: 1px solid #1a46a8;
-#                 }
-#             """
-#             )
-#         else:
-#             # No hoppings - gray
-#             btn.setStyleSheet(
-#                 """
-#                 QPushButton {
-#                     background-color: #e0e0e0;
-#                     border: 1px solid #aaaaaa;
-#                     border-radius: 3px;
-#                 }
-#                 QPushButton:hover {
-#                     background-color: #d0d0d0;
-#                     border: 1px solid #777777;
-#                 }
-#             """
-#             )
+        # Iterate through all buttons and update their colors
+        for pos, btn in self.buttons.items():
+            ii, jj = pos
+            s1 = self.states[ii][2]
+            s2 = self.states[jj][2]
+            hop = self.hopping_data.get((s1, s2), [])
+            if hop != []:
+                # Has hoppings - blue
+                btn.setStyleSheet(
+                    """
+                    QPushButton {
+                        background-color: #4a86e8;
+                        border: 1px solid #2a56b8;
+                        border-radius: 3px;
+                    }
+                    QPushButton:hover {
+                        background-color: #3a76d8;
+                        border: 1px solid #1a46a8;
+                    }
+                """
+                )
+            else:
+                # No hoppings - gray
+                btn.setStyleSheet(
+                    """
+                    QPushButton {
+                        background-color: #e0e0e0;
+                        border: 1px solid #aaaaaa;
+                        border-radius: 3px;
+                    }
+                    QPushButton:hover {
+                        background-color: #d0d0d0;
+                        border: 1px solid #777777;
+                    }
+                """
+                )

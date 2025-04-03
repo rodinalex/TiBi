@@ -27,9 +27,9 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
 
 ## Reminders
-- Check that the displacements are unique in coupling table
+<!-- - Check that the displacements are unique in coupling table
 - Add button coloring
-- Add "Hermitian Check"
+- Add "Hermitian Check" -->
 <!-- 
 ## Core Functionality
 

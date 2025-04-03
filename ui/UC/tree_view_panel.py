@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
-from src.tibitypes import UnitCell, Site, State
+from src.tibitypes import UnitCell
 import uuid
 
 

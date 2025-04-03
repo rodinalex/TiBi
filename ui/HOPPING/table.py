@@ -3,8 +3,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QWidget,
-    QFrame,
-    QGridLayout,
     QLabel,
     QTableWidget,
     QTableWidgetItem,

@@ -56,3 +56,4 @@ class HoppingController(QObject):
             new_couplings.append(((d1, d2, d3), amplitude))
         self.hopping_data[(self.selected_state1, self.selected_state2)] = new_couplings
         self.table.set_state_coupling(new_couplings)
+        self.matrix.refresh_matrix()

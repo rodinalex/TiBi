@@ -7,7 +7,6 @@ from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
 
 from controllers.uc_cotroller import UCController
-from src.tibitypes import get_states
 
 
 class UnitCellUI(QWidget):

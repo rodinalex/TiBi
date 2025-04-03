@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
-    QLabel,
     QPushButton,
 )
 from PySide6.QtGui import QDoubleValidator
