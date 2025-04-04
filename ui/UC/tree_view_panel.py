@@ -247,10 +247,13 @@ class TreeViewPanel(QWidget):
         """
         if item_type == "unit_cell":
             parent = self.root_node
+            self.unit_cell_selected.emit(item_id)
         elif item_type == "site":
             parent = self.find_item_by_id(parent_id, "unit_cell")
+            self.site_selected.emit(parent_id, item_id)
         else:
             parent = self.find_item_by_id(parent_id, "site", grandparent_id)
+            self.state_selected.emit(grandparent_id, parent_id, item_id)
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
