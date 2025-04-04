@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 from PySide6.QtCore import Qt, Signal
+import numpy as np
 
 
 class HoppingMatrix(QWidget):
@@ -38,13 +39,24 @@ class HoppingMatrix(QWidget):
 
     BUTTON_STYLE_HAS_HOPPING = """
         QPushButton {
-            background-color: #4a86e8;
-            border: 1px solid #2a56b8;
+            background-color: #56b4e9;
+            border: 1px solid #0072b2;
             border-radius: 3px;
         }
         QPushButton:hover {
-            background-color: #3a76d8;
-            border: 1px solid #1a46a8;
+            background-color: #50a7d9;
+            border: 1px solid #015a8c;
+        }
+    """
+    BUTTON_STYLE_NONHERMITIAN = """
+        QPushButton {
+            background-color: #cc79a7;
+            border: 1px solid #d55c00;
+            border-radius: 3px;
+        }
+        QPushButton:hover {
+            background-color: #b86593;
+            border: 1px solid #b34e02;
         }
     """
 
@@ -136,17 +148,23 @@ class HoppingMatrix(QWidget):
 
         self.refresh_button_colors()
 
-    def apply_button_style(self, button, has_hopping):
+    def apply_button_style(self, button, has_hopping, hermitian=False):
         """
         Apply the appropriate style to a button based on whether it has hoppings.
 
         Args:
             button: The QPushButton to style
             has_hopping: Boolean indicating whether the button represents a connection with hoppings
+            hermitian: Boolean indicating whether the coupling is Hermitian
         """
-        style = (
-            self.BUTTON_STYLE_HAS_HOPPING if has_hopping else self.BUTTON_STYLE_DEFAULT
-        )
+        if not has_hopping:
+            style = self.BUTTON_STYLE_DEFAULT
+        else:
+            if hermitian:
+                style = self.BUTTON_STYLE_HAS_HOPPING
+            else:
+                style = self.BUTTON_STYLE_NONHERMITIAN
+
         button.setStyleSheet(style)
 
     def refresh_button_colors(self):
@@ -156,6 +174,9 @@ class HoppingMatrix(QWidget):
         Iterates through all buttons in the grid and applies the appropriate style
         based on whether there are any hopping terms defined for the corresponding
         state pair.
+
+        The pair is also checked against its transpose element to determine whether
+        the couplings are Hermitian.
         """
         if not self.buttons:
             return
@@ -165,8 +186,13 @@ class HoppingMatrix(QWidget):
             ii, jj = pos
             s1 = self.states[ii][2]  # Destination state ID
             s2 = self.states[jj][2]  # Source state ID
-            hop = self.hopping_data.get((s1, s2), [])
-            has_hopping = hop != []
+            hop = set(self.hopping_data.get((s1, s2), []))
+            hop_herm = set(self.hopping_data.get((s2, s1), []))
+            has_hopping = bool(hop)
 
+            hop_neg_conj = set(
+                ((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop
+            )
+            is_hermitian = hop_neg_conj == hop_herm
             # Apply the appropriate style based on hopping existence
-            self.apply_button_style(btn, has_hopping)
+            self.apply_button_style(btn, has_hopping, is_hermitian)
