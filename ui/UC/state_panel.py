@@ -5,8 +5,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QFormLayout,
     QPushButton,
+    QDoubleSpinBox,
 )
-from PySide6.QtGui import QDoubleValidator
 from models.uc_models import DataModel
 
 
@@ -33,15 +33,15 @@ class StatePanel(QWidget):
 
         # Name field
         self.name = QLineEdit()
-        self.name.textChanged.connect(lambda t: self.update_model("name", t))
+        self.name.editingFinished.connect(
+            lambda: self.update_model("name", self.name.text())
+        )
         form_layout.addRow("Name:", self.name)
 
         # Energy field
-        self.energy = QLineEdit()
-        self.energy.setValidator(QDoubleValidator())
-        # Safely convert text to float, handling invalid inputs
-        self.energy.textChanged.connect(
-            lambda t: self.update_model("energy", self.safe_float(t, "energy"))
+        self.energy = QDoubleSpinBox()
+        self.energy.editingFinished.connect(
+            lambda: self.update_model("energy", self.energy.value())
         )
         form_layout.addRow("Energy:", self.energy)
 
@@ -67,14 +67,4 @@ class StatePanel(QWidget):
     # Use the model to fill the form fields
     def update_ui(self):
         self.name.setText(self.model["name"])
-        self.energy.setText(str(self.model["energy"]))
-
-    def safe_float(self, text, key):
-        """Safely convert text to float, handling invalid inputs"""
-        try:
-            if text:
-                return float(text)
-            return 0.0
-        except ValueError:
-            # Return the previous value or 0.0 if conversion fails
-            return self.model.get(key, 0.0)
+        self.energy.setValue(self.model["energy"])

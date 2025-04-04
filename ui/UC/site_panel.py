@@ -4,11 +4,9 @@ from PySide6.QtWidgets import (
     QWidget,
     QLineEdit,
     QFormLayout,
-    QLabel,
     QPushButton,
     QDoubleSpinBox,
 )
-from PySide6.QtGui import QDoubleValidator
 from models.uc_models import DataModel
 
 
@@ -20,8 +18,7 @@ class SitePanel(QWidget):
     - Name
     - Fractional coordinates (c1, c2, c3) within the unit cell
 
-    It includes validation to ensure coordinates are valid floating-point numbers
-    and uses reactive data binding to keep the UI and model in sync.
+    It uses reactive data binding to keep the UI and model in sync.
     """
 
     def __init__(self, model: DataModel):
@@ -33,7 +30,9 @@ class SitePanel(QWidget):
         form_layout = QFormLayout()
 
         self.name = QLineEdit()
-        self.name.textChanged.connect(lambda t: self.update_model("name", t))
+        self.name.editingFinished.connect(
+            lambda: self.update_model("name", self.name.text())
+        )
         form_layout.addRow("Name:", self.name)
 
         # Coordinate fields
@@ -47,9 +46,15 @@ class SitePanel(QWidget):
             c.setDecimals(3)
 
         # Connect signals to update model
-        self.c1.valueChanged.connect(lambda t: self.update_model("c1", t))
-        self.c2.valueChanged.connect(lambda t: self.update_model("c2", t))
-        self.c3.valueChanged.connect(lambda t: self.update_model("c3", t))
+        self.c1.editingFinished.connect(
+            lambda: self.update_model("c1", self.c1.value())
+        )
+        self.c2.editingFinished.connect(
+            lambda: self.update_model("c2", self.c2.value())
+        )
+        self.c3.editingFinished.connect(
+            lambda: self.update_model("c3", self.c3.value())
+        )
 
         # Add form fields
         form_layout.addRow("c<sub>1</sub>:", self.c1)
