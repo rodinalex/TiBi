@@ -7,9 +7,9 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QPushButton,
+    QDoubleSpinBox,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QDoubleValidator
 from models.uc_models import DataModel
 
 
@@ -36,35 +36,33 @@ class UnitCellPanel(QWidget):
         form_layout = QFormLayout()
 
         self.name = QLineEdit()
-        self.name.textChanged.connect(lambda t: self.update_model("name", t))
+        self.name.editingFinished.connect(
+            lambda: self.update_model("name", self.name.text())
+        )
         form_layout.addRow("Name:", self.name)
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_row(v):
             layout = QHBoxLayout()  # Pack x, y, and z fields horizontally
-            x = QLineEdit()
-            y = QLineEdit()
-            z = QLineEdit()
+            x = QDoubleSpinBox()
+            y = QDoubleSpinBox()
+            z = QDoubleSpinBox()
             c = QCheckBox()
 
-            x.setValidator(QDoubleValidator())
-            y.setValidator(QDoubleValidator())
-            z.setValidator(QDoubleValidator())
+            for coord in [x, y, z]:
+                coord.setButtonSymbols(QDoubleSpinBox.NoButtons)
+                coord.setRange(-1e308, 1e308)
+                coord.setFixedWidth(40)
+                coord.setDecimals(3)
 
-            x.textChanged.connect(
-                lambda t: self.update_model(v + "x", self.safe_float(t, v + "x"))
-            )
-            y.textChanged.connect(
-                lambda t: self.update_model(v + "y", self.safe_float(t, v + "y"))
-            )
-            z.textChanged.connect(
-                lambda t: self.update_model(v + "z", self.safe_float(t, v + "z"))
-            )
+            # Connect signals to update model
+
+            x.editingFinished.connect(lambda: self.update_model(v + "x", x.value()))
+            y.editingFinished.connect(lambda: self.update_model(v + "y", y.value()))
+            z.editingFinished.connect(lambda: self.update_model(v + "z", z.value()))
             c.checkStateChanged.connect(
                 lambda t: self.update_model(v + "periodic", t == Qt.Checked)
             )
-            # IMPLEMENT editingFinished() signal from the text boxes
-            # z.editingFinished().connect()
 
             layout.addWidget(x)
             layout.addWidget(y)
@@ -107,27 +105,17 @@ class UnitCellPanel(QWidget):
     def update_ui(self):
         self.name.setText(self.model["name"])
 
-        self.v1[0].setText(str(self.model["v1x"]))
-        self.v1[1].setText(str(self.model["v1y"]))
-        self.v1[2].setText(str(self.model["v1z"]))
+        self.v1[0].setValue(self.model["v1x"])
+        self.v1[1].setValue(self.model["v1y"])
+        self.v1[2].setValue(self.model["v1z"])
         self.v1[3].setChecked(bool(self.model["v1periodic"]))
 
-        self.v2[0].setText(str(self.model["v2x"]))
-        self.v2[1].setText(str(self.model["v2y"]))
-        self.v2[2].setText(str(self.model["v2z"]))
+        self.v2[0].setValue(self.model["v2x"])
+        self.v2[1].setValue(self.model["v2y"])
+        self.v2[2].setValue(self.model["v2z"])
         self.v2[3].setChecked(bool(self.model["v2periodic"]))
 
-        self.v3[0].setText(str(self.model["v3x"]))
-        self.v3[1].setText(str(self.model["v3y"]))
-        self.v3[2].setText(str(self.model["v3z"]))
+        self.v3[0].setValue(self.model["v3x"])
+        self.v3[1].setValue(self.model["v3y"])
+        self.v3[2].setValue(self.model["v3z"])
         self.v3[3].setChecked(bool(self.model["v3periodic"]))
-
-    def safe_float(self, text, key):
-        """Safely convert text to float, handling invalid inputs"""
-        try:
-            if text:
-                return float(text)
-            return 0.0
-        except ValueError:
-            # Return the previous value or 0.0 if conversion fails
-            return self.model.get(key, 0.0)

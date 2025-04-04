@@ -60,9 +60,11 @@ class MainWindow(QMainWindow):
         mid_layout.addWidget(self.hopping, stretch=4)
         mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
 
-        # Connect signals to update the plot when unit cell or site is selected
+        # Connect signals to update the plot after tree selection
         self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
-        self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
+        self.uc.tree_view_panel.site_selected.connect(self.update_plot)
+        self.uc.tree_view_panel.state_selected.connect(self.update_plot)
+        # self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
@@ -77,17 +79,21 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_view)
 
-    def update_plot(self, unit_cell_id):
+    def update_plot(self, unit_cell_id, site_id=None, state_id=None):
         """
         Update the 3D plot with the selected unit cell.
+        Highlight the selected site in the 3D plot.
 
-        This method is called when a unit cell is selected in the tree view.
-        It retrieves the selected unit cell from the model and passes it to the
-        3D visualization panel for display.
+        This method is called after a selection in the tree view.
+        It first updates the plot to show the correct unit cell, then tells
+        the plot to highlight the specific site with a different color.
 
         Args:
-            unit_cell_id: UUID of the selected unit cell
+            unit_cell_id: UUID of the unit cell containing the site
+            site_id: UUID of the site to highlight
+            state: UUID of the state from the state selection signal
         """
+
         if unit_cell_id in self.uc.unit_cells:
             unit_cell = self.uc.unit_cells[unit_cell_id]
             self.unit_cell_plot.set_unit_cell(unit_cell)
@@ -95,22 +101,6 @@ class MainWindow(QMainWindow):
             # Clear the plot if unit cell doesn't exist
             self.unit_cell_plot.set_unit_cell(None)
 
-    def highlight_site(self, unit_cell_id, site_id):
-        """
-        Highlight the selected site in the 3D plot.
-
-        This method is called when a site is selected in the tree view.
-        It first updates the plot to show the correct unit cell, then tells
-        the plot to highlight the specific site with a different color.
-
-        Args:
-            unit_cell_id: UUID of the unit cell containing the site
-            site_id: UUID of the site to highlight
-        """
-        # First update the plot with the current unit cell
-        self.update_plot(unit_cell_id)
-
-        # Then highlight the specific site if it exists
         try:
             if unit_cell_id in self.uc.unit_cells:
                 unit_cell = self.uc.unit_cells[unit_cell_id]

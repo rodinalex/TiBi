@@ -53,12 +53,20 @@ class HoppingPanel(QWidget):
         )
         self.info_label.setAlignment(Qt.AlignCenter)
 
+        self.table_info_label = QLabel(
+            "Select a pair of states to view hopping parameters"
+        )
+
         # Main Panel
         self.panel = QWidget()
         panel_layout = QHBoxLayout(self.panel)
 
+        self.table_stack = QStackedWidget()
+        self.table_stack.addWidget(self.table_info_label)
+        self.table_stack.addWidget(self.table)
+
         panel_layout.addWidget(self.matrix, stretch=1)
-        panel_layout.addWidget(self.table, stretch=1)
+        panel_layout.addWidget(self.table_stack, stretch=1)
 
         # A stack that hides the main panel if no unit cell is selected/unit cell has no states
         self.panel_stack = QStackedWidget()
@@ -79,6 +87,9 @@ class HoppingPanel(QWidget):
         self.selected_state1 = None
         self.selected_state2 = None
         self.hopping_data = None  # Will be populated with the unit cell's hopping data if a valid selection exists
+        self.table_stack.setCurrentWidget(
+            self.table_info_label
+        )  # Hide the table until a pair is selected
 
         # Clear the table since no state pair is selected yet
         self.table.set_state_coupling([])
@@ -113,6 +124,7 @@ class HoppingPanel(QWidget):
         # Store the UUIDs of the selected states
         self.selected_state1 = s1[2]  # Destination state UUID
         self.selected_state2 = s2[2]  # Source state UUID
+        self.table_stack.setCurrentWidget(self.table)
 
         # Retrieve existing hopping terms between these states, or empty list if none exist
         state_coupling = self.hopping_data.get(
@@ -133,43 +145,44 @@ class HoppingPanel(QWidget):
         - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
         - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
 
-        If any conversion fails (invalid input), the operation is aborted and
-        the table is reset to the last valid state.
+        If the same triplet (d₁,d₂,d₃) appears more than once, the amplitudes are summed
         """
-        new_couplings = []
-        try:
-            # Extract values from each row in the table
-            for row in range(self.table.hopping_table.rowCount()):
-                # Get displacement vector components (integers)
-                d1 = int(self.table.hopping_table.item(row, 0).text())
-                d2 = int(self.table.hopping_table.item(row, 1).text())
-                d3 = int(self.table.hopping_table.item(row, 2).text())
+        new_couplings = {}
+        # Extract values from each row in the table
+        for row in range(self.table.hopping_table.rowCount()):
+            # Get displacement vector components (integers)
+            d1 = self.table.hopping_table.cellWidget(row, 0).value()
+            d2 = self.table.hopping_table.cellWidget(row, 1).value()
+            d3 = self.table.hopping_table.cellWidget(row, 2).value()
 
-                # Get complex amplitude components (floats)
-                re = float(self.table.hopping_table.item(row, 3).text())
-                im = float(self.table.hopping_table.item(row, 4).text())
+            # Get complex amplitude components (floats)
+            re = self.table.hopping_table.cellWidget(row, 3).value()
+            im = self.table.hopping_table.cellWidget(row, 4).value()
 
-                # Create the complex amplitude
-                amplitude = np.complex128(re + im * 1j)
+            # Create the complex amplitude
+            amplitude = np.complex128(re + im * 1j)
 
-                # Add this coupling to the new list
-                new_couplings.append(((d1, d2, d3), amplitude))
+            # Create a tuple for the displacement vector (d₁, d₂, d₃)
+            triplet = (d1, d2, d3)
+            # If the triplet already exists, merge amplitudes by adding the new amplitude
+            if triplet in new_couplings:
+                new_couplings[triplet] += amplitude
+            else:
+                new_couplings[triplet] = amplitude
 
-            # Update the data model with the new couplings
-            self.hopping_data[(self.selected_state1, self.selected_state2)] = (
-                new_couplings
-            )
+        # Convert the dictionary to the expected format of the list of tuples
+        merged_couplings = [
+            ((d1, d2, d3), amplitude)
+            for (d1, d2, d3), amplitude in new_couplings.items()
+        ]
+        # Update the data model with the new couplings
+        self.hopping_data[(self.selected_state1, self.selected_state2)] = (
+            merged_couplings
+        )
+        self.unit_cells[self.uc_id].hoppings = self.hopping_data
 
-            # Update the unit cell model (important for persistence)
-            self.unit_cells[self.uc_id].hoppings = self.hopping_data
+        # Refresh the table with the new data
+        self.table.set_state_coupling(merged_couplings)
 
-            # Refresh the table with the new data
-            self.table.set_state_coupling(new_couplings)
-
-            # Update the matrix to show the new coupling state
-            self.matrix.refresh_matrix()
-        except ValueError:
-            # If there's an error parsing inputs, revert to the last valid state
-            self.table.set_state_coupling(
-                self.hopping_data.get((self.selected_state1, self.selected_state2), [])
-            )
+        # Update the matrix to show the new coupling state
+        self.matrix.refresh_matrix()
