@@ -110,7 +110,18 @@ class HoppingTable(QWidget):
 
     def remove_selected_coupling(self):
         """Remove selected row(s) from the table"""
-        selected_rows = set(item.row() for item in self.hopping_table.selectedItems())
+        selected_rows = set()
 
+        # Get the selection model from the table
+        selection_model = self.hopping_table.selectionModel()
+
+        # Get the selected rows
+        selected_indexes = selection_model.selectedRows()
+
+        # Extract the row numbers from the selected indexes
+        for index in selected_indexes:
+            selected_rows.add(index.row())
+
+        # Remove the rows from the table in reverse order to avoid shifting issues
         for row in sorted(selected_rows, reverse=True):
             self.hopping_table.removeRow(row)
