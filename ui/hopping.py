@@ -133,43 +133,33 @@ class HoppingPanel(QWidget):
         - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
         - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
 
-        If any conversion fails (invalid input), the operation is aborted and
-        the table is reset to the last valid state.
         """
         new_couplings = []
-        try:
-            # Extract values from each row in the table
-            for row in range(self.table.hopping_table.rowCount()):
-                # Get displacement vector components (integers)
-                d1 = int(self.table.hopping_table.item(row, 0).text())
-                d2 = int(self.table.hopping_table.item(row, 1).text())
-                d3 = int(self.table.hopping_table.item(row, 2).text())
+        # Extract values from each row in the table
+        for row in range(self.table.hopping_table.rowCount()):
+            # Get displacement vector components (integers)
+            d1 = self.table.hopping_table.cellWidget(row, 0).value()
+            d2 = self.table.hopping_table.cellWidget(row, 1).value()
+            d3 = self.table.hopping_table.cellWidget(row, 2).value()
 
-                # Get complex amplitude components (floats)
-                re = float(self.table.hopping_table.item(row, 3).text())
-                im = float(self.table.hopping_table.item(row, 4).text())
+            # Get complex amplitude components (floats)
+            re = self.table.hopping_table.cellWidget(row, 3).value()
+            im = self.table.hopping_table.cellWidget(row, 4).value()
 
-                # Create the complex amplitude
-                amplitude = np.complex128(re + im * 1j)
+            # Create the complex amplitude
+            amplitude = np.complex128(re + im * 1j)
 
-                # Add this coupling to the new list
-                new_couplings.append(((d1, d2, d3), amplitude))
+            # Add this coupling to the new list
+            new_couplings.append(((d1, d2, d3), amplitude))
 
-            # Update the data model with the new couplings
-            self.hopping_data[(self.selected_state1, self.selected_state2)] = (
-                new_couplings
-            )
+        # Update the data model with the new couplings
+        self.hopping_data[(self.selected_state1, self.selected_state2)] = new_couplings
 
-            # Update the unit cell model (important for persistence)
-            self.unit_cells[self.uc_id].hoppings = self.hopping_data
+        # Update the unit cell model (important for persistence)
+        self.unit_cells[self.uc_id].hoppings = self.hopping_data
 
-            # Refresh the table with the new data
-            self.table.set_state_coupling(new_couplings)
+        # Refresh the table with the new data
+        self.table.set_state_coupling(new_couplings)
 
-            # Update the matrix to show the new coupling state
-            self.matrix.refresh_matrix()
-        except ValueError:
-            # If there's an error parsing inputs, revert to the last valid state
-            self.table.set_state_coupling(
-                self.hopping_data.get((self.selected_state1, self.selected_state2), [])
-            )
+        # Update the matrix to show the new coupling state
+        self.matrix.refresh_matrix()

@@ -40,6 +40,11 @@ class StatePanel(QWidget):
 
         # Energy field
         self.energy = QDoubleSpinBox()
+        self.energy.setButtonSymbols(QDoubleSpinBox.NoButtons)
+        self.energy.setRange(-1e308, 1e308)
+        self.energy.setFixedWidth(40)
+        self.energy.setDecimals(3)
+
         self.energy.editingFinished.connect(
             lambda: self.update_model("energy", self.energy.value())
         )
