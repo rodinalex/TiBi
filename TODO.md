@@ -27,7 +27,6 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
 
 ## Reminders
-- Add a restriction on partial coordinates between 0 and 1
 - Add a possibility to automatically create a Hermitian pair when saving the couplings
 - Add a check for displacement uniqueness in the Coupling table
 - Visually show the non-Hermitian elements in the matrix.

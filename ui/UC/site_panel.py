@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QPushButton,
+    QDoubleSpinBox,
 )
 from PySide6.QtGui import QDoubleValidator
 from models.uc_models import DataModel
@@ -36,25 +37,19 @@ class SitePanel(QWidget):
         form_layout.addRow("Name:", self.name)
 
         # Coordinate fields
-        self.c1 = QLineEdit()
-        self.c2 = QLineEdit()
-        self.c3 = QLineEdit()
+        self.c1 = QDoubleSpinBox()
+        self.c2 = QDoubleSpinBox()
+        self.c3 = QDoubleSpinBox()
 
-        # Set validators to ensure numeric input
-        self.c1.setValidator(QDoubleValidator())
-        self.c2.setValidator(QDoubleValidator())
-        self.c3.setValidator(QDoubleValidator())
+        for c in [self.c1, self.c2, self.c3]:
+            c.setRange(0.0, 1.0)
+            c.setSingleStep(0.01)
+            c.setDecimals(3)
 
         # Connect signals to update model
-        self.c1.textChanged.connect(
-            lambda t: self.update_model("c1", self.safe_float(t, "c1"))
-        )
-        self.c2.textChanged.connect(
-            lambda t: self.update_model("c2", self.safe_float(t, "c2"))
-        )
-        self.c3.textChanged.connect(
-            lambda t: self.update_model("c3", self.safe_float(t, "c3"))
-        )
+        self.c1.valueChanged.connect(lambda t: self.update_model("c1", t))
+        self.c2.valueChanged.connect(lambda t: self.update_model("c2", t))
+        self.c3.valueChanged.connect(lambda t: self.update_model("c3", t))
 
         # Add form fields
         form_layout.addRow("c<sub>1</sub>:", self.c1)
@@ -85,16 +80,6 @@ class SitePanel(QWidget):
     # Use the model to fill the form fields
     def update_ui(self):
         self.name.setText(self.model["name"])
-        self.c1.setText(str(self.model["c1"]))
-        self.c2.setText(str(self.model["c2"]))
-        self.c3.setText(str(self.model["c3"]))
-
-    def safe_float(self, text, key):
-        """Safely convert text to float, handling invalid inputs"""
-        try:
-            if text:
-                return float(text)
-            return 0.0
-        except ValueError:
-            # Return the previous value or 0.0 if conversion fails
-            return self.model.get(key, 0.0)
+        self.c1.setValue(self.model["c1"])
+        self.c2.setValue(self.model["c2"])
+        self.c3.setValue(self.model["c3"])
