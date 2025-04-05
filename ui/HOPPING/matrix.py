@@ -6,8 +6,10 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QPushButton,
+    QMenu,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QPoint
+from PySide6.QtGui import QAction
 import numpy as np
 
 
@@ -23,6 +25,10 @@ class HoppingMatrix(QWidget):
     # Signal emitted when a button is clicked, carrying the source and destination state info
     # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
     button_clicked = Signal(object, object)
+
+    # Signal emitted when couplings are modified from right-clicking on the button grid.
+    # The signal triggers a table and matrix update
+    hoppings_changed = Signal()
 
     # Button style constants
     BUTTON_STYLE_DEFAULT = """
@@ -120,6 +126,10 @@ class HoppingMatrix(QWidget):
             for jj in range(len(self.states)):
                 btn = QPushButton("")
                 btn.setFixedSize(20, 20)
+                btn.setContextMenuPolicy(Qt.CustomContextMenu)
+                btn.customContextMenuRequested.connect(
+                    lambda _, row=ii, col=jj, b=btn: self.add_context_menu(b, row, col)
+                )
                 # Apply the default style (no hopping initially)
                 self.apply_button_style(btn, False)
 
@@ -196,3 +206,40 @@ class HoppingMatrix(QWidget):
             is_hermitian = hop_neg_conj == hop_herm
             # Apply the appropriate style based on hopping existence
             self.apply_button_style(btn, has_hopping, is_hermitian)
+
+    def add_context_menu(self, button, ii, jj):
+        menu = QMenu()
+        # Send hopping data to the transpose element
+        action_send_hoppings = QAction("Set transpose element", self)
+        action_send_hoppings.triggered.connect(
+            lambda: self.create_hermitian_partner(ii, jj)
+        )
+        menu.addAction(action_send_hoppings)
+
+        # Get hopping data from the transpose element
+        action_get_hoppings = QAction("Get transpose element", self)
+        action_get_hoppings.triggered.connect(
+            lambda: self.create_hermitian_partner(jj, ii)
+        )
+        menu.addAction(action_get_hoppings)
+
+        # Clear hoppings
+        action_clear_hoppings = QAction("Clear hoppings", self)
+        action_clear_hoppings.triggered.connect(lambda: self.delete_coupling(ii, jj))
+        menu.addAction(action_clear_hoppings)
+
+        menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
+
+    def create_hermitian_partner(self, ii, jj):
+        s1 = self.states[ii][2]  # Destination
+        s2 = self.states[jj][2]  # Source
+        hop = self.hopping_data.get((s1, s2), [])
+        hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
+        self.hopping_data[(s2, s1)] = hop_herm
+        self.hoppings_changed.emit()
+
+    def delete_coupling(self, ii, jj):
+        s1 = self.states[ii][2]  # Destination
+        s2 = self.states[jj][2]  # Source
+        self.hopping_data.pop((s1, s2), None)
+        self.hoppings_changed.emit()

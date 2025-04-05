@@ -42,6 +42,7 @@ class HoppingPanel(QWidget):
 
         # Connect Signals
         self.matrix.button_clicked.connect(self.handle_pair_selection)
+        self.matrix.hoppings_changed.connect(self.handle_matrix_interaction)
         self.table.save_btn.clicked.connect(self.save_couplings)
 
         # Main layout
@@ -186,3 +187,10 @@ class HoppingPanel(QWidget):
 
         # Update the matrix to show the new coupling state
         self.matrix.refresh_matrix()
+
+    def handle_matrix_interaction(self):
+        self.matrix.refresh_button_colors()
+        updated_couplings = self.hopping_data.get(
+            (self.selected_state1, self.selected_state2), []
+        )
+        self.table.set_state_coupling(updated_couplings)
