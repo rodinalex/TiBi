@@ -26,14 +26,7 @@ class SitePanel(QWidget):
 
         self.model = model
 
-        # Name field
         form_layout = QFormLayout()
-
-        self.name = QLineEdit()
-        self.name.editingFinished.connect(
-            lambda: self.update_model("name", self.name.text())
-        )
-        form_layout.addRow("Name:", self.name)
 
         # Coordinate fields
         self.c1 = QDoubleSpinBox()
@@ -82,7 +75,6 @@ class SitePanel(QWidget):
 
     # Use the model to fill the form fields
     def update_ui(self):
-        self.name.setText(self.model["name"])
         self.c1.setValue(self.model["c1"])
         self.c2.setValue(self.model["c2"])
         self.c3.setValue(self.model["c3"])

@@ -31,13 +31,6 @@ class StatePanel(QWidget):
         # Form layout
         form_layout = QFormLayout()
 
-        # Name field
-        self.name = QLineEdit()
-        self.name.editingFinished.connect(
-            lambda: self.update_model("name", self.name.text())
-        )
-        form_layout.addRow("Name:", self.name)
-
         # Energy field
         self.energy = QDoubleSpinBox()
         self.energy.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -69,5 +62,4 @@ class StatePanel(QWidget):
 
     # Use the model to fill the form fields
     def update_ui(self):
-        self.name.setText(self.model["name"])
         self.energy.setValue(self.model["energy"])

@@ -32,14 +32,7 @@ class UnitCellPanel(QWidget):
 
         self.model = model
 
-        # Name field
         form_layout = QFormLayout()
-
-        self.name = QLineEdit()
-        self.name.editingFinished.connect(
-            lambda: self.update_model("name", self.name.text())
-        )
-        form_layout.addRow("Name:", self.name)
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_row(v):
@@ -101,7 +94,6 @@ class UnitCellPanel(QWidget):
 
     # Use the model to fill the form fields
     def update_ui(self):
-        self.name.setText(self.model["name"])
 
         self.v1[0].setValue(self.model["v1x"])
         self.v1[1].setValue(self.model["v1y"])
