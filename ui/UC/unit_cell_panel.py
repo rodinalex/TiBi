@@ -83,10 +83,8 @@ class UnitCellPanel(QWidget):
         # Buttons for actions
         button_layout = QHBoxLayout()
         self.add_btn = QPushButton("Add Site")
-        self.save_btn = QPushButton("Save")
         self.delete_btn = QPushButton("Delete")
         button_layout.addWidget(self.add_btn)
-        button_layout.addWidget(self.save_btn)
         button_layout.addWidget(self.delete_btn)
 
         # Main layout

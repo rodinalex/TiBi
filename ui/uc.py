@@ -96,6 +96,11 @@ class UnitCellUI(QWidget):
         self.tree_view_panel.site_selected.connect(self.show_site_panel)
         self.tree_view_panel.state_selected.connect(self.show_state_panel)
 
+        # Save data whenever the models register an update
+        self.unit_cell_model.signals.updated.connect(self.controller.save_unit_cell)
+        self.site_model.signals.updated.connect(self.controller.save_site)
+        self.state_model.signals.updated.connect(self.controller.save_state)
+
         # Update panel forms whenever the models register an update
         self.unit_cell_model.signals.updated.connect(self.unit_cell_panel.update_ui)
         self.site_model.signals.updated.connect(self.site_panel.update_ui)

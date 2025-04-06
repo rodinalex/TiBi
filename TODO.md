@@ -25,7 +25,7 @@ In the present version, the GUI consists of 3 columns
 - ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
 include the unit cell as a parallelepiped, as well as any of the sites found inside of it
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
-- Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
+- ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
 - Make it possible to show multiple unit cells along the periodic directions
 
 ## Reminders

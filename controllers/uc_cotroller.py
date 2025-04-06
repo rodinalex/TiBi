@@ -59,17 +59,14 @@ class UCController(QObject):
         self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
 
         # Unit cell panel buttons
-        self.unit_cell_panel.save_btn.clicked.connect(self.save_unit_cell)
         self.unit_cell_panel.delete_btn.clicked.connect(self.delete_unit_cell)
         self.unit_cell_panel.add_btn.clicked.connect(self.add_site)
 
         # Site panel buttons
-        self.site_panel.save_btn.clicked.connect(self.save_site)
         self.site_panel.delete_btn.clicked.connect(self.delete_site)
         self.site_panel.add_btn.clicked.connect(self.add_state)
 
         # State panel buttons
-        self.state_panel.save_btn.clicked.connect(self.save_state)
         self.state_panel.delete_btn.clicked.connect(self.delete_state)
 
     def add_unit_cell(self):
