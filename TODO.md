@@ -24,15 +24,15 @@ In the present version, the GUI consists of 3 columns
 
 - ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
 include the unit cell as a parallelepiped, as well as any of the sites found inside of it
+- Make it possible to show multiple unit cells along the periodic directions
 - Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
+- ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
 
 ## Reminders
-- Add a possibility to automatically create a Hermitian pair when saving the couplings
-- Visually show the non-Hermitian elements in the matrix.
-- Make it possible to show multiple unit cells along the periodic directions
 - Reciprocal lattice
 - Hamiltonian function with momenta along the reciprocal lattice directions
-
+- Tidy up the UC panel: it's too wide for the tree, but the UC creation fields still need to go somewhere
+- Check that the volume of the unit cell is non-zero
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

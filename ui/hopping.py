@@ -42,24 +42,22 @@ class HoppingPanel(QWidget):
 
         # Connect Signals
         self.matrix.button_clicked.connect(self.handle_pair_selection)
+        self.matrix.hoppings_changed.connect(self.handle_matrix_interaction)
         self.table.save_btn.clicked.connect(self.save_couplings)
 
         # Main layout
         layout = QVBoxLayout(self)
 
         # Components
-        self.info_label = QLabel(
-            "Select a unit cell with states to view hopping parameters"
-        )
+        self.info_label = QLabel("Select a unit cell with states")
         self.info_label.setAlignment(Qt.AlignCenter)
 
-        self.table_info_label = QLabel(
-            "Select a pair of states to view hopping parameters"
-        )
+        self.table_info_label = QLabel("Select a pair of states")
+        self.table_info_label.setAlignment(Qt.AlignCenter)
 
         # Main Panel
         self.panel = QWidget()
-        panel_layout = QHBoxLayout(self.panel)
+        panel_layout = QVBoxLayout(self.panel)
 
         self.table_stack = QStackedWidget()
         self.table_stack.addWidget(self.table_info_label)
@@ -186,3 +184,10 @@ class HoppingPanel(QWidget):
 
         # Update the matrix to show the new coupling state
         self.matrix.refresh_matrix()
+
+    def handle_matrix_interaction(self):
+        self.matrix.refresh_button_colors()
+        updated_couplings = self.hopping_data.get(
+            (self.selected_state1, self.selected_state2), []
+        )
+        self.table.set_state_coupling(updated_couplings)

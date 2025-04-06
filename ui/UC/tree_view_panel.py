@@ -28,19 +28,30 @@ class TreeViewPanel(QWidget):
         uuid.UUID, uuid.UUID, uuid.UUID
     )  # unit_cell_id, site_id, state_id
 
-    def __init__(self, unit_cells: dict[uuid.UUID, UnitCell]):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        unit_cell_panel,
+        site_panel,
+        state_panel,
+    ):
         super().__init__()
 
         self.unit_cells = unit_cells
+        self.unit_cell_panel = unit_cell_panel
+        self.site_panel = site_panel
+        self.state_panel = state_panel
 
         # Create and configure tree view
         self.tree_view = QTreeView()
         self.tree_view.setHeaderHidden(True)
         self.tree_view.setSelectionMode(QTreeView.SingleSelection)
+        self.tree_view.setEditTriggers(QTreeView.DoubleClicked)
 
         # Create model
         self.tree_model = QStandardItemModel()
         self.root_node = self.tree_model.invisibleRootItem()
+        self.tree_model.itemChanged.connect(self.on_item_changed)
 
         # Set model to view
         self.tree_view.setModel(self.tree_model)
@@ -187,7 +198,7 @@ class TreeViewPanel(QWidget):
         tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
 
         # Set other visual properties
-        tree_item.setEditable(False)
+        tree_item.setEditable(True)
 
         return tree_item
 
@@ -262,3 +273,16 @@ class TreeViewPanel(QWidget):
                     index, QItemSelectionModel.ClearAndSelect
                 )
                 return
+
+    def on_item_changed(self, item: QStandardItem):
+        """
+        Change the name of the selected item by double-clicking on it in the tree view.
+        """
+        item_type = item.data(Qt.UserRole + 1)
+        new_name = item.text()
+        if item_type == "unit_cell":
+            self.unit_cell_panel.model["name"] = new_name
+        elif item_type == "site":
+            self.site_panel.model["name"] = new_name
+        else:
+            self.state_panel.model["name"] = new_name

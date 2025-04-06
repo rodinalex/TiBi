@@ -14,6 +14,7 @@ from PySide6.QtCore import Qt
 from ui.uc_plot import UnitCellPlot
 from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel
+from ui.placeholder import PlaceholderWidget
 
 # from controllers.hopping_controller import HoppingController
 
@@ -52,26 +53,26 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout()
 
         # Left column for hierarchical view and form panels
-        left_layout.addWidget(self.uc, stretch=2)
-        left_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        left_layout.addWidget(self.uc, stretch=1)
+        left_layout.addWidget(self.hopping, stretch=1)
 
         # 3D visualization for the unit cell
-        mid_layout.addWidget(self.unit_cell_plot, stretch=6)
-        mid_layout.addWidget(self.hopping, stretch=4)
-        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
+        mid_layout.addWidget(self.unit_cell_plot, stretch=2)
+        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
         # Connect signals to update the plot after tree selection
         self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
         self.uc.tree_view_panel.site_selected.connect(self.update_plot)
         self.uc.tree_view_panel.state_selected.connect(self.update_plot)
-        # self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
         )
 
-        right_layout.addWidget(PlaceholderWidget("Computation Options"))
-        right_layout.addWidget(PlaceholderWidget("Computation Input"))
+        right_layout.addWidget(PlaceholderWidget("BZ Plot"), stretch=1)
+        right_layout.addWidget(PlaceholderWidget("BZ Tools"), stretch=1)
+        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
 
         main_layout.addLayout(left_layout, stretch=3)
         main_layout.addLayout(mid_layout, stretch=5)
@@ -108,25 +109,6 @@ class MainWindow(QMainWindow):
                     self.unit_cell_plot.select_site(site_id)
         except Exception as e:
             print(f"Error highlighting site: {e}")
-
-
-class PlaceholderWidget(QWidget):
-    """Placeholder widget with a label to show where future components will go"""
-
-    def __init__(self, name):
-        super().__init__()
-        self.setAutoFillBackground(True)
-
-        # Set background color
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor("#f0f0f0"))
-        self.setPalette(palette)
-
-        # Add a label
-        layout = QVBoxLayout(self)
-        label = QLabel(f"[{name}]")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
 
 
 app = QApplication(sys.argv)
