@@ -18,6 +18,19 @@ class BasisVector:
     z: float  # z-component in Cartesian coordinates
     is_periodic: bool = False  # Whether the crystal repeats in this direction
 
+    def as_array(self) -> np.ndarray:
+        """Return the vector as a NumPy array."""
+        return np.array([self.x, self.y, self.z])
+
+    def dot(self, other: "BasisVector") -> float:
+        """Return the dot product with another basis vector."""
+        return float(np.dot(self.as_array(), other.as_array()))
+
+    def cross(self, other: "BasisVector") -> "BasisVector":
+        """Return the cross product with another basis vector as a new BasisVector."""
+        result = np.cross(self.as_array(), other.as_array())
+        return BasisVector(*result)
+
 
 @dataclass
 class State:
@@ -81,6 +94,44 @@ class UnitCell:
         ],  # [(displacement, amplitude), ...]
     ] = field(default_factory=dict)
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
+
+    def volume(self) -> float:
+        """Compute the volume of the unit cell using the scalar triple product."""
+        return np.dot(self.v1, np.cross(self.v2, self.v3))
+
+    def reciprocal_vectors(self) -> list[np.ndarray]:
+        """
+        Compute the reciprocal lattice vectors corresponding to the periodic directions
+        in the unit cell. Returns a list of 3D reciprocal vectors (0 to 3 items).
+        """
+        basis_vectors = [v for v in [self.v1, self.v2, self.v3] if v.is_periodic]
+        num_periodic = len(basis_vectors)
+
+        if num_periodic == 0:
+            return []
+
+        elif num_periodic == 1:
+            a1 = basis_vectors[0].as_array()
+            G1 = 2 * np.pi * a1 / np.dot(a1, a1)
+            return [G1]
+
+        elif num_periodic == 2:
+            a1, a2 = [v.as_array() for v in basis_vectors]
+            normal = np.cross(a1, a2)
+            G1 = 2 * np.pi * np.cross(normal, a2) / np.dot(a1, np.cross(a2, normal))
+            G2 = 2 * np.pi * np.cross(a1, normal) / np.dot(a2, np.cross(normal, a1))
+            return [G1, G2]
+
+        elif num_periodic == 3:
+            a1, a2, a3 = [v.as_array() for v in basis_vectors]
+            volume = np.dot(a1, np.cross(a2, a3))
+            G1 = 2 * np.pi * np.cross(a2, a3) / volume
+            G2 = 2 * np.pi * np.cross(a3, a1) / volume
+            G3 = 2 * np.pi * np.cross(a1, a2) / volume
+            return [G1, G2, G3]
+
+        else:
+            raise ValueError("Invalid number of periodic vectors.")
 
 
 def get_states(uc: UnitCell):

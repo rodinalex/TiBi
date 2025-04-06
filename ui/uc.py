@@ -1,10 +1,12 @@
-from PySide6.QtWidgets import QVBoxLayout, QWidget, QStackedWidget, QLabel
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QStackedWidget, QLabel
 from PySide6.QtCore import Qt
 from models.uc_models import DataModel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
+from ui.placeholder import PlaceholderWidget
+
 
 from controllers.uc_cotroller import UCController
 
@@ -79,7 +81,13 @@ class UnitCellUI(QWidget):
         self.form_stack.addWidget(self.site_panel)
         self.form_stack.addWidget(self.state_panel)
 
-        layout.addWidget(self.tree_view_panel, stretch=3)
+        # Create the interface
+
+        top_panel = QHBoxLayout()
+        top_panel.addWidget(self.tree_view_panel, stretch=2)
+        top_panel.addWidget(PlaceholderWidget("Tst"), stretch=1)
+
+        layout.addLayout(top_panel, stretch=3)
         layout.addWidget(self.form_stack, stretch=2)
 
         # Connect tree view signals to show appropriate panels
