@@ -89,8 +89,8 @@ class UnitCellUI(QWidget):
         top_panel.addWidget(self.tree_view_panel, stretch=2)
         top_panel.addWidget(PlaceholderWidget("Tst"), stretch=1)
 
-        layout.addLayout(top_panel, stretch=3)
-        layout.addWidget(self.form_stack, stretch=2)
+        layout.addLayout(top_panel, stretch=1)
+        layout.addWidget(self.form_stack, stretch=1)
 
         # Connect tree view signals to show appropriate panels
         self.tree_view_panel.none_selected.connect(self.show_info_panel)

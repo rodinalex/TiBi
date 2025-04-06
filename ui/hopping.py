@@ -49,18 +49,15 @@ class HoppingPanel(QWidget):
         layout = QVBoxLayout(self)
 
         # Components
-        self.info_label = QLabel(
-            "Select a unit cell with states to view hopping parameters"
-        )
+        self.info_label = QLabel("Select a unit cell with states")
         self.info_label.setAlignment(Qt.AlignCenter)
 
-        self.table_info_label = QLabel(
-            "Select a pair of states to view hopping parameters"
-        )
+        self.table_info_label = QLabel("Select a pair of states")
+        self.table_info_label.setAlignment(Qt.AlignCenter)
 
         # Main Panel
         self.panel = QWidget()
-        panel_layout = QHBoxLayout(self.panel)
+        panel_layout = QVBoxLayout(self.panel)
 
         self.table_stack = QStackedWidget()
         self.table_stack.addWidget(self.table_info_label)

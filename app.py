@@ -53,19 +53,18 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout()
 
         # Left column for hierarchical view and form panels
-        left_layout.addWidget(self.uc, stretch=2)
-        left_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        left_layout.addWidget(self.uc, stretch=1)
+        left_layout.addWidget(self.hopping, stretch=1)
 
         # 3D visualization for the unit cell
-        mid_layout.addWidget(self.unit_cell_plot, stretch=6)
-        mid_layout.addWidget(self.hopping, stretch=4)
-        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
+        mid_layout.addWidget(self.unit_cell_plot, stretch=2)
+        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
         # Connect signals to update the plot after tree selection
         self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
         self.uc.tree_view_panel.site_selected.connect(self.update_plot)
         self.uc.tree_view_panel.state_selected.connect(self.update_plot)
-        # self.uc.tree_view_panel.site_selected.connect(self.highlight_site)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
@@ -74,7 +73,6 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(PlaceholderWidget("BZ Plot"), stretch=1)
         right_layout.addWidget(PlaceholderWidget("BZ Tools"), stretch=1)
         right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
-        # right_layout.addWidget(PlaceholderWidget("Computation Input"))
 
         main_layout.addLayout(left_layout, stretch=3)
         main_layout.addLayout(mid_layout, stretch=5)
