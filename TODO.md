@@ -35,6 +35,7 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Check that the volume of the unit cell is non-zero
 - Edit UC element names by double-clicking on the name in the tree instead of having a dedicated name field (MAYBE)
 - Move coupling matrix setup into the first column (MAYBE)
+- When deleting the PENULTIMATE unit cell, the selection is wonky--another unit cell is highlighted, but the selection is not reflected in the panel (ghost highlight)
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

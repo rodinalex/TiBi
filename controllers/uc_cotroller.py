@@ -1,5 +1,5 @@
 import uuid
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QModelIndex
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from ui.UC.tree_view_panel import TreeViewPanel
 from ui.UC.unit_cell_panel import UnitCellPanel
@@ -142,6 +142,13 @@ class UCController(QObject):
 
         # Update UI (selective removal instead of full refresh)
         self.tree_view.remove_tree_item(selected_uc_id)
+
+        # Clear selection explicitly
+        self.tree_view.tree_view.selectionModel().clearSelection()
+        self.tree_view.tree_view.setCurrentIndex(
+            QModelIndex()
+        )  # Clear the cursor/visual highlight
+        self.tree_view.none_selected.emit()
 
     def add_site(self):
         """

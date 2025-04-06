@@ -58,7 +58,9 @@ class UnitCellUI(QWidget):
         self.unit_cell_panel = UnitCellPanel(self.unit_cell_model)
         self.site_panel = SitePanel(self.site_model)
         self.state_panel = StatePanel(self.state_model)
-        self.tree_view_panel = TreeViewPanel(self.unit_cells)
+        self.tree_view_panel = TreeViewPanel(
+            self.unit_cells, self.unit_cell_panel, self.site_panel, self.state_panel
+        )
 
         # Initialize controller
         self.controller = UCController(
@@ -71,7 +73,7 @@ class UnitCellUI(QWidget):
         )
 
         # Info label
-        self.info_label = QLabel("Start by adding a Unit Cell")
+        self.info_label = QLabel("Add/Select a Unit Cell")
         self.info_label.setAlignment(Qt.AlignCenter)
 
         # Setup panel stack for dynamic content switching depending on the tree selection.
