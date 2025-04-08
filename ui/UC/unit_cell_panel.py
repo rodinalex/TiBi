@@ -33,6 +33,7 @@ class UnitCellPanel(QWidget):
         self.model = model
 
         form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(2)
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_row(v):
@@ -84,6 +85,8 @@ class UnitCellPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.addLayout(form_layout)
         layout.addLayout(button_layout)
+
+        layout.setSpacing(5)
 
         # Sync the UI with the model
         self.update_ui()

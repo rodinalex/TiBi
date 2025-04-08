@@ -93,39 +93,7 @@ class UnitCellPlot(QWidget):
 
         # Plot the new unit cell
         self._plot_unit_cell()
-        self._plot_sites()
-
-        # Update the axes to match unit cell basis vectors
-        self._update_axes()
-
-    def _update_axes(self):
-        """
-        Update the coordinate axes to match the unit cell basis vectors.
-
-        Creates visual representations of the unit cell's basis vectors as colored
-        lines extending from the origin. This helps users understand the orientation
-        and dimensions of the unit cell in 3D space.
-        """
-        if not self.unit_cell:
-            return
-
-        # Scale factor to make axes visible
-        scale = 2.0
-
-        # Update each axis to represent a basis vector
-        vectors = [self.unit_cell.v1, self.unit_cell.v2, self.unit_cell.v3]
-
-        for ii, vector in enumerate(vectors):
-
-            axis_pos = np.array(
-                [[0, 0, 0], [vector.x * scale, vector.y * scale, vector.z * scale]]
-            )
-            axis = gl.GLLinePlotItem(
-                pos=axis_pos, color=(0.8, 0.8, 0.8, 0.3), width=3, antialias=True
-            )
-
-            self.view.addItem(axis)
-            self.plot_items[f"axis_{ii}"] = axis
+        self._plot_sites(0, 0, 0)
 
     def _plot_unit_cell(self):
         """
@@ -138,50 +106,7 @@ class UnitCellPlot(QWidget):
         if not self.unit_cell:
             return
 
-        # Extract basis vectors
-        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
-        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
-        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
-
-        # Define the 8 corners of the parallelepiped
-        verts = np.array(
-            [
-                [0, 0, 0],
-                v1,
-                v2,
-                v1 + v2,  # Bottom 4 vertices
-                v3,
-                v1 + v3,
-                v2 + v3,
-                v1 + v2 + v3,  # Top 4 vertices
-            ]
-        )
-
-        # Define the 12 edges of the parallelepiped
-        edges = np.array(
-            [
-                [0, 1],
-                [0, 2],
-                [1, 3],
-                [2, 3],  # Bottom square
-                [4, 5],
-                [4, 6],
-                [5, 7],
-                [6, 7],  # Top square
-                [0, 4],
-                [1, 5],
-                [2, 6],
-                [3, 7],  # Vertical edges
-            ]
-        )
-        # Convert edges into line segments
-        line_vertices = []
-        for edge in edges:
-            line_vertices.append(verts[edge[0]])
-            line_vertices.append(verts[edge[1]])
-
-        # Convert to NumPy array
-        line_vertices = np.array(line_vertices)
+        line_vertices = self._get_unit_cell_edges(0, 0, 0)
 
         # Create the wireframe using GLLinePlotItem
         unit_cell_edges = gl.GLLinePlotItem(
@@ -190,7 +115,7 @@ class UnitCellPlot(QWidget):
         self.view.addItem(unit_cell_edges)
         self.plot_items["unit_cell_edges"] = unit_cell_edges
 
-    def _plot_sites(self):
+    def _plot_sites(self, a1, a2, a3):
         """
         Plot all sites (atoms) within the unit cell as spheres.
 
@@ -210,7 +135,7 @@ class UnitCellPlot(QWidget):
         # Plot each site as a sphere
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
-            pos = site.c1 * v1 + site.c2 * v2 + site.c3 * v3
+            pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
 
             # Create a sphere for the site
             sphere = gl.GLMeshItem(
@@ -251,6 +176,64 @@ class UnitCellPlot(QWidget):
             sphere = self.plot_items.get(f"site_{site_id}")
             if sphere:
                 sphere.setColor(self.selected_site_color)
+
+    def _get_unit_cell_edges(self, a1, a2, a3):
+        """
+        Plot the unit cell as a wireframe parallelepiped.
+
+        Creates a 3D wireframe representation of the unit cell using the three
+        basis vectors to define the shape. The parallelepiped is drawn as a set
+        of 12 lines connecting 8 vertices in 3D space.
+        """
+        if not self.unit_cell:
+            return
+
+        # Extract basis vectors
+        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
+        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
+        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
+
+        # Define the 8 corners of the parallelepiped
+        verts = np.array(
+            [
+                [0, 0, 0],
+                v1,
+                v2,
+                v1 + v2,  # Bottom 4 vertices
+                v3,
+                v1 + v3,
+                v2 + v3,
+                v1 + v2 + v3,  # Top 4 vertices
+            ]
+        )
+        verts = [v + (a1 * v1 + a2 * v2 + a3 * v3) for v in verts]
+        # Define the 12 edges of the parallelepiped
+        edges = np.array(
+            [
+                [0, 1],
+                [0, 2],
+                [1, 3],
+                [2, 3],  # Bottom square
+                [4, 5],
+                [4, 6],
+                [5, 7],
+                [6, 7],  # Top square
+                [0, 4],
+                [1, 5],
+                [2, 6],
+                [3, 7],  # Vertical edges
+            ]
+        )
+        # Convert edges into line segments
+        line_vertices = []
+        for edge in edges:
+            line_vertices.append(verts[edge[0]])
+            line_vertices.append(verts[edge[1]])
+
+        # Convert to NumPy array
+        line_vertices = np.array(line_vertices)
+
+        return line_vertices
 
     def mousePressEvent(self, event):
         """Handle mouse clicks to select sites."""

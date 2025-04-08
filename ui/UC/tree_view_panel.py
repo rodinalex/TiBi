@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QLabel
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from src.tibitypes import UnitCell
 import uuid
@@ -27,6 +27,10 @@ class TreeViewPanel(QWidget):
     state_selected = Signal(
         uuid.UUID, uuid.UUID, uuid.UUID
     )  # unit_cell_id, site_id, state_id
+
+    unit_cell_delete = Signal()
+    site_delete = Signal()
+    state_delete = Signal()
 
     def __init__(
         self,
@@ -61,7 +65,7 @@ class TreeViewPanel(QWidget):
 
         # Layout setup
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Project Structure"))
+        # layout.addWidget(QLabel("Project Structure"))
         layout.addWidget(self.tree_view)
         layout.addWidget(self.add_unit_cell_btn)
 
@@ -69,6 +73,13 @@ class TreeViewPanel(QWidget):
         self.tree_view.selectionModel().selectionChanged.connect(
             self.on_selection_changed
         )
+        # Set up delete shortcut
+        self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
+        self.delete_shortcut.activated.connect(self.handle_delete_key)
+
+        # Optional: Add Backspace as an alternative shortcut
+        self.backspace_shortcut = QShortcut(QKeySequence("Backspace"), self.tree_view)
+        self.backspace_shortcut.activated.connect(self.handle_delete_key)
 
         # Initial render
         self.refresh_tree()
@@ -286,3 +297,27 @@ class TreeViewPanel(QWidget):
             self.site_panel.model["name"] = new_name
         else:
             self.state_panel.model["name"] = new_name
+
+    def handle_delete_key(self):
+        """
+        Handle Delete/Backspace key press to remove selected item
+        """
+        # Get the current selection
+        indexes = self.tree_view.selectionModel().selectedIndexes()
+        if not indexes:
+            return
+
+        # Get the selected item
+        index = indexes[0]
+        item = self.tree_model.itemFromIndex(index)
+
+        # Get item metadata
+        item_type = item.data(Qt.UserRole + 1)
+
+        # Handle deletion based on item type
+        if item_type == "unit_cell":
+            self.unit_cell_delete.emit()
+        elif item_type == "site":
+            self.site_delete.emit()
+        elif item_type == "state":
+            self.state_delete.emit()

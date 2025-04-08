@@ -69,6 +69,11 @@ class UCController(QObject):
         # State panel buttons
         self.state_panel.delete_btn.clicked.connect(self.delete_state)
 
+        # Tree view signals
+        self.tree_view.unit_cell_delete.connect(self.delete_unit_cell)
+        self.tree_view.site_delete.connect(self.delete_site)
+        self.tree_view.state_delete.connect(self.delete_state)
+
     def add_unit_cell(self):
         """
         Create a new unit cell with default properties and add it to the model.
