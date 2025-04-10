@@ -36,16 +36,16 @@ class TreeViewPanel(QWidget):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        unit_cell_panel,
-        site_panel,
-        state_panel,
+        unit_cell_model,
+        site_model,
+        state_model,
     ):
         super().__init__()
 
         self.unit_cells = unit_cells
-        self.unit_cell_panel = unit_cell_panel
-        self.site_panel = site_panel
-        self.state_panel = state_panel
+        self.unit_cell_model = unit_cell_model
+        self.site_model = site_model
+        self.state_model = state_model
 
         # Create and configure tree view
         self.tree_view = QTreeView()
@@ -293,11 +293,11 @@ class TreeViewPanel(QWidget):
         item_type = item.data(Qt.UserRole + 1)
         new_name = item.text()
         if item_type == "unit_cell":
-            self.unit_cell_panel.model["name"] = new_name
+            self.unit_cell_model["name"] = new_name
         elif item_type == "site":
-            self.site_panel.model["name"] = new_name
+            self.site_model["name"] = new_name
         else:
-            self.state_panel.model["name"] = new_name
+            self.state_model["name"] = new_name
 
     def handle_delete_key(self):
         """

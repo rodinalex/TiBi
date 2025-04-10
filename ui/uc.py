@@ -59,7 +59,7 @@ class UnitCellUI(QWidget):
         self.site_panel = SitePanel(self.site_model)
         self.state_panel = StatePanel(self.state_model)
         self.tree_view_panel = TreeViewPanel(
-            self.unit_cells, self.unit_cell_panel, self.site_panel, self.state_panel
+            self.unit_cells, self.unit_cell_model, self.site_model, self.state_model
         )
 
         # Initialize controller
@@ -94,8 +94,8 @@ class UnitCellUI(QWidget):
         top_panel.addWidget(self.tree_view_panel, stretch=2)
         top_panel.addWidget(PlaceholderWidget("Tst"), stretch=1)
 
-        layout.addLayout(top_panel, stretch=3)
-        layout.addWidget(self.uc_stack, stretch=1)
+        layout.addLayout(top_panel, stretch=6)
+        layout.addWidget(self.uc_stack, stretch=2)
         layout.addWidget(self.site_stack, stretch=1)
 
         # Connect tree view signals to show appropriate panels
@@ -142,7 +142,6 @@ class UnitCellUI(QWidget):
             self.uc_stack.setCurrentWidget(self.unit_cell_panel)
 
             if site_id:
-                uc = self.unit_cells[unit_cell_id]
                 site = uc.sites[site_id]
                 # Update the form model with all site properties
                 # The corresponding update function to update the fields is fired automatically.
@@ -157,8 +156,6 @@ class UnitCellUI(QWidget):
                 self.site_stack.setCurrentWidget(self.site_panel)
 
                 if state_id:
-                    uc = self.unit_cells[unit_cell_id]
-                    site = uc.sites[site_id]
                     state = site.states[state_id]
 
                     # Update the form model with the state properties
