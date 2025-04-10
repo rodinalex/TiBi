@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QPushButton,
     QDoubleSpinBox,
+    QLabel,
 )
 from models.uc_models import DataModel
 
@@ -26,7 +27,7 @@ class SitePanel(QWidget):
 
         self.model = model
 
-        form_layout = QFormLayout()
+        spinner_layout = QHBoxLayout()
 
         # Coordinate fields
         self.c1 = QDoubleSpinBox()
@@ -49,10 +50,23 @@ class SitePanel(QWidget):
             lambda: self.update_model("c3", self.c3.value())
         )
 
-        # Add form fields
-        form_layout.addRow("c<sub>1</sub>:", self.c1)
-        form_layout.addRow("c<sub>2</sub>:", self.c2)
-        form_layout.addRow("c<sub>3</sub>:", self.c3)
+        # Create row layouts with labels on the left and spin boxes on the right
+        spinner1 = QHBoxLayout()
+        spinner1.addWidget(QLabel("c<sub>1</sub>:"))
+        spinner1.addWidget(self.c1)
+
+        spinner2 = QHBoxLayout()
+        spinner2.addWidget(QLabel("c<sub>2</sub>:"))
+        spinner2.addWidget(self.c2)
+
+        spinner3 = QHBoxLayout()
+        spinner3.addWidget(QLabel("c<sub>3</sub>:"))
+        spinner3.addWidget(self.c3)
+
+        # Add spinners to the main form layout
+        spinner_layout.addLayout(spinner1)
+        spinner_layout.addLayout(spinner2)
+        spinner_layout.addLayout(spinner3)
 
         # Buttons for actions
         button_layout = QHBoxLayout()
@@ -63,7 +77,7 @@ class SitePanel(QWidget):
 
         # Main layout
         layout = QVBoxLayout(self)
-        layout.addLayout(form_layout)
+        layout.addLayout(spinner_layout)
         layout.addLayout(button_layout)
 
         # Sync the UI with the model

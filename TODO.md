@@ -34,6 +34,7 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Tidy up the UC panel: it's too wide for the tree, but the UC creation fields still need to go somewhere
 - Check that the volume of the unit cell is non-zero
 - When deleting a UC, make sure that the UC plot is reset
+- BZ Calculation
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

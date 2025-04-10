@@ -1,4 +1,10 @@
-from PySide6.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QLabel
+from PySide6.QtWidgets import (
+    QWidget,
+    QTreeView,
+    QVBoxLayout,
+    QPushButton,
+    QToolBar,
+)
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from src.tibitypes import UnitCell
