@@ -62,9 +62,9 @@ class MainWindow(QMainWindow):
         mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
         # Connect signals to update the plot after tree selection
-        self.uc.tree_view_panel.unit_cell_selected.connect(self.update_plot)
-        self.uc.tree_view_panel.site_selected.connect(self.update_plot)
-        self.uc.tree_view_panel.state_selected.connect(self.update_plot)
+        self.uc.tree_view_panel.selection_changed_signal.connect(self.update_plot)
+        # self.uc.tree_view_panel.site_selected.connect(self.update_plot)
+        # self.uc.tree_view_panel.state_selected.connect(self.update_plot)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])

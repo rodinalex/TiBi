@@ -27,12 +27,7 @@ class TreeViewPanel(QWidget):
     """
 
     # Define signals
-    none_selected = Signal()
-    unit_cell_selected = Signal(uuid.UUID)
-    site_selected = Signal(uuid.UUID, uuid.UUID)  # unit_cell_id, site_id
-    state_selected = Signal(
-        uuid.UUID, uuid.UUID, uuid.UUID
-    )  # unit_cell_id, site_id, state_id
+    selection_changed_signal = Signal(object, object, object)
 
     unit_cell_delete = Signal()
     site_delete = Signal()
@@ -237,7 +232,7 @@ class TreeViewPanel(QWidget):
         """
         indexes = selected.indexes()
         if not indexes:
-            self.none_selected.emit()
+            self.selection_changed_signal.emit(None, None, None)
             return
 
         # Get the selected item
@@ -248,16 +243,16 @@ class TreeViewPanel(QWidget):
         item_id = item.data(Qt.UserRole + 2)
 
         if item_type == "unit_cell":
-            self.unit_cell_selected.emit(item_id)
+            self.selection_changed_signal.emit(item_id, None, None)
         else:
             parent_item = item.parent()
             parent_id = parent_item.data(Qt.UserRole + 2)
             if item_type == "site":
-                self.site_selected.emit(parent_id, item_id)
+                self.selection_changed_signal.emit(parent_id, item_id, None)
             else:  # "state" selected
                 grandparent_item = parent_item.parent()
                 grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-                self.state_selected.emit(grandparent_id, parent_id, item_id)
+                self.selection_changed_signal.emit(grandparent_id, parent_id, item_id)
 
     # Programmatically select a tree item
     def select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
@@ -275,13 +270,13 @@ class TreeViewPanel(QWidget):
         """
         if item_type == "unit_cell":
             parent = self.root_node
-            self.unit_cell_selected.emit(item_id)
+            self.selection_changed_signal.emit(item_id, None, None)
         elif item_type == "site":
             parent = self.find_item_by_id(parent_id, "unit_cell")
-            self.site_selected.emit(parent_id, item_id)
+            self.selection_changed_signal.emit(parent_id, item_id, None)
         else:
             parent = self.find_item_by_id(parent_id, "site", grandparent_id)
-            self.state_selected.emit(grandparent_id, parent_id, item_id)
+            self.selection_changed_signal.emit(grandparent_id, parent_id, item_id)
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:

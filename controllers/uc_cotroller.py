@@ -153,7 +153,7 @@ class UCController(QObject):
         self.tree_view.tree_view.setCurrentIndex(
             QModelIndex()
         )  # Clear the cursor/visual highlight
-        self.tree_view.none_selected.emit()
+        self.tree_view.selection_changed_signal.emit(None, None, None)
 
     def add_site(self):
         """
