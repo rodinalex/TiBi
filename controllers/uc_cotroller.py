@@ -48,10 +48,7 @@ class UCController(QObject):
         self.selection = selection
 
         # Connect UI signals to appropriate handler methods
-
         # Tree view signals
-        self.tree_view.delete.connect(self.delete_item)
-        self.tree_view.delete.connect(self.delete_item)
         self.tree_view.delete.connect(self.delete_item)
 
         # Button panel signals
