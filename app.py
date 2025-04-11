@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from ui.uc_plot import UnitCellPlot
+from ui.bz_plot import BrillouinZonePlot
 from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel
 from ui.placeholder import PlaceholderWidget
@@ -35,8 +36,9 @@ class MainWindow(QMainWindow):
         # Initialize UI panels
         self.uc = UnitCellUI()
 
-        # Initialize the plot
+        # Initialize the plots
         self.unit_cell_plot = UnitCellPlot()
+        self.bz_plot = BrillouinZonePlot()
 
         # Initialize the hopping panel
         self.hopping = HoppingPanel(self.uc.unit_cells)
@@ -60,14 +62,12 @@ class MainWindow(QMainWindow):
 
         # Connect signals to update the plot after tree selection
         self.uc.tree_view_panel.selection_changed_signal.connect(self.update_plot)
-        # self.uc.tree_view_panel.site_selected.connect(self.update_plot)
-        # self.uc.tree_view_panel.state_selected.connect(self.update_plot)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
         )
 
-        right_layout.addWidget(PlaceholderWidget("BZ Plot"), stretch=1)
+        right_layout.addWidget(self.bz_plot, stretch=1)
         right_layout.addWidget(PlaceholderWidget("BZ Tools"), stretch=1)
         right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
 

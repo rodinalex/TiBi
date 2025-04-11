@@ -113,7 +113,6 @@ class UnitCellUI(QWidget):
         self.selection["unit_cell"] = unit_cell_id
         self.selection["site"] = site_id
         self.selection["state"] = state_id
-
         if unit_cell_id:
             # Get the selected unit cell
             uc = self.unit_cells[unit_cell_id]
