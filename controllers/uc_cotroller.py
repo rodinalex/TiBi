@@ -174,8 +174,7 @@ class UCController(QObject):
         """
         # Create a new state with default properties
         name = "New State"
-        energy = 0  # Default energy level (eV)
-        new_state = State(name, energy)
+        new_state = State(name)
 
         # Add the state to the selected site
         selected_uc_id = self.selection["unit_cell"]
@@ -208,7 +207,6 @@ class UCController(QObject):
 
         # Update state properties
         current_state.name = self.tree_view.state_model["name"]
-        current_state.energy = self.tree_view.state_model["energy"]
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(

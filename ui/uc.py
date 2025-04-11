@@ -44,7 +44,7 @@ class UnitCellUI(QWidget):
         )
 
         self.site_model = DataModel(name="New Site", c1=0.0, c2=0.0, c3=0.0)
-        self.state_model = DataModel(name="New State", energy=0.0)
+        self.state_model = DataModel(name="New State")
 
         # Track currently selected items
         self.selection = DataModel(unit_cell=None, site=None, state=None)
@@ -160,7 +160,9 @@ class UnitCellUI(QWidget):
                     # Update the form model with the state properties
                     # The corresponding update function to update the fields is fired automatically.
                     self.state_model.update(
-                        {"name": state.name, "energy": state.energy}
+                        {
+                            "name": state.name,
+                        }
                     )
             else:
                 self.site_stack.setCurrentWidget(self.site_info_label)

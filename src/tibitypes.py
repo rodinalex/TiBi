@@ -42,7 +42,6 @@ class State:
     """
 
     name: str  # Name of the state (e.g., "s", "px", "py", etc.)
-    energy: float  # On-site energy of the state (eV)
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
 
