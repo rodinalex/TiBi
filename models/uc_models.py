@@ -1,4 +1,4 @@
-from collections import UserDict, UserList
+from collections import UserDict
 from PySide6.QtCore import QObject, Signal
 
 

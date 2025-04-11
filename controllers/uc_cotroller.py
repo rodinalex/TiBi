@@ -1,10 +1,7 @@
 import uuid
-from PySide6.QtCore import QObject, Signal, QModelIndex
+from PySide6.QtCore import QObject, QModelIndex
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from ui.UC.tree_view_panel import TreeViewPanel
-from ui.UC.unit_cell_panel import UnitCellPanel
-from ui.UC.site_panel import SitePanel
-from ui.UC.state_panel import StatePanel
 from ui.UC.button_panel import ButtonPanel
 
 
@@ -28,11 +25,8 @@ class UCController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],  # Dictionary of all unit cells
-        unit_cell_panel: UnitCellPanel,  # Form panel for editing unit cells
-        site_panel: SitePanel,  # Form panel for editing sites
-        state_panel: StatePanel,  # Form panel for editing states
         tree_view: TreeViewPanel,  # Tree view showing the hierarchy
-        button_panel: ButtonPanel,
+        button_panel: ButtonPanel,  # Create/Delete buttons
         selection,  # Tracks currently selected items
     ):
         """
@@ -49,9 +43,6 @@ class UCController(QObject):
         super().__init__()
         # Store references to UI components and data models
         self.unit_cells = unit_cells
-        self.unit_cell_panel = unit_cell_panel
-        self.site_panel = site_panel
-        self.state_panel = state_panel
         self.tree_view = tree_view
         self.button_panel = button_panel
         self.selection = selection
@@ -103,25 +94,25 @@ class UCController(QObject):
         current_uc = self.unit_cells[selected_uc_id]
 
         # Update name and basic properties
-        current_uc.name = self.unit_cell_panel.model["name"]
+        current_uc.name = self.tree_view.unit_cell_model["name"]
 
         # Update first basis vector (v1)
-        current_uc.v1.x = float(self.unit_cell_panel.model["v1x"])
-        current_uc.v1.y = float(self.unit_cell_panel.model["v1y"])
-        current_uc.v1.z = float(self.unit_cell_panel.model["v1z"])
-        current_uc.v1.is_periodic = self.unit_cell_panel.model["v1periodic"]
+        current_uc.v1.x = float(self.tree_view.unit_cell_model["v1x"])
+        current_uc.v1.y = float(self.tree_view.unit_cell_model["v1y"])
+        current_uc.v1.z = float(self.tree_view.unit_cell_model["v1z"])
+        current_uc.v1.is_periodic = self.tree_view.unit_cell_model["v1periodic"]
 
         # Update second basis vector (v2)
-        current_uc.v2.x = float(self.unit_cell_panel.model["v2x"])
-        current_uc.v2.y = float(self.unit_cell_panel.model["v2y"])
-        current_uc.v2.z = float(self.unit_cell_panel.model["v2z"])
-        current_uc.v2.is_periodic = self.unit_cell_panel.model["v2periodic"]
+        current_uc.v2.x = float(self.tree_view.unit_cell_model["v2x"])
+        current_uc.v2.y = float(self.tree_view.unit_cell_model["v2y"])
+        current_uc.v2.z = float(self.tree_view.unit_cell_model["v2z"])
+        current_uc.v2.is_periodic = self.tree_view.unit_cell_model["v2periodic"]
 
         # Update third basis vector (v3)
-        current_uc.v3.x = float(self.unit_cell_panel.model["v3x"])
-        current_uc.v3.y = float(self.unit_cell_panel.model["v3y"])
-        current_uc.v3.z = float(self.unit_cell_panel.model["v3z"])
-        current_uc.v3.is_periodic = self.unit_cell_panel.model["v3periodic"]
+        current_uc.v3.x = float(self.tree_view.unit_cell_model["v3x"])
+        current_uc.v3.y = float(self.tree_view.unit_cell_model["v3y"])
+        current_uc.v3.z = float(self.tree_view.unit_cell_model["v3z"])
+        current_uc.v3.is_periodic = self.tree_view.unit_cell_model["v3periodic"]
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(selected_uc_id)
@@ -165,10 +156,10 @@ class UCController(QObject):
         current_site = current_uc.sites[selected_site_id]
 
         # Update site properties
-        current_site.name = self.site_panel.model["name"]
-        current_site.c1 = float(self.site_panel.model["c1"])
-        current_site.c2 = float(self.site_panel.model["c2"])
-        current_site.c3 = float(self.site_panel.model["c3"])
+        current_site.name = self.tree_view.site_model["name"]
+        current_site.c1 = float(self.tree_view.site_model["c1"])
+        current_site.c2 = float(self.tree_view.site_model["c2"])
+        current_site.c3 = float(self.tree_view.site_model["c3"])
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(selected_uc_id, selected_site_id)
@@ -216,8 +207,8 @@ class UCController(QObject):
         current_state = current_site.states[selected_state_id]
 
         # Update state properties
-        current_state.name = self.state_panel.model["name"]
-        current_state.energy = self.state_panel.model["energy"]
+        current_state.name = self.tree_view.state_model["name"]
+        current_state.energy = self.tree_view.state_model["energy"]
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(

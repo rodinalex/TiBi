@@ -3,7 +3,6 @@ from PySide6.QtCore import Qt
 from models.uc_models import DataModel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
-from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
 from ui.UC.button_panel import ButtonPanel
 
@@ -56,7 +55,6 @@ class UnitCellUI(QWidget):
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel(self.unit_cell_model)
         self.site_panel = SitePanel(self.site_model)
-        self.state_panel = StatePanel(self.state_model)
         self.tree_view_panel = TreeViewPanel(
             self.unit_cells,
             self.unit_cell_model,
@@ -67,9 +65,6 @@ class UnitCellUI(QWidget):
         # Initialize controller
         self.controller = UCController(
             self.unit_cells,
-            self.unit_cell_panel,
-            self.site_panel,
-            self.state_panel,
             self.tree_view_panel,
             self.button_panel,
             self.selection,
@@ -113,7 +108,6 @@ class UnitCellUI(QWidget):
         # Update panel forms whenever the models register an update
         self.unit_cell_model.signals.updated.connect(self.unit_cell_panel.update_ui)
         self.site_model.signals.updated.connect(self.site_panel.update_ui)
-        self.state_model.signals.updated.connect(self.state_panel.update_ui)
 
     def show_panels(self, unit_cell_id, site_id, state_id):
         self.selection["unit_cell"] = unit_cell_id

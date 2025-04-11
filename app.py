@@ -7,10 +7,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QLabel,
 )
-from PySide6.QtGui import QPalette, QColor
-from PySide6.QtCore import Qt
 from ui.uc_plot import UnitCellPlot
 from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel

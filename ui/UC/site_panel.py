@@ -2,7 +2,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QWidget,
-    QFormLayout,
     QDoubleSpinBox,
     QLabel,
 )

@@ -3,12 +3,10 @@ from PySide6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
-    QColorDialog,
     QSpinBox,
     QLabel,
 )
 from PySide6.QtCore import Signal, Qt, QSize
-import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from ui.placeholder import PlaceholderWidget
 from itertools import product
