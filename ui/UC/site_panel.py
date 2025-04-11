@@ -2,12 +2,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QWidget,
-    QLineEdit,
     QFormLayout,
-    QPushButton,
     QDoubleSpinBox,
     QLabel,
 )
+
+from PySide6.QtCore import Qt
+
 from models.uc_models import DataModel
 
 
@@ -26,6 +27,9 @@ class SitePanel(QWidget):
         super().__init__()
 
         self.model = model
+
+        header = QLabel("Site fractional coordinates")
+        header.setAlignment(Qt.AlignCenter)
 
         spinner_layout = QHBoxLayout()
 
@@ -68,15 +72,10 @@ class SitePanel(QWidget):
         spinner_layout.addLayout(spinner2)
         spinner_layout.addLayout(spinner3)
 
-        # Buttons for actions
-        button_layout = QHBoxLayout()
-        self.add_btn = QPushButton("Add State")
-        button_layout.addWidget(self.add_btn)
-
         # Main layout
         layout = QVBoxLayout(self)
+        layout.addWidget(header)
         layout.addLayout(spinner_layout)
-        layout.addLayout(button_layout)
 
         # Sync the UI with the model
         self.update_ui()

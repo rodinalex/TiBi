@@ -58,24 +58,16 @@ class UCController(QObject):
 
         # Connect UI signals to appropriate handler methods
 
-        # Tree view button
-        # self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
-
-        # Unit cell panel buttons
-        self.unit_cell_panel.add_btn.clicked.connect(self.add_site)
-
-        # Site panel buttons
-        self.site_panel.add_btn.clicked.connect(self.add_state)
-
         # Tree view signals
-        self.tree_view.unit_cell_delete.connect(self.delete_unit_cell)
-        self.tree_view.site_delete.connect(self.delete_site)
-        self.tree_view.state_delete.connect(self.delete_state)
+        self.tree_view.delete.connect(self.delete_item)
+        self.tree_view.delete.connect(self.delete_item)
+        self.tree_view.delete.connect(self.delete_item)
 
         # Button panel signals
         self.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
         self.button_panel.new_site_btn.clicked.connect(self.add_site)
         self.button_panel.new_state_btn.clicked.connect(self.add_state)
+        self.button_panel.delete_btn.clicked.connect(self.delete_item)
 
     def add_unit_cell(self):
         """
@@ -135,29 +127,6 @@ class UCController(QObject):
         self.tree_view.update_tree_item(selected_uc_id)
         self.tree_view.select_item(selected_uc_id, "unit_cell")
 
-    def delete_unit_cell(self):
-        """
-        Delete the currently selected unit cell from the model.
-
-        Removes the unit cell from the unit_cells dictionary and refreshes the tree view.
-        This also deletes all child sites and states associated with this unit cell.
-        """
-        # Get the ID of the selected unit cell
-        selected_uc_id = self.selection["unit_cell"]
-
-        # Remove the unit cell from the model
-        del self.unit_cells[selected_uc_id]
-
-        # Update UI (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(selected_uc_id)
-
-        # Clear selection explicitly
-        self.tree_view.tree_view.selectionModel().clearSelection()
-        self.tree_view.tree_view.setCurrentIndex(
-            QModelIndex()
-        )  # Clear the cursor/visual highlight
-        self.tree_view.selection_changed_signal.emit(None, None, None)
-
     def add_site(self):
         """
         Create a new site in the currently selected unit cell.
@@ -204,25 +173,6 @@ class UCController(QObject):
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(selected_uc_id, selected_site_id)
         self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
-
-    def delete_site(self):
-        """
-        Delete the currently selected site from its unit cell.
-
-        Removes the site from the sites dictionary of the unit cell and refreshes
-        the tree view. This also deletes all child states associated with this site.
-        After deletion, selects the parent unit cell in the tree view.
-        """
-        # Get the currently selected site
-        selected_uc_id = self.selection["unit_cell"]
-        selected_site_id = self.selection["site"]
-
-        # Remove the site from the unit cell
-        del self.unit_cells[selected_uc_id].sites[selected_site_id]
-
-        # Update UI and select the parent unit cell (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(selected_uc_id, selected_site_id)
-        self.tree_view.select_item(selected_uc_id, "unit_cell")
 
     def add_state(self):
         """
@@ -277,27 +227,46 @@ class UCController(QObject):
             selected_state_id, "state", selected_site_id, selected_uc_id
         )
 
-    def delete_state(self):
-        """
-        Delete the currently selected quantum state from its site.
+    def delete_item(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        selected_site_id = self.selection.get("site", None)
+        selected_state_id = self.selection.get("state", None)
 
-        Removes the state from the states dictionary of the site and refreshes
-        the tree view. After deletion, selects the parent site in the tree view.
-        """
-        # Get the currently selected state
-        selected_uc_id = self.selection["unit_cell"]
-        selected_site_id = self.selection["site"]
-        selected_state_id = self.selection["state"]
+        # Check if there is a selected unit cell
+        if selected_uc_id:
+            # Check if there a selected site
+            if selected_site_id:
+                # Check if there is a selected state
+                if selected_state_id:
+                    # Delete the selected state from the site
+                    del (
+                        self.unit_cells[selected_uc_id]
+                        .sites[selected_site_id]
+                        .states[selected_state_id]
+                    )
+                    # Update UI and select the parent site (selective removal instead of full refresh)
+                    self.tree_view.remove_tree_item(
+                        selected_uc_id, selected_site_id, selected_state_id
+                    )
+                    self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
+                else:
+                    # No state selected, therefore remove the site from the unit cell
+                    del self.unit_cells[selected_uc_id].sites[selected_site_id]
 
-        # Remove the state from the site
-        del (
-            self.unit_cells[selected_uc_id]
-            .sites[selected_site_id]
-            .states[selected_state_id]
-        )
+                    # Update UI and select the parent unit cell (selective removal instead of full refresh)
+                    self.tree_view.remove_tree_item(selected_uc_id, selected_site_id)
+                    self.tree_view.select_item(selected_uc_id, "unit_cell")
 
-        # Update UI and select the parent site (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(
-            selected_uc_id, selected_site_id, selected_state_id
-        )
-        self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
+            else:
+                # No site selected, therefore remove the unit cell from the model
+                del self.unit_cells[selected_uc_id]
+
+                # Update UI (selective removal instead of full refresh)
+                self.tree_view.remove_tree_item(selected_uc_id)
+
+                # Clear selection explicitly
+                self.tree_view.tree_view.selectionModel().clearSelection()
+                self.tree_view.tree_view.setCurrentIndex(
+                    QModelIndex()
+                )  # Clear the cursor/visual highlight
+                self.tree_view.selection_changed_signal.emit(None, None, None)

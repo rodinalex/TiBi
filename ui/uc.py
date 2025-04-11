@@ -5,7 +5,6 @@ from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
-from ui.placeholder import PlaceholderWidget
 from ui.UC.button_panel import ButtonPanel
 
 from controllers.uc_cotroller import UCController
@@ -101,6 +100,7 @@ class UnitCellUI(QWidget):
         layout.addLayout(top_panel, stretch=6)
         layout.addWidget(self.uc_stack, stretch=2)
         layout.addWidget(self.site_stack, stretch=1)
+        layout.setSpacing(5)
 
         # Connect tree view signals to show appropriate panels
         self.tree_view_panel.selection_changed_signal.connect(self.show_panels)

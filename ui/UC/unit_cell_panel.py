@@ -3,10 +3,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QCheckBox,
     QWidget,
-    QLineEdit,
     QFormLayout,
     QLabel,
-    QPushButton,
     QDoubleSpinBox,
 )
 from PySide6.QtCore import Qt
@@ -31,6 +29,9 @@ class UnitCellPanel(QWidget):
         super().__init__()
 
         self.model = model
+
+        header = QLabel("Unit Cell basis")
+        header.setAlignment(Qt.AlignCenter)
 
         form_layout = QFormLayout()
         form_layout.setVerticalSpacing(2)
@@ -74,17 +75,12 @@ class UnitCellPanel(QWidget):
         form_layout.addRow("v<sub>2</sub>:", self.v2_layout)
         form_layout.addRow("v<sub>3</sub>:", self.v3_layout)
 
-        # Buttons for actions
-        button_layout = QHBoxLayout()
-        self.add_btn = QPushButton("Add Site")
-        button_layout.addWidget(self.add_btn)
-
         # Main layout
         layout = QVBoxLayout(self)
+        layout.addWidget(header)
         layout.addLayout(form_layout)
-        layout.addLayout(button_layout)
 
-        layout.setSpacing(5)
+        # layout.setSpacing(5)
 
         # Sync the UI with the model
         self.update_ui()
