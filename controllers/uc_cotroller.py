@@ -5,6 +5,7 @@ from ui.UC.tree_view_panel import TreeViewPanel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
+from ui.UC.button_panel import ButtonPanel
 
 
 class UCController(QObject):
@@ -31,6 +32,7 @@ class UCController(QObject):
         site_panel: SitePanel,  # Form panel for editing sites
         state_panel: StatePanel,  # Form panel for editing states
         tree_view: TreeViewPanel,  # Tree view showing the hierarchy
+        button_panel: ButtonPanel,
         selection,  # Tracks currently selected items
     ):
         """
@@ -51,28 +53,29 @@ class UCController(QObject):
         self.site_panel = site_panel
         self.state_panel = state_panel
         self.tree_view = tree_view
+        self.button_panel = button_panel
         self.selection = selection
 
         # Connect UI signals to appropriate handler methods
 
         # Tree view button
-        self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
+        # self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
 
         # Unit cell panel buttons
-        self.unit_cell_panel.delete_btn.clicked.connect(self.delete_unit_cell)
         self.unit_cell_panel.add_btn.clicked.connect(self.add_site)
 
         # Site panel buttons
-        self.site_panel.delete_btn.clicked.connect(self.delete_site)
         self.site_panel.add_btn.clicked.connect(self.add_state)
-
-        # State panel buttons
-        self.state_panel.delete_btn.clicked.connect(self.delete_state)
 
         # Tree view signals
         self.tree_view.unit_cell_delete.connect(self.delete_unit_cell)
         self.tree_view.site_delete.connect(self.delete_site)
         self.tree_view.state_delete.connect(self.delete_state)
+
+        # Button panel signals
+        self.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
+        self.button_panel.new_site_btn.clicked.connect(self.add_site)
+        self.button_panel.new_state_btn.clicked.connect(self.add_state)
 
     def add_unit_cell(self):
         """

@@ -62,13 +62,13 @@ class TreeViewPanel(QWidget):
         self.tree_view.setModel(self.tree_model)
 
         # Add unit cell button
-        self.add_unit_cell_btn = QPushButton("Add Unit Cell")
+        # self.add_unit_cell_btn = QPushButton("Add Unit Cell")
 
         # Layout setup
         layout = QVBoxLayout(self)
         # layout.addWidget(QLabel("Project Structure"))
         layout.addWidget(self.tree_view)
-        layout.addWidget(self.add_unit_cell_btn)
+        # layout.addWidget(self.add_unit_cell_btn)
 
         # Connect signals
         self.tree_view.selectionModel().selectionChanged.connect(

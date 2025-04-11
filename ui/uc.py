@@ -6,7 +6,7 @@ from ui.UC.site_panel import SitePanel
 from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
 from ui.placeholder import PlaceholderWidget
-
+from ui.UC.button_panel import ButtonPanel
 
 from controllers.uc_cotroller import UCController
 
@@ -59,9 +59,12 @@ class UnitCellUI(QWidget):
         self.site_panel = SitePanel(self.site_model)
         self.state_panel = StatePanel(self.state_model)
         self.tree_view_panel = TreeViewPanel(
-            self.unit_cells, self.unit_cell_model, self.site_model, self.state_model
+            self.unit_cells,
+            self.unit_cell_model,
+            self.site_model,
+            self.state_model,
         )
-
+        self.button_panel = ButtonPanel()
         # Initialize controller
         self.controller = UCController(
             self.unit_cells,
@@ -69,6 +72,7 @@ class UnitCellUI(QWidget):
             self.site_panel,
             self.state_panel,
             self.tree_view_panel,
+            self.button_panel,
             self.selection,
         )
 
@@ -92,7 +96,7 @@ class UnitCellUI(QWidget):
 
         top_panel = QHBoxLayout()
         top_panel.addWidget(self.tree_view_panel, stretch=2)
-        top_panel.addWidget(PlaceholderWidget("Tst"), stretch=1)
+        top_panel.addWidget(self.button_panel, stretch=1)
 
         layout.addLayout(top_panel, stretch=6)
         layout.addWidget(self.uc_stack, stretch=2)
@@ -140,7 +144,7 @@ class UnitCellUI(QWidget):
                 }
             )
             self.uc_stack.setCurrentWidget(self.unit_cell_panel)
-
+            self.button_panel.new_site_btn.setEnabled(True)
             if site_id:
                 site = uc.sites[site_id]
                 # Update the form model with all site properties
@@ -154,6 +158,7 @@ class UnitCellUI(QWidget):
                     }
                 )
                 self.site_stack.setCurrentWidget(self.site_panel)
+                self.button_panel.new_state_btn.setEnabled(True)
 
                 if state_id:
                     state = site.states[state_id]
@@ -165,5 +170,8 @@ class UnitCellUI(QWidget):
                     )
             else:
                 self.site_stack.setCurrentWidget(self.site_info_label)
+                self.button_panel.new_state_btn.setEnabled(False)
         else:
             self.uc_stack.setCurrentWidget(self.uc_info_label)
+            self.button_panel.new_site_btn.setEnabled(False)
+            self.button_panel.new_state_btn.setEnabled(False)
