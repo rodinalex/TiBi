@@ -14,8 +14,6 @@ from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel
 from ui.placeholder import PlaceholderWidget
 
-# from controllers.hopping_controller import HoppingController
-
 
 class MainWindow(QMainWindow):
     """
@@ -31,7 +29,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1200, 900))  # Slightly wider to accommodate 3D plot
+        self.setFixedSize(QSize(1200, 900))
 
         # Initialize UI panels
         self.uc = UnitCellUI()
@@ -61,7 +59,7 @@ class MainWindow(QMainWindow):
         mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
         # Connect signals to update the plot after tree selection
-        self.uc.tree_view_panel.selection_changed_signal.connect(self.update_plot)
+        self.uc.selection.signals.updated.connect(self.update_plot)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
@@ -77,7 +75,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_view)
 
-    def update_plot(self, unit_cell_id, site_id=None, state_id=None):
+    def update_plot(self):
         """
         Update the 3D plot with the selected unit cell.
         Highlight the selected site in the 3D plot.
@@ -91,7 +89,8 @@ class MainWindow(QMainWindow):
             site_id: UUID of the site to highlight
             state: UUID of the state from the state selection signal
         """
-
+        unit_cell_id = self.uc.selection.get("unit_cell", None)
+        site_id = self.uc.selection.get("unit_cell", None)
         if unit_cell_id in self.uc.unit_cells:
             unit_cell = self.uc.unit_cells[unit_cell_id]
             self.unit_cell_plot.set_unit_cell(unit_cell)

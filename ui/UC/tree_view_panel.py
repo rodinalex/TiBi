@@ -7,6 +7,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QShor
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from src.tibitypes import UnitCell
 import uuid
+from models.uc_models import DataModel
 
 
 class TreeViewPanel(QWidget):
@@ -25,15 +26,15 @@ class TreeViewPanel(QWidget):
     """
 
     # Define signals
-    selection_changed_signal = Signal(object, object, object)
     delete = Signal()
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        unit_cell_model,
-        site_model,
-        state_model,
+        unit_cell_model: DataModel,
+        site_model: DataModel,
+        state_model: DataModel,
+        selection: DataModel,
     ):
         super().__init__()
 
@@ -41,6 +42,7 @@ class TreeViewPanel(QWidget):
         self.unit_cell_model = unit_cell_model
         self.site_model = site_model
         self.state_model = state_model
+        self.selection = selection
 
         # Create and configure tree view
         self.tree_view = QTreeView()
@@ -224,7 +226,7 @@ class TreeViewPanel(QWidget):
         """
         indexes = selected.indexes()
         if not indexes:
-            self.selection_changed_signal.emit(None, None, None)
+            self.selection.update({"unit_cell": None, "site": None, "state": None})
             return
 
         # Get the selected item
@@ -235,16 +237,20 @@ class TreeViewPanel(QWidget):
         item_id = item.data(Qt.UserRole + 2)
 
         if item_type == "unit_cell":
-            self.selection_changed_signal.emit(item_id, None, None)
+            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
         else:
             parent_item = item.parent()
             parent_id = parent_item.data(Qt.UserRole + 2)
             if item_type == "site":
-                self.selection_changed_signal.emit(parent_id, item_id, None)
+                self.selection.update(
+                    {"unit_cell": parent_id, "site": item_id, "state": None}
+                )
             else:  # "state" selected
                 grandparent_item = parent_item.parent()
                 grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-                self.selection_changed_signal.emit(grandparent_id, parent_id, item_id)
+                self.selection.update(
+                    {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+                )
 
     # Programmatically select a tree item
     def select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
@@ -262,13 +268,17 @@ class TreeViewPanel(QWidget):
         """
         if item_type == "unit_cell":
             parent = self.root_node
-            self.selection_changed_signal.emit(item_id, None, None)
+            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
         elif item_type == "site":
             parent = self.find_item_by_id(parent_id, "unit_cell")
-            self.selection_changed_signal.emit(parent_id, item_id, None)
+            self.selection.update(
+                {"unit_cell": parent_id, "site": item_id, "state": None}
+            )
         else:
             parent = self.find_item_by_id(parent_id, "site", grandparent_id)
-            self.selection_changed_signal.emit(grandparent_id, parent_id, item_id)
+            self.selection.update(
+                {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+            )
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:

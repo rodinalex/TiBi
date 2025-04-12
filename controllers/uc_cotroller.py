@@ -256,4 +256,4 @@ class UCController(QObject):
                 self.tree_view.tree_view.setCurrentIndex(
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
-                self.tree_view.selection_changed_signal.emit(None, None, None)
+                self.selection.update({"unit_cell": None, "site": None, "state": None})

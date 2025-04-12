@@ -60,6 +60,7 @@ class UnitCellUI(QWidget):
             self.unit_cell_model,
             self.site_model,
             self.state_model,
+            self.selection,
         )
         self.button_panel = ButtonPanel()
         # Initialize controller
@@ -98,7 +99,7 @@ class UnitCellUI(QWidget):
         layout.setSpacing(5)
 
         # Connect tree view signals to show appropriate panels
-        self.tree_view_panel.selection_changed_signal.connect(self.show_panels)
+        self.selection.signals.updated.connect(self.show_panels)
 
         # Save data whenever the models register an update
         self.unit_cell_model.signals.updated.connect(self.controller.save_unit_cell)
@@ -109,10 +110,11 @@ class UnitCellUI(QWidget):
         self.unit_cell_model.signals.updated.connect(self.unit_cell_panel.update_ui)
         self.site_model.signals.updated.connect(self.site_panel.update_ui)
 
-    def show_panels(self, unit_cell_id, site_id, state_id):
-        self.selection["unit_cell"] = unit_cell_id
-        self.selection["site"] = site_id
-        self.selection["state"] = state_id
+    def show_panels(self):
+        unit_cell_id = self.selection.get("unit_cell", None)
+        site_id = self.selection.get("site", None)
+        state_id = self.selection.get("state", None)
+
         if unit_cell_id:
             # Get the selected unit cell
             uc = self.unit_cells[unit_cell_id]
