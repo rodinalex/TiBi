@@ -35,6 +35,7 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Check that the volume of the unit cell is non-zero
 - When deleting a UC, make sure that the UC plot is reset
 - BZ Calculation
+- Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
 
 ## Bugs
 - State saving triggered when states are selected

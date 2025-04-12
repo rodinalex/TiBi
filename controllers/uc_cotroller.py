@@ -56,6 +56,7 @@ class UCController(QObject):
         self.button_panel.new_site_btn.clicked.connect(self.add_site)
         self.button_panel.new_state_btn.clicked.connect(self.add_state)
         self.button_panel.delete_btn.clicked.connect(self.delete_item)
+        self.button_panel.reduce_btn.clicked.connect(self.reduce_uc_basis)
 
     def add_unit_cell(self):
         """
@@ -257,3 +258,27 @@ class UCController(QObject):
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
                 self.selection.update({"unit_cell": None, "site": None, "state": None})
+
+    def reduce_uc_basis(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        if selected_uc_id:
+            uc = self.unit_cells[selected_uc_id]
+            reduced_basis = uc.reduced_basis()
+
+            # Run a model update
+            v1 = reduced_basis[0]
+            v2 = reduced_basis[1]
+            v3 = reduced_basis[2]
+            self.tree_view.unit_cell_model.update(
+                {
+                    "v1x": v1.x,
+                    "v1y": v1.y,
+                    "v1z": v1.z,
+                    "v2x": v2.x,
+                    "v2y": v2.y,
+                    "v2z": v2.z,
+                    "v3x": v3.x,
+                    "v3y": v3.y,
+                    "v3z": v3.z,
+                }
+            )

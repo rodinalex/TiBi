@@ -140,6 +140,7 @@ class UnitCellUI(QWidget):
             )
             self.uc_stack.setCurrentWidget(self.unit_cell_panel)
             self.button_panel.new_site_btn.setEnabled(True)
+            self.button_panel.reduce_btn.setEnabled(True)
             if site_id:
                 site = uc.sites[site_id]
                 # Update the form model with all site properties

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import uuid
 from typing import Tuple
 import numpy as np
+from sympy import Matrix
 
 
 @dataclass
@@ -131,6 +132,36 @@ class UnitCell:
 
         else:
             raise ValueError("Invalid number of periodic vectors.")
+
+    def reduced_basis(self, scale: float = 1e6) -> list[BasisVector]:
+        """
+        Return a reduced set of periodic basis vectors using LLL algorithm.
+
+        Args:
+            scale: A float to scale the vectors for integer reduction (default: 1e6)
+
+        Returns:
+            A list of BasisVector objects representing the reduced basis.
+        """
+        periodic = [
+            (v, v.is_periodic) for v in [self.v1, self.v2, self.v3] if v.is_periodic
+        ]
+        if not periodic:
+            return []
+
+        vectors = np.array([v.as_array() for v, _ in periodic])
+        scaled = np.round(vectors * scale).astype(int)
+
+        # LLL reduction via SymPy
+        mat = Matrix(scaled.T.tolist())  # SymPy expects columns
+        reduced_mat = mat.lll()
+        reduced_array = np.array(reduced_mat.tolist()).T / scale
+
+        reduced_basis = [
+            BasisVector(*vec, is_periodic=flag)
+            for vec, (_, flag) in zip(reduced_array, periodic)
+        ]
+        return reduced_basis
 
 
 def get_states(uc: UnitCell):

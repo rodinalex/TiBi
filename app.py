@@ -60,6 +60,9 @@ class MainWindow(QMainWindow):
 
         # Connect signals to update the plot after tree selection
         self.uc.selection.signals.updated.connect(self.update_plot)
+        # Connect signals to update the plot after the model for the unit cell or site changes
+        self.uc.unit_cell_model.signals.updated.connect(self.update_plot)
+        self.uc.site_model.signals.updated.connect(self.update_plot)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
