@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 import uuid
 from typing import Tuple
 import numpy as np
-from sympy import Matrix
+from sympy.polys.domains import ZZ
+from sympy.polys.matrices import DM
 
 
 @dataclass
@@ -143,24 +144,35 @@ class UnitCell:
         Returns:
             A list of BasisVector objects representing the reduced basis.
         """
-        periodic = [
-            (v, v.is_periodic) for v in [self.v1, self.v2, self.v3] if v.is_periodic
+        vs = [self.v1, self.v2, self.v3]
+        # Determine which vectors are periodic
+        periodic_flags = [v.is_periodic for v in vs]
+        # Extract the periodic vectors. Scale them to be used in reduction
+        periodic_vectors = [
+            np.round(scale * vs[ii].as_array()).astype(int)
+            for ii in range(3)
+            if periodic_flags[ii]
         ]
-        if not periodic:
-            return []
 
-        vectors = np.array([v.as_array() for v, _ in periodic])
-        scaled = np.round(vectors * scale).astype(int)
+        # If there are fewer than 2 periodic vectors, LLL reduction isn't meaningful
+        if len(periodic_vectors) < 2:
+            return vs  # Return unchanged
 
-        # LLL reduction via SymPy
-        mat = Matrix(scaled.T.tolist())  # SymPy expects columns
-        reduced_mat = mat.lll()
-        reduced_array = np.array(reduced_mat.tolist()).T / scale
+        # Reduced vectors
+        reduced = DM(periodic_vectors, ZZ).lll().to_list()
+        # Rebuild full list with reduced periodic vectors in original order
+        reduced_basis = []
+        # Rescale
+        reduced_vectors = [np.array(vec, dtype=float) / scale for vec in reduced]
 
-        reduced_basis = [
-            BasisVector(*vec, is_periodic=flag)
-            for vec, (_, flag) in zip(reduced_array, periodic)
-        ]
+        jj = 0  # Index for reduced_vectors
+        for ii in range(3):
+            if periodic_flags[ii]:
+                vec = reduced_vectors[jj]
+                reduced_basis.append(BasisVector(*vec, is_periodic=True))
+                jj += 1
+            else:
+                reduced_basis.append(vs[ii])  # Unchanged
         return reduced_basis
 
 

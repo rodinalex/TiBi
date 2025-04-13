@@ -38,7 +38,6 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
 
 ## Bugs
-- State saving triggered when states are selected
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->
