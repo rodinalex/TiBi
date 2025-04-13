@@ -65,7 +65,7 @@ class UnitCellPanel(QWidget):
             x = QDoubleSpinBox()
             y = QDoubleSpinBox()
             z = QDoubleSpinBox()
-            c = QCheckBox()
+            # c = QCheckBox()
 
             for coord in [x, y, z]:
                 coord.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -78,16 +78,17 @@ class UnitCellPanel(QWidget):
             x.editingFinished.connect(lambda: self.update_model(v + "x", x.value()))
             y.editingFinished.connect(lambda: self.update_model(v + "y", y.value()))
             z.editingFinished.connect(lambda: self.update_model(v + "z", z.value()))
-            c.checkStateChanged.connect(
-                lambda t: self.update_model(v + "periodic", t == Qt.Checked)
-            )
+            # c.checkStateChanged.connect(
+            #     lambda t: self.update_model(v + "periodic", t == Qt.Checked)
+            # )
 
             layout.addWidget(x)
             layout.addWidget(y)
             layout.addWidget(z)
-            layout.addWidget(c)
-            layout.addWidget(QLabel("Periodic"))
-            return layout, (x, y, z, c)
+            # layout.addWidget(c)
+            # layout.addWidget(QLabel("Periodic"))
+            return layout, (x, y, z)
+            # return layout, (x, y, z, c)
 
         # Create vector input rows
         self.v1_layout, self.v1 = create_vector_row("v1")
@@ -120,14 +121,14 @@ class UnitCellPanel(QWidget):
         self.v1[0].setValue(self.model["v1x"])
         self.v1[1].setValue(self.model["v1y"])
         self.v1[2].setValue(self.model["v1z"])
-        self.v1[3].setChecked(bool(self.model["v1periodic"]))
+        # self.v1[3].setChecked(bool(self.model["v1periodic"]))
 
         self.v2[0].setValue(self.model["v2x"])
         self.v2[1].setValue(self.model["v2y"])
         self.v2[2].setValue(self.model["v2z"])
-        self.v2[3].setChecked(bool(self.model["v2periodic"]))
+        # self.v2[3].setChecked(bool(self.model["v2periodic"]))
 
         self.v3[0].setValue(self.model["v3x"])
         self.v3[1].setValue(self.model["v3y"])
         self.v3[2].setValue(self.model["v3z"])
-        self.v3[3].setChecked(bool(self.model["v3periodic"]))
+        # self.v3[3].setChecked(bool(self.model["v3periodic"]))
