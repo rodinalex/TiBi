@@ -29,11 +29,9 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
 
 ## Reminders
-- Reciprocal lattice
+- Use Voronoi to obtain BZ since the basis vectors are reduced already
 - Hamiltonian function with momenta along the reciprocal lattice directions
-- Tidy up the UC panel: it's too wide for the tree, but the UC creation fields still need to go somewhere
 - Check that the volume of the unit cell is non-zero
-- When deleting a UC, make sure that the UC plot is reset
 - BZ Calculation
 - Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
 

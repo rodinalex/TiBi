@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLabel,
     QDoubleSpinBox,
+    QRadioButton,
+    QButtonGroup,
 )
 from PySide6.QtCore import Qt
 from models.uc_models import DataModel
@@ -30,11 +32,32 @@ class UnitCellPanel(QWidget):
 
         self.model = model
 
-        header = QLabel("Unit Cell basis")
-        header.setAlignment(Qt.AlignCenter)
+        dimensionality_header = QLabel("Dimensionality")
+        dimensionality_header.setAlignment(Qt.AlignCenter)
+
+        basis_header = QLabel("Unit Cell basis")
+        basis_header.setAlignment(Qt.AlignCenter)
 
         form_layout = QFormLayout()
         form_layout.setVerticalSpacing(2)
+
+        # Radio buttons
+        self.radio0D = QRadioButton("0D")
+        self.radio1D = QRadioButton("1D")
+        self.radio2D = QRadioButton("2D")
+        self.radio3D = QRadioButton("3D")
+
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.radio0D, id=0)
+        self.radio_group.addButton(self.radio1D, id=1)
+        self.radio_group.addButton(self.radio2D, id=2)
+        self.radio_group.addButton(self.radio3D, id=3)
+
+        radio_layout = QHBoxLayout()
+        radio_layout.addWidget(self.radio0D)
+        radio_layout.addWidget(self.radio1D)
+        radio_layout.addWidget(self.radio2D)
+        radio_layout.addWidget(self.radio3D)
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_row(v):
@@ -77,7 +100,9 @@ class UnitCellPanel(QWidget):
 
         # Main layout
         layout = QVBoxLayout(self)
-        layout.addWidget(header)
+        layout.addWidget(dimensionality_header)
+        layout.addLayout(radio_layout)
+        layout.addWidget(basis_header)
         layout.addLayout(form_layout)
 
         # layout.setSpacing(5)

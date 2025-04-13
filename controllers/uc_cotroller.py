@@ -58,6 +58,11 @@ class UCController(QObject):
         self.button_panel.delete_btn.clicked.connect(self.delete_item)
         self.button_panel.reduce_btn.clicked.connect(self.reduce_uc_basis)
 
+        # Save data whenever the models register an update
+        self.tree_view.unit_cell_model.signals.updated.connect(self.save_unit_cell)
+        self.tree_view.site_model.signals.updated.connect(self.save_site)
+        self.tree_view.state_model.signals.updated.connect(self.save_state)
+
     def add_unit_cell(self):
         """
         Create a new unit cell with default properties and add it to the model.
