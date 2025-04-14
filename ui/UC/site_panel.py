@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QDoubleSpinBox,
     QLabel,
+    QFormLayout,
 )
 
 from PySide6.QtCore import Qt
@@ -27,7 +28,7 @@ class SitePanel(QWidget):
 
         self.model = model
 
-        header = QLabel("Site fractional coordinates")
+        header = QLabel("Site coordinates")
         header.setAlignment(Qt.AlignCenter)
 
         spinner_layout = QHBoxLayout()
@@ -54,27 +55,16 @@ class SitePanel(QWidget):
         )
 
         # Create row layouts with labels on the left and spin boxes on the right
-        spinner1 = QHBoxLayout()
-        spinner1.addWidget(QLabel("c<sub>1</sub>:"))
-        spinner1.addWidget(self.c1)
-
-        spinner2 = QHBoxLayout()
-        spinner2.addWidget(QLabel("c<sub>2</sub>:"))
-        spinner2.addWidget(self.c2)
-
-        spinner3 = QHBoxLayout()
-        spinner3.addWidget(QLabel("c<sub>3</sub>:"))
-        spinner3.addWidget(self.c3)
-
-        # Add spinners to the main form layout
-        spinner_layout.addLayout(spinner1)
-        spinner_layout.addLayout(spinner2)
-        spinner_layout.addLayout(spinner3)
+        form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(2)
+        form_layout.addRow("c<sub>1</sub>:", self.c1)
+        form_layout.addRow("c<sub>2</sub>:", self.c2)
+        form_layout.addRow("c<sub>3</sub>:", self.c3)
 
         # Main layout
         layout = QVBoxLayout(self)
         layout.addWidget(header)
-        layout.addLayout(spinner_layout)
+        layout.addLayout(form_layout)
 
         # Sync the UI with the model
         self.update_ui()

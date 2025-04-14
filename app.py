@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
 
         # Left column for hierarchical view and form panels
         left_layout.addWidget(self.uc, stretch=1)
-        left_layout.addWidget(self.hopping, stretch=1)
+        left_layout.addWidget(self.hopping, stretch=2)
 
         # 3D visualization for the unit cell
         mid_layout.addWidget(self.unit_cell_plot, stretch=2)

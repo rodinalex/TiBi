@@ -35,7 +35,13 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - BZ Calculation
 - Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
 
+## Daily Plan
+- Reorganize UC panel for compactness
+- Implement Voronoi calculations for BZ
+- Get BZ plots
+
 ## Bugs
+- Sites are not market as highlighted in the plot
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

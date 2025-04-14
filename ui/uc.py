@@ -1,4 +1,13 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QStackedWidget, QLabel
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QVBoxLayout,
+    QWidget,
+    QStackedWidget,
+    QLabel,
+    QButtonGroup,
+    QRadioButton,
+    QFormLayout,
+)
 from PySide6.QtCore import Qt
 from models.uc_models import DataModel
 from ui.UC.unit_cell_panel import UnitCellPanel
@@ -87,17 +96,50 @@ class UnitCellUI(QWidget):
         self.site_stack.addWidget(self.site_info_label)
         self.site_stack.addWidget(self.site_panel)
 
+        # Radio panel
+
+        dimensionality_header = QLabel("Dimensionality")
+        dimensionality_header.setAlignment(Qt.AlignCenter)
+
+        # Radio buttons
+        self.radio0D = QRadioButton("0D")
+        self.radio1D = QRadioButton("1D")
+        self.radio2D = QRadioButton("2D")
+        self.radio3D = QRadioButton("3D")
+
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.radio0D, id=0)
+        self.radio_group.addButton(self.radio1D, id=1)
+        self.radio_group.addButton(self.radio2D, id=2)
+        self.radio_group.addButton(self.radio3D, id=3)
+
+        radio_layout = QHBoxLayout()
+        radio_layout.addWidget(self.radio0D)
+        radio_layout.addWidget(self.radio1D)
+        radio_layout.addWidget(self.radio2D)
+        radio_layout.addWidget(self.radio3D)
+
+        radio_form = QFormLayout()
+        radio_form.addRow("Dimensionality:", radio_layout)
+
         # Create the interface
 
         top_panel = QHBoxLayout()
         top_panel.addWidget(self.tree_view_panel, stretch=2)
         top_panel.addWidget(self.button_panel, stretch=1)
 
-        layout.addLayout(top_panel, stretch=6)
-        layout.addWidget(self.uc_stack, stretch=2)
-        layout.addWidget(self.site_stack, stretch=1)
-        layout.setSpacing(5)
+        # Basis vectors and fractional coordinates
+        bottom_panel = QHBoxLayout()
+        # bottom_panel.setContentsMargins(0, 0, 0, 0)
 
+        bottom_panel.addWidget(self.uc_stack, stretch=2)
+        bottom_panel.addWidget(self.site_stack, stretch=1)
+
+        layout.setSpacing(0)
+
+        layout.addLayout(top_panel)
+        layout.addLayout(radio_form)
+        layout.addLayout(bottom_panel)
         # Connect tree view signals to show appropriate panels
         self.selection.signals.updated.connect(self.show_panels)
 
@@ -106,10 +148,10 @@ class UnitCellUI(QWidget):
         self.site_model.signals.updated.connect(self.site_panel.update_ui)
 
         # Dimensionality radio buttons
-        self.unit_cell_panel.radio0D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_panel.radio1D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_panel.radio2D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_panel.radio3D.toggled.connect(self.dimensionality_change)
+        self.radio0D.toggled.connect(self.dimensionality_change)
+        self.radio1D.toggled.connect(self.dimensionality_change)
+        self.radio2D.toggled.connect(self.dimensionality_change)
+        self.radio3D.toggled.connect(self.dimensionality_change)
 
     def show_panels(self):
         unit_cell_id = self.selection.get("unit_cell", None)
@@ -140,7 +182,7 @@ class UnitCellUI(QWidget):
                 }
             )
             dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
-            self.unit_cell_panel.radio_group.button(dim).setChecked(True)
+            self.radio_group.button(dim).setChecked(True)
             self.uc_stack.setCurrentWidget(self.unit_cell_panel)
             self.button_panel.new_site_btn.setEnabled(True)
             self.button_panel.reduce_btn.setEnabled(True)
