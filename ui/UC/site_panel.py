@@ -2,11 +2,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QWidget,
-    QLineEdit,
-    QFormLayout,
-    QPushButton,
     QDoubleSpinBox,
+    QLabel,
+    QFormLayout,
 )
+
+from PySide6.QtCore import Qt
+
 from models.uc_models import DataModel
 
 
@@ -26,7 +28,10 @@ class SitePanel(QWidget):
 
         self.model = model
 
-        form_layout = QFormLayout()
+        header = QLabel("Site coordinates")
+        header.setAlignment(Qt.AlignCenter)
+
+        spinner_layout = QHBoxLayout()
 
         # Coordinate fields
         self.c1 = QDoubleSpinBox()
@@ -49,22 +54,17 @@ class SitePanel(QWidget):
             lambda: self.update_model("c3", self.c3.value())
         )
 
-        # Add form fields
+        # Create row layouts with labels on the left and spin boxes on the right
+        form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(2)
         form_layout.addRow("c<sub>1</sub>:", self.c1)
         form_layout.addRow("c<sub>2</sub>:", self.c2)
         form_layout.addRow("c<sub>3</sub>:", self.c3)
 
-        # Buttons for actions
-        button_layout = QHBoxLayout()
-        self.add_btn = QPushButton("Add State")
-        self.delete_btn = QPushButton("Delete")
-        button_layout.addWidget(self.add_btn)
-        button_layout.addWidget(self.delete_btn)
-
         # Main layout
         layout = QVBoxLayout(self)
+        layout.addWidget(header)
         layout.addLayout(form_layout)
-        layout.addLayout(button_layout)
 
         # Sync the UI with the model
         self.update_ui()

@@ -1,8 +1,13 @@
-from PySide6.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QLabel
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtWidgets import (
+    QWidget,
+    QTreeView,
+    QVBoxLayout,
+)
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from src.tibitypes import UnitCell
 import uuid
+from models.uc_models import DataModel
 
 
 class TreeViewPanel(QWidget):
@@ -21,26 +26,23 @@ class TreeViewPanel(QWidget):
     """
 
     # Define signals
-    none_selected = Signal()
-    unit_cell_selected = Signal(uuid.UUID)
-    site_selected = Signal(uuid.UUID, uuid.UUID)  # unit_cell_id, site_id
-    state_selected = Signal(
-        uuid.UUID, uuid.UUID, uuid.UUID
-    )  # unit_cell_id, site_id, state_id
+    delete = Signal()
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        unit_cell_panel,
-        site_panel,
-        state_panel,
+        unit_cell_model: DataModel,
+        site_model: DataModel,
+        state_model: DataModel,
+        selection: DataModel,
     ):
         super().__init__()
 
         self.unit_cells = unit_cells
-        self.unit_cell_panel = unit_cell_panel
-        self.site_panel = site_panel
-        self.state_panel = state_panel
+        self.unit_cell_model = unit_cell_model
+        self.site_model = site_model
+        self.state_model = state_model
+        self.selection = selection
 
         # Create and configure tree view
         self.tree_view = QTreeView()
@@ -56,19 +58,23 @@ class TreeViewPanel(QWidget):
         # Set model to view
         self.tree_view.setModel(self.tree_model)
 
-        # Add unit cell button
-        self.add_unit_cell_btn = QPushButton("Add Unit Cell")
-
         # Layout setup
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Project Structure"))
+        # layout.addWidget(QLabel("Project Structure"))
         layout.addWidget(self.tree_view)
-        layout.addWidget(self.add_unit_cell_btn)
+        # layout.addWidget(self.add_unit_cell_btn)
 
         # Connect signals
         self.tree_view.selectionModel().selectionChanged.connect(
             self.on_selection_changed
         )
+        # Set up delete shortcut
+        self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
+        self.delete_shortcut.activated.connect(lambda: self.delete.emit())
+
+        # Optional: Add Backspace as an alternative shortcut
+        self.backspace_shortcut = QShortcut(QKeySequence("Backspace"), self.tree_view)
+        self.backspace_shortcut.activated.connect(lambda: self.delete.emit())
 
         # Initial render
         self.refresh_tree()
@@ -220,7 +226,7 @@ class TreeViewPanel(QWidget):
         """
         indexes = selected.indexes()
         if not indexes:
-            self.none_selected.emit()
+            self.selection.update({"unit_cell": None, "site": None, "state": None})
             return
 
         # Get the selected item
@@ -231,16 +237,20 @@ class TreeViewPanel(QWidget):
         item_id = item.data(Qt.UserRole + 2)
 
         if item_type == "unit_cell":
-            self.unit_cell_selected.emit(item_id)
+            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
         else:
             parent_item = item.parent()
             parent_id = parent_item.data(Qt.UserRole + 2)
             if item_type == "site":
-                self.site_selected.emit(parent_id, item_id)
+                self.selection.update(
+                    {"unit_cell": parent_id, "site": item_id, "state": None}
+                )
             else:  # "state" selected
                 grandparent_item = parent_item.parent()
                 grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-                self.state_selected.emit(grandparent_id, parent_id, item_id)
+                self.selection.update(
+                    {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+                )
 
     # Programmatically select a tree item
     def select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
@@ -258,13 +268,17 @@ class TreeViewPanel(QWidget):
         """
         if item_type == "unit_cell":
             parent = self.root_node
-            self.unit_cell_selected.emit(item_id)
+            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
         elif item_type == "site":
             parent = self.find_item_by_id(parent_id, "unit_cell")
-            self.site_selected.emit(parent_id, item_id)
+            self.selection.update(
+                {"unit_cell": parent_id, "site": item_id, "state": None}
+            )
         else:
             parent = self.find_item_by_id(parent_id, "site", grandparent_id)
-            self.state_selected.emit(grandparent_id, parent_id, item_id)
+            self.selection.update(
+                {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+            )
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
@@ -281,8 +295,8 @@ class TreeViewPanel(QWidget):
         item_type = item.data(Qt.UserRole + 1)
         new_name = item.text()
         if item_type == "unit_cell":
-            self.unit_cell_panel.model["name"] = new_name
+            self.unit_cell_model["name"] = new_name
         elif item_type == "site":
-            self.site_panel.model["name"] = new_name
+            self.site_model["name"] = new_name
         else:
-            self.state_panel.model["name"] = new_name
+            self.state_model["name"] = new_name

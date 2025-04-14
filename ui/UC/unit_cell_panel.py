@@ -1,12 +1,9 @@
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
-    QCheckBox,
     QWidget,
-    QLineEdit,
     QFormLayout,
     QLabel,
-    QPushButton,
     QDoubleSpinBox,
 )
 from PySide6.QtCore import Qt
@@ -32,7 +29,11 @@ class UnitCellPanel(QWidget):
 
         self.model = model
 
+        basis_header = QLabel("Unit Cell basis")
+        basis_header.setAlignment(Qt.AlignCenter)
+
         form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(2)
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_row(v):
@@ -40,7 +41,6 @@ class UnitCellPanel(QWidget):
             x = QDoubleSpinBox()
             y = QDoubleSpinBox()
             z = QDoubleSpinBox()
-            c = QCheckBox()
 
             for coord in [x, y, z]:
                 coord.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -53,16 +53,11 @@ class UnitCellPanel(QWidget):
             x.editingFinished.connect(lambda: self.update_model(v + "x", x.value()))
             y.editingFinished.connect(lambda: self.update_model(v + "y", y.value()))
             z.editingFinished.connect(lambda: self.update_model(v + "z", z.value()))
-            c.checkStateChanged.connect(
-                lambda t: self.update_model(v + "periodic", t == Qt.Checked)
-            )
 
             layout.addWidget(x)
             layout.addWidget(y)
             layout.addWidget(z)
-            layout.addWidget(c)
-            layout.addWidget(QLabel("Periodic"))
-            return layout, (x, y, z, c)
+            return layout, (x, y, z)
 
         # Create vector input rows
         self.v1_layout, self.v1 = create_vector_row("v1")
@@ -73,17 +68,11 @@ class UnitCellPanel(QWidget):
         form_layout.addRow("v<sub>2</sub>:", self.v2_layout)
         form_layout.addRow("v<sub>3</sub>:", self.v3_layout)
 
-        # Buttons for actions
-        button_layout = QHBoxLayout()
-        self.add_btn = QPushButton("Add Site")
-        self.delete_btn = QPushButton("Delete")
-        button_layout.addWidget(self.add_btn)
-        button_layout.addWidget(self.delete_btn)
-
         # Main layout
         layout = QVBoxLayout(self)
+
+        layout.addWidget(basis_header)
         layout.addLayout(form_layout)
-        layout.addLayout(button_layout)
 
         # Sync the UI with the model
         self.update_ui()
@@ -98,14 +87,11 @@ class UnitCellPanel(QWidget):
         self.v1[0].setValue(self.model["v1x"])
         self.v1[1].setValue(self.model["v1y"])
         self.v1[2].setValue(self.model["v1z"])
-        self.v1[3].setChecked(bool(self.model["v1periodic"]))
 
         self.v2[0].setValue(self.model["v2x"])
         self.v2[1].setValue(self.model["v2y"])
         self.v2[2].setValue(self.model["v2z"])
-        self.v2[3].setChecked(bool(self.model["v2periodic"]))
 
         self.v3[0].setValue(self.model["v3x"])
         self.v3[1].setValue(self.model["v3y"])
         self.v3[2].setValue(self.model["v3z"])
-        self.v3[3].setChecked(bool(self.model["v3periodic"]))

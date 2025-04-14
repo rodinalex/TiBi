@@ -1,12 +1,19 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QStackedWidget, QLabel
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QVBoxLayout,
+    QWidget,
+    QStackedWidget,
+    QLabel,
+    QButtonGroup,
+    QRadioButton,
+    QFormLayout,
+)
 from PySide6.QtCore import Qt
 from models.uc_models import DataModel
 from ui.UC.unit_cell_panel import UnitCellPanel
 from ui.UC.site_panel import SitePanel
-from ui.UC.state_panel import StatePanel
 from ui.UC.tree_view_panel import TreeViewPanel
-from ui.placeholder import PlaceholderWidget
-
+from ui.UC.button_panel import ButtonPanel
 
 from controllers.uc_cotroller import UCController
 
@@ -46,7 +53,7 @@ class UnitCellUI(QWidget):
         )
 
         self.site_model = DataModel(name="New Site", c1=0.0, c2=0.0, c3=0.0)
-        self.state_model = DataModel(name="New State", energy=0.0)
+        self.state_model = DataModel(name="New State")
 
         # Track currently selected items
         self.selection = DataModel(unit_cell=None, site=None, state=None)
@@ -57,143 +64,281 @@ class UnitCellUI(QWidget):
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel(self.unit_cell_model)
         self.site_panel = SitePanel(self.site_model)
-        self.state_panel = StatePanel(self.state_model)
         self.tree_view_panel = TreeViewPanel(
-            self.unit_cells, self.unit_cell_panel, self.site_panel, self.state_panel
+            self.unit_cells,
+            self.unit_cell_model,
+            self.site_model,
+            self.state_model,
+            self.selection,
         )
-
+        self.button_panel = ButtonPanel()
         # Initialize controller
         self.controller = UCController(
             self.unit_cells,
-            self.unit_cell_panel,
-            self.site_panel,
-            self.state_panel,
             self.tree_view_panel,
+            self.button_panel,
             self.selection,
         )
 
-        # Info label
-        self.info_label = QLabel("Add/Select a Unit Cell")
-        self.info_label.setAlignment(Qt.AlignCenter)
+        # Info labels
+        self.uc_info_label = QLabel("Add/Select a Unit Cell")
+        self.uc_info_label.setAlignment(Qt.AlignCenter)
 
-        # Setup panel stack for dynamic content switching depending on the tree selection.
-        self.form_stack = QStackedWidget()
-        self.form_stack.addWidget(self.info_label)
-        self.form_stack.addWidget(self.unit_cell_panel)
-        self.form_stack.addWidget(self.site_panel)
-        self.form_stack.addWidget(self.state_panel)
+        self.site_info_label = QLabel("Add/Select a Site")
+        self.site_info_label.setAlignment(Qt.AlignCenter)
+
+        # Panel stacks
+        self.uc_stack = QStackedWidget()
+        self.uc_stack.addWidget(self.uc_info_label)
+        self.uc_stack.addWidget(self.unit_cell_panel)
+
+        self.site_stack = QStackedWidget()
+        self.site_stack.addWidget(self.site_info_label)
+        self.site_stack.addWidget(self.site_panel)
+
+        # Radio panel
+
+        dimensionality_header = QLabel("Dimensionality")
+        dimensionality_header.setAlignment(Qt.AlignCenter)
+
+        # Radio buttons
+        self.radio0D = QRadioButton("0D")
+        self.radio1D = QRadioButton("1D")
+        self.radio2D = QRadioButton("2D")
+        self.radio3D = QRadioButton("3D")
+
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.radio0D, id=0)
+        self.radio_group.addButton(self.radio1D, id=1)
+        self.radio_group.addButton(self.radio2D, id=2)
+        self.radio_group.addButton(self.radio3D, id=3)
+
+        radio_layout = QHBoxLayout()
+        radio_layout.addWidget(self.radio0D)
+        radio_layout.addWidget(self.radio1D)
+        radio_layout.addWidget(self.radio2D)
+        radio_layout.addWidget(self.radio3D)
+
+        radio_form = QFormLayout()
+        radio_form.addRow("Dimensionality:", radio_layout)
 
         # Create the interface
 
         top_panel = QHBoxLayout()
         top_panel.addWidget(self.tree_view_panel, stretch=2)
-        top_panel.addWidget(PlaceholderWidget("Tst"), stretch=1)
+        top_panel.addWidget(self.button_panel, stretch=1)
 
-        layout.addLayout(top_panel, stretch=1)
-        layout.addWidget(self.form_stack, stretch=1)
+        # Basis vectors and fractional coordinates
+        bottom_panel = QHBoxLayout()
+        # bottom_panel.setContentsMargins(0, 0, 0, 0)
 
+        bottom_panel.addWidget(self.uc_stack, stretch=2)
+        bottom_panel.addWidget(self.site_stack, stretch=1)
+
+        layout.setSpacing(0)
+
+        layout.addLayout(top_panel)
+        layout.addLayout(radio_form)
+        layout.addLayout(bottom_panel)
         # Connect tree view signals to show appropriate panels
-        self.tree_view_panel.none_selected.connect(self.show_info_panel)
-        self.tree_view_panel.unit_cell_selected.connect(self.show_unit_cell_panel)
-        self.tree_view_panel.site_selected.connect(self.show_site_panel)
-        self.tree_view_panel.state_selected.connect(self.show_state_panel)
-
-        # Save data whenever the models register an update
-        self.unit_cell_model.signals.updated.connect(self.controller.save_unit_cell)
-        self.site_model.signals.updated.connect(self.controller.save_site)
-        self.state_model.signals.updated.connect(self.controller.save_state)
+        self.selection.signals.updated.connect(self.show_panels)
 
         # Update panel forms whenever the models register an update
         self.unit_cell_model.signals.updated.connect(self.unit_cell_panel.update_ui)
         self.site_model.signals.updated.connect(self.site_panel.update_ui)
-        self.state_model.signals.updated.connect(self.state_panel.update_ui)
 
-    def show_info_panel(self):
-        """Display the info panel and deselect all"""
-        self.selection["unit_cell"] = None
-        self.selection["site"] = None
-        self.selection["state"] = None
-        self.form_stack.setCurrentWidget(self.info_label)
+        # Dimensionality radio buttons
+        self.radio0D.toggled.connect(self.dimensionality_change)
+        self.radio1D.toggled.connect(self.dimensionality_change)
+        self.radio2D.toggled.connect(self.dimensionality_change)
+        self.radio3D.toggled.connect(self.dimensionality_change)
 
-    def show_unit_cell_panel(self, unit_cell_id):
-        """
-        Display the unit cell panel and load selected unit cell data.
+    def show_panels(self):
+        unit_cell_id = self.selection.get("unit_cell", None)
+        site_id = self.selection.get("site", None)
+        state_id = self.selection.get("state", None)
 
-        This method is called when a unit cell is selected in the tree view.
-        It updates the selection model, populates the unit cell form with data
-        from the selected unit cell, and switches the stacked widget to show
-        the unit cell editing panel.
+        if unit_cell_id:
+            # Get the selected unit cell
+            uc = self.unit_cells[unit_cell_id]
 
-        The reactive data binding system ensures that when the model is updated,
-        the UI components are automatically refreshed to match.
+            # Update the form model with all unit cell properties
+            # The form will automatically update due to the reactive data binding
+            self.unit_cell_model.update(
+                {
+                    "name": uc.name,
+                    "v1x": uc.v1.x,
+                    "v1y": uc.v1.y,
+                    "v1z": uc.v1.z,
+                    "v2x": uc.v2.x,
+                    "v2y": uc.v2.y,
+                    "v2z": uc.v2.z,
+                    "v3x": uc.v3.x,
+                    "v3y": uc.v3.y,
+                    "v3z": uc.v3.z,
+                    "v1periodic": uc.v1.is_periodic,
+                    "v2periodic": uc.v2.is_periodic,
+                    "v3periodic": uc.v3.is_periodic,
+                }
+            )
+            dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
+            self.radio_group.button(dim).setChecked(True)
+            self.uc_stack.setCurrentWidget(self.unit_cell_panel)
+            self.button_panel.new_site_btn.setEnabled(True)
+            self.button_panel.reduce_btn.setEnabled(True)
+            if site_id:
+                site = uc.sites[site_id]
+                # Update the form model with all site properties
+                # The corresponding update function to update the fields is fired automatically.
+                self.site_model.update(
+                    {
+                        "name": site.name,
+                        "c1": site.c1,
+                        "c2": site.c2,
+                        "c3": site.c3,
+                    }
+                )
+                self.site_stack.setCurrentWidget(self.site_panel)
+                self.button_panel.new_state_btn.setEnabled(True)
 
-        Args:
-            unit_cell_id: UUID of the selected unit cell
-        """
-        # Update the current selection state
-        self.selection["unit_cell"] = unit_cell_id
-        self.selection["site"] = None
-        self.selection["state"] = None
+                if state_id:
+                    state = site.states[state_id]
 
-        # Get the selected unit cell
-        uc = self.unit_cells[unit_cell_id]
+                    # Update the form model with the state properties
+                    # The corresponding update function to update the fields is fired automatically.
+                    self.state_model.update(
+                        {
+                            "name": state.name,
+                        }
+                    )
+            else:
+                self.site_stack.setCurrentWidget(self.site_info_label)
+                self.button_panel.new_state_btn.setEnabled(False)
+        else:
+            self.uc_stack.setCurrentWidget(self.uc_info_label)
+            self.button_panel.new_site_btn.setEnabled(False)
+            self.button_panel.new_state_btn.setEnabled(False)
 
-        # Update the form model with all unit cell properties
-        # The form will automatically update due to the reactive data binding
-        self.unit_cell_model.update(
-            {
-                "name": uc.name,
-                "v1x": uc.v1.x,
-                "v1y": uc.v1.y,
-                "v1z": uc.v1.z,
-                "v2x": uc.v2.x,
-                "v2y": uc.v2.y,
-                "v2z": uc.v2.z,
-                "v3x": uc.v3.x,
-                "v3y": uc.v3.y,
-                "v3z": uc.v3.z,
-                "v1periodic": uc.v1.is_periodic,
-                "v2periodic": uc.v2.is_periodic,
-                "v3periodic": uc.v3.is_periodic,
-            }
-        )
-        # Switch to the unit cell panel
-        self.form_stack.setCurrentWidget(self.unit_cell_panel)
+    def dimensionality_change(self):
+        btn = self.sender()
+        if btn.isChecked():
+            selected_dim = btn.text()
+            if selected_dim == "0D":
+                self.unit_cell_panel.v1[0].setEnabled(True)
+                self.unit_cell_panel.v1[1].setEnabled(False)
+                self.unit_cell_panel.v1[2].setEnabled(False)
 
-    def show_site_panel(self, unit_cell_id, site_id):
-        """Display the site panel and load selected site data"""
-        # Save the current selection
-        self.selection["unit_cell"] = unit_cell_id
-        self.selection["site"] = site_id
-        self.selection["state"] = None
+                self.unit_cell_panel.v2[0].setEnabled(False)
+                self.unit_cell_panel.v2[1].setEnabled(True)
+                self.unit_cell_panel.v2[2].setEnabled(False)
 
-        uc = self.unit_cells[unit_cell_id]
-        site = uc.sites[site_id]
-        # Update the form model
-        # The corresponding update function to update the fields is fired automatically.
-        self.site_model.update(
-            {
-                "name": site.name,
-                "c1": site.c1,
-                "c2": site.c2,
-                "c3": site.c3,
-            }
-        )
-        # Set the appropriate panel
-        self.form_stack.setCurrentWidget(self.site_panel)
+                self.unit_cell_panel.v3[0].setEnabled(False)
+                self.unit_cell_panel.v3[1].setEnabled(False)
+                self.unit_cell_panel.v3[2].setEnabled(True)
 
-    def show_state_panel(self, unit_cell_id, site_id, state_id):
-        """Display the state panel and load selected state data"""
-        # Save the current selection
-        self.selection["unit_cell"] = unit_cell_id
-        self.selection["site"] = site_id
-        self.selection["state"] = state_id
+                self.unit_cell_model.update(
+                    {
+                        "v1x": 1.0,
+                        "v1y": 0.0,
+                        "v1z": 0.0,
+                        "v2x": 0.0,
+                        "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        "v3z": 1.0,
+                        "v1periodic": False,
+                        "v2periodic": False,
+                        "v3periodic": False,
+                    }
+                )
 
-        uc = self.unit_cells[unit_cell_id]
-        site = uc.sites[site_id]
-        state = site.states[state_id]
+            elif selected_dim == "1D":
+                self.unit_cell_panel.v1[0].setEnabled(True)
+                self.unit_cell_panel.v1[1].setEnabled(False)
+                self.unit_cell_panel.v1[2].setEnabled(False)
 
-        # Update the form model
-        # The corresponding update function to update the fields is fired automatically.
-        self.state_model.update({"name": state.name, "energy": state.energy})
-        self.form_stack.setCurrentWidget(self.state_panel)
+                self.unit_cell_panel.v2[0].setEnabled(False)
+                self.unit_cell_panel.v2[1].setEnabled(True)
+                self.unit_cell_panel.v2[2].setEnabled(False)
+
+                self.unit_cell_panel.v3[0].setEnabled(False)
+                self.unit_cell_panel.v3[1].setEnabled(False)
+                self.unit_cell_panel.v3[2].setEnabled(True)
+
+                self.unit_cell_model.update(
+                    {
+                        # "v1x": 1.0,
+                        "v1y": 0.0,
+                        "v1z": 0.0,
+                        "v2x": 0.0,
+                        # "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": False,
+                        "v3periodic": False,
+                    }
+                )
+
+            elif selected_dim == "2D":
+                self.unit_cell_panel.v1[0].setEnabled(True)
+                self.unit_cell_panel.v1[1].setEnabled(True)
+                self.unit_cell_panel.v1[2].setEnabled(False)
+
+                self.unit_cell_panel.v2[0].setEnabled(True)
+                self.unit_cell_panel.v2[1].setEnabled(True)
+                self.unit_cell_panel.v2[2].setEnabled(False)
+
+                self.unit_cell_panel.v3[0].setEnabled(False)
+                self.unit_cell_panel.v3[1].setEnabled(False)
+                self.unit_cell_panel.v3[2].setEnabled(True)
+
+                self.unit_cell_model.update(
+                    {
+                        # "v1x": 1.0,
+                        # "v1y": 0.0,
+                        "v1z": 0.0,
+                        # "v2x": 0.0,
+                        # "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": True,
+                        "v3periodic": False,
+                    }
+                )
+
+            elif selected_dim == "3D":
+                self.unit_cell_panel.v1[0].setEnabled(True)
+                self.unit_cell_panel.v1[1].setEnabled(True)
+                self.unit_cell_panel.v1[2].setEnabled(True)
+
+                self.unit_cell_panel.v2[0].setEnabled(True)
+                self.unit_cell_panel.v2[1].setEnabled(True)
+                self.unit_cell_panel.v2[2].setEnabled(True)
+
+                self.unit_cell_panel.v3[0].setEnabled(True)
+                self.unit_cell_panel.v3[1].setEnabled(True)
+                self.unit_cell_panel.v3[2].setEnabled(True)
+
+                self.unit_cell_model.update(
+                    {
+                        # "v1x": 1.0,
+                        # "v1y": 0.0,
+                        # "v1z": 0.0,
+                        # "v2x": 0.0,
+                        # "v2y": 1.0,
+                        # "v2z": 0.0,
+                        # "v3x": 0.0,
+                        # "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": True,
+                        "v3periodic": True,
+                    }
+                )

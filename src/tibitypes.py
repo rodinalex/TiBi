@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 import uuid
 from typing import Tuple
 import numpy as np
+from sympy.polys.domains import ZZ
+from sympy.polys.matrices import DM
 
 
 @dataclass
@@ -42,7 +44,6 @@ class State:
     """
 
     name: str  # Name of the state (e.g., "s", "px", "py", etc.)
-    energy: float  # On-site energy of the state (eV)
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
 
@@ -132,6 +133,47 @@ class UnitCell:
 
         else:
             raise ValueError("Invalid number of periodic vectors.")
+
+    def reduced_basis(self, scale: float = 1e6) -> list[BasisVector]:
+        """
+        Return a reduced set of periodic basis vectors using LLL algorithm.
+
+        Args:
+            scale: A float to scale the vectors for integer reduction (default: 1e6)
+
+        Returns:
+            A list of BasisVector objects representing the reduced basis.
+        """
+        vs = [self.v1, self.v2, self.v3]
+        # Determine which vectors are periodic
+        periodic_flags = [v.is_periodic for v in vs]
+        # Extract the periodic vectors. Scale them to be used in reduction
+        periodic_vectors = [
+            np.round(scale * vs[ii].as_array()).astype(int)
+            for ii in range(3)
+            if periodic_flags[ii]
+        ]
+
+        # If there are fewer than 2 periodic vectors, LLL reduction isn't meaningful
+        if len(periodic_vectors) < 2:
+            return vs  # Return unchanged
+
+        # Reduced vectors
+        reduced = DM(periodic_vectors, ZZ).lll().to_list()
+        # Rebuild full list with reduced periodic vectors in original order
+        reduced_basis = []
+        # Rescale
+        reduced_vectors = [np.array(vec, dtype=float) / scale for vec in reduced]
+
+        jj = 0  # Index for reduced_vectors
+        for ii in range(3):
+            if periodic_flags[ii]:
+                vec = reduced_vectors[jj]
+                reduced_basis.append(BasisVector(*vec, is_periodic=True))
+                jj += 1
+            else:
+                reduced_basis.append(vs[ii])  # Unchanged
+        return reduced_basis
 
 
 def get_states(uc: UnitCell):

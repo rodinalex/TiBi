@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QMenu,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtGui import QAction
@@ -75,6 +76,8 @@ class HoppingMatrix(QWidget):
         # Keep all the grid buttons as we will change their appearance based on the coupling
         self.buttons = {}
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
 
         # Scrollable Area for Matrix
         self.scroll_area = QScrollArea()
@@ -90,6 +93,7 @@ class HoppingMatrix(QWidget):
 
         title_label = QLabel("Coupling Matrix")
         title_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        title_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         layout.addWidget(title_label)
         layout.addWidget(self.scroll_area)
 

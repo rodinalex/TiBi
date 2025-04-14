@@ -12,7 +12,7 @@ from ui.placeholder import PlaceholderWidget
 from itertools import product
 
 
-class UnitCellPlot(QWidget):
+class BrillouinZonePlot(QWidget):
     """
     A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
 

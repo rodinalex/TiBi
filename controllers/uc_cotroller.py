@@ -1,10 +1,8 @@
 import uuid
-from PySide6.QtCore import QObject, Signal, QModelIndex
+from PySide6.QtCore import QObject, QModelIndex
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from ui.UC.tree_view_panel import TreeViewPanel
-from ui.UC.unit_cell_panel import UnitCellPanel
-from ui.UC.site_panel import SitePanel
-from ui.UC.state_panel import StatePanel
+from ui.UC.button_panel import ButtonPanel
 
 
 class UCController(QObject):
@@ -27,10 +25,8 @@ class UCController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],  # Dictionary of all unit cells
-        unit_cell_panel: UnitCellPanel,  # Form panel for editing unit cells
-        site_panel: SitePanel,  # Form panel for editing sites
-        state_panel: StatePanel,  # Form panel for editing states
         tree_view: TreeViewPanel,  # Tree view showing the hierarchy
+        button_panel: ButtonPanel,  # Create/Delete buttons
         selection,  # Tracks currently selected items
     ):
         """
@@ -47,27 +43,25 @@ class UCController(QObject):
         super().__init__()
         # Store references to UI components and data models
         self.unit_cells = unit_cells
-        self.unit_cell_panel = unit_cell_panel
-        self.site_panel = site_panel
-        self.state_panel = state_panel
         self.tree_view = tree_view
+        self.button_panel = button_panel
         self.selection = selection
 
         # Connect UI signals to appropriate handler methods
+        # Tree view signals
+        self.tree_view.delete.connect(self.delete_item)
 
-        # Tree view button
-        self.tree_view.add_unit_cell_btn.clicked.connect(self.add_unit_cell)
+        # Button panel signals
+        self.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
+        self.button_panel.new_site_btn.clicked.connect(self.add_site)
+        self.button_panel.new_state_btn.clicked.connect(self.add_state)
+        self.button_panel.delete_btn.clicked.connect(self.delete_item)
+        self.button_panel.reduce_btn.clicked.connect(self.reduce_uc_basis)
 
-        # Unit cell panel buttons
-        self.unit_cell_panel.delete_btn.clicked.connect(self.delete_unit_cell)
-        self.unit_cell_panel.add_btn.clicked.connect(self.add_site)
-
-        # Site panel buttons
-        self.site_panel.delete_btn.clicked.connect(self.delete_site)
-        self.site_panel.add_btn.clicked.connect(self.add_state)
-
-        # State panel buttons
-        self.state_panel.delete_btn.clicked.connect(self.delete_state)
+        # Save data whenever the models register an update
+        self.tree_view.unit_cell_model.signals.updated.connect(self.save_unit_cell)
+        self.tree_view.site_model.signals.updated.connect(self.save_site)
+        self.tree_view.state_model.signals.updated.connect(self.save_state)
 
     def add_unit_cell(self):
         """
@@ -103,52 +97,29 @@ class UCController(QObject):
         current_uc = self.unit_cells[selected_uc_id]
 
         # Update name and basic properties
-        current_uc.name = self.unit_cell_panel.model["name"]
+        current_uc.name = self.tree_view.unit_cell_model["name"]
 
         # Update first basis vector (v1)
-        current_uc.v1.x = float(self.unit_cell_panel.model["v1x"])
-        current_uc.v1.y = float(self.unit_cell_panel.model["v1y"])
-        current_uc.v1.z = float(self.unit_cell_panel.model["v1z"])
-        current_uc.v1.is_periodic = self.unit_cell_panel.model["v1periodic"]
+        current_uc.v1.x = float(self.tree_view.unit_cell_model["v1x"])
+        current_uc.v1.y = float(self.tree_view.unit_cell_model["v1y"])
+        current_uc.v1.z = float(self.tree_view.unit_cell_model["v1z"])
+        current_uc.v1.is_periodic = self.tree_view.unit_cell_model["v1periodic"]
 
         # Update second basis vector (v2)
-        current_uc.v2.x = float(self.unit_cell_panel.model["v2x"])
-        current_uc.v2.y = float(self.unit_cell_panel.model["v2y"])
-        current_uc.v2.z = float(self.unit_cell_panel.model["v2z"])
-        current_uc.v2.is_periodic = self.unit_cell_panel.model["v2periodic"]
+        current_uc.v2.x = float(self.tree_view.unit_cell_model["v2x"])
+        current_uc.v2.y = float(self.tree_view.unit_cell_model["v2y"])
+        current_uc.v2.z = float(self.tree_view.unit_cell_model["v2z"])
+        current_uc.v2.is_periodic = self.tree_view.unit_cell_model["v2periodic"]
 
         # Update third basis vector (v3)
-        current_uc.v3.x = float(self.unit_cell_panel.model["v3x"])
-        current_uc.v3.y = float(self.unit_cell_panel.model["v3y"])
-        current_uc.v3.z = float(self.unit_cell_panel.model["v3z"])
-        current_uc.v3.is_periodic = self.unit_cell_panel.model["v3periodic"]
+        current_uc.v3.x = float(self.tree_view.unit_cell_model["v3x"])
+        current_uc.v3.y = float(self.tree_view.unit_cell_model["v3y"])
+        current_uc.v3.z = float(self.tree_view.unit_cell_model["v3z"])
+        current_uc.v3.is_periodic = self.tree_view.unit_cell_model["v3periodic"]
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(selected_uc_id)
         self.tree_view.select_item(selected_uc_id, "unit_cell")
-
-    def delete_unit_cell(self):
-        """
-        Delete the currently selected unit cell from the model.
-
-        Removes the unit cell from the unit_cells dictionary and refreshes the tree view.
-        This also deletes all child sites and states associated with this unit cell.
-        """
-        # Get the ID of the selected unit cell
-        selected_uc_id = self.selection["unit_cell"]
-
-        # Remove the unit cell from the model
-        del self.unit_cells[selected_uc_id]
-
-        # Update UI (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(selected_uc_id)
-
-        # Clear selection explicitly
-        self.tree_view.tree_view.selectionModel().clearSelection()
-        self.tree_view.tree_view.setCurrentIndex(
-            QModelIndex()
-        )  # Clear the cursor/visual highlight
-        self.tree_view.none_selected.emit()
 
     def add_site(self):
         """
@@ -188,33 +159,14 @@ class UCController(QObject):
         current_site = current_uc.sites[selected_site_id]
 
         # Update site properties
-        current_site.name = self.site_panel.model["name"]
-        current_site.c1 = float(self.site_panel.model["c1"])
-        current_site.c2 = float(self.site_panel.model["c2"])
-        current_site.c3 = float(self.site_panel.model["c3"])
+        current_site.name = self.tree_view.site_model["name"]
+        current_site.c1 = float(self.tree_view.site_model["c1"])
+        current_site.c2 = float(self.tree_view.site_model["c2"])
+        current_site.c3 = float(self.tree_view.site_model["c3"])
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(selected_uc_id, selected_site_id)
         self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
-
-    def delete_site(self):
-        """
-        Delete the currently selected site from its unit cell.
-
-        Removes the site from the sites dictionary of the unit cell and refreshes
-        the tree view. This also deletes all child states associated with this site.
-        After deletion, selects the parent unit cell in the tree view.
-        """
-        # Get the currently selected site
-        selected_uc_id = self.selection["unit_cell"]
-        selected_site_id = self.selection["site"]
-
-        # Remove the site from the unit cell
-        del self.unit_cells[selected_uc_id].sites[selected_site_id]
-
-        # Update UI and select the parent unit cell (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(selected_uc_id, selected_site_id)
-        self.tree_view.select_item(selected_uc_id, "unit_cell")
 
     def add_state(self):
         """
@@ -225,8 +177,7 @@ class UCController(QObject):
         """
         # Create a new state with default properties
         name = "New State"
-        energy = 0  # Default energy level (eV)
-        new_state = State(name, energy)
+        new_state = State(name)
 
         # Add the state to the selected site
         selected_uc_id = self.selection["unit_cell"]
@@ -249,6 +200,7 @@ class UCController(QObject):
         corresponding properties in the State model object. This includes the
         name and energy level.
         """
+        print(self.selection)
         # Get the currently selected state
         selected_uc_id = self.selection["unit_cell"]
         selected_site_id = self.selection["site"]
@@ -258,8 +210,7 @@ class UCController(QObject):
         current_state = current_site.states[selected_state_id]
 
         # Update state properties
-        current_state.name = self.state_panel.model["name"]
-        current_state.energy = self.state_panel.model["energy"]
+        current_state.name = self.tree_view.state_model["name"]
 
         # Update UI (selective update instead of full refresh)
         self.tree_view.update_tree_item(
@@ -269,27 +220,70 @@ class UCController(QObject):
             selected_state_id, "state", selected_site_id, selected_uc_id
         )
 
-    def delete_state(self):
-        """
-        Delete the currently selected quantum state from its site.
+    def delete_item(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        selected_site_id = self.selection.get("site", None)
+        selected_state_id = self.selection.get("state", None)
 
-        Removes the state from the states dictionary of the site and refreshes
-        the tree view. After deletion, selects the parent site in the tree view.
-        """
-        # Get the currently selected state
-        selected_uc_id = self.selection["unit_cell"]
-        selected_site_id = self.selection["site"]
-        selected_state_id = self.selection["state"]
+        # Check if there is a selected unit cell
+        if selected_uc_id:
+            # Check if there a selected site
+            if selected_site_id:
+                # Check if there is a selected state
+                if selected_state_id:
+                    # Delete the selected state from the site
+                    del (
+                        self.unit_cells[selected_uc_id]
+                        .sites[selected_site_id]
+                        .states[selected_state_id]
+                    )
+                    # Update UI and select the parent site (selective removal instead of full refresh)
+                    self.tree_view.remove_tree_item(
+                        selected_uc_id, selected_site_id, selected_state_id
+                    )
+                    self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
+                else:
+                    # No state selected, therefore remove the site from the unit cell
+                    del self.unit_cells[selected_uc_id].sites[selected_site_id]
 
-        # Remove the state from the site
-        del (
-            self.unit_cells[selected_uc_id]
-            .sites[selected_site_id]
-            .states[selected_state_id]
-        )
+                    # Update UI and select the parent unit cell (selective removal instead of full refresh)
+                    self.tree_view.remove_tree_item(selected_uc_id, selected_site_id)
+                    self.tree_view.select_item(selected_uc_id, "unit_cell")
 
-        # Update UI and select the parent site (selective removal instead of full refresh)
-        self.tree_view.remove_tree_item(
-            selected_uc_id, selected_site_id, selected_state_id
-        )
-        self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
+            else:
+                # No site selected, therefore remove the unit cell from the model
+                del self.unit_cells[selected_uc_id]
+
+                # Update UI (selective removal instead of full refresh)
+                self.tree_view.remove_tree_item(selected_uc_id)
+
+                # Clear selection explicitly
+                self.tree_view.tree_view.selectionModel().clearSelection()
+                self.tree_view.tree_view.setCurrentIndex(
+                    QModelIndex()
+                )  # Clear the cursor/visual highlight
+                self.selection.update({"unit_cell": None, "site": None, "state": None})
+
+    def reduce_uc_basis(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        if selected_uc_id:
+            uc = self.unit_cells[selected_uc_id]
+            reduced_basis = uc.reduced_basis()
+
+            # Run a model update
+            v1 = reduced_basis[0]
+            v2 = reduced_basis[1]
+            v3 = reduced_basis[2]
+            self.tree_view.unit_cell_model.update(
+                {
+                    "v1x": v1.x,
+                    "v1y": v1.y,
+                    "v1z": v1.z,
+                    "v2x": v2.x,
+                    "v2y": v2.y,
+                    "v2z": v2.z,
+                    "v3x": v3.x,
+                    "v3y": v3.y,
+                    "v3z": v3.z,
+                }
+            )
