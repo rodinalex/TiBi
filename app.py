@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
             state: UUID of the state from the state selection signal
         """
         unit_cell_id = self.uc.selection.get("unit_cell", None)
-        site_id = self.uc.selection.get("unit_cell", None)
+        site_id = self.uc.selection.get("site", None)
         if unit_cell_id in self.uc.unit_cells:
             unit_cell = self.uc.unit_cells[unit_cell_id]
             self.unit_cell_plot.set_unit_cell(unit_cell)
@@ -104,20 +104,28 @@ class MainWindow(QMainWindow):
             self.unit_cell_plot.set_unit_cell(None)
 
         try:
-            if unit_cell_id in self.uc.unit_cells:
-                unit_cell = self.uc.unit_cells[unit_cell_id]
-                if site_id in unit_cell.sites:
-                    self.unit_cell_plot.select_site(site_id)
+            # Always call select_site, even with None, to ensure proper highlighting
+            self.unit_cell_plot.select_site(site_id)
         except Exception as e:
             print(f"Error highlighting site: {e}")
 
     def update_BZ(self):
-        uc = self.uc.unit_cells[self.uc.selection["unit_cell"]]
-        bz_vertices, bz_faces = uc.get_BZ()
-        self.uc.bz["bz_vertices"] = bz_vertices
-        self.uc.bz["bz_faces"] = bz_faces
-        print(bz_vertices)
-        print(bz_faces)
+        """
+        Update the Brillouin zone visualization with data from the selected unit cell.
+        
+        This method retrieves BZ vertices and faces from the selected unit cell,
+        stores them in the data model, and passes them to the BZ plot for visualization.
+        """
+        try:
+            uc = self.uc.unit_cells[self.uc.selection["unit_cell"]]
+            bz_vertices, bz_faces = uc.get_BZ()
+            self.uc.bz["bz_vertices"] = bz_vertices
+            self.uc.bz["bz_faces"] = bz_faces
+            
+            # Pass BZ data to the plot for visualization
+            self.bz_plot.set_BZ(self.uc.bz)
+        except Exception as e:
+            print(f"Error updating Brillouin zone: {e}")
 
 
 app = QApplication(sys.argv)

@@ -229,16 +229,18 @@ class UnitCellPlot(QWidget):
         """
         # Reset previously selected site to default color
         if self.selected_site:
-            prev_sphere = self.plot_items.get(f"site_{self.selected_site}")
-            if prev_sphere:
-                prev_sphere.setColor(self.site_color)
+            # Find all instances of the previously selected site across unit cells
+            for key, item in list(self.plot_items.items()):
+                if key.startswith(f"site_{self.selected_site}_"):
+                    item.setColor(self.site_color)
 
         # Highlight new selected site with the highlight color
         self.selected_site = site_id
         if site_id:
-            sphere = self.plot_items.get(f"site_{site_id}")
-            if sphere:
-                sphere.setColor(self.selected_site_color)
+            # Find all instances of the newly selected site across unit cells
+            for key, item in list(self.plot_items.items()):
+                if key.startswith(f"site_{site_id}_"):
+                    item.setColor(self.selected_site_color)
 
     def _get_unit_cell_edges(self, a1, a2, a3):
         """
