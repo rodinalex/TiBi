@@ -12,7 +12,7 @@ class BrillouinZonePlot(QWidget):
     A 3D visualization panel for Brillouin Zone using PyQtGraph's OpenGL support.
 
     Displays a Brillouin zone as a wireframe with vertices shown as small spheres.
-    The visualization supports rotation and zooming. The coordinate system shows 
+    The visualization supports rotation and zooming. The coordinate system shows
     the reciprocal space axes.
     """
 
@@ -61,7 +61,7 @@ class BrillouinZonePlot(QWidget):
         1. Stores the BZ data (vertices and faces)
         2. Clears existing visualization elements
         3. Creates new visualization elements for the BZ vertices and edges
-        
+
         Args:
             bz: Dictionary containing 'bz_vertices' and 'bz_faces' or None to clear the view
         """
@@ -71,21 +71,21 @@ class BrillouinZonePlot(QWidget):
             self.view.removeItem(item)
             del self.plot_items[key]
 
-        if not bz or 'bz_vertices' not in bz or 'bz_faces' not in bz:
+        if not bz or "bz_vertices" not in bz or "bz_faces" not in bz:
             return
 
-        bz_vertices = bz['bz_vertices']
-        bz_faces = bz['bz_faces']
-        
+        bz_vertices = bz["bz_vertices"]
+        bz_faces = bz["bz_faces"]
+
         # Check if we have any vertices to plot
         if len(bz_vertices) == 0:
             # No periodic directions, nothing to visualize
             return
-            
+
         # Plot the BZ vertices as points
         if len(bz_vertices) > 0:
             vertex_size = 0.05  # Size of vertex points
-            
+
             # Ensure all vertices have 3D coordinates
             vertices_3d = []
             for vertex in bz_vertices:
@@ -96,12 +96,14 @@ class BrillouinZonePlot(QWidget):
                     vertices_3d.append([vertex[0], vertex[1], 0])
                 else:  # 3D case
                     vertices_3d.append(vertex)
-            
+
             # Create a sphere for each vertex
             for i, vertex in enumerate(vertices_3d):
                 try:
                     sphere = gl.GLMeshItem(
-                        meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=vertex_size),
+                        meshdata=gl.MeshData.sphere(
+                            rows=10, cols=10, radius=vertex_size
+                        ),
                         smooth=True,
                         color=(1, 1, 1, 0.8),  # White, semi-transparent
                         shader="shaded",
@@ -111,7 +113,7 @@ class BrillouinZonePlot(QWidget):
                     self.plot_items[f"bz_vertex_{i}"] = sphere
                 except Exception as e:
                     print(f"Error creating BZ vertex {i}: {e}")
-        
+
         # Create edges - connect the vertices based on face data
         if len(bz_faces) > 0:
             # Process faces to extract unique edges
@@ -126,26 +128,26 @@ class BrillouinZonePlot(QWidget):
                         face_vertices.append([vertex[0], vertex[1], 0])
                     else:  # 3D case
                         face_vertices.append(vertex)
-                
+
                 # Extract edges from each face (connecting consecutive vertices)
                 for i in range(len(face_vertices)):
                     next_i = (i + 1) % len(face_vertices)  # Loop back to first vertex
                     all_edges.append([face_vertices[i], face_vertices[next_i]])
-            
+
             # Create a single line item for all BZ edges
             if all_edges:
                 # Flatten the list of edges to a list of vertices for GLLinePlotItem
                 line_vertices = []
                 for edge in all_edges:
                     line_vertices.extend(edge)
-                
+
                 # Create a GLLinePlotItem for all BZ edges
                 try:
                     bz_edges = gl.GLLinePlotItem(
-                        pos=np.array(line_vertices), 
+                        pos=np.array(line_vertices),
                         color=(1, 1, 1, 0.8),  # White, semi-transparent
-                        width=2, 
-                        mode="lines"
+                        width=2,
+                        mode="lines",
                     )
                     self.view.addItem(bz_edges)
                     self.plot_items["bz_edges"] = bz_edges

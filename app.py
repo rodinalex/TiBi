@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
     def update_BZ(self):
         """
         Update the Brillouin zone visualization with data from the selected unit cell.
-        
+
         This method retrieves BZ vertices and faces from the selected unit cell,
         stores them in the data model, and passes them to the BZ plot for visualization.
         """
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
             bz_vertices, bz_faces = uc.get_BZ()
             self.uc.bz["bz_vertices"] = bz_vertices
             self.uc.bz["bz_faces"] = bz_faces
-            
+
             # Pass BZ data to the plot for visualization
             self.bz_plot.set_BZ(self.uc.bz)
         except Exception as e:
