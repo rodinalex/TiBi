@@ -60,7 +60,7 @@ class UnitCellUI(QWidget):
 
         # Existing unit cells
         self.unit_cells = {}
-
+        self.bz = {"bz_vertices": [], "bz_faces": []}
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel(self.unit_cell_model)
         self.site_panel = SitePanel(self.site_model)

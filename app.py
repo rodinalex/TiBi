@@ -60,8 +60,10 @@ class MainWindow(QMainWindow):
 
         # Connect signals to update the plot after tree selection
         self.uc.selection.signals.updated.connect(self.update_plot)
+        self.uc.selection.signals.updated.connect(self.update_BZ)
         # Connect signals to update the plot after the model for the unit cell or site changes
         self.uc.unit_cell_model.signals.updated.connect(self.update_plot)
+        self.uc.unit_cell_model.signals.updated.connect(self.update_BZ)
         self.uc.site_model.signals.updated.connect(self.update_plot)
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
@@ -108,6 +110,14 @@ class MainWindow(QMainWindow):
                     self.unit_cell_plot.select_site(site_id)
         except Exception as e:
             print(f"Error highlighting site: {e}")
+
+    def update_BZ(self):
+        uc = self.uc.unit_cells[self.uc.selection["unit_cell"]]
+        bz_vertices, bz_faces = uc.get_BZ()
+        self.uc.bz["bz_vertices"] = bz_vertices
+        self.uc.bz["bz_faces"] = bz_faces
+        print(bz_vertices)
+        print(bz_faces)
 
 
 app = QApplication(sys.argv)
