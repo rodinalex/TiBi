@@ -1,10 +1,11 @@
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
+    QHBoxLayout,
 )
 from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
+from ui.placeholder import PlaceholderWidget
 
 
 class BrillouinZonePlot(QWidget):
@@ -31,12 +32,12 @@ class BrillouinZonePlot(QWidget):
         ]  # R, G, B for x, y, z
 
         # Setup layout
-        layout = QVBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Create 3D plot widget
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(distance=8)
+        self.view.setCameraPosition(distance=20)
         self.view.setBackgroundColor("k")  # Black background
 
         # Axes
@@ -51,7 +52,8 @@ class BrillouinZonePlot(QWidget):
                 gl.GLLinePlotItem(pos=axes[ii], color=color, width=5, antialias=True)
             )
 
-        layout.addWidget(self.view)
+        layout.addWidget(self.view, stretch=1)
+        layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
     def set_BZ(self, bz):
         """
@@ -84,7 +86,7 @@ class BrillouinZonePlot(QWidget):
 
         # Plot the BZ vertices as points
         if len(bz_vertices) > 0:
-            vertex_size = 0.05  # Size of vertex points
+            vertex_size = 0.2  # Size of vertex points
 
             # Ensure all vertices have 3D coordinates
             vertices_3d = []

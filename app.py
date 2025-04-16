@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
 
         # 3D visualization for the unit cell
         mid_layout.addWidget(self.unit_cell_plot, stretch=2)
-        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        mid_layout.addWidget(self.bz_plot, stretch=1)
         mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
 
         # Connect signals to update the plot after tree selection
@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
             lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
         )
 
-        right_layout.addWidget(self.bz_plot, stretch=1)
+        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
         right_layout.addWidget(self.selectable_bz_plot, stretch=1)
 
         # Create a widget for the selected BZ point info
