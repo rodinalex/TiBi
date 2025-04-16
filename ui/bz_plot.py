@@ -115,6 +115,15 @@ class BrillouinZonePlot(QWidget):
         ]
         for btn in btns:
             btn.setFixedSize(25, 25)
+            btn.setEnabled(False)
+
+        self.vertex_btns = [
+            self.prev_vertex_btn,
+            self.next_vertex_btn,
+            self.add_vertex_btn,
+        ]
+        self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
+        self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
 
         form_layout.addRow("Vertex:", vertex_pick_layout)
         form_layout.addRow("Edge:", edge_pick_layout)
@@ -162,7 +171,13 @@ class BrillouinZonePlot(QWidget):
         else:
             dim = len(bz["bz_vertices"][0])
 
-        # TODO: Activate/deactivate buttons based on dimensionality
+        # Activate/deactivate buttons based on dimensionality
+        for btn in self.vertex_btns:
+            btn.setEnabled(dim > 0)
+        for btn in self.edge_btns:
+            btn.setEnabled(dim > 1)
+        for btn in self.face_btns:
+            btn.setEnabled(dim > 2)
 
         if dim == 2:
             # Get the edge points
@@ -190,45 +205,43 @@ class BrillouinZonePlot(QWidget):
             self.bz_edge_points = np.array(self.bz_edge_points)
             self.bz_face_points = np.array(self.bz_face_points)
 
-        # # Create edges - connect the vertices based on face data
-        # if len(bz["bz_faces"]) > 0:
-        #     # Process faces to extract unique edges
-        #     all_edges = []
-        #     for face in bz["bz_faces"]:
-        #         # Ensure all face vertices have 3D coordinates
-        #         face_vertices = []
-        #         for vertex in face:
-        #             if len(vertex) == 1:  # 1D case
-        #                 face_vertices.append([vertex[0], 0, 0])
-        #             elif len(vertex) == 2:  # 2D case
-        #                 face_vertices.append([vertex[0], vertex[1], 0])
-        #             else:  # 3D case
-        #                 face_vertices.append(vertex)
+        # Create edges - connect the vertices based on face data
+        if len(bz["bz_faces"]) > 0:
+            # Process faces to extract unique edges
+            all_edges = []
+            for face in bz["bz_faces"]:
+                # Extract edges from each face (connecting consecutive vertices)
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)  # Loop back to first vertex
+                    all_edges.append([face[ii], face[next_ii]])
 
-        #         # Extract edges from each face (connecting consecutive vertices)
-        #         for ii in range(len(face_vertices)):
-        #             next_ii = (ii + 1) % len(face_vertices)  # Loop back to first vertex
-        #             all_edges.append([face_vertices[ii], face_vertices[next_ii]])
+            # Create a single line item for all BZ edges
+            if all_edges:
+                # Flatten the list of edges to a list of vertices for GLLinePlotItem
+                line_vertices = []
+                for edge in all_edges:
+                    line_vertices.extend(edge)
+            # Make sure all the line vertices are 3D
+            pad_width = 3 - dim
+            if pad_width > 0:
+                line_vertices = np.pad(
+                    line_vertices, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                line_vertices = line_vertices
 
-        #     # Create a single line item for all BZ edges
-        #     if all_edges:
-        #         # Flatten the list of edges to a list of vertices for GLLinePlotItem
-        #         line_vertices = []
-        #         for edge in all_edges:
-        #             line_vertices.extend(edge)
-
-        #         # Create a GLLinePlotItem for all BZ edges
-        #         try:
-        #             bz_edges = gl.GLLinePlotItem(
-        #                 pos=np.array(line_vertices),
-        #                 color=(1, 1, 1, 0.8),  # White, semi-transparent
-        #                 width=1,
-        #                 mode="lines",
-        #             )
-        #             self.view.addItem(bz_edges)
-        #             self.plot_items["bz_edges"] = bz_edges
-        #         except Exception as e:
-        #             print(f"Error creating BZ edges: {e}")
+            # Create a GLLinePlotItem for all BZ edges
+            try:
+                bz_edges = gl.GLLinePlotItem(
+                    pos=np.array(line_vertices),
+                    color=(1, 1, 1, 0.8),  # White, semi-transparent
+                    width=1,
+                    mode="lines",
+                )
+                self.view.addItem(bz_edges)
+                self.plot_items["bz_edges"] = bz_edges
+            except Exception as e:
+                print(f"Error creating BZ edges: {e}")
 
         # Plot the BZ vertices as points
         if len(self.bz_vertex_points) > 0:
@@ -295,67 +308,26 @@ class BrillouinZonePlot(QWidget):
                 except Exception as e:
                     print(f"Error creating BZ face {ii}: {e}")
 
-        # bz_vertices = bz["bz_vertices"]
-        # bz_faces = bz["bz_faces"]
-
-        # # Check if we have any vertices to plot
-        # if len(bz_vertices) == 0:
-        #     # No periodic directions, nothing to visualize
-        #     return
-
-        # # Plot the BZ vertices as points
-        # if len(bz_vertices) > 0:
-        #     vertex_size = 0.2  # Size of vertex points
-
-        #     # Ensure all vertices have 3D coordinates
-        #     vertices_3d = []
-        #     for vertex in bz_vertices:
-        #         # Pad with zeros if needed to ensure 3D coordinates
-        #         if len(vertex) == 1:  # 1D case
-        #             vertices_3d.append([vertex[0], 0, 0])
-        #         elif len(vertex) == 2:  # 2D case
-        #             vertices_3d.append([vertex[0], vertex[1], 0])
-        #         else:  # 3D case
-        #             vertices_3d.append(vertex)
-
-        #     # Create a sphere for each vertex
-        #     for ii, vertex in enumerate(vertices_3d):
-        #         try:
-        #             sphere = gl.GLMeshItem(
-        #                 meshdata=gl.MeshData.sphere(
-        #                     rows=10, cols=10, radius=vertex_size
-        #                 ),
-        #                 smooth=True,
-        #                 color=self.point_color,
-        #                 shader="shaded",
-        #             )
-        #             sphere.translate(vertex[0], vertex[1], vertex[2])
-        #             self.view.addItem(sphere)
-        #             self.plot_items[f"bz_vertex_{ii}"] = sphere
-        #         except Exception as e:
-        #             print(f"Error creating BZ vertex {ii}: {e}")
-
     def _select_vertex(self, step):
         """
         Move to the next vertex in the BZ visualization.
         """
-        pass
-        # if self.selected_vertex is None:
-        #     self.selected_vertex = 0
-        #     prev_vertex = None
-        # else:
-        #     prev_vertex = self.selected_vertex
-        #     self.selected_vertex = (self.selected_vertex + step) % len(
-        #         self.bz["bz_vertices"]
-        #     )
-        # if prev_vertex is not None:
-        #     # Deselect the previous vertex
-        #     self.plot_items[f"bz_vertex_{prev_vertex}"].setColor(self.point_color)
-        # # Select the new vertex
-        # self.plot_items[f"bz_vertex_{self.selected_vertex}"].setColor(
-        #     self.selected_point_color
-        # )
-        # print(self.bz["bz_vertices"][self.selected_vertex])
+        if self.selected_vertex is None:
+            self.selected_vertex = 0
+            prev_vertex = None
+        else:
+            prev_vertex = self.selected_vertex
+            self.selected_vertex = (self.selected_vertex + step) % len(
+                self.bz_vertex_points
+            )
+        if prev_vertex is not None:
+            # Deselect the previous vertex
+            self.plot_items[f"bz_vertex_{prev_vertex}"].setColor(self.point_color)
+        # Select the new vertex
+        self.plot_items[f"bz_vertex_{self.selected_vertex}"].setColor(
+            self.selected_point_color
+        )
+        print(self.bz_vertex_points[self.selected_vertex])
 
     def _make_point(self, vertex_size=0.20):
         return gl.GLMeshItem(
