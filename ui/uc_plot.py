@@ -10,6 +10,7 @@ from PySide6.QtCore import Signal, Qt, QSize
 import pyqtgraph.opengl as gl
 from ui.placeholder import PlaceholderWidget
 from itertools import product
+from resources.colors import CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
 
 
 class UnitCellPlot(QWidget):
@@ -34,18 +35,13 @@ class UnitCellPlot(QWidget):
         self.plot_items = {}  # Map to track mesh items for selection
         # Colors
         self.axis_colors = [
-            (213 / 255, 94 / 255, 0, 1),
-            (0, 158 / 255, 115 / 255, 1),
-            (0, 114 / 255, 178 / 255, 1),
+            CF_vermillion,
+            CF_green,
+            CF_blue,
         ]  # R, G, B for x, y, z
         self.cell_color = (0.8, 0.8, 0.8, 0.3)  # Light gray, semi-transparent
-        self.site_color = (86 / 255, 180 / 255, 233 / 255, 0.8)
-        self.selected_site_color = (
-            240 / 255,
-            228 / 255,
-            66 / 255,
-            1,
-        )
+        self.site_color = CF_sky
+        self.selected_site_color = CF_yellow
 
         # Setup layout
         layout = QVBoxLayout(self)

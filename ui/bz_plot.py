@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QSize, Qt
 import pyqtgraph.opengl as gl
+from resources.colors import CF_red, CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
 
 
 class BrillouinZonePlot(QWidget):
@@ -33,19 +34,15 @@ class BrillouinZonePlot(QWidget):
         self.selected_vertex = None
         self.selected_edge = None
         self.selected_face = None
+        self.bz_path = []
         # Colors
         self.axis_colors = [
-            (213 / 255, 94 / 255, 0, 1),
-            (0, 158 / 255, 115 / 255, 1),
-            (0, 114 / 255, 178 / 255, 1),
+            CF_vermillion,
+            CF_green,
+            CF_blue,
         ]  # R, G, B for x, y, z
-        self.point_color = (86 / 255, 180 / 255, 233 / 255, 0.8)
-        self.selected_point_color = (
-            240 / 255,
-            228 / 255,
-            66 / 255,
-            1,
-        )
+        self.point_color = CF_sky
+        self.selected_point_color = CF_yellow
 
         # Setup layout
         layout = QHBoxLayout(self)
@@ -76,6 +73,11 @@ class BrillouinZonePlot(QWidget):
         form_layout = QFormLayout()
         form_layout.setVerticalSpacing(2)
 
+        gamma_pick_layout = QHBoxLayout()
+        self.add_gamma_btn = QPushButton("+")
+        gamma_pick_layout.addWidget(self.add_gamma_btn)
+        self.add_gamma_btn.clicked.connect(lambda: self._add_point("Gamma"))
+
         vertex_pick_layout = QHBoxLayout()
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
@@ -85,6 +87,7 @@ class BrillouinZonePlot(QWidget):
         vertex_pick_layout.addWidget(self.add_vertex_btn)
         self.prev_vertex_btn.clicked.connect(lambda: self._select_vertex(-1))
         self.next_vertex_btn.clicked.connect(lambda: self._select_vertex(+1))
+        self.add_vertex_btn.clicked.connect(lambda: self._add_point("Vertex"))
 
         edge_pick_layout = QHBoxLayout()
         self.prev_edge_btn = QPushButton("←")
@@ -95,6 +98,7 @@ class BrillouinZonePlot(QWidget):
         edge_pick_layout.addWidget(self.add_edge_btn)
         self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
         self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
+        self.add_edge_btn.clicked.connect(lambda: self._add_point("Edge"))
 
         face_pick_layout = QHBoxLayout()
         self.prev_face_btn = QPushButton("←")
@@ -105,8 +109,13 @@ class BrillouinZonePlot(QWidget):
         face_pick_layout.addWidget(self.add_face_btn)
         self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
         self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
+        self.add_face_btn.clicked.connect(lambda: self._add_point("Face"))
+
+        self.clear_path_btn = QPushButton("Clear")
+        self.clear_path_btn.clicked.connect(lambda: self._clear_path())
 
         btns = [
+            self.add_gamma_btn,
             self.prev_vertex_btn,
             self.next_vertex_btn,
             self.add_vertex_btn,
@@ -118,7 +127,6 @@ class BrillouinZonePlot(QWidget):
             self.add_face_btn,
         ]
         for btn in btns:
-            btn.setFixedSize(25, 25)
             btn.setEnabled(False)
 
         self.vertex_btns = [
@@ -129,12 +137,14 @@ class BrillouinZonePlot(QWidget):
         self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
         self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
 
+        form_layout.addRow("Γ:", gamma_pick_layout)
         form_layout.addRow("Vertex:", vertex_pick_layout)
         form_layout.addRow("Edge:", edge_pick_layout)
         form_layout.addRow("Face:", face_pick_layout)
 
         self.selection_panel.addWidget(self.selection_panel_label)
         self.selection_panel.addLayout(form_layout)
+        self.selection_panel.addWidget(self.clear_path_btn)
 
         layout.addWidget(self.view, stretch=1)
         layout.addLayout(self.selection_panel, stretch=1)
@@ -158,6 +168,7 @@ class BrillouinZonePlot(QWidget):
         self.selected_vertex = None
         self.selectedEdge = None
         self.selectedFace = None
+        self.bz_path = []
 
         # Clear previous plot items except axes and grid
         for key, item in list(self.plot_items.items()):
@@ -171,19 +182,20 @@ class BrillouinZonePlot(QWidget):
         self.bz_vertex_points = bz["bz_vertices"]
         # System dimensionality
         if len(self.bz_vertex_points) == 0:
-            dim = 0
+            self.dim = 0
         else:
-            dim = len(bz["bz_vertices"][0])
+            self.dim = len(bz["bz_vertices"][0])
 
         # Activate/deactivate buttons based on dimensionality
+        self.add_gamma_btn.setEnabled(self.dim > 0)
         for btn in self.vertex_btns:
-            btn.setEnabled(dim > 0)
+            btn.setEnabled(self.dim > 0)
         for btn in self.edge_btns:
-            btn.setEnabled(dim > 1)
+            btn.setEnabled(self.dim > 1)
         for btn in self.face_btns:
-            btn.setEnabled(dim > 2)
+            btn.setEnabled(self.dim > 2)
 
-        if dim == 2:
+        if self.dim == 2:
             # Get the edge points
             self.bz_edge_points = []
             for edge in bz["bz_faces"]:
@@ -192,7 +204,7 @@ class BrillouinZonePlot(QWidget):
                 self.bz_edge_points.append(mid_point)
             self.bz_edge_points = np.array(self.bz_edge_points)
 
-        elif dim == 3:
+        elif self.dim == 3:
             # Get the edge and face points
             self.bz_edge_points = []
             self.bz_face_points = []
@@ -226,7 +238,7 @@ class BrillouinZonePlot(QWidget):
                 for edge in all_edges:
                     line_vertices.extend(edge)
             # Make sure all the line vertices are 3D
-            pad_width = 3 - dim
+            pad_width = 3 - self.dim
             if pad_width > 0:
                 line_vertices = np.pad(
                     line_vertices, ((0, 0), (0, pad_width)), mode="constant"
@@ -250,7 +262,7 @@ class BrillouinZonePlot(QWidget):
         # Plot the BZ vertices as points
         if len(self.bz_vertex_points) > 0:
 
-            pad_width = 3 - dim
+            pad_width = 3 - self.dim
             if pad_width > 0:
                 vertices_3d = np.pad(
                     self.bz_vertex_points, ((0, 0), (0, pad_width)), mode="constant"
@@ -267,12 +279,16 @@ class BrillouinZonePlot(QWidget):
                     self.plot_items[f"bz_vertex_{ii}"] = sphere
                 except Exception as e:
                     print(f"Error creating BZ vertex {ii}: {e}")
+            # Add Gamma point
+            sphere = self._make_point()
+            self.view.addItem(sphere)
+            self.plot_items[f"Gamma"] = sphere
         else:
             return
 
         if len(self.bz_edge_points) > 0:
 
-            pad_width = 3 - dim
+            pad_width = 3 - self.dim
             if pad_width > 0:
                 edges_3d = np.pad(
                     self.bz_edge_points, ((0, 0), (0, pad_width)), mode="constant"
@@ -294,7 +310,7 @@ class BrillouinZonePlot(QWidget):
 
         if len(self.bz_face_points) > 0:
 
-            pad_width = 3 - dim
+            pad_width = 3 - self.dim
             if pad_width > 0:
                 faces_3d = np.pad(
                     self.bz_face_points, ((0, 0), (0, pad_width)), mode="constant"
@@ -331,7 +347,6 @@ class BrillouinZonePlot(QWidget):
         self.plot_items[f"bz_vertex_{self.selected_vertex}"].setColor(
             self.selected_point_color
         )
-        print(self.bz_vertex_points[self.selected_vertex])
 
     def _select_edge(self, step):
         """
@@ -350,7 +365,6 @@ class BrillouinZonePlot(QWidget):
         self.plot_items[f"bz_edge_{self.selected_edge}"].setColor(
             self.selected_point_color
         )
-        print(self.bz_edge_points[self.selected_edge])
 
     def _select_face(self, step):
         """
@@ -369,7 +383,6 @@ class BrillouinZonePlot(QWidget):
         self.plot_items[f"bz_face_{self.selected_face}"].setColor(
             self.selected_point_color
         )
-        print(self.bz_face_points[self.selected_face])
 
     def _make_point(self, vertex_size=0.20):
         return gl.GLMeshItem(
@@ -378,3 +391,41 @@ class BrillouinZonePlot(QWidget):
             color=self.point_color,
             shader="shaded",
         )
+
+    def _clear_path(self):
+        self.bz_path = []
+        # Remove path from the plot
+        self.view.removeItem(self.plot_items["bz_path"])
+        del self.plot_items["bz_path"]
+
+    def _add_point(self, point):
+        if point == "Gamma":
+            self.bz_path.append([0] * self.dim)
+        elif point == "Vertex":
+            self.bz_path.append(self.bz_vertex_points[self.selected_vertex])
+        elif point == "Edge":
+            self.bz_path.append(self.bz_edge_points[self.selected_edge])
+        elif point == "Face":
+            self.bz_path.append(self.bz_face_points[self.selected_face])
+
+        print(self.bz_path)
+
+        if len(self.bz_path) > 1:
+            pad_width = 3 - self.dim
+            if pad_width > 0:
+                path_3d = np.pad(
+                    self.bz_path, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                path_3d = self.bz_face_points
+
+            path_segments = []
+
+            for ii in range(len(self.bz_path) - 1):
+                path_segments.append([self.bz_path[ii], self.bz_path[ii + 1]])
+            path_object = gl.GLLinePlotItem(
+                pos=np.array(path_segments), color=CF_red, width=2, mode="lines"
+            )
+            self.view.addItem(path_object)
+
+            self.plot_items["bz_path"] = path_object
