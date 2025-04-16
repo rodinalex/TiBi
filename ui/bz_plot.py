@@ -31,8 +31,8 @@ class BrillouinZonePlot(QWidget):
         self.bz_face_points = None
         self.plot_items = {}  # Map to track mesh items
         self.selected_vertex = None
-        self.selecteeEdge = None
-        self.selectedFace = None
+        self.selected_edge = None
+        self.selected_face = None
         # Colors
         self.axis_colors = [
             (213 / 255, 94 / 255, 0, 1),
@@ -93,6 +93,8 @@ class BrillouinZonePlot(QWidget):
         edge_pick_layout.addWidget(self.prev_edge_btn)
         edge_pick_layout.addWidget(self.next_edge_btn)
         edge_pick_layout.addWidget(self.add_edge_btn)
+        self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
+        self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
 
         face_pick_layout = QHBoxLayout()
         self.prev_face_btn = QPushButton("←")
@@ -101,6 +103,8 @@ class BrillouinZonePlot(QWidget):
         face_pick_layout.addWidget(self.prev_face_btn)
         face_pick_layout.addWidget(self.next_face_btn)
         face_pick_layout.addWidget(self.add_face_btn)
+        self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
+        self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
 
         btns = [
             self.prev_vertex_btn,
@@ -328,6 +332,44 @@ class BrillouinZonePlot(QWidget):
             self.selected_point_color
         )
         print(self.bz_vertex_points[self.selected_vertex])
+
+    def _select_edge(self, step):
+        """
+        Move to the next edge in the BZ visualization.
+        """
+        if self.selected_edge is None:
+            self.selected_edge = 0
+            prev_edge = None
+        else:
+            prev_edge = self.selected_edge
+            self.selected_edge = (self.selected_edge + step) % len(self.bz_edge_points)
+        if prev_edge is not None:
+            # Deselect the previous edge
+            self.plot_items[f"bz_edge_{prev_edge}"].setColor(self.point_color)
+        # Select the new edge
+        self.plot_items[f"bz_edge_{self.selected_edge}"].setColor(
+            self.selected_point_color
+        )
+        print(self.bz_edge_points[self.selected_edge])
+
+    def _select_face(self, step):
+        """
+        Move to the next face in the BZ visualization.
+        """
+        if self.selected_face is None:
+            self.selected_face = 0
+            prev_face = None
+        else:
+            prev_face = self.selected_face
+            self.selected_face = (self.selected_face + step) % len(self.bz_face_points)
+        if prev_face is not None:
+            # Deselect the previous edge
+            self.plot_items[f"bz_face_{prev_face}"].setColor(self.point_color)
+        # Select the new edge
+        self.plot_items[f"bz_face_{self.selected_face}"].setColor(
+            self.selected_point_color
+        )
+        print(self.bz_face_points[self.selected_face])
 
     def _make_point(self, vertex_size=0.20):
         return gl.GLMeshItem(
