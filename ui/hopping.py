@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 import numpy as np
-from src.tibitypes import get_states
 
 from ui.HOPPING.matrix import HoppingMatrix
 from ui.HOPPING.table import HoppingTable
@@ -97,7 +96,7 @@ class HoppingPanel(QWidget):
         else:
             uc = self.unit_cells[uc_id]
             # Get the states and their "info" from inside the unit cell
-            new_states, new_info = get_states(uc)
+            new_states, new_info = uc.get_states()
             # Use the states and the info to construct the hopping matrix grid
             self.matrix.set_states(new_info)
             # Extract the hopping data

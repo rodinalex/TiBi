@@ -24,24 +24,25 @@ In the present version, the GUI consists of 3 columns
 
 - ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
 include the unit cell as a parallelepiped, as well as any of the sites found inside of it
-- Make it possible to show multiple unit cells along the periodic directions
-- Add the ability to select sites from the plot and reflect the selection in the tree (partially implemented - highlighting sites works when selected in tree)
+- ✅ Make it possible to show multiple unit cells along the periodic directions
 - ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
 
 ## Reminders
-- Use Voronoi to obtain BZ since the basis vectors are reduced already
 - Hamiltonian function with momenta along the reciprocal lattice directions
 - Check that the volume of the unit cell is non-zero
-- BZ Calculation
 - Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
-
+- MAYBE: add point group information
+- Figure out how to help the user distinguish between different sites: for now they all look the same
+- Make BZ path selection context-based (that a BZ exists in the first place)
+- Refactor the styling:
+* Buttons
+* Colors
+- Add bandstructure plot
 ## Daily Plan
-- Reorganize UC panel for compactness
-- Implement Voronoi calculations for BZ
-- Get BZ plots
+- Add path-construction option using the selection
+
 
 ## Bugs
-- Sites are not market as highlighted in the plot
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

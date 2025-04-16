@@ -1,46 +1,46 @@
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget,
+    QLabel,
     QHBoxLayout,
     QVBoxLayout,
-    QSpinBox,
-    QLabel,
+    QFormLayout,
+    QPushButton,
 )
-from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtCore import QSize, Qt
 import pyqtgraph.opengl as gl
-from ui.placeholder import PlaceholderWidget
-from itertools import product
 
 
 class BrillouinZonePlot(QWidget):
     """
-    A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
+    A 3D visualization panel for Brillouin Zone using PyQtGraph's OpenGL support.
 
-    Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
-    The visualization supports rotation, zooming, and site selection. The coordinate
-    system shows the unit cell basis vectors and a reference grid.
+    Displays a Brillouin zone as a wireframe with vertices shown as small spheres.
+    The visualization supports rotation and zooming. The coordinate system shows
+    the reciprocal space axes.
     """
-
-    # Signals for interacting with other components
-    site_selected = Signal(object)  # Emits site ID when a site is selected
 
     def __init__(self):
         super().__init__()
-        self.setMinimumSize(QSize(400, 400))
+        self.setMinimumSize(QSize(300, 200))
 
         # Initialize data
-        self.unit_cell = None
-        self.selected_site = None
-        self.plot_items = {}  # Map to track mesh items for selection
+        self.bz = None
+        self.bz_vertex_points = None
+        self.bz_edge_points = None
+        self.bz_face_points = None
+        self.plot_items = {}  # Map to track mesh items
+        self.selected_vertex = None
+        self.selected_edge = None
+        self.selected_face = None
         # Colors
         self.axis_colors = [
             (213 / 255, 94 / 255, 0, 1),
             (0, 158 / 255, 115 / 255, 1),
             (0, 114 / 255, 178 / 255, 1),
         ]  # R, G, B for x, y, z
-        self.cell_color = (0.8, 0.8, 0.8, 0.3)  # Light gray, semi-transparent
-        self.site_color = (86 / 255, 180 / 255, 233 / 255, 0.8)
-        self.selected_site_color = (
+        self.point_color = (86 / 255, 180 / 255, 233 / 255, 0.8)
+        self.selected_point_color = (
             240 / 255,
             228 / 255,
             66 / 255,
@@ -48,12 +48,12 @@ class BrillouinZonePlot(QWidget):
         )
 
         # Setup layout
-        layout = QVBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Create 3D plot widget
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(distance=8)
+        self.view.setCameraPosition(distance=20)
         self.view.setBackgroundColor("k")  # Black background
 
         # Axes
@@ -68,255 +68,313 @@ class BrillouinZonePlot(QWidget):
                 gl.GLLinePlotItem(pos=axes[ii], color=color, width=5, antialias=True)
             )
 
-        # Settings panel
-        self.control_panel = QHBoxLayout()
-        # View adjusting panel
-        self.lattice_view_control = QVBoxLayout()
-        self.lattice_view_control_label = QLabel("Number of unit cells to show")
-        self.lattice_view_control_label.setAlignment(Qt.AlignCenter)
-        self.lattice_view_control_spinners = QHBoxLayout()
+        # Selection panel
+        self.selection_panel = QVBoxLayout()
+        self.selection_panel_label = QLabel("Create a BZ Path")
+        self.selection_panel_label.setAlignment(Qt.AlignCenter)
 
-        # Unit cell view number
-        self.n1_spinner = QSpinBox()
-        self.n2_spinner = QSpinBox()
-        self.n3_spinner = QSpinBox()
+        form_layout = QFormLayout()
+        form_layout.setVerticalSpacing(2)
 
-        self.n1_spinner.valueChanged.connect(self._on_spinner_changed)
-        self.n2_spinner.valueChanged.connect(self._on_spinner_changed)
-        self.n3_spinner.valueChanged.connect(self._on_spinner_changed)
+        vertex_pick_layout = QHBoxLayout()
+        self.prev_vertex_btn = QPushButton("←")
+        self.next_vertex_btn = QPushButton("→")
+        self.add_vertex_btn = QPushButton("+")
+        vertex_pick_layout.addWidget(self.prev_vertex_btn)
+        vertex_pick_layout.addWidget(self.next_vertex_btn)
+        vertex_pick_layout.addWidget(self.add_vertex_btn)
+        self.prev_vertex_btn.clicked.connect(lambda: self._select_vertex(-1))
+        self.next_vertex_btn.clicked.connect(lambda: self._select_vertex(+1))
 
-        for x in [self.n1_spinner, self.n2_spinner, self.n3_spinner]:
-            x.setFixedWidth(40)
-            x.setRange(1, 10)
-            x.setEnabled(False)
+        edge_pick_layout = QHBoxLayout()
+        self.prev_edge_btn = QPushButton("←")
+        self.next_edge_btn = QPushButton("→")
+        self.add_edge_btn = QPushButton("+")
+        edge_pick_layout.addWidget(self.prev_edge_btn)
+        edge_pick_layout.addWidget(self.next_edge_btn)
+        edge_pick_layout.addWidget(self.add_edge_btn)
+        self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
+        self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
 
-        # Create row layouts with labels on the left and spin boxes on the right
-        spinner1 = QHBoxLayout()
-        spinner1.addWidget(QLabel("n<sub>1</sub>:"))
-        spinner1.addWidget(self.n1_spinner)
+        face_pick_layout = QHBoxLayout()
+        self.prev_face_btn = QPushButton("←")
+        self.next_face_btn = QPushButton("→")
+        self.add_face_btn = QPushButton("+")
+        face_pick_layout.addWidget(self.prev_face_btn)
+        face_pick_layout.addWidget(self.next_face_btn)
+        face_pick_layout.addWidget(self.add_face_btn)
+        self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
+        self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
 
-        spinner2 = QHBoxLayout()
-        spinner2.addWidget(QLabel("n<sub>2</sub>:"))
-        spinner2.addWidget(self.n2_spinner)
+        btns = [
+            self.prev_vertex_btn,
+            self.next_vertex_btn,
+            self.add_vertex_btn,
+            self.prev_edge_btn,
+            self.next_edge_btn,
+            self.add_edge_btn,
+            self.prev_face_btn,
+            self.next_face_btn,
+            self.add_face_btn,
+        ]
+        for btn in btns:
+            btn.setFixedSize(25, 25)
+            btn.setEnabled(False)
 
-        spinner3 = QHBoxLayout()
-        spinner3.addWidget(QLabel("n<sub>3</sub>:"))
-        spinner3.addWidget(self.n3_spinner)
+        self.vertex_btns = [
+            self.prev_vertex_btn,
+            self.next_vertex_btn,
+            self.add_vertex_btn,
+        ]
+        self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
+        self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
 
-        # Add spinners to the main form layout
-        self.lattice_view_control_spinners.addLayout(spinner1)
-        self.lattice_view_control_spinners.addLayout(spinner2)
-        self.lattice_view_control_spinners.addLayout(spinner3)
+        form_layout.addRow("Vertex:", vertex_pick_layout)
+        form_layout.addRow("Edge:", edge_pick_layout)
+        form_layout.addRow("Face:", face_pick_layout)
 
-        self.lattice_view_control.addWidget(self.lattice_view_control_label)
-        self.lattice_view_control.addLayout(self.lattice_view_control_spinners)
+        self.selection_panel.addWidget(self.selection_panel_label)
+        self.selection_panel.addLayout(form_layout)
 
-        self.control_panel.addLayout(self.lattice_view_control, stretch=1)
-        self.control_panel.addWidget(PlaceholderWidget("TEST"), stretch=3)
+        layout.addWidget(self.view, stretch=1)
+        layout.addLayout(self.selection_panel, stretch=1)
 
-        layout.addWidget(self.view, stretch=5)
-        layout.addLayout(self.control_panel, stretch=1)
-
-    def set_unit_cell(self, unit_cell):
+    def set_BZ(self, bz):
         """
-        Set or update the unit cell to be displayed in the 3D view.
+        Set or update the Brillouin zone to be displayed in the 3D view.
 
-        This method handles the complete process of updating the visualization:
-        1. Stores the new unit cell reference
+        This method handles the complete process of updating the BZ visualization:
+        1. Stores the BZ data (vertices and faces)
         2. Clears existing visualization elements
-        3. Creates new visualization elements for the unit cell and its sites
-        4. Updates the coordinate axes to match the unit cell basis vectors
+        3. Creates new visualization elements for the BZ vertices and edges
 
         Args:
-            unit_cell: The UnitCell object to display, or None to clear the view
+            bz: Dictionary containing 'bz_vertices' and 'bz_faces' or None to clear the view
         """
-        self.unit_cell = unit_cell
+        self.bz = bz
+        self.bz_vertex_points = []  # Points for vertices
+        self.bz_edge_points = []  # Points in the middle of each edge
+        self.bz_face_points = []  # Points in the middle of each face
+        self.selected_vertex = None
+        self.selectedEdge = None
+        self.selectedFace = None
+
         # Clear previous plot items except axes and grid
         for key, item in list(self.plot_items.items()):
             self.view.removeItem(item)
             del self.plot_items[key]
 
-        if not unit_cell:
+        if not bz or "bz_vertices" not in bz or "bz_faces" not in bz:
+            return
+        # Extract vertices and faces from the BZ data. Note that in 2D, the faces are equivalent to edges.
+        # In 3D, the faces are polygons.
+        self.bz_vertex_points = bz["bz_vertices"]
+        # System dimensionality
+        if len(self.bz_vertex_points) == 0:
+            dim = 0
+        else:
+            dim = len(bz["bz_vertices"][0])
+
+        # Activate/deactivate buttons based on dimensionality
+        for btn in self.vertex_btns:
+            btn.setEnabled(dim > 0)
+        for btn in self.edge_btns:
+            btn.setEnabled(dim > 1)
+        for btn in self.face_btns:
+            btn.setEnabled(dim > 2)
+
+        if dim == 2:
+            # Get the edge points
+            self.bz_edge_points = []
+            for edge in bz["bz_faces"]:
+                # Midpoint of the edge
+                mid_point = np.mean(edge, axis=0)
+                self.bz_edge_points.append(mid_point)
+            self.bz_edge_points = np.array(self.bz_edge_points)
+
+        elif dim == 3:
+            # Get the edge and face points
+            self.bz_edge_points = []
+            self.bz_face_points = []
+            for face in bz["bz_faces"]:
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)
+                    # Midpoint of the edge
+                    mid_point = np.mean([face[ii], face[next_ii]], axis=0)
+                    self.bz_edge_points.append(mid_point)
+
+                # Midpoint of the face
+                mid_point = np.mean(face, axis=0)
+                self.bz_face_points.append(mid_point)
+            self.bz_edge_points = np.array(self.bz_edge_points)
+            self.bz_face_points = np.array(self.bz_face_points)
+
+        # Create edges - connect the vertices based on face data
+        if len(bz["bz_faces"]) > 0:
+            # Process faces to extract unique edges
+            all_edges = []
+            for face in bz["bz_faces"]:
+                # Extract edges from each face (connecting consecutive vertices)
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)  # Loop back to first vertex
+                    all_edges.append([face[ii], face[next_ii]])
+
+            # Create a single line item for all BZ edges
+            if all_edges:
+                # Flatten the list of edges to a list of vertices for GLLinePlotItem
+                line_vertices = []
+                for edge in all_edges:
+                    line_vertices.extend(edge)
+            # Make sure all the line vertices are 3D
+            pad_width = 3 - dim
+            if pad_width > 0:
+                line_vertices = np.pad(
+                    line_vertices, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                line_vertices = line_vertices
+
+            # Create a GLLinePlotItem for all BZ edges
+            try:
+                bz_edges = gl.GLLinePlotItem(
+                    pos=np.array(line_vertices),
+                    color=(1, 1, 1, 0.8),  # White, semi-transparent
+                    width=1,
+                    mode="lines",
+                )
+                self.view.addItem(bz_edges)
+                self.plot_items["bz_edges"] = bz_edges
+            except Exception as e:
+                print(f"Error creating BZ edges: {e}")
+
+        # Plot the BZ vertices as points
+        if len(self.bz_vertex_points) > 0:
+
+            pad_width = 3 - dim
+            if pad_width > 0:
+                vertices_3d = np.pad(
+                    self.bz_vertex_points, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                vertices_3d = self.bz_vertex_points
+
+            # Create a sphere for each vertex
+            for ii, vertex in enumerate(vertices_3d):
+                try:
+                    sphere = self._make_point()
+                    sphere.translate(vertex[0], vertex[1], vertex[2])
+                    self.view.addItem(sphere)
+                    self.plot_items[f"bz_vertex_{ii}"] = sphere
+                except Exception as e:
+                    print(f"Error creating BZ vertex {ii}: {e}")
+        else:
             return
 
-        # Check which vectors of the unit cell are periodic and activate the UC spinners if they are
-        if self.unit_cell.v1.is_periodic == True:
-            self.n1_spinner.setEnabled(True)
+        if len(self.bz_edge_points) > 0:
+
+            pad_width = 3 - dim
+            if pad_width > 0:
+                edges_3d = np.pad(
+                    self.bz_edge_points, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                edges_3d = self.bz_edge_points
+
+            # Create a sphere for each vertex
+            for ii, edge in enumerate(edges_3d):
+                try:
+                    sphere = self._make_point()
+                    sphere.translate(edge[0], edge[1], edge[2])
+                    self.view.addItem(sphere)
+                    self.plot_items[f"bz_edge_{ii}"] = sphere
+                except Exception as e:
+                    print(f"Error creating BZ edge {ii}: {e}")
         else:
-            self.n1_spinner.setEnabled(False)
-
-        if self.unit_cell.v2.is_periodic == True:
-            self.n2_spinner.setEnabled(True)
-        else:
-            self.n2_spinner.setEnabled(False)
-
-        if self.unit_cell.v3.is_periodic == True:
-            self.n3_spinner.setEnabled(True)
-        else:
-            self.n3_spinner.setEnabled(False)
-
-        # Plot unit cell wireframe
-        repeats = [
-            spinner.value() if spinner.isEnabled() else 1
-            for spinner in (self.n1_spinner, self.n2_spinner, self.n3_spinner)
-        ]
-        n1, n2, n3 = repeats
-
-        # Collect line vertices
-        line_vertices = []
-        for jj, kk, ll in product(range(n1), range(n2), range(n3)):
-            line_vertices.extend(self._get_unit_cell_edges(jj, kk, ll))
-            self._plot_sites(jj, kk, ll)
-
-        # Create the wireframe using GLLinePlotItem
-        unit_cell_edges = gl.GLLinePlotItem(
-            pos=line_vertices, color="w", width=2, mode="lines"  # White color
-        )
-        self.view.addItem(unit_cell_edges)
-        self.plot_items["unit_cell_edges"] = unit_cell_edges
-
-        # Plot the new unit cell
-        # self._plot_sites(0, 0, 0)
-
-    def _plot_sites(self, a1, a2, a3):
-        """
-        Plot all sites (atoms) within the unit cell as spheres.
-
-        Each site is represented as a colored sphere positioned according to
-        its fractional coordinates within the unit cell. Sites can be selected
-        and will change color when highlighted. Each sphere stores a reference
-        to its corresponding site ID for interaction.
-        """
-        if not self.unit_cell or not self.unit_cell.sites:
             return
 
-        # Extract basis vectors
-        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
-        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
-        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
+        if len(self.bz_face_points) > 0:
 
-        # Plot each site as a sphere
-        for site_id, site in self.unit_cell.sites.items():
-            # Calculate the position in Cartesian coordinates
-            pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
+            pad_width = 3 - dim
+            if pad_width > 0:
+                faces_3d = np.pad(
+                    self.bz_face_points, ((0, 0), (0, pad_width)), mode="constant"
+                )
+            else:
+                faces_3d = self.bz_face_points
 
-            # Create a sphere for the site
-            sphere = gl.GLMeshItem(
-                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=0.1),
-                smooth=True,
-                color=self.site_color,
-                shader="shaded",
+            # Create a sphere for each vertex
+            for ii, face in enumerate(faces_3d):
+                try:
+                    sphere = self._make_point()
+                    sphere.translate(face[0], face[1], face[2])
+                    self.view.addItem(sphere)
+                    self.plot_items[f"bz_face_{ii}"] = sphere
+                except Exception as e:
+                    print(f"Error creating BZ face {ii}: {e}")
+
+    def _select_vertex(self, step):
+        """
+        Move to the next vertex in the BZ visualization.
+        """
+        if self.selected_vertex is None:
+            self.selected_vertex = 0
+            prev_vertex = None
+        else:
+            prev_vertex = self.selected_vertex
+            self.selected_vertex = (self.selected_vertex + step) % len(
+                self.bz_vertex_points
             )
-            sphere.translate(pos[0], pos[1], pos[2])
-
-            # Store site ID as user data for interaction
-            sphere.site_id = site_id
-
-            self.view.addItem(sphere)
-            self.plot_items[f"site_{site_id}_{a1}_{a2}_{a3}"] = sphere
-
-    def select_site(self, site_id):
-        """
-        Highlight a selected site by changing its color.
-
-        This method is called when a site is selected, either from clicking on it
-        in the 3D view or from selecting it in the tree view. It changes the color
-        of the selected site to make it stand out and resets any previously selected
-        site back to the default color.
-
-        Args:
-            site_id: The UUID of the site to highlight, or None to deselect all sites
-        """
-        # Reset previously selected site to default color
-        if self.selected_site:
-            prev_sphere = self.plot_items.get(f"site_{self.selected_site}")
-            if prev_sphere:
-                prev_sphere.setColor(self.site_color)
-
-        # Highlight new selected site with the highlight color
-        self.selected_site = site_id
-        if site_id:
-            sphere = self.plot_items.get(f"site_{site_id}")
-            if sphere:
-                sphere.setColor(self.selected_site_color)
-
-    def _get_unit_cell_edges(self, a1, a2, a3):
-        """
-        Plot the unit cell as a wireframe parallelepiped.
-
-        Creates a 3D wireframe representation of the unit cell using the three
-        basis vectors to define the shape. The parallelepiped is drawn as a set
-        of 12 lines connecting 8 vertices in 3D space.
-        """
-        if not self.unit_cell:
-            return
-
-        # Extract basis vectors
-        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
-        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
-        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
-
-        # Define the 8 corners of the parallelepiped
-        verts = np.array(
-            [
-                [0, 0, 0],
-                v1,
-                v2,
-                v1 + v2,  # Bottom 4 vertices
-                v3,
-                v1 + v3,
-                v2 + v3,
-                v1 + v2 + v3,  # Top 4 vertices
-            ]
+        if prev_vertex is not None:
+            # Deselect the previous vertex
+            self.plot_items[f"bz_vertex_{prev_vertex}"].setColor(self.point_color)
+        # Select the new vertex
+        self.plot_items[f"bz_vertex_{self.selected_vertex}"].setColor(
+            self.selected_point_color
         )
-        verts = [v + (a1 * v1 + a2 * v2 + a3 * v3) for v in verts]
-        # Define the 12 edges of the parallelepiped
-        edges = np.array(
-            [
-                [0, 1],
-                [0, 2],
-                [1, 3],
-                [2, 3],  # Bottom square
-                [4, 5],
-                [4, 6],
-                [5, 7],
-                [6, 7],  # Top square
-                [0, 4],
-                [1, 5],
-                [2, 6],
-                [3, 7],  # Vertical edges
-            ]
+        print(self.bz_vertex_points[self.selected_vertex])
+
+    def _select_edge(self, step):
+        """
+        Move to the next edge in the BZ visualization.
+        """
+        if self.selected_edge is None:
+            self.selected_edge = 0
+            prev_edge = None
+        else:
+            prev_edge = self.selected_edge
+            self.selected_edge = (self.selected_edge + step) % len(self.bz_edge_points)
+        if prev_edge is not None:
+            # Deselect the previous edge
+            self.plot_items[f"bz_edge_{prev_edge}"].setColor(self.point_color)
+        # Select the new edge
+        self.plot_items[f"bz_edge_{self.selected_edge}"].setColor(
+            self.selected_point_color
         )
-        # Convert edges into line segments
-        line_vertices = []
-        for edge in edges:
-            line_vertices.append(verts[edge[0]])
-            line_vertices.append(verts[edge[1]])
+        print(self.bz_edge_points[self.selected_edge])
 
-        # Convert to NumPy array
-        line_vertices = np.array(line_vertices)
+    def _select_face(self, step):
+        """
+        Move to the next face in the BZ visualization.
+        """
+        if self.selected_face is None:
+            self.selected_face = 0
+            prev_face = None
+        else:
+            prev_face = self.selected_face
+            self.selected_face = (self.selected_face + step) % len(self.bz_face_points)
+        if prev_face is not None:
+            # Deselect the previous edge
+            self.plot_items[f"bz_face_{prev_face}"].setColor(self.point_color)
+        # Select the new edge
+        self.plot_items[f"bz_face_{self.selected_face}"].setColor(
+            self.selected_point_color
+        )
+        print(self.bz_face_points[self.selected_face])
 
-        return line_vertices
-
-    def _on_spinner_changed(self):
-
-        self.set_unit_cell(self.unit_cell)
-
-    def mousePressEvent(self, event):
-        """Handle mouse clicks to select sites."""
-        # Let the view handle mouse events for 3D rotation and navigation
-        # The actual picking of objects should be handled in the GLViewWidget
-        super().mousePressEvent(event)
-
-        # We need to implement picking through the GLViewWidget
-        # For now, this is a placeholder that will be implemented in the future
-        # when we can properly implement ray picking
-
-        # Future implementation:
-        # 1. Get mouse position in view coordinates
-        # 2. Use ray casting to determine which site was clicked
-        # 3. Emit site_selected signal with the site ID
-        # 4. Highlight the selected site in the plot
-
-        # For now, we rely on the tree selection to highlight sites
-        # This is a TODO item as noted in the project roadmap
+    def _make_point(self, vertex_size=0.20):
+        return gl.GLMeshItem(
+            meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=vertex_size),
+            smooth=True,
+            color=self.point_color,
+            shader="shaded",
+        )

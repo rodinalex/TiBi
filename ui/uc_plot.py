@@ -81,9 +81,9 @@ class UnitCellPlot(QWidget):
         self.n2_spinner = QSpinBox()
         self.n3_spinner = QSpinBox()
 
-        self.n1_spinner.valueChanged.connect(self._on_spinner_changed)
-        self.n2_spinner.valueChanged.connect(self._on_spinner_changed)
-        self.n3_spinner.valueChanged.connect(self._on_spinner_changed)
+        self.n1_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
+        self.n2_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
+        self.n3_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
 
         for x in [self.n1_spinner, self.n2_spinner, self.n3_spinner]:
             x.setFixedWidth(40)
@@ -160,23 +160,31 @@ class UnitCellPlot(QWidget):
             spinner.value() if spinner.isEnabled() else 1
             for spinner in (self.n1_spinner, self.n2_spinner, self.n3_spinner)
         ]
-        n1, n2, n3 = repeats
+        self.n1, self.n2, self.n3 = repeats
 
         # Collect line vertices
         line_vertices = []
-        for jj, kk, ll in product(range(n1), range(n2), range(n3)):
+        for jj, kk, ll in product(range(self.n1), range(self.n2), range(self.n3)):
             line_vertices.extend(self._get_unit_cell_edges(jj, kk, ll))
             self._plot_sites(jj, kk, ll)
 
         # Create the wireframe using GLLinePlotItem
         unit_cell_edges = gl.GLLinePlotItem(
-            pos=line_vertices, color="w", width=2, mode="lines"  # White color
+            pos=line_vertices, color="w", width=1, mode="lines"  # White color
         )
+
+        # Shift the unit cells so that they are centered aroudn the origin
+        shift = (
+            -(
+                self.n1 * self.unit_cell.v1.as_array()
+                + self.n2 * self.unit_cell.v2.as_array()
+                + self.n3 * self.unit_cell.v3.as_array()
+            )
+            / 2
+        )
+        unit_cell_edges.translate(shift[0], shift[1], shift[2])
         self.view.addItem(unit_cell_edges)
         self.plot_items["unit_cell_edges"] = unit_cell_edges
-
-        # Plot the new unit cell
-        # self._plot_sites(0, 0, 0)
 
     def _plot_sites(self, a1, a2, a3):
         """
@@ -191,9 +199,9 @@ class UnitCellPlot(QWidget):
             return
 
         # Extract basis vectors
-        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
-        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
-        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
+        v1 = self.unit_cell.v1.as_array()
+        v2 = self.unit_cell.v2.as_array()
+        v3 = self.unit_cell.v3.as_array()
 
         # Plot each site as a sphere
         for site_id, site in self.unit_cell.sites.items():
@@ -207,7 +215,9 @@ class UnitCellPlot(QWidget):
                 color=self.site_color,
                 shader="shaded",
             )
-            sphere.translate(pos[0], pos[1], pos[2])
+
+            shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2 + pos
+            sphere.translate(shift[0], shift[1], shift[2])
 
             # Store site ID as user data for interaction
             sphere.site_id = site_id
@@ -229,16 +239,18 @@ class UnitCellPlot(QWidget):
         """
         # Reset previously selected site to default color
         if self.selected_site:
-            prev_sphere = self.plot_items.get(f"site_{self.selected_site}")
-            if prev_sphere:
-                prev_sphere.setColor(self.site_color)
+            # Find all instances of the previously selected site across unit cells
+            for key, item in list(self.plot_items.items()):
+                if key.startswith(f"site_{self.selected_site}_"):
+                    item.setColor(self.site_color)
 
         # Highlight new selected site with the highlight color
         self.selected_site = site_id
         if site_id:
-            sphere = self.plot_items.get(f"site_{site_id}")
-            if sphere:
-                sphere.setColor(self.selected_site_color)
+            # Find all instances of the newly selected site across unit cells
+            for key, item in list(self.plot_items.items()):
+                if key.startswith(f"site_{site_id}_"):
+                    item.setColor(self.selected_site_color)
 
     def _get_unit_cell_edges(self, a1, a2, a3):
         """
@@ -298,25 +310,6 @@ class UnitCellPlot(QWidget):
 
         return line_vertices
 
-    def _on_spinner_changed(self):
+    # def _on_spinner_changed(self):
 
-        self.set_unit_cell(self.unit_cell)
-
-    def mousePressEvent(self, event):
-        """Handle mouse clicks to select sites."""
-        # Let the view handle mouse events for 3D rotation and navigation
-        # The actual picking of objects should be handled in the GLViewWidget
-        super().mousePressEvent(event)
-
-        # We need to implement picking through the GLViewWidget
-        # For now, this is a placeholder that will be implemented in the future
-        # when we can properly implement ray picking
-
-        # Future implementation:
-        # 1. Get mouse position in view coordinates
-        # 2. Use ray casting to determine which site was clicked
-        # 3. Emit site_selected signal with the site ID
-        # 4. Highlight the selected site in the plot
-
-        # For now, we rely on the tree selection to highlight sites
-        # This is a TODO item as noted in the project roadmap
+    #     self.set_unit_cell(self.unit_cell)

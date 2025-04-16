@@ -4,6 +4,8 @@ from typing import Tuple
 import numpy as np
 from sympy.polys.domains import ZZ
 from sympy.polys.matrices import DM
+from scipy.spatial import Voronoi
+import itertools
 
 
 @dataclass
@@ -175,27 +177,98 @@ class UnitCell:
                 reduced_basis.append(vs[ii])  # Unchanged
         return reduced_basis
 
+    def get_states(self):
+        """
+        Extracts all states from a unit cell along with their identifying information.
 
-def get_states(uc: UnitCell):
-    """
-    Extracts all states from a unit cell along with their identifying information.
+        This is a helper function used by UI components to get a flattened list of all
+        states in the unit cell, regardless of which site they belong to.
 
-    This is a helper function used by UI components to get a flattened list of all
-    states in the unit cell, regardless of which site they belong to.
+        Args:
+            self: The unit cell to extract states from
 
-    Args:
-        uc: The unit cell to extract states from
+        Returns:
+            A tuple of (states, state_info) where:
+            - states is a list of State objects
+            - state_info is a list of tuples (site_name, state_name, state_id) that
+            provides a more displayable form of the state information
+        """
+        states = []
+        state_info = []
+        for site_id, site in self.sites.items():
+            for state_id, state in site.states.items():
+                states.append(state)
+                state_info.append((site.name, state.name, state_id))
+        return (states, state_info)
 
-    Returns:
-        A tuple of (states, state_info) where:
-        - states is a list of State objects
-        - state_info is a list of tuples (site_name, state_name, state_id) that
-          provides a more displayable form of the state information
-    """
-    states = []
-    state_info = []
-    for site_id, site in uc.sites.items():
-        for state_id, state in site.states.items():
-            states.append(state)
-            state_info.append((site.name, state.name, state_id))
-    return (states, state_info)
+    def get_BZ(self):
+
+        n_neighbors = 1
+        ranges = range(-n_neighbors, n_neighbors + 1)
+
+        reciprocal_vectors = self.reciprocal_vectors()
+        dim = len(reciprocal_vectors)
+
+        if dim == 0:
+            bz_vertices = np.array([])
+            bz_faces = np.array([])
+
+        elif dim == 1:
+            G1 = reciprocal_vectors[0]
+            bz_vertices = np.array([[G1[0] / 2], [-G1[0] / 2]])
+            bz_faces = np.array([])
+
+        else:
+
+            if dim == 2:
+                g1 = reciprocal_vectors[0][0:2]
+                g2 = reciprocal_vectors[1][0:2]
+                points = [
+                    ii * g1 + jj * g2
+                    for ii, jj in itertools.product(ranges, ranges)
+                    if (ii != 0 or jj != 0)
+                ]
+                all_points = np.vstack([np.zeros(2), points])
+            else:
+                g1 = reciprocal_vectors[0]
+                g2 = reciprocal_vectors[1]
+                g3 = reciprocal_vectors[2]
+                points = [
+                    ii * g1 + jj * g2 + kk * g3
+                    for ii, jj, kk in itertools.product(ranges, ranges, ranges)
+                    if (ii != 0 or jj != 0 or kk != 0)
+                ]
+                all_points = np.vstack([np.zeros(3), points])
+
+            vor = Voronoi(all_points)
+
+            # Start by getting the vertices of the Brillouin zone
+            # The first Brillouin zone is the Voronoi cell around the origin (index 0)
+            origin_region = vor.point_region[
+                0
+            ]  # Tells which Voronoi cell corresponds to the point at the origin
+            vertex_indices = vor.regions[
+                origin_region
+            ]  # Tells which vertices defining Voronoi cell bound the relevant region
+
+            # Extract vertices
+            bz_vertices = vor.vertices[
+                vertex_indices
+            ]  # Get the actual coordinates of the vertices of the points bounding the region
+
+            # Next, get a list of lists that defines the faces of the Brillouin zone
+            bz_faces = []
+            # bz_faces = np.array([])
+            # ridge_points is a list of tuples corresponding to
+            # pairs of elements of all_points that are separated by a Voronoi boundary
+            for num, p in enumerate(vor.ridge_points):
+                # If one of the elements in the pair is the origin (index 0),
+                # this ridge separates the BZ from its neighbors
+                if p[0] == 0 or p[1] == 0:
+                    # ridge_vertices[num] contains the indices of the vertices bounding the ridge
+                    ridge_vertices = vor.ridge_vertices[num]
+                    # finally, get the coordinates of the ridge vertices from their indices
+                    face = vor.vertices[ridge_vertices]
+                    bz_faces.append(face)
+
+        return bz_vertices, bz_faces
