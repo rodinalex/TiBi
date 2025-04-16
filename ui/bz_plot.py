@@ -111,8 +111,18 @@ class BrillouinZonePlot(QWidget):
         self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
         self.add_face_btn.clicked.connect(lambda: self._add_point("Face"))
 
+        # Path control buttons
+        path_controls_layout = QHBoxLayout()
+
+        self.remove_last_btn = QPushButton("Remove Last")
+        self.remove_last_btn.clicked.connect(self._remove_last_point)
+        self.remove_last_btn.setEnabled(False)  # Disabled until path has points
+
         self.clear_path_btn = QPushButton("Clear")
-        self.clear_path_btn.clicked.connect(lambda: self._clear_path())
+        self.clear_path_btn.clicked.connect(self._clear_path)
+
+        path_controls_layout.addWidget(self.remove_last_btn)
+        path_controls_layout.addWidget(self.clear_path_btn)
 
         btns = [
             self.add_gamma_btn,
@@ -144,7 +154,7 @@ class BrillouinZonePlot(QWidget):
 
         self.selection_panel.addWidget(self.selection_panel_label)
         self.selection_panel.addLayout(form_layout)
-        self.selection_panel.addWidget(self.clear_path_btn)
+        self.selection_panel.addLayout(path_controls_layout)
 
         layout.addWidget(self.view, stretch=1)
         layout.addLayout(self.selection_panel, stretch=1)
@@ -166,8 +176,8 @@ class BrillouinZonePlot(QWidget):
         self.bz_edge_points = []  # Points in the middle of each edge
         self.bz_face_points = []  # Points in the middle of each face
         self.selected_vertex = None
-        self.selectedEdge = None
-        self.selectedFace = None
+        self.selected_edge = None  # Fix variable name
+        self.selected_face = None  # Fix variable name
         self.bz_path = []
 
         # Clear previous plot items except axes and grid
@@ -175,16 +185,21 @@ class BrillouinZonePlot(QWidget):
             self.view.removeItem(item)
             del self.plot_items[key]
 
+        # Check for valid BZ data
         if not bz or "bz_vertices" not in bz or "bz_faces" not in bz:
             return
-        # Extract vertices and faces from the BZ data. Note that in 2D, the faces are equivalent to edges.
-        # In 3D, the faces are polygons.
+
+        # Extract vertices and faces from the BZ data
+        # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
         self.bz_vertex_points = bz["bz_vertices"]
-        # System dimensionality
-        if len(self.bz_vertex_points) == 0:
-            self.dim = 0
-        else:
-            self.dim = len(bz["bz_vertices"][0])
+
+        # Determine system dimensionality
+        self.dim = 0 if len(self.bz_vertex_points) == 0 else len(bz["bz_vertices"][0])
+
+        # Initialize selections to the first element if available
+        self.selected_vertex = 0 if len(self.bz_vertex_points) > 0 else None
+        self.selected_edge = 0  # Will be set properly after edges are calculated
+        self.selected_face = 0  # Will be set properly after faces are calculated
 
         # Activate/deactivate buttons based on dimensionality
         self.add_gamma_btn.setEnabled(self.dim > 0)
@@ -237,38 +252,26 @@ class BrillouinZonePlot(QWidget):
                 line_vertices = []
                 for edge in all_edges:
                     line_vertices.extend(edge)
-            # Make sure all the line vertices are 3D
-            pad_width = 3 - self.dim
-            if pad_width > 0:
-                line_vertices = np.pad(
-                    line_vertices, ((0, 0), (0, pad_width)), mode="constant"
-                )
-            else:
-                line_vertices = line_vertices
-
-            # Create a GLLinePlotItem for all BZ edges
-            try:
-                bz_edges = gl.GLLinePlotItem(
-                    pos=np.array(line_vertices),
-                    color=(1, 1, 1, 0.8),  # White, semi-transparent
-                    width=1,
-                    mode="lines",
-                )
-                self.view.addItem(bz_edges)
-                self.plot_items["bz_edges"] = bz_edges
-            except Exception as e:
-                print(f"Error creating BZ edges: {e}")
+                    
+                # Make sure all the line vertices are 3D
+                line_vertices = self._pad_to_3d(line_vertices)
+    
+                # Create a GLLinePlotItem for all BZ edges
+                try:
+                    bz_edges = gl.GLLinePlotItem(
+                        pos=np.array(line_vertices),
+                        color=(1, 1, 1, 0.8),  # White, semi-transparent
+                        width=1,
+                        mode="lines",
+                    )
+                    self.view.addItem(bz_edges)
+                    self.plot_items["bz_edges"] = bz_edges
+                except Exception as e:
+                    print(f"Error creating BZ edges: {e}")
 
         # Plot the BZ vertices as points
         if len(self.bz_vertex_points) > 0:
-
-            pad_width = 3 - self.dim
-            if pad_width > 0:
-                vertices_3d = np.pad(
-                    self.bz_vertex_points, ((0, 0), (0, pad_width)), mode="constant"
-                )
-            else:
-                vertices_3d = self.bz_vertex_points
+            vertices_3d = self._pad_to_3d(self.bz_vertex_points)
 
             # Create a sphere for each vertex
             for ii, vertex in enumerate(vertices_3d):
@@ -277,114 +280,164 @@ class BrillouinZonePlot(QWidget):
                     sphere.translate(vertex[0], vertex[1], vertex[2])
                     self.view.addItem(sphere)
                     self.plot_items[f"bz_vertex_{ii}"] = sphere
+
+                    # Highlight the first vertex
+                    if ii == self.selected_vertex:
+                        sphere.setColor(self.selected_point_color)
                 except Exception as e:
                     print(f"Error creating BZ vertex {ii}: {e}")
-            # Add Gamma point
+
+            # Add Gamma point at origin
             sphere = self._make_point()
             self.view.addItem(sphere)
-            self.plot_items[f"Gamma"] = sphere
-        else:
-            return
+            self.plot_items["Gamma"] = sphere
 
+        # Plot edge points
         if len(self.bz_edge_points) > 0:
+            edges_3d = self._pad_to_3d(self.bz_edge_points)
 
-            pad_width = 3 - self.dim
-            if pad_width > 0:
-                edges_3d = np.pad(
-                    self.bz_edge_points, ((0, 0), (0, pad_width)), mode="constant"
-                )
-            else:
-                edges_3d = self.bz_edge_points
+            # Update edge selection to be valid
+            self.selected_edge = 0 if len(self.bz_edge_points) > 0 else None
 
-            # Create a sphere for each vertex
+            # Create a sphere for each edge midpoint
             for ii, edge in enumerate(edges_3d):
                 try:
                     sphere = self._make_point()
                     sphere.translate(edge[0], edge[1], edge[2])
                     self.view.addItem(sphere)
                     self.plot_items[f"bz_edge_{ii}"] = sphere
+
+                    # Highlight the first edge
+                    if ii == self.selected_edge:
+                        sphere.setColor(self.selected_point_color)
                 except Exception as e:
                     print(f"Error creating BZ edge {ii}: {e}")
-        else:
-            return
 
+        # Plot face points
         if len(self.bz_face_points) > 0:
+            faces_3d = self._pad_to_3d(self.bz_face_points)
 
-            pad_width = 3 - self.dim
-            if pad_width > 0:
-                faces_3d = np.pad(
-                    self.bz_face_points, ((0, 0), (0, pad_width)), mode="constant"
-                )
-            else:
-                faces_3d = self.bz_face_points
+            # Update face selection to be valid
+            self.selected_face = 0 if len(self.bz_face_points) > 0 else None
 
-            # Create a sphere for each vertex
+            # Create a sphere for each face midpoint
             for ii, face in enumerate(faces_3d):
                 try:
                     sphere = self._make_point()
                     sphere.translate(face[0], face[1], face[2])
                     self.view.addItem(sphere)
                     self.plot_items[f"bz_face_{ii}"] = sphere
+
+                    # Highlight the first face
+                    if ii == self.selected_face:
+                        sphere.setColor(self.selected_point_color)
                 except Exception as e:
                     print(f"Error creating BZ face {ii}: {e}")
 
     def _select_vertex(self, step):
         """
         Move to the next vertex in the BZ visualization.
+
+        Args:
+            step: Direction to move (typically +1 or -1)
         """
+        # Guard against empty vertex list
+        if not self.bz_vertex_points or len(self.bz_vertex_points) == 0:
+            return
+
+        prev_vertex = self.selected_vertex
+
         if self.selected_vertex is None:
             self.selected_vertex = 0
-            prev_vertex = None
         else:
-            prev_vertex = self.selected_vertex
-            self.selected_vertex = (self.selected_vertex + step) % len(
-                self.bz_vertex_points
-            )
-        if prev_vertex is not None:
-            # Deselect the previous vertex
-            self.plot_items[f"bz_vertex_{prev_vertex}"].setColor(self.point_color)
-        # Select the new vertex
-        self.plot_items[f"bz_vertex_{self.selected_vertex}"].setColor(
-            self.selected_point_color
-        )
+            self.selected_vertex = (self.selected_vertex + step) % len(self.bz_vertex_points)
+
+        try:
+            # Skip deselection if previous vertex wasn't valid
+            if prev_vertex is not None and prev_vertex != self.selected_vertex:
+                # Only try to deselect if the key exists
+                prev_key = f"bz_vertex_{prev_vertex}"
+                if prev_key in self.plot_items:
+                    self.plot_items[prev_key].setColor(self.point_color)
+    
+            # Only try to select if the key exists
+            new_key = f"bz_vertex_{self.selected_vertex}"
+            if new_key in self.plot_items:
+                # Select the new vertex
+                self.plot_items[new_key].setColor(self.selected_point_color)
+        except Exception as e:
+            print(f"Error selecting vertex: {e}")
 
     def _select_edge(self, step):
         """
         Move to the next edge in the BZ visualization.
+
+        Args:
+            step: Direction to move (typically +1 or -1)
         """
+        # Guard against empty edge list
+        if not self.bz_edge_points or len(self.bz_edge_points) == 0:
+            return
+
+        prev_edge = self.selected_edge
+
         if self.selected_edge is None:
             self.selected_edge = 0
-            prev_edge = None
         else:
-            prev_edge = self.selected_edge
             self.selected_edge = (self.selected_edge + step) % len(self.bz_edge_points)
-        if prev_edge is not None:
-            # Deselect the previous edge
-            self.plot_items[f"bz_edge_{prev_edge}"].setColor(self.point_color)
-        # Select the new edge
-        self.plot_items[f"bz_edge_{self.selected_edge}"].setColor(
-            self.selected_point_color
-        )
+
+        try:
+            # Skip deselection if previous edge wasn't valid
+            if prev_edge is not None and prev_edge != self.selected_edge:
+                # Only try to deselect if the key exists
+                prev_key = f"bz_edge_{prev_edge}"
+                if prev_key in self.plot_items:
+                    self.plot_items[prev_key].setColor(self.point_color)
+    
+            # Only try to select if the key exists
+            new_key = f"bz_edge_{self.selected_edge}"
+            if new_key in self.plot_items:
+                # Select the new edge
+                self.plot_items[new_key].setColor(self.selected_point_color)
+        except Exception as e:
+            print(f"Error selecting edge: {e}")
 
     def _select_face(self, step):
         """
         Move to the next face in the BZ visualization.
+
+        Args:
+            step: Direction to move (typically +1 or -1)
         """
+        # Guard against empty face list
+        if not self.bz_face_points or len(self.bz_face_points) == 0:
+            return
+
+        prev_face = self.selected_face
+
         if self.selected_face is None:
             self.selected_face = 0
-            prev_face = None
         else:
-            prev_face = self.selected_face
             self.selected_face = (self.selected_face + step) % len(self.bz_face_points)
-        if prev_face is not None:
-            # Deselect the previous edge
-            self.plot_items[f"bz_face_{prev_face}"].setColor(self.point_color)
-        # Select the new edge
-        self.plot_items[f"bz_face_{self.selected_face}"].setColor(
-            self.selected_point_color
-        )
+
+        try:
+            # Skip deselection if previous face wasn't valid
+            if prev_face is not None and prev_face != self.selected_face:
+                # Only try to deselect if the key exists
+                prev_key = f"bz_face_{prev_face}"
+                if prev_key in self.plot_items:
+                    self.plot_items[prev_key].setColor(self.point_color)
+    
+            # Only try to select if the key exists
+            new_key = f"bz_face_{self.selected_face}"
+            if new_key in self.plot_items:
+                # Select the new face
+                self.plot_items[new_key].setColor(self.selected_point_color)
+        except Exception as e:
+            print(f"Error selecting face: {e}")
 
     def _make_point(self, vertex_size=0.20):
+        """Create a sphere mesh item for a point in the BZ."""
         return gl.GLMeshItem(
             meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=vertex_size),
             smooth=True,
@@ -392,40 +445,134 @@ class BrillouinZonePlot(QWidget):
             shader="shaded",
         )
 
+    def _pad_to_3d(self, points):
+        """
+        Ensure points have 3D coordinates by padding with zeros if needed.
+
+        Args:
+            points: Array of points with coordinates
+
+        Returns:
+            Array of points with 3D coordinates
+        """
+        pad_width = 3 - self.dim
+        if pad_width > 0:
+            return np.pad(points, ((0, 0), (0, pad_width)), mode="constant")
+        return np.array(points)
+
     def _clear_path(self):
+        """Remove all points from the path."""
         self.bz_path = []
-        # Remove path from the plot
-        self.view.removeItem(self.plot_items["bz_path"])
-        del self.plot_items["bz_path"]
+        # Remove path from the plot if it exists
+        if "bz_path" in self.plot_items:
+            self.view.removeItem(self.plot_items["bz_path"])
+            del self.plot_items["bz_path"]
 
-    def _add_point(self, point):
-        if point == "Gamma":
-            self.bz_path.append([0] * self.dim)
-        elif point == "Vertex":
-            self.bz_path.append(self.bz_vertex_points[self.selected_vertex])
-        elif point == "Edge":
-            self.bz_path.append(self.bz_edge_points[self.selected_edge])
-        elif point == "Face":
-            self.bz_path.append(self.bz_face_points[self.selected_face])
+        # Disable the remove last button since path is empty
+        self.remove_last_btn.setEnabled(False)
 
-        print(self.bz_path)
+    def _remove_last_point(self):
+        """Remove the last point added to the path."""
+        if self.bz_path:
+            # Remove the last point
+            self.bz_path.pop()
 
-        if len(self.bz_path) > 1:
-            pad_width = 3 - self.dim
-            if pad_width > 0:
-                path_3d = np.pad(
-                    self.bz_path, ((0, 0), (0, pad_width)), mode="constant"
-                )
-            else:
-                path_3d = self.bz_face_points
+            # Update path visualization
+            self._update_path_visualization()
 
-            path_segments = []
+            # Disable button if path is now empty
+            if not self.bz_path:
+                self.remove_last_btn.setEnabled(False)
 
-            for ii in range(len(self.bz_path) - 1):
-                path_segments.append([self.bz_path[ii], self.bz_path[ii + 1]])
+    def _update_path_visualization(self):
+        """
+        Update the visualization of the BZ path based on current path points.
+        """
+        # Remove existing path visualization if it exists
+        if "bz_path" in self.plot_items:
+            try:
+                self.view.removeItem(self.plot_items["bz_path"])
+                del self.plot_items["bz_path"]
+            except Exception as e:
+                print(f"Error removing path visualization: {e}")
+
+        # Only create visualization if we have at least 2 points
+        if not self.bz_path or len(self.bz_path) < 2:
+            return
+
+        try:
+            # Convert path points to 3D if needed
+            path_3d = self._pad_to_3d(self.bz_path)
+    
+            # Create line segments for the path
+            path_pos = []
+            for i in range(len(path_3d) - 1):
+                # Add both points of each segment
+                path_pos.append(path_3d[i])
+                path_pos.append(path_3d[i + 1])
+    
+            # Create the path visualization
             path_object = gl.GLLinePlotItem(
-                pos=np.array(path_segments), color=CF_red, width=2, mode="lines"
+                pos=np.array(path_pos), color=CF_red, width=2, mode="lines"
             )
             self.view.addItem(path_object)
-
             self.plot_items["bz_path"] = path_object
+        except Exception as e:
+            print(f"Error updating path visualization: {e}")
+
+    def _add_point(self, point):
+        """
+        Add a selected point to the Brillouin zone path.
+
+        Args:
+            point: The type of point to add ("Gamma", "Vertex", "Edge", or "Face")
+        """
+        try:
+            # Add the selected point to the path
+            if point == "Gamma":
+                if hasattr(self, 'dim') and self.dim > 0:
+                    self.bz_path.append([0] * self.dim)
+                else:
+                    print("Cannot add Gamma point: dimension not set")
+                    return
+                    
+            elif point == "Vertex":
+                if self.selected_vertex is not None and self.bz_vertex_points is not None:
+                    if len(self.bz_vertex_points) > self.selected_vertex:
+                        self.bz_path.append(self.bz_vertex_points[self.selected_vertex])
+                    else:
+                        print(f"Invalid vertex index: {self.selected_vertex}")
+                        return
+                else:
+                    print("No vertex selected")
+                    return
+                    
+            elif point == "Edge":
+                if self.selected_edge is not None and self.bz_edge_points is not None:
+                    if len(self.bz_edge_points) > self.selected_edge:
+                        self.bz_path.append(self.bz_edge_points[self.selected_edge])
+                    else:
+                        print(f"Invalid edge index: {self.selected_edge}")
+                        return
+                else:
+                    print("No edge selected")
+                    return
+                    
+            elif point == "Face":
+                if self.selected_face is not None and self.bz_face_points is not None:
+                    if len(self.bz_face_points) > self.selected_face:
+                        self.bz_path.append(self.bz_face_points[self.selected_face])
+                    else:
+                        print(f"Invalid face index: {self.selected_face}")
+                        return
+                else:
+                    print("No face selected")
+                    return
+
+            # Enable the remove last button now that we have points
+            self.remove_last_btn.setEnabled(True)
+
+            # Update the path visualization
+            self._update_path_visualization()
+        except Exception as e:
+            print(f"Error adding point: {e}")
