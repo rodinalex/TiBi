@@ -27,9 +27,9 @@ class BrillouinZonePlot(QWidget):
 
         # Initialize data
         self.bz = None
-        self.bz_vertex_points = None
-        self.bz_edge_points = None
-        self.bz_face_points = None
+        self.bz_vertex_points = []
+        self.bz_edge_points = []
+        self.bz_face_points = []
         self.plot_items = {}  # Map to track mesh items
         self.selected_vertex = None
         self.selected_edge = None
@@ -252,10 +252,10 @@ class BrillouinZonePlot(QWidget):
                 line_vertices = []
                 for edge in all_edges:
                     line_vertices.extend(edge)
-                    
+
                 # Make sure all the line vertices are 3D
                 line_vertices = self._pad_to_3d(line_vertices)
-    
+
                 # Create a GLLinePlotItem for all BZ edges
                 try:
                     bz_edges = gl.GLLinePlotItem(
@@ -342,7 +342,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty vertex list
-        if not self.bz_vertex_points or len(self.bz_vertex_points) == 0:
+        if len(self.bz_vertex_points) == 0:
             return
 
         prev_vertex = self.selected_vertex
@@ -350,7 +350,9 @@ class BrillouinZonePlot(QWidget):
         if self.selected_vertex is None:
             self.selected_vertex = 0
         else:
-            self.selected_vertex = (self.selected_vertex + step) % len(self.bz_vertex_points)
+            self.selected_vertex = (self.selected_vertex + step) % len(
+                self.bz_vertex_points
+            )
 
         try:
             # Skip deselection if previous vertex wasn't valid
@@ -359,7 +361,7 @@ class BrillouinZonePlot(QWidget):
                 prev_key = f"bz_vertex_{prev_vertex}"
                 if prev_key in self.plot_items:
                     self.plot_items[prev_key].setColor(self.point_color)
-    
+
             # Only try to select if the key exists
             new_key = f"bz_vertex_{self.selected_vertex}"
             if new_key in self.plot_items:
@@ -376,7 +378,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty edge list
-        if not self.bz_edge_points or len(self.bz_edge_points) == 0:
+        if len(self.bz_edge_points) == 0:
             return
 
         prev_edge = self.selected_edge
@@ -393,7 +395,7 @@ class BrillouinZonePlot(QWidget):
                 prev_key = f"bz_edge_{prev_edge}"
                 if prev_key in self.plot_items:
                     self.plot_items[prev_key].setColor(self.point_color)
-    
+
             # Only try to select if the key exists
             new_key = f"bz_edge_{self.selected_edge}"
             if new_key in self.plot_items:
@@ -410,7 +412,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty face list
-        if not self.bz_face_points or len(self.bz_face_points) == 0:
+        if len(self.bz_face_points) == 0:
             return
 
         prev_face = self.selected_face
@@ -427,7 +429,7 @@ class BrillouinZonePlot(QWidget):
                 prev_key = f"bz_face_{prev_face}"
                 if prev_key in self.plot_items:
                     self.plot_items[prev_key].setColor(self.point_color)
-    
+
             # Only try to select if the key exists
             new_key = f"bz_face_{self.selected_face}"
             if new_key in self.plot_items:
@@ -503,14 +505,14 @@ class BrillouinZonePlot(QWidget):
         try:
             # Convert path points to 3D if needed
             path_3d = self._pad_to_3d(self.bz_path)
-    
+
             # Create line segments for the path
             path_pos = []
             for i in range(len(path_3d) - 1):
                 # Add both points of each segment
                 path_pos.append(path_3d[i])
                 path_pos.append(path_3d[i + 1])
-    
+
             # Create the path visualization
             path_object = gl.GLLinePlotItem(
                 pos=np.array(path_pos), color=CF_red, width=2, mode="lines"
@@ -530,14 +532,17 @@ class BrillouinZonePlot(QWidget):
         try:
             # Add the selected point to the path
             if point == "Gamma":
-                if hasattr(self, 'dim') and self.dim > 0:
+                if hasattr(self, "dim") and self.dim > 0:
                     self.bz_path.append([0] * self.dim)
                 else:
                     print("Cannot add Gamma point: dimension not set")
                     return
-                    
+
             elif point == "Vertex":
-                if self.selected_vertex is not None and self.bz_vertex_points is not None:
+                if (
+                    self.selected_vertex is not None
+                    and self.bz_vertex_points is not None
+                ):
                     if len(self.bz_vertex_points) > self.selected_vertex:
                         self.bz_path.append(self.bz_vertex_points[self.selected_vertex])
                     else:
@@ -546,7 +551,7 @@ class BrillouinZonePlot(QWidget):
                 else:
                     print("No vertex selected")
                     return
-                    
+
             elif point == "Edge":
                 if self.selected_edge is not None and self.bz_edge_points is not None:
                     if len(self.bz_edge_points) > self.selected_edge:
@@ -557,7 +562,7 @@ class BrillouinZonePlot(QWidget):
                 else:
                     print("No edge selected")
                     return
-                    
+
             elif point == "Face":
                 if self.selected_face is not None and self.bz_face_points is not None:
                     if len(self.bz_face_points) > self.selected_face:
