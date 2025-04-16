@@ -37,6 +37,7 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - When plotting the system, make it centered around the origin for easier interaction
 - MAYBE: add point group information
 - Figure out how to help the user distinguish between different sites: for now they all look the same
+- Make BZ path selection context-based (that a BZ exists in the first place)
 
 ## Daily Plan
 - Reorganize the BZ panel
