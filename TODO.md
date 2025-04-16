@@ -34,14 +34,16 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 - Check that the volume of the unit cell is non-zero
 - BZ Calculation
 - Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
+- When plotting the system, make it centered around the origin for easier interaction
+- MAYBE: add point group information
+- Figure out how to help the user distinguish between different sites: for now they all look the same
 
 ## Daily Plan
-- Reorganize UC panel for compactness
-- Implement Voronoi calculations for BZ
-- Get BZ plots
+- Reorganize the BZ panel
+- Add points to the BZ plot corresponding to mid-edge and mid-face
+- Add path-construction option using the selection
 
 ## Bugs
-- Sites are not market as highlighted in the plot
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

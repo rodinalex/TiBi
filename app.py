@@ -1,15 +1,17 @@
 import sys
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
     QVBoxLayout,
     QWidget,
+    QLabel,
 )
 from ui.uc_plot import UnitCellPlot
 from ui.bz_plot import BrillouinZonePlot
+from ui.bz_plot_selectable import SelectableBrillouinZonePlot
 from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel
 from ui.placeholder import PlaceholderWidget
@@ -37,6 +39,7 @@ class MainWindow(QMainWindow):
         # Initialize the plots
         self.unit_cell_plot = UnitCellPlot()
         self.bz_plot = BrillouinZonePlot()
+        self.selectable_bz_plot = SelectableBrillouinZonePlot()
 
         # Initialize the hopping panel
         self.hopping = HoppingPanel(self.uc.unit_cells)
@@ -71,8 +74,19 @@ class MainWindow(QMainWindow):
         )
 
         right_layout.addWidget(self.bz_plot, stretch=1)
-        right_layout.addWidget(PlaceholderWidget("BZ Tools"), stretch=1)
-        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=2)
+        right_layout.addWidget(self.selectable_bz_plot, stretch=1)
+
+        # Create a widget for the selected BZ point info
+        bz_info_widget = QWidget()
+        bz_info_layout = QVBoxLayout(bz_info_widget)
+        self.bz_info_label = QLabel("BZ Point Info")
+        self.bz_info_label.setAlignment(Qt.AlignCenter)
+        bz_info_layout.addWidget(self.bz_info_label)
+
+        # Connect selectable BZ plot signal
+        self.selectable_bz_plot.vertex_selected.connect(self.on_bz_vertex_selected)
+
+        right_layout.addWidget(bz_info_widget, stretch=1)
 
         main_layout.addLayout(left_layout, stretch=3)
         main_layout.addLayout(mid_layout, stretch=5)
@@ -114,7 +128,7 @@ class MainWindow(QMainWindow):
         Update the Brillouin zone visualization with data from the selected unit cell.
 
         This method retrieves BZ vertices and faces from the selected unit cell,
-        stores them in the data model, and passes them to the BZ plot for visualization.
+        stores them in the data model, and passes them to both BZ plots for visualization.
         """
         try:
             uc = self.uc.unit_cells[self.uc.selection["unit_cell"]]
@@ -122,10 +136,29 @@ class MainWindow(QMainWindow):
             self.uc.bz["bz_vertices"] = bz_vertices
             self.uc.bz["bz_faces"] = bz_faces
 
-            # Pass BZ data to the plot for visualization
+            # Pass BZ data to both plot widgets for visualization
             self.bz_plot.set_BZ(self.uc.bz)
+            self.selectable_bz_plot.set_BZ(self.uc.bz)
         except Exception as e:
             print(f"Error updating Brillouin zone: {e}")
+
+    def on_bz_vertex_selected(self, vertex):
+        """
+        Handle the selection of a vertex in the Brillouin zone.
+
+        Args:
+            vertex: Coordinates of the selected vertex (numpy array)
+        """
+        # Format the vertex information
+        if len(vertex) == 3:
+            coords_str = f"({vertex[0]:.3f}, {vertex[1]:.3f}, {vertex[2]:.3f})"
+        elif len(vertex) == 2:
+            coords_str = f"({vertex[0]:.3f}, {vertex[1]:.3f})"
+        else:
+            coords_str = f"({vertex[0]:.3f})"
+
+        # Update the BZ info label with the selected point
+        self.bz_info_label.setText(f"Selected BZ Point:\n{coords_str}")
 
 
 app = QApplication(sys.argv)
