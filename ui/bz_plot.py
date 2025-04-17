@@ -185,21 +185,8 @@ class BrillouinZonePlot(QWidget):
             self.view.removeItem(item)
             del self.plot_items[key]
 
-        # Check for valid BZ data
-        if not bz or "bz_vertices" not in bz or "bz_faces" not in bz:
-            return
-
-        # Extract vertices and faces from the BZ data
-        # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
-        self.bz_vertex_points = bz["bz_vertices"]
-
         # Determine system dimensionality
-        self.dim = 0 if len(self.bz_vertex_points) == 0 else len(bz["bz_vertices"][0])
-
-        # Initialize selections to the first element if available
-        self.selected_vertex = 0 if len(self.bz_vertex_points) > 0 else None
-        self.selected_edge = 0  # Will be set properly after edges are calculated
-        self.selected_face = 0  # Will be set properly after faces are calculated
+        self.dim = 0 if len(bz["bz_vertices"]) == 0 else len(bz["bz_vertices"][0])
 
         # Activate/deactivate buttons based on dimensionality
         self.add_gamma_btn.setEnabled(self.dim > 0)
@@ -209,6 +196,13 @@ class BrillouinZonePlot(QWidget):
             btn.setEnabled(self.dim > 1)
         for btn in self.face_btns:
             btn.setEnabled(self.dim > 2)
+
+        # Create the BZ wireframe by making edges (connect the vertices based on face data)
+        self._create_bz_wireframe(bz)
+
+        # Extract vertices and faces from the BZ data
+        # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
+        self.bz_vertex_points = bz["bz_vertices"]
 
         if self.dim == 2:
             # Get the edge points
@@ -236,38 +230,10 @@ class BrillouinZonePlot(QWidget):
             self.bz_edge_points = np.array(self.bz_edge_points)
             self.bz_face_points = np.array(self.bz_face_points)
 
-        # Create edges - connect the vertices based on face data
-        if len(bz["bz_faces"]) > 0:
-            # Process faces to extract unique edges
-            all_edges = []
-            for face in bz["bz_faces"]:
-                # Extract edges from each face (connecting consecutive vertices)
-                for ii in range(len(face)):
-                    next_ii = (ii + 1) % len(face)  # Loop back to first vertex
-                    all_edges.append([face[ii], face[next_ii]])
-
-            # Create a single line item for all BZ edges
-            if all_edges:
-                # Flatten the list of edges to a list of vertices for GLLinePlotItem
-                line_vertices = []
-                for edge in all_edges:
-                    line_vertices.extend(edge)
-
-                # Make sure all the line vertices are 3D
-                line_vertices = self._pad_to_3d(line_vertices)
-
-                # Create a GLLinePlotItem for all BZ edges
-                try:
-                    bz_edges = gl.GLLinePlotItem(
-                        pos=np.array(line_vertices),
-                        color=(1, 1, 1, 0.8),  # White, semi-transparent
-                        width=1,
-                        mode="lines",
-                    )
-                    self.view.addItem(bz_edges)
-                    self.plot_items["bz_edges"] = bz_edges
-                except Exception as e:
-                    print(f"Error creating BZ edges: {e}")
+        # Initialize selections to the first element if available
+        self.selected_vertex = 0 if len(self.bz_vertex_points) > 0 else None
+        self.selected_edge = 0  # Will be set properly after edges are calculated
+        self.selected_face = 0  # Will be set properly after faces are calculated
 
         # Plot the BZ vertices as points
         if len(self.bz_vertex_points) > 0:
@@ -333,6 +299,39 @@ class BrillouinZonePlot(QWidget):
                         sphere.setColor(self.selected_point_color)
                 except Exception as e:
                     print(f"Error creating BZ face {ii}: {e}")
+
+    def _create_bz_wireframe(self, bz):
+        if len(bz["bz_faces"]) > 0:
+            # Process faces to extract unique edges
+            all_edges = []
+            for face in bz["bz_faces"]:
+                # Extract edges from each face (connecting consecutive vertices)
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)  # Loop back to first vertex
+                    all_edges.append([face[ii], face[next_ii]])
+
+            # Create a single line item for all BZ edges
+            if all_edges:
+                # Flatten the list of edges to a list of vertices for GLLinePlotItem
+                line_vertices = []
+                for edge in all_edges:
+                    line_vertices.extend(edge)
+
+                # Make sure all the line vertices are 3D
+                line_vertices = self._pad_to_3d(line_vertices)
+
+                # Create a GLLinePlotItem for all BZ edges
+                try:
+                    bz_edges = gl.GLLinePlotItem(
+                        pos=np.array(line_vertices),
+                        color=(1, 1, 1, 0.8),  # White, semi-transparent
+                        width=1,
+                        mode="lines",
+                    )
+                    self.view.addItem(bz_edges)
+                    self.plot_items["bz_edges"] = bz_edges
+                except Exception as e:
+                    print(f"Error creating BZ edges: {e}")
 
     def _select_vertex(self, step):
         """
