@@ -27,14 +27,9 @@ class BrillouinZonePlot(QWidget):
 
         # Initialize data
         self.bz = None
-        self.bz_vertex_points = []
-        self.bz_edge_points = []
-        self.bz_face_points = []
         self.plot_items = {}  # Map to track mesh items
+        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
         self.selection = {"vertex": None, "edge": None, "face": None}
-        # self.selected_vertex = None
-        # self.selected_edge = None
-        # self.selected_face = None
         self.bz_path = []
         # Colors
         self.axis_colors = [
@@ -173,9 +168,10 @@ class BrillouinZonePlot(QWidget):
             bz: Dictionary containing 'bz_vertices' and 'bz_faces' or None to clear the view
         """
         self.bz = bz
-        self.bz_vertex_points = []  # Points for vertices
-        self.bz_edge_points = []  # Points in the middle of each edge
-        self.bz_face_points = []  # Points in the middle of each face
+        # self.bz_vertex_points = []  # Points for vertices
+        # self.bz_point_lists["edge"] = []  # Points in the middle of each edge
+        # self.bz_point_lists["face"] = []  # Points in the middle of each face
+        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
         self.selection = {"vertex": None, "edge": None, "face": None}
         # self.selected_vertex = None
         # self.selected_edge = None
@@ -204,38 +200,33 @@ class BrillouinZonePlot(QWidget):
 
         # Extract vertices and faces from the BZ data
         # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
-        self.bz_vertex_points = np.array(bz["bz_vertices"])
+        self.bz_point_lists["vertex"] = np.array(bz["bz_vertices"])
 
         if self.dim == 2:
             # Get the edge points
-            self.bz_edge_points = []
+            self.bz_point_lists["edge"] = []
             for edge in bz["bz_faces"]:
                 # Midpoint of the edge
                 mid_point = np.mean(edge, axis=0)
-                self.bz_edge_points.append(mid_point)
-            self.bz_edge_points = np.array(self.bz_edge_points)
+                self.bz_point_lists["edge"].append(mid_point)
+            self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
 
         elif self.dim == 3:
             # Get the edge and face points
-            self.bz_edge_points = []
-            self.bz_face_points = []
+            self.bz_point_lists["edge"] = []
+            self.bz_point_lists["face"] = []
             for face in bz["bz_faces"]:
                 for ii in range(len(face)):
                     next_ii = (ii + 1) % len(face)
                     # Midpoint of the edge
                     mid_point = np.mean([face[ii], face[next_ii]], axis=0)
-                    self.bz_edge_points.append(mid_point)
+                    self.bz_point_lists["edge"].append(mid_point)
 
                 # Midpoint of the face
                 mid_point = np.mean(face, axis=0)
-                self.bz_face_points.append(mid_point)
-            self.bz_edge_points = np.array(self.bz_edge_points)
-            self.bz_face_points = np.array(self.bz_face_points)
-
-        # Initialize selections to the first element if available
-        self.selected_vertex = 0 if len(self.bz_vertex_points) > 0 else None
-        self.selected_edge = 0 if len(self.bz_edge_points) > 0 else None
-        self.selected_face = 0 if len(self.bz_face_points) > 0 else None
+                self.bz_point_lists["face"].append(mid_point)
+            self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
+            self.bz_point_lists["face"] = np.array(self.bz_point_lists["face"])
 
         # Plot the BZ vertices as points
         # Add Gamma point at origin
@@ -244,7 +235,11 @@ class BrillouinZonePlot(QWidget):
         self.plot_items["Gamma"] = sphere
 
         # Plot points for vertices, edges, and faces
-        pts = [self.bz_vertex_points, self.bz_edge_points, self.bz_face_points]
+        pts = [
+            self.bz_point_lists["vertex"],
+            self.bz_point_lists["edge"],
+            self.bz_point_lists["face"],
+        ]
         types = ["vertex", "edge", "face"]
         for pt, typ in zip(pts, types):
             if len(pt) > 0:
@@ -258,59 +253,6 @@ class BrillouinZonePlot(QWidget):
                     # Highlight the first point
                     if ii == 0:
                         sphere.setColor(self.selected_point_color)
-
-        # if len(self.bz_vertex_points) > 0:
-        #     vertices_3d = self._pad_to_3d(self.bz_vertex_points)
-
-        #     # Create a sphere for each vertex
-        #     for ii, vertex in enumerate(vertices_3d):
-        #         try:
-        #             sphere = self._make_point()
-        #             sphere.translate(vertex[0], vertex[1], vertex[2])
-        #             self.view.addItem(sphere)
-        #             self.plot_items[f"bz_vertex_{ii}"] = sphere
-
-        #             # Highlight the first vertex
-        #             if ii == self.selected_vertex:
-        #                 sphere.setColor(self.selected_point_color)
-        #         except Exception as e:
-        #             print(f"Error creating BZ vertex {ii}: {e}")
-
-        # # Plot edge points
-        # if len(self.bz_edge_points) > 0:
-        #     edges_3d = self._pad_to_3d(self.bz_edge_points)
-
-        #     # Create a sphere for each edge midpoint
-        #     for ii, edge in enumerate(edges_3d):
-        #         try:
-        #             sphere = self._make_point()
-        #             sphere.translate(edge[0], edge[1], edge[2])
-        #             self.view.addItem(sphere)
-        #             self.plot_items[f"bz_edge_{ii}"] = sphere
-
-        #             # Highlight the first edge
-        #             if ii == self.selected_edge:
-        #                 sphere.setColor(self.selected_point_color)
-        #         except Exception as e:
-        #             print(f"Error creating BZ edge {ii}: {e}")
-
-        # # Plot face points
-        # if len(self.bz_face_points) > 0:
-        #     faces_3d = self._pad_to_3d(self.bz_face_points)
-
-        #     # Create a sphere for each face midpoint
-        #     for ii, face in enumerate(faces_3d):
-        #         try:
-        #             sphere = self._make_point()
-        #             sphere.translate(face[0], face[1], face[2])
-        #             self.view.addItem(sphere)
-        #             self.plot_items[f"bz_face_{ii}"] = sphere
-
-        #             # Highlight the first face
-        #             if ii == self.selected_face:
-        #                 sphere.setColor(self.selected_point_color)
-        #         except Exception as e:
-        #             print(f"Error creating BZ face {ii}: {e}")
 
     def _create_bz_wireframe(self, bz):
         if len(bz["bz_faces"]) > 0:
@@ -349,7 +291,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty vertex list
-        if len(self.bz_vertex_points) == 0:
+        if len(self.bz_point_lists["vertex"]) == 0:
             return
 
         prev_vertex = self.selection["vertex"]
@@ -359,7 +301,7 @@ class BrillouinZonePlot(QWidget):
             self.selection["vertex"] = 0
         else:
             self.selection["vertex"] = (self.selection["vertex"] + step) % len(
-                self.bz_vertex_points
+                self.bz_point_lists["vertex"]
             )
 
         try:
@@ -386,7 +328,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty edge list
-        if len(self.bz_edge_points) == 0:
+        if len(self.bz_point_lists["edge"]) == 0:
             return
 
         prev_edge = self.selection["edge"]
@@ -395,7 +337,7 @@ class BrillouinZonePlot(QWidget):
             self.selection["edge"] = 0
         else:
             self.selection["edge"] = (self.selection["edge"] + step) % len(
-                self.bz_edge_points
+                self.bz_point_lists["edge"]
             )
 
         try:
@@ -422,7 +364,7 @@ class BrillouinZonePlot(QWidget):
             step: Direction to move (typically +1 or -1)
         """
         # Guard against empty face list
-        if len(self.bz_face_points) == 0:
+        if len(self.bz_point_lists["face"]) == 0:
             return
 
         prev_face = self.selection["face"]
@@ -431,7 +373,7 @@ class BrillouinZonePlot(QWidget):
             self.selection["face"] = 0
         else:
             self.selection["face"] = (self.selection["face"] + step) % len(
-                self.bz_face_points
+                self.bz_point_lists["face"]
             )
 
         try:
@@ -549,11 +491,11 @@ class BrillouinZonePlot(QWidget):
             elif point == "Vertex":
                 if (
                     self.selection["vertex"] is not None
-                    and self.bz_vertex_points is not None
+                    and self.bz_point_lists["vertex"] is not None
                 ):
-                    if len(self.bz_vertex_points) > self.selection["vertex"]:
+                    if len(self.bz_point_lists["vertex"]) > self.selection["vertex"]:
                         self.bz_path.append(
-                            self.bz_vertex_points[self.selection["vertex"]]
+                            self.bz_point_lists["vertex"][self.selection["vertex"]]
                         )
                     else:
                         print(f"Invalid vertex index: {self.selection["vertex"]}")
@@ -565,10 +507,12 @@ class BrillouinZonePlot(QWidget):
             elif point == "Edge":
                 if (
                     self.selection["edge"] is not None
-                    and self.bz_edge_points is not None
+                    and self.bz_point_lists["edge"] is not None
                 ):
-                    if len(self.bz_edge_points) > self.selection["edge"]:
-                        self.bz_path.append(self.bz_edge_points[self.selection["edge"]])
+                    if len(self.bz_point_lists["edge"]) > self.selection["edge"]:
+                        self.bz_path.append(
+                            self.bz_point_lists["edge"][self.selection["edge"]]
+                        )
                     else:
                         print(f"Invalid edge index: {self.selection["edge"]}")
                         return
@@ -579,10 +523,12 @@ class BrillouinZonePlot(QWidget):
             elif point == "Face":
                 if (
                     self.selection["face"] is not None
-                    and self.bz_face_points is not None
+                    and self.bz_point_lists["face"] is not None
                 ):
-                    if len(self.bz_face_points) > self.selection["face"]:
-                        self.bz_path.append(self.bz_face_points[self.selection["face"]])
+                    if len(self.bz_point_lists["face"]) > self.selection["face"]:
+                        self.bz_path.append(
+                            self.bz_point_lists["face"][self.selection["face"]]
+                        )
                     else:
                         print(f"Invalid face index: {self.selection["face"]}")
                         return
