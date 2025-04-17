@@ -229,13 +229,7 @@ class BrillouinZonePlot(QWidget):
         self.plot_items["Gamma"] = sphere
 
         # Plot points for vertices, edges, and faces
-        pts = [
-            self.bz_point_lists["vertex"],
-            self.bz_point_lists["edge"],
-            self.bz_point_lists["face"],
-        ]
-        types = ["vertex", "edge", "face"]
-        for pt, typ in zip(pts, types):
+        for typ, pt in self.bz_point_lists.items():
             if len(pt) > 0:
                 pt_3d = self._pad_to_3d(pt)
                 self.selection[typ] = 0
