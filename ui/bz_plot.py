@@ -72,7 +72,7 @@ class BrillouinZonePlot(QWidget):
         gamma_pick_layout = QHBoxLayout()
         self.add_gamma_btn = QPushButton("+")
         gamma_pick_layout.addWidget(self.add_gamma_btn)
-        self.add_gamma_btn.clicked.connect(lambda: self._add_point("Gamma"))
+        self.add_gamma_btn.clicked.connect(lambda: self._add_point("gamma"))
 
         vertex_pick_layout = QHBoxLayout()
         self.prev_vertex_btn = QPushButton("←")
@@ -83,9 +83,7 @@ class BrillouinZonePlot(QWidget):
         vertex_pick_layout.addWidget(self.add_vertex_btn)
         self.prev_vertex_btn.clicked.connect(lambda: self._select_point(-1, "vertex"))
         self.next_vertex_btn.clicked.connect(lambda: self._select_point(+1, "vertex"))
-        # self.prev_vertex_btn.clicked.connect(lambda: self._select_vertex(-1))
-        # self.next_vertex_btn.clicked.connect(lambda: self._select_vertex(+1))
-        self.add_vertex_btn.clicked.connect(lambda: self._add_point("Vertex"))
+        self.add_vertex_btn.clicked.connect(lambda: self._add_point("vertex"))
 
         edge_pick_layout = QHBoxLayout()
         self.prev_edge_btn = QPushButton("←")
@@ -96,9 +94,7 @@ class BrillouinZonePlot(QWidget):
         edge_pick_layout.addWidget(self.add_edge_btn)
         self.prev_edge_btn.clicked.connect(lambda: self._select_point(-1, "edge"))
         self.next_edge_btn.clicked.connect(lambda: self._select_point(+1, "edge"))
-        # self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
-        # self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
-        self.add_edge_btn.clicked.connect(lambda: self._add_point("Edge"))
+        self.add_edge_btn.clicked.connect(lambda: self._add_point("edge"))
 
         face_pick_layout = QHBoxLayout()
         self.prev_face_btn = QPushButton("←")
@@ -109,9 +105,7 @@ class BrillouinZonePlot(QWidget):
         face_pick_layout.addWidget(self.add_face_btn)
         self.prev_face_btn.clicked.connect(lambda: self._select_point(-1, "face"))
         self.next_face_btn.clicked.connect(lambda: self._select_point(+1, "face"))
-        # self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
-        # self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
-        self.add_face_btn.clicked.connect(lambda: self._add_point("Face"))
+        self.add_face_btn.clicked.connect(lambda: self._add_point("face"))
 
         # Path control buttons
         path_controls_layout = QHBoxLayout()
@@ -283,146 +277,6 @@ class BrillouinZonePlot(QWidget):
             self.view.addItem(bz_wireframe)
             self.plot_items["bz_wireframe"] = bz_wireframe
 
-    def _select_point(self, step, typ):
-
-        # Guard against empty vertex list
-        if len(self.bz_point_lists[typ]) == 0:
-            return
-
-        prev_vertex = self.selection[typ]
-
-        if self.selection[typ] is None:
-            self.selection[typ] = 0
-        else:
-            self.selection[typ] = (self.selection[typ] + step) % len(
-                self.bz_point_lists[typ]
-            )
-
-        try:
-            # Skip deselection if previous vertex wasn't valid
-            if prev_vertex is not None and prev_vertex != self.selection[typ]:
-                # Only try to deselect if the key exists
-                prev_key = f"bz_{typ}_{prev_vertex}"
-                if prev_key in self.plot_items:
-                    self.plot_items[prev_key].setColor(self.point_color)
-
-            # Only try to select if the key exists
-            new_key = f"bz_{typ}_{self.selection[typ]}"
-            if new_key in self.plot_items:
-                # Select the new vertex
-                self.plot_items[new_key].setColor(self.selected_point_color)
-        except Exception as e:
-            print(f"Error selecting {typ}: {e}")
-
-    def _select_vertex(self, step):
-        """
-        Move to the next vertex in the BZ visualization.
-
-        Args:
-            step: Direction to move (typically +1 or -1)
-        """
-        # Guard against empty vertex list
-        if len(self.bz_point_lists["vertex"]) == 0:
-            return
-
-        prev_vertex = self.selection["vertex"]
-        # prev_vertex = self.selected_vertex
-
-        if self.selection["vertex"] is None:
-            self.selection["vertex"] = 0
-        else:
-            self.selection["vertex"] = (self.selection["vertex"] + step) % len(
-                self.bz_point_lists["vertex"]
-            )
-
-        try:
-            # Skip deselection if previous vertex wasn't valid
-            if prev_vertex is not None and prev_vertex != self.selection["vertex"]:
-                # Only try to deselect if the key exists
-                prev_key = f"bz_vertex_{prev_vertex}"
-                if prev_key in self.plot_items:
-                    self.plot_items[prev_key].setColor(self.point_color)
-
-            # Only try to select if the key exists
-            new_key = f"bz_vertex_{self.selection["vertex"]}"
-            if new_key in self.plot_items:
-                # Select the new vertex
-                self.plot_items[new_key].setColor(self.selected_point_color)
-        except Exception as e:
-            print(f"Error selecting vertex: {e}")
-
-    def _select_edge(self, step):
-        """
-        Move to the next edge in the BZ visualization.
-
-        Args:
-            step: Direction to move (typically +1 or -1)
-        """
-        # Guard against empty edge list
-        if len(self.bz_point_lists["edge"]) == 0:
-            return
-
-        prev_edge = self.selection["edge"]
-
-        if self.selection["edge"] is None:
-            self.selection["edge"] = 0
-        else:
-            self.selection["edge"] = (self.selection["edge"] + step) % len(
-                self.bz_point_lists["edge"]
-            )
-
-        try:
-            # Skip deselection if previous edge wasn't valid
-            if prev_edge is not None and prev_edge != self.selection["edge"]:
-                # Only try to deselect if the key exists
-                prev_key = f"bz_edge_{prev_edge}"
-                if prev_key in self.plot_items:
-                    self.plot_items[prev_key].setColor(self.point_color)
-
-            # Only try to select if the key exists
-            new_key = f"bz_edge_{self.selection["edge"]}"
-            if new_key in self.plot_items:
-                # Select the new edge
-                self.plot_items[new_key].setColor(self.selected_point_color)
-        except Exception as e:
-            print(f"Error selecting edge: {e}")
-
-    def _select_face(self, step):
-        """
-        Move to the next face in the BZ visualization.
-
-        Args:
-            step: Direction to move (typically +1 or -1)
-        """
-        # Guard against empty face list
-        if len(self.bz_point_lists["face"]) == 0:
-            return
-
-        prev_face = self.selection["face"]
-
-        if self.selection["face"] is None:
-            self.selection["face"] = 0
-        else:
-            self.selection["face"] = (self.selection["face"] + step) % len(
-                self.bz_point_lists["face"]
-            )
-
-        try:
-            # Skip deselection if previous face wasn't valid
-            if prev_face is not None and prev_face != self.selection["face"]:
-                # Only try to deselect if the key exists
-                prev_key = f"bz_face_{prev_face}"
-                if prev_key in self.plot_items:
-                    self.plot_items[prev_key].setColor(self.point_color)
-
-            # Only try to select if the key exists
-            new_key = f"bz_face_{self.selection["face"]}"
-            if new_key in self.plot_items:
-                # Select the new face
-                self.plot_items[new_key].setColor(self.selected_point_color)
-        except Exception as e:
-            print(f"Error selecting face: {e}")
-
     def _make_point(self, vertex_size=0.20):
         """Create a sphere mesh item for a point in the BZ."""
         return gl.GLMeshItem(
@@ -458,19 +312,6 @@ class BrillouinZonePlot(QWidget):
         # Disable the remove last button since path is empty
         self.remove_last_btn.setEnabled(False)
 
-    def _remove_last_point(self):
-        """Remove the last point added to the path."""
-        if self.bz_path:
-            # Remove the last point
-            self.bz_path.pop()
-
-            # Update path visualization
-            self._update_path_visualization()
-
-            # Disable button if path is now empty
-            if not self.bz_path:
-                self.remove_last_btn.setEnabled(False)
-
     def _update_path_visualization(self):
         """
         Update the visualization of the BZ path based on current path points.
@@ -503,6 +344,35 @@ class BrillouinZonePlot(QWidget):
         self.view.addItem(path_object)
         self.plot_items["bz_path"] = path_object
 
+    def _select_point(self, step, typ):
+
+        # Guard against empty vertex list
+        if len(self.bz_point_lists[typ]) == 0:
+            return
+
+        prev_point = self.selection[typ]
+
+        if prev_point is None:
+            self.selection[typ] = 0
+        else:
+            self.selection[typ] = (prev_point + step) % len(self.bz_point_lists[typ])
+
+        try:
+            # Skip deselection if previous vertex wasn't valid
+            if prev_point is not None and prev_point != self.selection[typ]:
+                # Only try to deselect if the key exists
+                prev_key = f"bz_{typ}_{prev_point}"
+                if prev_key in self.plot_items:
+                    self.plot_items[prev_key].setColor(self.point_color)
+
+            # Only try to select if the key exists
+            new_key = f"bz_{typ}_{self.selection[typ]}"
+            if new_key in self.plot_items:
+                # Select the new vertex
+                self.plot_items[new_key].setColor(self.selected_point_color)
+        except Exception as e:
+            print(f"Error selecting {typ}: {e}")
+
     def _add_point(self, point):
         """
         Add a selected point to the Brillouin zone path.
@@ -510,67 +380,39 @@ class BrillouinZonePlot(QWidget):
         Args:
             point: The type of point to add ("Gamma", "Vertex", "Edge", or "Face")
         """
-        try:
-            # Add the selected point to the path
-            if point == "Gamma":
-                if hasattr(self, "dim") and self.dim > 0:
-                    self.bz_path.append([0] * self.dim)
+
+        if point == "gamma":
+            self.bz_path.append([0] * self.dim)
+        else:
+            if (
+                self.selection[point] is not None
+                and self.bz_point_lists[point] is not None
+            ):
+                if len(self.bz_point_lists[point]) > self.selection[point]:
+                    self.bz_path.append(
+                        self.bz_point_lists[point][self.selection[point]]
+                    )
                 else:
-                    print("Cannot add Gamma point: dimension not set")
+                    print(f"Invalid point index: {self.selection[point]}")
                     return
+            else:
+                print("No point selected")
+                return
+        # Enable the remove last button now that we have points
+        self.remove_last_btn.setEnabled(True)
 
-            elif point == "Vertex":
-                if (
-                    self.selection["vertex"] is not None
-                    and self.bz_point_lists["vertex"] is not None
-                ):
-                    if len(self.bz_point_lists["vertex"]) > self.selection["vertex"]:
-                        self.bz_path.append(
-                            self.bz_point_lists["vertex"][self.selection["vertex"]]
-                        )
-                    else:
-                        print(f"Invalid vertex index: {self.selection["vertex"]}")
-                        return
-                else:
-                    print("No vertex selected")
-                    return
+        # Update the path visualization
+        self._update_path_visualization()
 
-            elif point == "Edge":
-                if (
-                    self.selection["edge"] is not None
-                    and self.bz_point_lists["edge"] is not None
-                ):
-                    if len(self.bz_point_lists["edge"]) > self.selection["edge"]:
-                        self.bz_path.append(
-                            self.bz_point_lists["edge"][self.selection["edge"]]
-                        )
-                    else:
-                        print(f"Invalid edge index: {self.selection["edge"]}")
-                        return
-                else:
-                    print("No edge selected")
-                    return
+    def _remove_last_point(self):
+        """Remove the last point added to the path."""
+        if self.bz_path:
+            # Remove the last point
+            self.bz_path.pop()
 
-            elif point == "Face":
-                if (
-                    self.selection["face"] is not None
-                    and self.bz_point_lists["face"] is not None
-                ):
-                    if len(self.bz_point_lists["face"]) > self.selection["face"]:
-                        self.bz_path.append(
-                            self.bz_point_lists["face"][self.selection["face"]]
-                        )
-                    else:
-                        print(f"Invalid face index: {self.selection["face"]}")
-                        return
-                else:
-                    print("No face selected")
-                    return
-
-            # Enable the remove last button now that we have points
-            self.remove_last_btn.setEnabled(True)
-
-            # Update the path visualization
+            # Update path visualization
             self._update_path_visualization()
-        except Exception as e:
-            print(f"Error adding point: {e}")
+
+            # Disable button if path is now empty
+            if not self.bz_path:
+                self.remove_last_btn.setEnabled(False)
