@@ -81,8 +81,10 @@ class BrillouinZonePlot(QWidget):
         vertex_pick_layout.addWidget(self.prev_vertex_btn)
         vertex_pick_layout.addWidget(self.next_vertex_btn)
         vertex_pick_layout.addWidget(self.add_vertex_btn)
-        self.prev_vertex_btn.clicked.connect(lambda: self._select_vertex(-1))
-        self.next_vertex_btn.clicked.connect(lambda: self._select_vertex(+1))
+        self.prev_vertex_btn.clicked.connect(lambda: self._select_point(-1, "vertex"))
+        self.next_vertex_btn.clicked.connect(lambda: self._select_point(+1, "vertex"))
+        # self.prev_vertex_btn.clicked.connect(lambda: self._select_vertex(-1))
+        # self.next_vertex_btn.clicked.connect(lambda: self._select_vertex(+1))
         self.add_vertex_btn.clicked.connect(lambda: self._add_point("Vertex"))
 
         edge_pick_layout = QHBoxLayout()
@@ -92,8 +94,10 @@ class BrillouinZonePlot(QWidget):
         edge_pick_layout.addWidget(self.prev_edge_btn)
         edge_pick_layout.addWidget(self.next_edge_btn)
         edge_pick_layout.addWidget(self.add_edge_btn)
-        self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
-        self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
+        self.prev_edge_btn.clicked.connect(lambda: self._select_point(-1, "edge"))
+        self.next_edge_btn.clicked.connect(lambda: self._select_point(+1, "edge"))
+        # self.prev_edge_btn.clicked.connect(lambda: self._select_edge(-1))
+        # self.next_edge_btn.clicked.connect(lambda: self._select_edge(+1))
         self.add_edge_btn.clicked.connect(lambda: self._add_point("Edge"))
 
         face_pick_layout = QHBoxLayout()
@@ -103,8 +107,10 @@ class BrillouinZonePlot(QWidget):
         face_pick_layout.addWidget(self.prev_face_btn)
         face_pick_layout.addWidget(self.next_face_btn)
         face_pick_layout.addWidget(self.add_face_btn)
-        self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
-        self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
+        self.prev_face_btn.clicked.connect(lambda: self._select_point(-1, "face"))
+        self.next_face_btn.clicked.connect(lambda: self._select_point(+1, "face"))
+        # self.prev_face_btn.clicked.connect(lambda: self._select_face(-1))
+        # self.next_face_btn.clicked.connect(lambda: self._select_face(+1))
         self.add_face_btn.clicked.connect(lambda: self._add_point("Face"))
 
         # Path control buttons
@@ -168,14 +174,8 @@ class BrillouinZonePlot(QWidget):
             bz: Dictionary containing 'bz_vertices' and 'bz_faces' or None to clear the view
         """
         self.bz = bz
-        # self.bz_vertex_points = []  # Points for vertices
-        # self.bz_point_lists["edge"] = []  # Points in the middle of each edge
-        # self.bz_point_lists["face"] = []  # Points in the middle of each face
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
         self.selection = {"vertex": None, "edge": None, "face": None}
-        # self.selected_vertex = None
-        # self.selected_edge = None
-        # self.selected_face = None
         self.bz_path = []
 
         # Clear previous plot items except axes and grid
@@ -282,6 +282,37 @@ class BrillouinZonePlot(QWidget):
             )
             self.view.addItem(bz_wireframe)
             self.plot_items["bz_wireframe"] = bz_wireframe
+
+    def _select_point(self, step, typ):
+
+        # Guard against empty vertex list
+        if len(self.bz_point_lists[typ]) == 0:
+            return
+
+        prev_vertex = self.selection[typ]
+
+        if self.selection[typ] is None:
+            self.selection[typ] = 0
+        else:
+            self.selection[typ] = (self.selection[typ] + step) % len(
+                self.bz_point_lists[typ]
+            )
+
+        try:
+            # Skip deselection if previous vertex wasn't valid
+            if prev_vertex is not None and prev_vertex != self.selection[typ]:
+                # Only try to deselect if the key exists
+                prev_key = f"bz_{typ}_{prev_vertex}"
+                if prev_key in self.plot_items:
+                    self.plot_items[prev_key].setColor(self.point_color)
+
+            # Only try to select if the key exists
+            new_key = f"bz_{typ}_{self.selection[typ]}"
+            if new_key in self.plot_items:
+                # Select the new vertex
+                self.plot_items[new_key].setColor(self.selected_point_color)
+        except Exception as e:
+            print(f"Error selecting {typ}: {e}")
 
     def _select_vertex(self, step):
         """
