@@ -38,6 +38,7 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 * Buttons
 * Colors
 - Add bandstructure plot
+- When creating a UC, we occasionally have problematic vectors DURING THE CREATION leading to runtime warnings (parallel vectors, zero volume, etc).
 ## Daily Plan
 - Add path-construction option using the selection
 

@@ -176,8 +176,8 @@ class BrillouinZonePlot(QWidget):
         self.bz_edge_points = []  # Points in the middle of each edge
         self.bz_face_points = []  # Points in the middle of each face
         self.selected_vertex = None
-        self.selected_edge = None  # Fix variable name
-        self.selected_face = None  # Fix variable name
+        self.selected_edge = None
+        self.selected_face = None
         self.bz_path = []
 
         # Clear previous plot items except axes and grid
@@ -202,7 +202,7 @@ class BrillouinZonePlot(QWidget):
 
         # Extract vertices and faces from the BZ data
         # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
-        self.bz_vertex_points = bz["bz_vertices"]
+        self.bz_vertex_points = np.array(bz["bz_vertices"])
 
         if self.dim == 2:
             # Get the edge points
@@ -311,27 +311,23 @@ class BrillouinZonePlot(QWidget):
                     all_edges.append([face[ii], face[next_ii]])
 
             # Create a single line item for all BZ edges
-            if all_edges:
-                # Flatten the list of edges to a list of vertices for GLLinePlotItem
-                line_vertices = []
-                for edge in all_edges:
-                    line_vertices.extend(edge)
+            # Flatten the list of edges to a list of vertices for GLLinePlotItem
+            line_vertices = []
+            for edge in all_edges:
+                line_vertices.extend(edge)
 
-                # Make sure all the line vertices are 3D
-                line_vertices = self._pad_to_3d(line_vertices)
+            # Make sure all the line vertices are 3D
+            line_vertices = self._pad_to_3d(line_vertices)
 
-                # Create a GLLinePlotItem for all BZ edges
-                try:
-                    bz_edges = gl.GLLinePlotItem(
-                        pos=np.array(line_vertices),
-                        color=(1, 1, 1, 0.8),  # White, semi-transparent
-                        width=1,
-                        mode="lines",
-                    )
-                    self.view.addItem(bz_edges)
-                    self.plot_items["bz_edges"] = bz_edges
-                except Exception as e:
-                    print(f"Error creating BZ edges: {e}")
+            # Create a GLLinePlotItem for all BZ edges
+            bz_wireframe = gl.GLLinePlotItem(
+                pos=np.array(line_vertices),
+                color=(1, 1, 1, 0.8),
+                width=1,
+                mode="lines",
+            )
+            self.view.addItem(bz_wireframe)
+            self.plot_items["bz_wireframe"] = bz_wireframe
 
     def _select_vertex(self, step):
         """
@@ -514,7 +510,7 @@ class BrillouinZonePlot(QWidget):
 
             # Create the path visualization
             path_object = gl.GLLinePlotItem(
-                pos=np.array(path_pos), color=CF_red, width=2, mode="lines"
+                pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
             )
             self.view.addItem(path_object)
             self.plot_items["bz_path"] = path_object
