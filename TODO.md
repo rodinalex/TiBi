@@ -22,10 +22,9 @@ In the present version, the GUI consists of 3 columns
 ## Immediate Tasks
 
 
-- ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
-include the unit cell as a parallelepiped, as well as any of the sites found inside of it
-- ✅ Make it possible to show multiple unit cells along the periodic directions
-- ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
+- Implement a Hamiltonian function based on the Unit Cell datatype. Although, when adding the hoppings, the user can specify hoppings along non-periodic directions, the Hamiltonian must take the correct number of momentum coordinates. Important feature: minimize recalculation of reciprocal vectors and unnecessary calls to Unit Cell object
+- Implement the calculation of the bands along the path determined from bz_plot. The user should be able to input the number of points along the path. Since different segments of the path have different lengths, the points should be allocated accordingly.
+- Implement a 2D plot that will show the band structure. Preferably with some interactivity: the user should be able to pan/zoom.
 
 ## Reminders
 - Hamiltonian function with momenta along the reciprocal lattice directions

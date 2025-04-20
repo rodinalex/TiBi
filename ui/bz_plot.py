@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QFormLayout,
     QPushButton,
+    QSpinBox,
 )
 from PySide6.QtCore import QSize, Qt
 import pyqtgraph.opengl as gl
@@ -62,12 +63,12 @@ class BrillouinZonePlot(QWidget):
             )
 
         # Selection panel
-        self.selection_panel = QVBoxLayout()
-        self.selection_panel_label = QLabel("Create a BZ Path")
-        self.selection_panel_label.setAlignment(Qt.AlignCenter)
+        self.button_panel = QVBoxLayout()
+        self.button_panel_label = QLabel("Create a BZ Path")
+        self.button_panel_label.setAlignment(Qt.AlignCenter)
 
-        form_layout = QFormLayout()
-        form_layout.setVerticalSpacing(2)
+        selection_form_layout = QFormLayout()
+        selection_form_layout.setVerticalSpacing(2)
 
         gamma_pick_layout = QHBoxLayout()
         self.add_gamma_btn = QPushButton("+")
@@ -107,8 +108,12 @@ class BrillouinZonePlot(QWidget):
         self.next_face_btn.clicked.connect(lambda: self._select_point(+1, "face"))
         self.add_face_btn.clicked.connect(lambda: self._add_point("face"))
 
-        # Path control buttons
-        path_controls_layout = QHBoxLayout()
+        # Control buttons
+        controls_layout = QVBoxLayout()
+        path_controls_layout = QHBoxLayout()  # Holds "Remove Last" and "Clear" buttons
+        computation_controls_layout = (
+            QHBoxLayout()
+        )  # Holds "Number of Points" field and "Compute Bands" button
 
         self.remove_last_btn = QPushButton("Remove Last")
         self.remove_last_btn.clicked.connect(self._remove_last_point)
@@ -116,9 +121,22 @@ class BrillouinZonePlot(QWidget):
 
         self.clear_path_btn = QPushButton("Clear")
         self.clear_path_btn.clicked.connect(self._clear_path)
+        self.clear_path_btn.setEnabled(False)  # Disabled until path has points
+
+        self.n_points_spinbox = QSpinBox()
+        self.n_points_spinbox.setRange(1, 1000000)
+        self.n_points_spinbox.setValue(100)
+        self.compute_bands_btn = QPushButton("Compute")
+        self.compute_bands_btn.setEnabled(
+            False
+        )  # Disabled unitl path has at least two points
 
         path_controls_layout.addWidget(self.remove_last_btn)
         path_controls_layout.addWidget(self.clear_path_btn)
+
+        computation_controls_layout.addWidget(QLabel("Points:"))
+        computation_controls_layout.addWidget(self.n_points_spinbox)
+        computation_controls_layout.addWidget(self.compute_bands_btn)
 
         btns = [
             self.add_gamma_btn,
@@ -143,17 +161,24 @@ class BrillouinZonePlot(QWidget):
         self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
         self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
 
-        form_layout.addRow("Γ:", gamma_pick_layout)
-        form_layout.addRow("Vertex:", vertex_pick_layout)
-        form_layout.addRow("Edge:", edge_pick_layout)
-        form_layout.addRow("Face:", face_pick_layout)
+        # Assemble the point-addition panel
+        selection_form_layout.addRow("Γ:", gamma_pick_layout)
+        selection_form_layout.addRow("Vertex:", vertex_pick_layout)
+        selection_form_layout.addRow("Edge:", edge_pick_layout)
+        selection_form_layout.addRow("Face:", face_pick_layout)
 
-        self.selection_panel.addWidget(self.selection_panel_label)
-        self.selection_panel.addLayout(form_layout)
-        self.selection_panel.addLayout(path_controls_layout)
+        # Add controls to the layout
+        controls_layout.addLayout(path_controls_layout)
+        controls_layout.addLayout(computation_controls_layout)
 
-        layout.addWidget(self.view, stretch=1)
-        layout.addLayout(self.selection_panel, stretch=1)
+        # Assemble buttons panel
+        self.button_panel.addWidget(self.button_panel_label)
+        self.button_panel.addLayout(selection_form_layout)
+        self.button_panel.addLayout(controls_layout)
+        self.button_panel.setSpacing(2)
+        # Assemble the full layout
+        layout.addWidget(self.view, stretch=3)
+        layout.addLayout(self.button_panel, stretch=2)
 
     def set_BZ(self, bz):
         """
@@ -171,6 +196,9 @@ class BrillouinZonePlot(QWidget):
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
         self.selection = {"vertex": None, "edge": None, "face": None}
         self.bz_path = []
+        self.remove_last_btn.setEnabled(False)
+        self.clear_path_btn.setEnabled(False)
+        self.compute_bands_btn.setEnabled(False)
 
         # Clear previous plot items except axes and grid
         for key, item in list(self.plot_items.items()):
@@ -303,8 +331,10 @@ class BrillouinZonePlot(QWidget):
             self.view.removeItem(self.plot_items["bz_path"])
             del self.plot_items["bz_path"]
 
-        # Disable the remove last button since path is empty
+        # Disable the control buttons since the path is empty
         self.remove_last_btn.setEnabled(False)
+        self.clear_path_btn.setEnabled(False)
+        self.compute_bands_btn.setEnabled(False)
 
     def _update_path_visualization(self):
         """
@@ -372,7 +402,7 @@ class BrillouinZonePlot(QWidget):
         Add a selected point to the Brillouin zone path.
 
         Args:
-            point: The type of point to add ("Gamma", "Vertex", "Edge", or "Face")
+            point: The type of point to add ("gamma", "vertex", "edge", or "face")
         """
 
         if point == "gamma":
@@ -392,8 +422,14 @@ class BrillouinZonePlot(QWidget):
             else:
                 print("No point selected")
                 return
-        # Enable the remove last button now that we have points
+        # Enable the remove last button and clear path button now that we have points
         self.remove_last_btn.setEnabled(True)
+        self.clear_path_btn.setEnabled(True)
+        # Enable the compute bands button if we have at least 2 points
+        if len(self.bz_path) >= 2:
+            self.compute_bands_btn.setEnabled(True)
+        else:
+            self.compute_bands_btn.setEnabled(False)
 
         # Update the path visualization
         self._update_path_visualization()
@@ -410,3 +446,9 @@ class BrillouinZonePlot(QWidget):
             # Disable button if path is now empty
             if not self.bz_path:
                 self.remove_last_btn.setEnabled(False)
+                self.clear_path_btn.setEnabled(False)
+            # Enable the compute bands button if we have at least 2 points
+            if len(self.bz_path) >= 2:
+                self.compute_bands_btn.setEnabled(True)
+            else:
+                self.compute_bands_btn.setEnabled(False)

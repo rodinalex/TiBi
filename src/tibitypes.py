@@ -26,15 +26,6 @@ class BasisVector:
         """Return the vector as a NumPy array."""
         return np.array([self.x, self.y, self.z])
 
-    def dot(self, other: "BasisVector") -> float:
-        """Return the dot product with another basis vector."""
-        return float(np.dot(self.as_array(), other.as_array()))
-
-    def cross(self, other: "BasisVector") -> "BasisVector":
-        """Return the cross product with another basis vector as a new BasisVector."""
-        result = np.cross(self.as_array(), other.as_array())
-        return BasisVector(*result)
-
 
 @dataclass
 class State:
@@ -100,7 +91,8 @@ class UnitCell:
 
     def volume(self) -> float:
         """Compute the volume of the unit cell using the scalar triple product."""
-        return np.dot(self.v1, np.cross(self.v2, self.v3))
+        a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
+        return np.dot(a1, np.cross(a2, a3))
 
     def reciprocal_vectors(self) -> list[np.ndarray]:
         """
@@ -272,3 +264,81 @@ class UnitCell:
                     bz_faces.append(face)
 
         return bz_vertices, bz_faces
+
+    def get_hamiltonian_function(self):
+        """
+        Generate a function that computes the Hamiltonian matrix for a given k-point.
+
+        This method creates a closure that precomputes all k-independent data needed for
+        the Hamiltonian, and returns a function that efficiently builds the Hamiltonian
+        matrix for any k-point in the Brillouin zone.
+
+        Returns:
+            function: A function that takes k-points (numpy array) and returns a
+                     Hamiltonian matrix (numpy array)
+        """
+        # Get the list of all states in the unit cell for determining the Hamiltonian size
+        states, state_info = self.get_states()
+
+        # Get the reciprocal lattice vectors
+        reciprocal_vectors = self.reciprocal_vectors()
+        num_periodic = len(reciprocal_vectors)
+
+        # Create a mapping from state IDs to indices in the Hamiltonian matrix
+        # state_id identifies the state, idx is its index in the Hamiltonian matrix (to keep track of rows/columns)
+        state_to_idx = {
+            state_id: idx for idx, (_, _, state_id) in enumerate(state_info)
+        }
+
+        # Store the total number of states for matrix size
+        n_states = len(states)
+        # Basis vectors as arrays
+        v1 = self.v1.as_array() if self.v1.is_periodic else np.zeros(3)
+        v2 = self.v2.as_array() if self.v2.is_periodic else np.zeros(3)
+        v3 = self.v3.as_array() if self.v3.is_periodic else np.zeros(3)
+
+        # Define the Hamiltonian function that will be returned
+        def hamiltonian(k):
+            """
+            Compute the Hamiltonian matrix for a given k-point.
+
+            Args:
+                k: k-point vector in the basis of reciprocal lattice vectors
+                   If the system has n periodic directions, k should be an n-dimensional vector
+
+            Returns:
+                numpy.ndarray: Complex Hamiltonian matrix of size (n_states, n_states)
+            """
+            # Validate the k-point dimension matches the number of periodic directions
+            if len(k) != num_periodic:
+                raise ValueError(
+                    f"k-point dimension ({len(k)}) does not match number of periodic directions ({num_periodic})"
+                )
+
+            # Initialize the Hamiltonian matrix with zeros
+            H = np.zeros((n_states, n_states), dtype=np.complex128)
+
+            # Fill the Hamiltonian matrix
+            for (dest_id, source_id), hoppings in self.hoppings.items():
+                dest_idx = state_to_idx[dest_id]  # Destination state index
+                source_idx = state_to_idx[source_id]  # Source state index
+
+                for displacement, amplitude in hoppings:
+                    d1, d2, d3 = displacement
+
+                    # Calculate the real-space displacement vector
+                    # This is the sum of the periodic vectors scaled by the displacement
+                    R = d1 * v1 + d2 * v2 + d3 * v3
+
+                    # Apply Bloch phase factor: exp(-i k·R)
+                    if num_periodic == 0:
+                        phase = 1.0
+                    else:
+                        phase = np.exp(1j * np.dot(k, R[0:num_periodic]))
+
+                    # Add the term to the Hamiltonian
+                    H[dest_idx, source_idx] += amplitude * phase
+
+            return H
+
+        return hamiltonian
