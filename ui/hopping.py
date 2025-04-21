@@ -11,6 +11,7 @@ from ui.HOPPING.matrix import HoppingMatrix
 from ui.HOPPING.table import HoppingTable
 
 from models.uc_models import DataModel
+from controllers.hopping_controller import HoppingController
 import uuid
 
 
@@ -24,7 +25,6 @@ class HoppingPanel(QWidget):
         super().__init__()
         # All unit cells
         self.unit_cells = unit_cells
-        self.uc_id = None
         """A dictionary of hoppings for the selected unit cell. 
         The keys are Tuple[uuid, uuid] and the values are 
         list[Tuple[int, int, int], np.complex128]"""
@@ -33,10 +33,22 @@ class HoppingPanel(QWidget):
         # Current selection of a hopping pair from the list of states inside the unit cell
         self.selected_state1 = None
         self.selected_state2 = None
+        self.uc_id = None
 
         # Initialize the panels
         self.matrix = HoppingMatrix(self.hopping_data)
         self.table = HoppingTable()
+
+        # Initialize the hopping controller
+        # self.controller = HoppingController(
+        #     self.unit_cells,
+        #     self.hopping_data,
+        #     self.selected_state1,
+        #     self.selected_state2,
+        #     self.uc_id,
+        #     self.matrix,
+        #     self.table,
+        # )
 
         # Connect Signals
         self.matrix.button_clicked.connect(self.handle_pair_selection)

@@ -17,6 +17,73 @@ from ui.placeholder import PlaceholderWidget
 from controllers.app_controller import AppController
 
 
+def main():
+    # Create models
+    unit_cells = {}
+    # ... other models
+
+    # Create UI components
+    uc_ui = UnitCellUI()
+    hopping_panel = HoppingPanel()
+    unit_cell_plot = UnitCellPlot()
+    bz_plot = BrillouinZonePlot()
+    band_plot = BandStructurePlot()
+
+    # Create the main window and arrange components
+    main_window = MainWindow(
+        uc_ui=uc_ui,
+        hopping_panel=hopping_panel,
+        unit_cell_plot=unit_cell_plot,
+        bz_plot=bz_plot,
+        band_plot=band_plot,
+    )
+
+    # Create controllers
+    app_controller = AppController(
+        uc=uc_ui,
+        hopping=hopping_panel,
+        unit_cell_plot=unit_cell_plot,
+        bz_plot=bz_plot,
+        band_plot=band_plot,
+    )
+    # ... other controllers
+
+    # Start the application
+    main_window.show()
+    app.exec()
+
+
+class MainWindow(QMainWindow):
+    def __init__(self, uc_ui, hopping_panel, unit_cell_plot, bz_plot, band_plot):
+        super().__init__()
+        self.setWindowTitle("TiBi")
+        self.setFixedSize(QSize(1500, 900))
+
+        # Main Layout
+        main_view = QWidget()
+        main_layout = QHBoxLayout(main_view)
+
+        # Create layout with passed-in components
+        left_layout = QVBoxLayout()
+        mid_layout = QVBoxLayout()
+        right_layout = QVBoxLayout()
+
+        # Add components to layouts
+        left_layout.addWidget(uc_ui, stretch=1)
+        left_layout.addWidget(hopping_panel, stretch=2)
+        # ... and so on
+
+        # Set as central widget
+        self.setCentralWidget(main_view)
+
+
+if __name__ == "__main__":
+    # This is the entry point when running "python3 app.py"
+    app = QApplication(sys.argv)
+    main()
+    sys.exit(app.exec())
+
+
 class MainWindow(QMainWindow):
     """
     Main application window that sets up the overall UI layout and coordinates interactions
