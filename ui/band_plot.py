@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize
 
-import numpy as np
 import matplotlib.figure as mpl_fig
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -49,26 +48,18 @@ class BandStructurePlot(QWidget):
         # Initial draw
         self.canvas.draw()
 
-    def _plot_bands(self, bands):
-        # def _plot_bands(self, distances, bands, special_points):
+    def _plot_bands(self, pos, bands):
         """
         Plot the calculated bands.
 
-        Args:
-            distances: Array of distances along the path
-            bands: 2D array of band energies (bands × distances)
-            special_points: Indices of special points in the path
         """
         # Clear previous plot
         self.ax.clear()
 
         # Plot each band
-        # for band_idx in range(bands.shape[0]):
-        #     self.ax.plot(distances, bands[band_idx], "b-")
 
         for band_idx in range(bands.shape[1]):
-            self.ax.plot(bands[:, band_idx])
-            # self.ax.plot(distances, bands[band_idx], "b-")
+            self.ax.plot(pos, bands[:, band_idx], "b-")
 
         # # Add vertical lines at special points
         # special_distances = [distances[0]]  # First point

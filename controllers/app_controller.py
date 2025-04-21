@@ -109,4 +109,8 @@ class AppController(QObject):
         # Interpolate the path
         k_path = interpolate_k_path(path, self.bz_plot.n_points_spinbox.value())
         bands = band_compute(hamiltonian, k_path)
-        self.band_plot._plot_bands(bands)
+        # Get the positions along the path reflecting the point spacing
+        step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
+        pos = np.hstack((0, np.cumsum(step)))
+
+        self.band_plot._plot_bands(pos, bands)
