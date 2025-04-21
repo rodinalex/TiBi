@@ -1,14 +1,12 @@
 import sys
-import numpy as np
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QLabel,
 )
 from ui.uc_plot import UnitCellPlot
 from ui.bz_plot import BrillouinZonePlot

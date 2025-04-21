@@ -1,14 +1,11 @@
-import uuid
-from PySide6.QtCore import QObject, QModelIndex
-from src.tibitypes import UnitCell, Site, State, BasisVector
-from ui.UC.tree_view_panel import TreeViewPanel
-from ui.UC.button_panel import ButtonPanel
+from PySide6.QtCore import QObject
 from ui.uc_plot import UnitCellPlot
 from ui.bz_plot import BrillouinZonePlot
 from ui.uc import UnitCellUI
 from ui.hopping import HoppingPanel
 from ui.band_plot import BandStructurePlot
 import numpy as np
+from src.band_structure import interpolate_k_path, band_compute
 
 
 class AppController(QObject):
@@ -43,7 +40,7 @@ class AppController(QObject):
         self.uc.site_model.signals.updated.connect(self.update_plot)
 
         # Conenct signals to calculate bands
-        self.bz_plot.compute_bands_btn.clicked.connect(self.band_compute)
+        self.bz_plot.compute_bands_btn.clicked.connect(self.update_bands_plot)
 
         # Notify the hopping block when the selection changes
         self.uc.selection.signals.updated.connect(
@@ -100,58 +97,7 @@ class AppController(QObject):
         except Exception as e:
             print(f"Error updating Brillouin zone: {e}")
 
-    def prepare_band_calculation(self):
-        """
-        Prepare the band structure calculation by passing the current BZ path to the band plot.
-        This method is called when the user clicks the Calculate Bands button.
-        """
-        print("\n============ PREPARING BAND CALCULATION ============")
-        # Get the current unit cell and pass it to the band plot
-        unit_cell_id = self.uc.selection.get("unit_cell", None)
-        if unit_cell_id not in self.uc.unit_cells:
-            print("No unit cell selected")
-            return
-
-        unit_cell = self.uc.unit_cells[unit_cell_id]
-
-        # Basic unit cell checks
-        print(f"Unit cell: {unit_cell.name}")
-        print(
-            f"Periodic directions: {[v.is_periodic for v in [unit_cell.v1, unit_cell.v2, unit_cell.v3]]}"
-        )
-        states, _ = unit_cell.get_states()
-        print(f"Number of states: {len(states)}")
-        print(f"Reciprocal vectors: {unit_cell.reciprocal_vectors()}")
-
-        # Update the band plot with the unit cell
-        print("Setting unit cell in band plot")
-        self.band_plot.set_unit_cell(unit_cell)
-
-        # Get the current BZ path (make a deep copy to avoid reference issues)
-        path = [np.copy(p) for p in self.bz_plot.bz_path]
-        print(
-            f"BZ path in BZ plot: {self.bz_plot.bz_path}, length: {len(self.bz_plot.bz_path)}"
-        )
-        if not path or len(path) < 2:
-            print(f"Path too short: {len(path)}")
-            return
-
-        # Generate labels (Γ for origin, high-symmetry points for others)
-        labels = []
-        for i, point in enumerate(path):
-            if np.allclose(point, 0):
-                labels.append("Γ")
-            else:
-                labels.append(f"P{i}")
-
-        print(f"Preparing band calculation with path: {path}")
-        print(f"Path labels: {labels}")
-
-        # Update the band structure plot with the path
-        print("Setting path in band plot")
-        self.band_plot.set_path(path, labels)
-
-    def band_compute(self):
+    def update_bands_plot(self):
         unit_cell_id = self.uc.selection.get("unit_cell", None)
         if unit_cell_id not in self.uc.unit_cells:
             print("No unit cell selected")
@@ -161,37 +107,6 @@ class AppController(QObject):
         # Get path
         path = [np.copy(p) for p in self.bz_plot.bz_path]
         # Interpolate the path
-        k_path = self.interpolate_k_path(path, self.bz_plot.n_points_spinbox.value())
-        bands = []
-
-        for k in k_path:
-            H = hamiltonian(k)
-            eigenvalues = np.linalg.eigh(H)[0]  # Only eigenvalues
-            bands.append(eigenvalues)
-
-        bands = np.array(bands)
+        k_path = interpolate_k_path(path, self.bz_plot.n_points_spinbox.value())
+        bands = band_compute(hamiltonian, k_path)
         self.band_plot._plot_bands(bands)
-
-    def interpolate_k_path(self, points, n_total):
-        points = np.array(points)
-        distances = np.linalg.norm(np.diff(points, axis=0), axis=1)
-        total_distance = np.sum(distances)
-
-        # Allocate number of points per segment
-        n_segments = len(points) - 1
-        fractions = distances / total_distance
-        n_points_each = [max(2, int(round(f * n_total))) for f in fractions]
-
-        # Build the full path
-        k_path = []
-        for i in range(n_segments):
-            start = points[i]
-            end = points[i + 1]
-            n_pts = n_points_each[i]
-            segment = np.linspace(start, end, n_pts, endpoint=False)
-            k_path.extend(segment)
-
-        # Add the final high-symmetry point
-        k_path.append(points[-1])
-
-        return np.array(k_path)
