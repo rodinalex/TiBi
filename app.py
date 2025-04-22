@@ -145,16 +145,13 @@ class TiBiApplication:
             None,
             None,
         ]  # Selected pair of states in the hopping matrix.
-
+        self.models["state_coupling"] = (
+            []
+        )  # List of couplings list[Tuple[int, int, int], np.complex128]
         # Set views
         self.views["uc"] = UnitCellView()
 
-        self.views["hopping"] = HoppingView(
-            self.models["unit_cells"],
-            self.models["selection"],
-            self.models["hopping_data"],
-            self.models["pair_selection"],
-        )
+        self.views["hopping"] = HoppingView()
 
         # Set controllers
         self.controllers["app"] = AppController()
@@ -174,6 +171,7 @@ class TiBiApplication:
             self.models["hopping_data"],
             self.models["state_info"],
             self.models["pair_selection"],
+            self.models["state_coupling"],
             self.views["hopping"],
         )
 

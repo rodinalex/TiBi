@@ -27,56 +27,9 @@ class HoppingMatrix(QWidget):
     Buttons are colored differently based on whether a hopping exists or not.
     """
 
-    # Signal emitted when a button is clicked, carrying the source and destination state info
-    # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
-    button_clicked = Signal(object, object)
-
-    # Signal emitted when couplings are modified from right-clicking on the button grid.
-    # The signal triggers a table and matrix update
-    hoppings_changed = Signal()
-
-    # Button style constants
-    BUTTON_STYLE_DEFAULT = """
-        QPushButton {
-            background-color: #e0e0e0;
-            border: 1px solid #aaaaaa;
-            border-radius: 3px;
-        }
-        QPushButton:hover {
-            background-color: #d0d0d0;
-            border: 1px solid #777777;
-        }
-    """
-
-    BUTTON_STYLE_HAS_HOPPING = """
-        QPushButton {
-            background-color: #56b4e9;
-            border: 1px solid #0072b2;
-            border-radius: 3px;
-        }
-        QPushButton:hover {
-            background-color: #50a7d9;
-            border: 1px solid #015a8c;
-        }
-    """
-    BUTTON_STYLE_NONHERMITIAN = """
-        QPushButton {
-            background-color: #cc79a7;
-            border: 1px solid #d55c00;
-            border-radius: 3px;
-        }
-        QPushButton:hover {
-            background-color: #b86593;
-            border: 1px solid #b34e02;
-        }
-    """
-
-    def __init__(self, hopping_data):
+    def __init__(self):
         super().__init__()
-        # Store tuples of (site_name, state_name, state_id).
-        # We do NOT need the complete state structure here
-        self.states = []
-        self.hopping_data = hopping_data
+
         # Keep all the grid buttons as we will change their appearance based on the coupling
         self.buttons = {}
         layout = QVBoxLayout(self)
@@ -109,7 +62,6 @@ class HoppingTable(QWidget):
     def __init__(self):
         super().__init__()
 
-        #         self.state_coupling = []
         layout = QVBoxLayout(self)
 
         self.table_title = QLabel("")
@@ -151,17 +103,12 @@ class HoppingView(QWidget):
     Displays a grid of buttons, where each button corresponds to a pair of states.
     """
 
-    def __init__(self, unit_cells, selection, hopping_data, pair_selection):
+    def __init__(self):
         super().__init__()
-        # All unit cells
-        self.unit_cells = unit_cells
-        self.selection = selection
-        self.hopping_data = hopping_data
-        self.pair_selection = pair_selection
 
-        # # Initialize the panels
-        self.matrix = HoppingMatrix(self.hopping_data)
-        self.table = HoppingTable()
+        # Initialize the panels
+        self.matrix_panel = HoppingMatrix()
+        self.table_panel = HoppingTable()
 
         # Main layout
         layout = QVBoxLayout(self)
@@ -179,9 +126,9 @@ class HoppingView(QWidget):
 
         self.table_stack = QStackedWidget()
         self.table_stack.addWidget(self.table_info_label)
-        self.table_stack.addWidget(self.table)
+        self.table_stack.addWidget(self.table_panel)
 
-        panel_layout.addWidget(self.matrix, stretch=1)
+        panel_layout.addWidget(self.matrix_panel, stretch=1)
         panel_layout.addWidget(self.table_stack, stretch=1)
 
         # A stack that hides the main panel if no unit cell is selected/unit cell has no states
