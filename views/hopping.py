@@ -11,11 +11,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QTableWidget,
 )
-from PySide6.QtCore import Qt, Signal
-import numpy as np
-
-from models.data_models import DataModel
-import uuid
+from PySide6.QtCore import Qt
 
 
 class HoppingMatrix(QWidget):
@@ -56,8 +52,6 @@ class HoppingMatrix(QWidget):
 
 
 class HoppingTable(QWidget):
-
-    hoppings_saved = Signal()
 
     def __init__(self):
         super().__init__()

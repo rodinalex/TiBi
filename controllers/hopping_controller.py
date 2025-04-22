@@ -1,6 +1,7 @@
 import uuid
-from PySide6.QtCore import QObject, Qt, Signal
-from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox
+from PySide6.QtCore import QObject, Qt, Signal, QPoint
+from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QMenu
+from PySide6.QtGui import QAction
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.hopping import HoppingView
@@ -45,6 +46,13 @@ class HoppingController(QObject):
         # Connect Signals
         self.selection.signals.updated.connect(self.set_unit_cell)
         self.button_clicked.connect(self.set_pair)
+
+        self.hopping_view.table_panel.add_row_btn.clicked.connect(self.add_empty_row)
+        self.hopping_view.table_panel.remove_row_btn.clicked.connect(
+            self.remove_selected_coupling
+        )
+        self.hopping_view.table_panel.save_btn.clicked.connect(self.save_couplings)
+        self.hoppings_changed.connect(self.handle_matrix_interaction)
 
     def set_unit_cell(self):
         """
@@ -108,9 +116,9 @@ class HoppingController(QObject):
                 btn = QPushButton("")
                 btn.setFixedSize(20, 20)
                 btn.setContextMenuPolicy(Qt.CustomContextMenu)
-                # btn.customContextMenuRequested.connect(
-                #     lambda _, row=ii, col=jj, b=btn: self.add_context_menu(b, row, col)
-                # )
+                btn.customContextMenuRequested.connect(
+                    lambda _, row=ii, col=jj, b=btn: self.add_context_menu(b, row, col)
+                )
                 # Apply the default style (no hopping initially)
                 self.apply_button_style(btn, False)
 
@@ -244,178 +252,152 @@ class HoppingController(QObject):
             )
 
     def make_spinbox(self, value=0, minimum=-99, maximum=99):
-        w = QSpinBox()
-        w.setRange(minimum, maximum)
-        w.setValue(value)
-        return w
+        box = QSpinBox()
+        box.setRange(minimum, maximum)
+        box.setValue(value)
+        return box
 
     def make_doublespinbox(self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3):
-        w = QDoubleSpinBox()
-        w.setRange(minimum, maximum)
-        w.setDecimals(decimals)
-        w.setValue(value)
-        return w
+        box = QDoubleSpinBox()
+        box.setRange(minimum, maximum)
+        box.setDecimals(decimals)
+        box.setValue(value)
+        return box
 
+    def add_empty_row(self):
+        """Add a new empty row to the table"""
+        row_index = self.hopping_view.table_panel.hopping_table.rowCount()
+        self.hopping_view.table_panel.hopping_table.insertRow(row_index)
 
-# # Get the currently selected unit cell ID
-# uc_id = self.selection.get("unit_cell_id")
-# # Set the hopping data for the selected unit cell
-# self.hopping_view.set_uc_id(uc_id)
-# # Update the hopping data model with the new data
-# self.hopping_view.set_hopping_data(self.hopping_data[uc_id])
+        # Pre-fill with default values
+        self.hopping_view.table_panel.hopping_table.setCellWidget(
+            row_index, 0, self.make_spinbox()
+        )
+        self.hopping_view.table_panel.hopping_table.setCellWidget(
+            row_index, 1, self.make_spinbox()
+        )
+        self.hopping_view.table_panel.hopping_table.setCellWidget(
+            row_index, 2, self.make_spinbox()
+        )
+        self.hopping_view.table_panel.hopping_table.setCellWidget(
+            row_index, 3, self.make_doublespinbox()
+        )
+        self.hopping_view.table_panel.hopping_table.setCellWidget(
+            row_index, 4, self.make_doublespinbox()
+        )
 
+    def remove_selected_coupling(self):
+        """Remove selected row(s) from the table"""
+        selected_rows = set()
 
-# self.matrix.hoppings_changed.connect(self.handle_matrix_interaction)
-# self.table.save_btn.clicked.connect(self.save_couplings)
+        # Get the selection model from the table
+        selection_model = self.hopping_view.table_panel.hopping_table.selectionModel()
 
+        # Get the selected rows
+        selected_indexes = selection_model.selectedRows()
 
-#         self.add_row_btn.clicked.connect(self.add_empty_row)
-#         self.remove_row_btn.clicked.connect(self.remove_selected_coupling)
+        # Extract the row numbers from the selected indexes
+        for index in selected_indexes:
+            selected_rows.add(index.row())
 
+        # Remove the rows from the table in reverse order to avoid shifting issues
+        for row in sorted(selected_rows, reverse=True):
+            self.hopping_view.table_panel.hopping_table.removeRow(row)
 
-#
-#     def save_couplings(self):
-#         """
-#         Extracts data from the hopping table and saves it to the unit cell model.
+    def save_couplings(self):
+        """
+        Extracts data from the hopping table and saves it to the unit cell model.
 
-#         Reads all rows from the table, converting cell values to the appropriate types:
-#         - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
-#         - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
+        Reads all rows from the table, converting cell values to the appropriate types:
+        - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
+        - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
 
-#         If the same triplet (d₁,d₂,d₃) appears more than once, the amplitudes are summed
-#         """
-#         new_couplings = {}
-#         # Extract values from each row in the table
-#         for row in range(self.table.hopping_table.rowCount()):
-#             # Get displacement vector components (integers)
-#             d1 = self.table.hopping_table.cellWidget(row, 0).value()
-#             d2 = self.table.hopping_table.cellWidget(row, 1).value()
-#             d3 = self.table.hopping_table.cellWidget(row, 2).value()
+        If the same triplet (d₁,d₂,d₃) appears more than once, the amplitudes are summed
+        """
+        new_couplings = {}
+        # Extract values from each row in the table
+        for row in range(self.hopping_view.table_panel.hopping_table.rowCount()):
+            # Get displacement vector components (integers)
+            d1 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 0).value()
+            d2 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 1).value()
+            d3 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 2).value()
 
-#             # Get complex amplitude components (floats)
-#             re = self.table.hopping_table.cellWidget(row, 3).value()
-#             im = self.table.hopping_table.cellWidget(row, 4).value()
+            # Get complex amplitude components (floats)
+            re = self.hopping_view.table_panel.hopping_table.cellWidget(row, 3).value()
+            im = self.hopping_view.table_panel.hopping_table.cellWidget(row, 4).value()
 
-#             # Create the complex amplitude
-#             amplitude = np.complex128(re + im * 1j)
+            # Create the complex amplitude
+            amplitude = np.complex128(re + im * 1j)
 
-#             # Create a tuple for the displacement vector (d₁, d₂, d₃)
-#             triplet = (d1, d2, d3)
-#             # If the triplet already exists, merge amplitudes by adding the new amplitude
-#             if triplet in new_couplings:
-#                 new_couplings[triplet] += amplitude
-#             else:
-#                 new_couplings[triplet] = amplitude
+            # Create a tuple for the displacement vector (d₁, d₂, d₃)
+            triplet = (d1, d2, d3)
+            # If the triplet already exists, merge amplitudes by adding the new amplitude
+            if triplet in new_couplings:
+                new_couplings[triplet] += amplitude
+            else:
+                new_couplings[triplet] = amplitude
 
-#         # Convert the dictionary to the expected format of the list of tuples
-#         merged_couplings = [
-#             ((d1, d2, d3), amplitude)
-#             for (d1, d2, d3), amplitude in new_couplings.items()
-#         ]
-#         # Update the data model with the new couplings
-#         self.hopping_data[(self.selected_state1, self.selected_state2)] = (
-#             merged_couplings
-#         )
-#         self.unit_cells[self.uc_id].hoppings = self.hopping_data
+        # Convert the dictionary to the expected format of the list of tuples
+        merged_couplings = [
+            ((d1, d2, d3), amplitude)
+            for (d1, d2, d3), amplitude in new_couplings.items()
+        ]
+        # Update the data model with the new couplings
+        self.hopping_data[(self.pair_selection[0], self.pair_selection[1])] = (
+            merged_couplings
+        )
+        self.unit_cells[self.selection["unit_cell"]].hoppings = self.hopping_data
 
-#         # Refresh the table with the new data
-#         self.table.set_state_coupling(merged_couplings)
+        # Refresh the table with the new data
+        self.state_coupling = merged_couplings
 
-#         # Update the matrix to show the new coupling state
-#         self.matrix.refresh_matrix()
+        # Update the matrix and the table to show the new coupling state
+        self.refresh_matrix()
+        self.refresh_table()
 
-#     def handle_matrix_interaction(self):
-#         self.matrix.refresh_button_colors()
-#         updated_couplings = self.hopping_data.get(
-#             (self.selected_state1, self.selected_state2), []
-#         )
-#         self.table.set_state_coupling(updated_couplings)
+    def add_context_menu(self, button, ii, jj):
+        menu = QMenu()
+        # Send hopping data to the transpose element
+        action_send_hoppings = QAction("Set transpose element", self)
+        action_send_hoppings.triggered.connect(
+            lambda: self.create_hermitian_partner(ii, jj)
+        )
+        menu.addAction(action_send_hoppings)
 
+        # Get hopping data from the transpose element
+        action_get_hoppings = QAction("Get transpose element", self)
+        action_get_hoppings.triggered.connect(
+            lambda: self.create_hermitian_partner(jj, ii)
+        )
+        menu.addAction(action_get_hoppings)
 
-#         # Initialize the button matrix
-#         self.refresh_matrix()
+        # Clear hoppings
+        action_clear_hoppings = QAction("Clear hoppings", self)
+        action_clear_hoppings.triggered.connect(lambda: self.delete_coupling(ii, jj))
+        menu.addAction(action_clear_hoppings)
 
-#     def set_states(self, new_states):
-#         """Setter for states that also refreshes the matrix. Occurs on every tree selection"""
-#         self.states = new_states
-#         self.refresh_matrix()
+        menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
 
-#     def set_hopping_data(self, new_hopping_data):
-#         """Setter for hopping data that also refreshes the matrix. Occurs on every tree selection"""
-#         self.hopping_data = new_hopping_data
-#         self.refresh_matrix()
+    def create_hermitian_partner(self, ii, jj):
+        s1 = self.state_info[ii][2]  # Destination
+        s2 = self.state_info[jj][2]  # Source
+        hop = self.hopping_data.get((s1, s2), [])
+        hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
+        self.hopping_data[(s2, s1)] = hop_herm
+        self.hoppings_changed.emit()
 
+    def delete_coupling(self, ii, jj):
+        s1 = self.state_info[ii][2]  # Destination
+        s2 = self.state_info[jj][2]  # Source
+        self.hopping_data.pop((s1, s2), None)
+        self.hoppings_changed.emit()
 
-#     def add_context_menu(self, button, ii, jj):
-#         menu = QMenu()
-#         # Send hopping data to the transpose element
-#         action_send_hoppings = QAction("Set transpose element", self)
-#         action_send_hoppings.triggered.connect(
-#             lambda: self.create_hermitian_partner(ii, jj)
-#         )
-#         menu.addAction(action_send_hoppings)
+    def handle_matrix_interaction(self):
+        self.refresh_button_colors()
+        updated_couplings = self.hopping_data.get(
+            (self.pair_selection[0], self.pair_selection[1]), []
+        )
+        self.state_coupling = updated_couplings
 
-#         # Get hopping data from the transpose element
-#         action_get_hoppings = QAction("Get transpose element", self)
-#         action_get_hoppings.triggered.connect(
-#             lambda: self.create_hermitian_partner(jj, ii)
-#         )
-#         menu.addAction(action_get_hoppings)
-
-#         # Clear hoppings
-#         action_clear_hoppings = QAction("Clear hoppings", self)
-#         action_clear_hoppings.triggered.connect(lambda: self.delete_coupling(ii, jj))
-#         menu.addAction(action_clear_hoppings)
-
-#         menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
-
-#     def create_hermitian_partner(self, ii, jj):
-#         s1 = self.states[ii][2]  # Destination
-#         s2 = self.states[jj][2]  # Source
-#         hop = self.hopping_data.get((s1, s2), [])
-#         hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
-#         self.hopping_data[(s2, s1)] = hop_herm
-#         self.hoppings_changed.emit()
-
-#     def delete_coupling(self, ii, jj):
-#         s1 = self.states[ii][2]  # Destination
-#         s2 = self.states[jj][2]  # Source
-#         self.hopping_data.pop((s1, s2), None)
-#         self.hoppings_changed.emit()
-
-
-#     def set_state_coupling(self, state_coupling):
-#         """Setter for hoppings that also refreshes the table"""
-#         self.state_coupling = state_coupling
-#         self.refresh_table()
-
-
-#     def add_empty_row(self):
-#         """Add a new empty row to the table"""
-#         row_index = self.hopping_table.rowCount()
-#         self.hopping_table.insertRow(row_index)
-
-#         # Pre-fill with default values
-#         self.hopping_table.setCellWidget(row_index, 0, self.make_spinbox())
-#         self.hopping_table.setCellWidget(row_index, 1, self.make_spinbox())
-#         self.hopping_table.setCellWidget(row_index, 2, self.make_spinbox())
-#         self.hopping_table.setCellWidget(row_index, 3, self.make_doublespinbox())
-#         self.hopping_table.setCellWidget(row_index, 4, self.make_doublespinbox())
-
-#     def remove_selected_coupling(self):
-#         """Remove selected row(s) from the table"""
-#         selected_rows = set()
-
-#         # Get the selection model from the table
-#         selection_model = self.hopping_table.selectionModel()
-
-#         # Get the selected rows
-#         selected_indexes = selection_model.selectedRows()
-
-#         # Extract the row numbers from the selected indexes
-#         for index in selected_indexes:
-#             selected_rows.add(index.row())
-
-#         # Remove the rows from the table in reverse order to avoid shifting issues
-#         for row in sorted(selected_rows, reverse=True):
-#             self.hopping_table.removeRow(row)
+        # Initialize the button matrix
+        self.refresh_matrix()
