@@ -69,6 +69,7 @@ class UnitCellController(QObject):
         self.update_site_ui()
 
         # Connect signals
+
         # Tree view signals
         self.unit_cell_view.tree_view_panel.tree_view.selectionModel().selectionChanged.connect(
             self.on_selection_changed
@@ -79,7 +80,6 @@ class UnitCellController(QObject):
         self.unit_cell_view.tree_view_panel.delete.connect(self.delete_item)
 
         # Unit Cell panel signals
-
         def connect_vector_fields(vector_name, spinboxes):
             for ii, axis in enumerate("xyz"):
                 spinboxes[ii].editingFinished.connect(

@@ -214,9 +214,7 @@ class UnitCellView(QWidget):
     2. Form panel that changes depending on what is selected in the tree
     """
 
-    def __init__(
-        self, unit_cells, selection, unit_cell_data, site_data, state_data, bz
-    ):
+    def __init__(self, unit_cells, selection, unit_cell_data, site_data, state_data):
         super().__init__()
         layout = QVBoxLayout(self)
 
@@ -226,7 +224,6 @@ class UnitCellView(QWidget):
         self.unit_cell_data = unit_cell_data
         self.site_data = site_data
         self.state_data = state_data
-        self.bz = bz
 
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel(self.unit_cell_data)

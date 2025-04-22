@@ -8,17 +8,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-# from ui.uc_plot import UnitCellPlot
-# from ui.bz_plot import BrillouinZonePlot
-# from ui.uc import UnitCellUI
-# from ui.hopping import HoppingPanel
-# from ui.band_plot import BandStructurePlot
 from views.placeholder import PlaceholderWidget
 from views.uc import UnitCellView
+from views.hopping import HoppingView
+
+from controllers.app_controller import AppController
+from controllers.hopping_controller import HoppingController
 from controllers.uc_controller import UnitCellController
 
-# from controllers.app_controller import AppController
-# from controllers.hopping_controller import HoppingController
 # from controllers.bz_controller import BZController
 # from controllers.computation_controller import ComputationController
 
@@ -33,14 +30,14 @@ class MainWindow(QMainWindow):
     doesn't contain business logic or model manipulation.
     """
 
-    def __init__(self, uc):
+    def __init__(self, uc, hopping):
         super().__init__()
         self.setWindowTitle("TiBi")
         self.setFixedSize(QSize(1500, 900))
 
         # Store references to UI components
         self.uc = uc
-        # self.hopping = hopping_panel
+        self.hopping = hopping
         # self.unit_cell_plot = unit_cell_plot
         # self.bz_plot = bz_plot
         # self.band_plot = band_plot
@@ -56,7 +53,7 @@ class MainWindow(QMainWindow):
 
         # Left column for hierarchical view and form panels
         left_layout.addWidget(self.uc, stretch=1)
-        left_layout.addWidget(PlaceholderWidget("TEST"), stretch=2)
+        left_layout.addWidget(self.hopping, stretch=2)
 
         # 3D visualization for the unit cell
         mid_layout.addWidget(PlaceholderWidget("TEST"), stretch=1)
@@ -133,7 +130,21 @@ class TiBiApplication:
         self.models["bz"] = {
             "bz_vertices": [],
             "bz_faces": [],
-        }  # Coordinates of BZ vertices and points bounding the BZ faces
+        }  # Coordinates of BZ vertices and points bounding the BZ faces for the selected unit cell
+
+        self.models["hopping_data"] = (
+            DataModel()
+        )  # A dictionary of hoppings for the selected unit cell.
+        # The keys are Tuple[uuid, uuid] and the values are list[Tuple[int, int, int], np.complex128]
+
+        self.models["state_info"] = (
+            []
+        )  # Tuples of (site_name, state_name, state_id) for the states in the selected unit cell
+
+        self.models["pair_selection"] = [
+            None,
+            None,
+        ]  # Selected pair of states in the hopping matrix.
 
         # Set views
         self.views["uc"] = UnitCellView(
@@ -142,9 +153,18 @@ class TiBiApplication:
             self.models["unit_cell_data"],
             self.models["site_data"],
             self.models["state_data"],
-            self.models["bz"],
         )
+
+        self.views["hopping"] = HoppingView(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models["hopping_data"],
+            self.models["pair_selection"],
+        )
+
         # Set controllers
+        self.controllers["app"] = AppController()
+
         self.controllers["uc"] = UnitCellController(
             self.models["unit_cells"],
             self.models["selection"],
@@ -152,6 +172,15 @@ class TiBiApplication:
             self.models["site_data"],
             self.models["state_data"],
             self.views["uc"],
+        )
+
+        self.controllers["hopping"] = HoppingController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models["hopping_data"],
+            self.models["state_info"],
+            self.models["pair_selection"],
+            self.views["hopping"],
         )
 
     def initialize(self):
@@ -163,7 +192,7 @@ class TiBiApplication:
         """Create the main application window."""
         self.main_window = MainWindow(
             self.views["uc"],
-            # self.views["hopping"],
+            self.views["hopping"],
             # self.views["unit_cell_plot"],
             # self.views["bz_plot"],
             # self.views["band_plot"],
