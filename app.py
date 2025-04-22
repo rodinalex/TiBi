@@ -147,13 +147,7 @@ class TiBiApplication:
         ]  # Selected pair of states in the hopping matrix.
 
         # Set views
-        self.views["uc"] = UnitCellView(
-            self.models["unit_cells"],
-            self.models["selection"],
-            self.models["unit_cell_data"],
-            self.models["site_data"],
-            self.models["state_data"],
-        )
+        self.views["uc"] = UnitCellView()
 
         self.views["hopping"] = HoppingView(
             self.models["unit_cells"],

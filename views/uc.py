@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal
-from models.data_models import DataModel
 
 
 class ButtonPanel(QWidget):
@@ -52,10 +51,8 @@ class UnitCellPanel(QWidget):
     appropriate UI refreshes.
     """
 
-    def __init__(self, model: DataModel):
+    def __init__(self):
         super().__init__()
-
-        self.model = model
 
         basis_header = QLabel("Unit Cell basis")
         basis_header.setAlignment(Qt.AlignCenter)
@@ -108,15 +105,11 @@ class SitePanel(QWidget):
     It uses reactive data binding to keep the UI and model in sync.
     """
 
-    def __init__(self, model: DataModel):
+    def __init__(self):
         super().__init__()
-
-        self.model = model
 
         header = QLabel("Site coordinates")
         header.setAlignment(Qt.AlignCenter)
-
-        spinner_layout = QHBoxLayout()
 
         # Coordinate fields
         self.c1 = QDoubleSpinBox()
@@ -159,21 +152,8 @@ class TreeViewPanel(QWidget):
     # Define signals
     delete = Signal()
 
-    def __init__(
-        self,
-        unit_cells,
-        unit_cell_model: DataModel,
-        site_model: DataModel,
-        state_model: DataModel,
-        selection: DataModel,
-    ):
+    def __init__(self):
         super().__init__()
-
-        self.unit_cells = unit_cells
-        self.unit_cell_model = unit_cell_model
-        self.site_model = site_model
-        self.state_model = state_model
-        self.selection = selection
 
         # Create and configure tree view
         self.tree_view = QTreeView()
@@ -214,27 +194,14 @@ class UnitCellView(QWidget):
     2. Form panel that changes depending on what is selected in the tree
     """
 
-    def __init__(self, unit_cells, selection, unit_cell_data, site_data, state_data):
+    def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
 
-        # Store references to data models and selection
-        self.unit_cells = unit_cells
-        self.selection = selection
-        self.unit_cell_data = unit_cell_data
-        self.site_data = site_data
-        self.state_data = state_data
-
         # Initialize UI panels
-        self.unit_cell_panel = UnitCellPanel(self.unit_cell_data)
-        self.site_panel = SitePanel(self.site_data)
-        self.tree_view_panel = TreeViewPanel(
-            self.unit_cells,
-            self.unit_cell_data,
-            self.site_data,
-            self.state_data,
-            self.selection,
-        )
+        self.unit_cell_panel = UnitCellPanel()
+        self.site_panel = SitePanel()
+        self.tree_view_panel = TreeViewPanel()
         self.button_panel = ButtonPanel()
 
         # Info labels
