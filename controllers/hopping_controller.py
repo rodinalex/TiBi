@@ -399,5 +399,5 @@ class HoppingController(QObject):
         )
         self.state_coupling = updated_couplings
 
-        # Initialize the button matrix
         self.refresh_matrix()
+        self.refresh_table()
