@@ -41,6 +41,8 @@ In the present version, the GUI consists of 3 columns
 ## Daily Plan
 - Add path-construction option using the selection
 
+## Tree structure
+- update_tree_item, remove_tree_item, select_item, and find_item_by_id have some redundancy: can make more streamlined
 
 ## Bugs
 <!-- - Check that the displacements are unique in coupling table
