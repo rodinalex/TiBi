@@ -76,7 +76,7 @@ class UnitCellController(QObject):
         self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
             self.on_item_changed
         )
-        # self.tree_view.delete.connect(self.delete_item)
+        self.unit_cell_view.tree_view_panel.delete.connect(self.delete_item)
 
         # Unit Cell panel signals
 
@@ -104,6 +104,12 @@ class UnitCellController(QObject):
             lambda: self.update_site_data("c3", self.c3.value())
         )
 
+        # Dimensionality radio buttons
+        self.unit_cell_view.radio0D.toggled.connect(self.dimensionality_change)
+        self.unit_cell_view.radio1D.toggled.connect(self.dimensionality_change)
+        self.unit_cell_view.radio2D.toggled.connect(self.dimensionality_change)
+        self.unit_cell_view.radio3D.toggled.connect(self.dimensionality_change)
+
         # Button panel signals
         self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
         self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self.add_site)
@@ -116,8 +122,8 @@ class UnitCellController(QObject):
         self.selection.signals.updated.connect(self.show_panels)
 
         # When model changes, update UI
-        self.unit_cell_data.signals.updated.connect(lambda: self.update_unit_cell_ui)
-        self.site_data.signals.updated.connect(lambda: self.update_site_ui)
+        self.unit_cell_data.signals.updated.connect(self.update_unit_cell_ui)
+        self.site_data.signals.updated.connect(self.update_site_ui)
 
         # Save data whenever the models register an update
         self.unit_cell_data.signals.updated.connect(self.save_unit_cell)
@@ -648,129 +654,130 @@ class UnitCellController(QObject):
             self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
             self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
 
-    # def dimensionality_change(self):
-    #     btn = self.sender()
-    #     if btn.isChecked():
-    #         selected_dim = btn.text()
-    #         if selected_dim == "0D":
-    #             self.unit_cell_panel.v1[0].setEnabled(True)
-    #             self.unit_cell_panel.v1[1].setEnabled(False)
-    #             self.unit_cell_panel.v1[2].setEnabled(False)
+    def dimensionality_change(self):
+        btn = self.sender()
+        if btn.isChecked():
+            selected_dim = btn.text()
+            if selected_dim == "0D":
+                self.v1[0].setEnabled(True)
+                self.v1[1].setEnabled(False)
+                self.v1[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v2[0].setEnabled(False)
-    #             self.unit_cell_panel.v2[1].setEnabled(True)
-    #             self.unit_cell_panel.v2[2].setEnabled(False)
+                self.v2[0].setEnabled(False)
+                self.v2[1].setEnabled(True)
+                self.v2[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v3[0].setEnabled(False)
-    #             self.unit_cell_panel.v3[1].setEnabled(False)
-    #             self.unit_cell_panel.v3[2].setEnabled(True)
+                self.v3[0].setEnabled(False)
+                self.v3[1].setEnabled(False)
+                self.v3[2].setEnabled(True)
 
-    #             self.unit_cell_data.update(
-    #                 {
-    #                     "v1x": 1.0,
-    #                     "v1y": 0.0,
-    #                     "v1z": 0.0,
-    #                     "v2x": 0.0,
-    #                     "v2y": 1.0,
-    #                     "v2z": 0.0,
-    #                     "v3x": 0.0,
-    #                     "v3y": 0.0,
-    #                     "v3z": 1.0,
-    #                     "v1periodic": False,
-    #                     "v2periodic": False,
-    #                     "v3periodic": False,
-    #                 }
-    #             )
+                self.unit_cell_data.update(
+                    {
+                        "v1x": 1.0,
+                        "v1y": 0.0,
+                        "v1z": 0.0,
+                        "v2x": 0.0,
+                        "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        "v3z": 1.0,
+                        "v1periodic": False,
+                        "v2periodic": False,
+                        "v3periodic": False,
+                    }
+                )
 
-    #         elif selected_dim == "1D":
-    #             self.unit_cell_panel.v1[0].setEnabled(True)
-    #             self.unit_cell_panel.v1[1].setEnabled(False)
-    #             self.unit_cell_panel.v1[2].setEnabled(False)
+            elif selected_dim == "1D":
+                self.v1[0].setEnabled(True)
+                self.v1[1].setEnabled(False)
+                self.v1[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v2[0].setEnabled(False)
-    #             self.unit_cell_panel.v2[1].setEnabled(True)
-    #             self.unit_cell_panel.v2[2].setEnabled(False)
+                self.v2[0].setEnabled(False)
+                self.v2[1].setEnabled(True)
+                self.v2[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v3[0].setEnabled(False)
-    #             self.unit_cell_panel.v3[1].setEnabled(False)
-    #             self.unit_cell_panel.v3[2].setEnabled(True)
+                self.v3[0].setEnabled(False)
+                self.v3[1].setEnabled(False)
+                self.v3[2].setEnabled(True)
 
-    #             self.unit_cell_data.update(
-    #                 {
-    #                     # "v1x": 1.0,
-    #                     "v1y": 0.0,
-    #                     "v1z": 0.0,
-    #                     "v2x": 0.0,
-    #                     # "v2y": 1.0,
-    #                     "v2z": 0.0,
-    #                     "v3x": 0.0,
-    #                     "v3y": 0.0,
-    #                     # "v3z": 1.0,
-    #                     "v1periodic": True,
-    #                     "v2periodic": False,
-    #                     "v3periodic": False,
-    #                 }
-    #             )
+                self.unit_cell_data.update(
+                    {
+                        # "v1x": 1.0,
+                        "v1y": 0.0,
+                        "v1z": 0.0,
+                        "v2x": 0.0,
+                        # "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": False,
+                        "v3periodic": False,
+                    }
+                )
 
-    #         elif selected_dim == "2D":
-    #             self.unit_cell_panel.v1[0].setEnabled(True)
-    #             self.unit_cell_panel.v1[1].setEnabled(True)
-    #             self.unit_cell_panel.v1[2].setEnabled(False)
+            elif selected_dim == "2D":
+                self.v1[0].setEnabled(True)
+                self.v1[1].setEnabled(True)
+                self.v1[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v2[0].setEnabled(True)
-    #             self.unit_cell_panel.v2[1].setEnabled(True)
-    #             self.unit_cell_panel.v2[2].setEnabled(False)
+                self.v2[0].setEnabled(True)
+                self.v2[1].setEnabled(True)
+                self.v2[2].setEnabled(False)
 
-    #             self.unit_cell_panel.v3[0].setEnabled(False)
-    #             self.unit_cell_panel.v3[1].setEnabled(False)
-    #             self.unit_cell_panel.v3[2].setEnabled(True)
+                self.v3[0].setEnabled(False)
+                self.v3[1].setEnabled(False)
+                self.v3[2].setEnabled(True)
 
-    #             self.unit_cell_data.update(
-    #                 {
-    #                     # "v1x": 1.0,
-    #                     # "v1y": 0.0,
-    #                     "v1z": 0.0,
-    #                     # "v2x": 0.0,
-    #                     # "v2y": 1.0,
-    #                     "v2z": 0.0,
-    #                     "v3x": 0.0,
-    #                     "v3y": 0.0,
-    #                     # "v3z": 1.0,
-    #                     "v1periodic": True,
-    #                     "v2periodic": True,
-    #                     "v3periodic": False,
-    #                 }
-    #             )
+                self.unit_cell_data.update(
+                    {
+                        # "v1x": 1.0,
+                        # "v1y": 0.0,
+                        "v1z": 0.0,
+                        # "v2x": 0.0,
+                        # "v2y": 1.0,
+                        "v2z": 0.0,
+                        "v3x": 0.0,
+                        "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": True,
+                        "v3periodic": False,
+                    }
+                )
 
-    #         elif selected_dim == "3D":
-    #             self.unit_cell_panel.v1[0].setEnabled(True)
-    #             self.unit_cell_panel.v1[1].setEnabled(True)
-    #             self.unit_cell_panel.v1[2].setEnabled(True)
+            elif selected_dim == "3D":
+                self.v1[0].setEnabled(True)
+                self.v1[1].setEnabled(True)
+                self.v1[2].setEnabled(True)
 
-    #             self.unit_cell_panel.v2[0].setEnabled(True)
-    #             self.unit_cell_panel.v2[1].setEnabled(True)
-    #             self.unit_cell_panel.v2[2].setEnabled(True)
+                self.v2[0].setEnabled(True)
+                self.v2[1].setEnabled(True)
+                self.v2[2].setEnabled(True)
 
-    #             self.unit_cell_panel.v3[0].setEnabled(True)
-    #             self.unit_cell_panel.v3[1].setEnabled(True)
-    #             self.unit_cell_panel.v3[2].setEnabled(True)
+                self.v3[0].setEnabled(True)
+                self.v3[1].setEnabled(True)
+                self.v3[2].setEnabled(True)
 
-    #             self.unit_cell_data.update(
-    #                 {
-    #                     # "v1x": 1.0,
-    #                     # "v1y": 0.0,
-    #                     # "v1z": 0.0,
-    #                     # "v2x": 0.0,
-    #                     # "v2y": 1.0,
-    #                     # "v2z": 0.0,
-    #                     # "v3x": 0.0,
-    #                     # "v3y": 0.0,
-    #                     # "v3z": 1.0,
-    #                     "v1periodic": True,
-    #                     "v2periodic": True,
-    #                     "v3periodic": True,
-    #                 }
-    #             )
+                self.unit_cell_data.update(
+                    {
+                        # "v1x": 1.0,
+                        # "v1y": 0.0,
+                        # "v1z": 0.0,
+                        # "v2x": 0.0,
+                        # "v2y": 1.0,
+                        # "v2z": 0.0,
+                        # "v3x": 0.0,
+                        # "v3y": 0.0,
+                        # "v3z": 1.0,
+                        "v1periodic": True,
+                        "v2periodic": True,
+                        "v3periodic": True,
+                    }
+                )
+
     def update_unit_cell_data(self, key, value):
         """
         Update the unit cell data model with new values.
