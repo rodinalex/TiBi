@@ -24,9 +24,7 @@ class ButtonPanel(QWidget):
         self.new_uc_btn = QPushButton("New UC")
         self.new_site_btn = QPushButton("New Site")
         self.new_state_btn = QPushButton("New State")
-
         self.delete_btn = QPushButton("Delete")
-
         self.reduce_btn = QPushButton("Reduce UC")
 
         self.new_site_btn.setEnabled(False)
@@ -77,12 +75,6 @@ class UnitCellPanel(QWidget):
                 coord.setRange(-1e308, 1e308)
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
-
-            # Connect signals to update model
-
-            x.editingFinished.connect(lambda: self.update_model(v + "x", x.value()))
-            y.editingFinished.connect(lambda: self.update_model(v + "y", y.value()))
-            z.editingFinished.connect(lambda: self.update_model(v + "z", z.value()))
 
             layout.addWidget(x)
             layout.addWidget(y)
@@ -135,17 +127,6 @@ class SitePanel(QWidget):
             c.setRange(0.0, 1.0)
             c.setSingleStep(0.01)
             c.setDecimals(3)
-
-        # Connect signals to update model
-        self.c1.editingFinished.connect(
-            lambda: self.update_model("c1", self.c1.value())
-        )
-        self.c2.editingFinished.connect(
-            lambda: self.update_model("c2", self.c2.value())
-        )
-        self.c3.editingFinished.connect(
-            lambda: self.update_model("c3", self.c3.value())
-        )
 
         # Create row layouts with labels on the left and spin boxes on the right
         form_layout = QFormLayout()

@@ -51,37 +51,78 @@ class UnitCellController(QObject):
         self.site_data = site_data
         self.state_data = state_data
         self.unit_cell_view = unit_cell_view
-        # Add a reference to the tree view's root node for easy access
-        self.root_node = (
-            self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
-        )
+
+        # Get the fields from unit_cell_view for convenience
+        # For the basis vectors, each reference has three spinboxes
+        self.v1 = self.unit_cell_view.unit_cell_panel.v1
+        self.v2 = self.unit_cell_view.unit_cell_panel.v2
+        self.v3 = self.unit_cell_view.unit_cell_panel.v3
+
+        self.c1 = self.unit_cell_view.site_panel.c1
+        self.c2 = self.unit_cell_view.site_panel.c2
+        self.c3 = self.unit_cell_view.site_panel.c3
         # Rebuild the tree view from scratch in the beginning
         self.refresh_tree()
+
+        # Sync UI with data models
+        self.update_unit_cell_ui()
+        self.update_site_ui()
+
         # Connect signals
         # Tree view signals
-
-        # Unit Cell panel signalas
-
-        # Site panel signales
-        # self.tree_view.selectionModel().selectionChanged.connect(
-        # self.on_selection_changed
-        # )
-        # self.tree_model.itemChanged.connect(self.on_item_changed)
-
-        # Conenct signals to handlers
-
-        # Connect UI signals to appropriate handler methods
-        # Tree view signals
+        self.unit_cell_view.tree_view_panel.tree_view.selectionModel().selectionChanged.connect(
+            self.on_selection_changed
+        )
+        self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
+            self.on_item_changed
+        )
         # self.tree_view.delete.connect(self.delete_item)
+
+        # Unit Cell panel signals
+
+        def connect_vector_fields(vector_name, spinboxes):
+            for ii, axis in enumerate("xyz"):
+                spinboxes[ii].editingFinished.connect(
+                    lambda ii=ii, axis=axis: self.update_unit_cell_data(
+                        f"{vector_name}{axis}", spinboxes[ii].value()
+                    )
+                )
+
+        connect_vector_fields("v1", self.v1)
+        connect_vector_fields("v2", self.v2)
+        connect_vector_fields("v3", self.v3)
+
+        # Site panel signals
+
+        self.c1.editingFinished.connect(
+            lambda: self.update_site_data("c1", self.c1.value())
+        )
+        self.c2.editingFinished.connect(
+            lambda: self.update_site_data("c2", self.c2.value())
+        )
+        self.c3.editingFinished.connect(
+            lambda: self.update_site_data("c3", self.c3.value())
+        )
 
         # Button panel signals
         self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
         self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self.add_site)
         self.unit_cell_view.button_panel.new_state_btn.clicked.connect(self.add_state)
-        # self.unit_cell_view.button_panel.delete_btn.clicked.connect(self.delete_item)
-        # self.unit_cell_view.button_panel.reduce_btn.clicked.connect(
-        #     self.reduce_uc_basis
-        # )
+        self.unit_cell_view.button_panel.delete_btn.clicked.connect(self.delete_item)
+        self.unit_cell_view.button_panel.reduce_btn.clicked.connect(
+            self.reduce_uc_basis
+        )
+        # Selection change
+        self.selection.signals.updated.connect(self.show_panels)
+
+        # When model changes, update UI
+        self.unit_cell_data.signals.updated.connect(lambda: self.update_unit_cell_ui)
+        self.site_data.signals.updated.connect(lambda: self.update_site_ui)
+
+        # Save data whenever the models register an update
+        self.unit_cell_data.signals.updated.connect(self.save_unit_cell)
+        self.site_data.signals.updated.connect(self.save_site)
+        self.state_data.signals.updated.connect(self.save_state)
 
     # Tree Navigation Functions
     def refresh_tree(self):
@@ -287,17 +328,10 @@ class UnitCellController(QObject):
         """
         if item_type == "unit_cell":
             parent = self.root_node
-            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
         elif item_type == "site":
             parent = self.find_item_by_id(parent_id, "unit_cell")
-            self.selection.update(
-                {"unit_cell": parent_id, "site": item_id, "state": None}
-            )
         else:
             parent = self.find_item_by_id(parent_id, "site", grandparent_id)
-            self.selection.update(
-                {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
-            )
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
@@ -340,7 +374,6 @@ class UnitCellController(QObject):
         new_cell = UnitCell(name, v1, v2, v3)
         self.unit_cells[new_cell.id] = new_cell
         # Update UI (selective update instead of full refresh)
-        # self.refresh_tree()
         self.update_tree_item(new_cell.id)
         self.select_item(new_cell.id, "unit_cell")
 
@@ -389,203 +422,401 @@ class UnitCellController(QObject):
         self.update_tree_item(selected_uc_id, selected_site_id, new_state.id)
         self.select_item(new_state.id, "state", selected_site_id, selected_uc_id)
 
-    # # Save data whenever the models register an update
-    # self.tree_view.unit_cell_model.signals.updated.connect(self.save_unit_cell)
-    # self.tree_view.site_model.signals.updated.connect(self.save_site)
-    # self.tree_view.state_model.signals.updated.connect(self.save_state)
+    def save_unit_cell(self):
+        """
+        Save changes from the unit cell panel to the selected unit cell model.
 
-    # def save_unit_cell(self):
-    #     """
-    #     Save changes from the unit cell panel to the selected unit cell model.
+        Takes all field values from the unit cell form panel and updates the
+        corresponding properties in the UnitCell model object. This includes the
+        name and all properties of the three basis vectors (x, y, z components
+        and periodicity flags).
+        """
+        # Get the currently selected unit cell
+        selected_uc_id = self.selection["unit_cell"]
+        current_uc = self.unit_cells[selected_uc_id]
 
-    #     Takes all field values from the unit cell form panel and updates the
-    #     corresponding properties in the UnitCell model object. This includes the
-    #     name and all properties of the three basis vectors (x, y, z components
-    #     and periodicity flags).
-    #     """
-    #     # Get the currently selected unit cell
-    #     selected_uc_id = self.selection["unit_cell"]
-    #     current_uc = self.unit_cells[selected_uc_id]
+        # Update name and basic properties
+        current_uc.name = self.unit_cell_data["name"]
 
-    #     # Update name and basic properties
-    #     current_uc.name = self.tree_view.unit_cell_model["name"]
+        # Update first basis vector (v1)
+        current_uc.v1.x = float(self.unit_cell_data["v1x"])
+        current_uc.v1.y = float(self.unit_cell_data["v1y"])
+        current_uc.v1.z = float(self.unit_cell_data["v1z"])
+        current_uc.v1.is_periodic = self.unit_cell_data["v1periodic"]
 
-    #     # Update first basis vector (v1)
-    #     current_uc.v1.x = float(self.tree_view.unit_cell_model["v1x"])
-    #     current_uc.v1.y = float(self.tree_view.unit_cell_model["v1y"])
-    #     current_uc.v1.z = float(self.tree_view.unit_cell_model["v1z"])
-    #     current_uc.v1.is_periodic = self.tree_view.unit_cell_model["v1periodic"]
+        # Update second basis vector (v2)
+        current_uc.v2.x = float(self.unit_cell_data["v2x"])
+        current_uc.v2.y = float(self.unit_cell_data["v2y"])
+        current_uc.v2.z = float(self.unit_cell_data["v2z"])
+        current_uc.v2.is_periodic = self.unit_cell_data["v2periodic"]
 
-    #     # Update second basis vector (v2)
-    #     current_uc.v2.x = float(self.tree_view.unit_cell_model["v2x"])
-    #     current_uc.v2.y = float(self.tree_view.unit_cell_model["v2y"])
-    #     current_uc.v2.z = float(self.tree_view.unit_cell_model["v2z"])
-    #     current_uc.v2.is_periodic = self.tree_view.unit_cell_model["v2periodic"]
+        # Update third basis vector (v3)
+        current_uc.v3.x = float(self.unit_cell_data["v3x"])
+        current_uc.v3.y = float(self.unit_cell_data["v3y"])
+        current_uc.v3.z = float(self.unit_cell_data["v3z"])
+        current_uc.v3.is_periodic = self.unit_cell_data["v3periodic"]
 
-    #     # Update third basis vector (v3)
-    #     current_uc.v3.x = float(self.tree_view.unit_cell_model["v3x"])
-    #     current_uc.v3.y = float(self.tree_view.unit_cell_model["v3y"])
-    #     current_uc.v3.z = float(self.tree_view.unit_cell_model["v3z"])
-    #     current_uc.v3.is_periodic = self.tree_view.unit_cell_model["v3periodic"]
+        # Update UI (selective update instead of full refresh)
+        self.update_tree_item(selected_uc_id)
+        self.select_item(selected_uc_id, "unit_cell")
 
-    #     # Update UI (selective update instead of full refresh)
-    #     self.tree_view.update_tree_item(selected_uc_id)
-    #     self.tree_view.select_item(selected_uc_id, "unit_cell")
+    def save_site(self):
+        """
+        Save changes from the site panel to the selected site model.
 
-    # def save_site(self):
-    #     """
-    #     Save changes from the site panel to the selected site model.
+        Takes all field values from the site form panel and updates the
+        corresponding properties in the Site model object. This includes the
+        name and fractional coordinates (c1, c2, c3).
+        """
+        # Get the currently selected site
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        current_uc = self.unit_cells[selected_uc_id]
+        current_site = current_uc.sites[selected_site_id]
 
-    #     Takes all field values from the site form panel and updates the
-    #     corresponding properties in the Site model object. This includes the
-    #     name and fractional coordinates (c1, c2, c3).
-    #     """
-    #     # Get the currently selected site
-    #     selected_uc_id = self.selection["unit_cell"]
-    #     selected_site_id = self.selection["site"]
-    #     current_uc = self.unit_cells[selected_uc_id]
-    #     current_site = current_uc.sites[selected_site_id]
+        # Update site properties
+        current_site.name = self.site_data["name"]
+        current_site.c1 = float(self.site_data["c1"])
+        current_site.c2 = float(self.site_data["c2"])
+        current_site.c3 = float(self.site_data["c3"])
 
-    #     # Update site properties
-    #     current_site.name = self.tree_view.site_model["name"]
-    #     current_site.c1 = float(self.tree_view.site_model["c1"])
-    #     current_site.c2 = float(self.tree_view.site_model["c2"])
-    #     current_site.c3 = float(self.tree_view.site_model["c3"])
+        # Update UI (selective update instead of full refresh)
+        self.update_tree_item(selected_uc_id, selected_site_id)
+        self.select_item(selected_site_id, "site", selected_uc_id)
 
-    #     # Update UI (selective update instead of full refresh)
-    #     self.tree_view.update_tree_item(selected_uc_id, selected_site_id)
-    #     self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
+    def save_state(self):
+        """
+        Save changes from the state panel to the selected state model.
 
-    # def save_state(self):
-    #     """
-    #     Save changes from the state panel to the selected state model.
+        Takes all field values from the state form panel and updates the
+        corresponding properties in the State model object. This includes the
+        name and energy level.
+        """
+        print(self.selection)
+        # Get the currently selected state
+        selected_uc_id = self.selection["unit_cell"]
+        selected_site_id = self.selection["site"]
+        selected_state_id = self.selection["state"]
+        current_uc = self.unit_cells[selected_uc_id]
+        current_site = current_uc.sites[selected_site_id]
+        current_state = current_site.states[selected_state_id]
 
-    #     Takes all field values from the state form panel and updates the
-    #     corresponding properties in the State model object. This includes the
-    #     name and energy level.
-    #     """
-    #     print(self.selection)
-    #     # Get the currently selected state
-    #     selected_uc_id = self.selection["unit_cell"]
-    #     selected_site_id = self.selection["site"]
-    #     selected_state_id = self.selection["state"]
-    #     current_uc = self.unit_cells[selected_uc_id]
-    #     current_site = current_uc.sites[selected_site_id]
-    #     current_state = current_site.states[selected_state_id]
+        # Update state properties
+        current_state.name = self.state_data["name"]
 
-    #     # Update state properties
-    #     current_state.name = self.tree_view.state_model["name"]
+        # Update UI (selective update instead of full refresh)
+        self.update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
+        self.select_item(selected_state_id, "state", selected_site_id, selected_uc_id)
 
-    #     # Update UI (selective update instead of full refresh)
-    #     self.tree_view.update_tree_item(
-    #         selected_uc_id, selected_site_id, selected_state_id
-    #     )
-    #     self.tree_view.select_item(
-    #         selected_state_id, "state", selected_site_id, selected_uc_id
-    #     )
+    def delete_item(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        selected_site_id = self.selection.get("site", None)
+        selected_state_id = self.selection.get("state", None)
 
-    # def delete_item(self):
-    #     selected_uc_id = self.selection.get("unit_cell", None)
-    #     selected_site_id = self.selection.get("site", None)
-    #     selected_state_id = self.selection.get("state", None)
+        # Check if there is a selected unit cell
+        if selected_uc_id:
+            # Check if there a selected site
+            if selected_site_id:
+                # Check if there is a selected state
+                if selected_state_id:
+                    # Delete the selected state from the site
+                    del (
+                        self.unit_cells[selected_uc_id]
+                        .sites[selected_site_id]
+                        .states[selected_state_id]
+                    )
+                    # Update UI and select the parent site (selective removal instead of full refresh)
+                    self.remove_tree_item(
+                        selected_uc_id, selected_site_id, selected_state_id
+                    )
+                    self.select_item(selected_site_id, "site", selected_uc_id)
+                else:
+                    # No state selected, therefore remove the site from the unit cell
+                    del self.unit_cells[selected_uc_id].sites[selected_site_id]
 
-    #     # Check if there is a selected unit cell
-    #     if selected_uc_id:
-    #         # Check if there a selected site
-    #         if selected_site_id:
-    #             # Check if there is a selected state
-    #             if selected_state_id:
-    #                 # Delete the selected state from the site
-    #                 del (
-    #                     self.unit_cells[selected_uc_id]
-    #                     .sites[selected_site_id]
-    #                     .states[selected_state_id]
-    #                 )
-    #                 # Update UI and select the parent site (selective removal instead of full refresh)
-    #                 self.tree_view.remove_tree_item(
-    #                     selected_uc_id, selected_site_id, selected_state_id
-    #                 )
-    #                 self.tree_view.select_item(selected_site_id, "site", selected_uc_id)
-    #             else:
-    #                 # No state selected, therefore remove the site from the unit cell
-    #                 del self.unit_cells[selected_uc_id].sites[selected_site_id]
+                    # Update UI and select the parent unit cell (selective removal instead of full refresh)
+                    self.remove_tree_item(selected_uc_id, selected_site_id)
+                    self.select_item(selected_uc_id, "unit_cell")
 
-    #                 # Update UI and select the parent unit cell (selective removal instead of full refresh)
-    #                 self.tree_view.remove_tree_item(selected_uc_id, selected_site_id)
-    #                 self.tree_view.select_item(selected_uc_id, "unit_cell")
+            else:
+                # No site selected, therefore remove the unit cell from the model
+                del self.unit_cells[selected_uc_id]
 
-    #         else:
-    #             # No site selected, therefore remove the unit cell from the model
-    #             del self.unit_cells[selected_uc_id]
+                # Update UI (selective removal instead of full refresh)
+                self.remove_tree_item(selected_uc_id)
 
-    #             # Update UI (selective removal instead of full refresh)
-    #             self.tree_view.remove_tree_item(selected_uc_id)
+                # Clear selection explicitly
+                self.unit_cell_view.tree_view_panel.tree_view.selectionModel().clearSelection()
+                self.unit_cell_view.tree_view_panel.tree_view.setCurrentIndex(
+                    QModelIndex()
+                )  # Clear the cursor/visual highlight
+                self.selection.update({"unit_cell": None, "site": None, "state": None})
 
-    #             # Clear selection explicitly
-    #             self.tree_view.tree_view.selectionModel().clearSelection()
-    #             self.tree_view.tree_view.setCurrentIndex(
-    #                 QModelIndex()
-    #             )  # Clear the cursor/visual highlight
-    #             self.selection.update({"unit_cell": None, "site": None, "state": None})
+    def reduce_uc_basis(self):
+        selected_uc_id = self.selection.get("unit_cell", None)
+        if selected_uc_id:
+            uc = self.unit_cells[selected_uc_id]
+            reduced_basis = uc.reduced_basis()
 
-    # def reduce_uc_basis(self):
-    #     selected_uc_id = self.selection.get("unit_cell", None)
-    #     if selected_uc_id:
-    #         uc = self.unit_cells[selected_uc_id]
-    #         reduced_basis = uc.reduced_basis()
+            # Run a model update
+            v1 = reduced_basis[0]
+            v2 = reduced_basis[1]
+            v3 = reduced_basis[2]
+            self.unit_cell_data.update(
+                {
+                    "v1x": v1.x,
+                    "v1y": v1.y,
+                    "v1z": v1.z,
+                    "v2x": v2.x,
+                    "v2y": v2.y,
+                    "v2z": v2.z,
+                    "v3x": v3.x,
+                    "v3y": v3.y,
+                    "v3z": v3.z,
+                }
+            )
 
-    #         # Run a model update
-    #         v1 = reduced_basis[0]
-    #         v2 = reduced_basis[1]
-    #         v3 = reduced_basis[2]
-    #         self.tree_view.unit_cell_model.update(
-    #             {
-    #                 "v1x": v1.x,
-    #                 "v1y": v1.y,
-    #                 "v1z": v1.z,
-    #                 "v2x": v2.x,
-    #                 "v2y": v2.y,
-    #                 "v2z": v2.z,
-    #                 "v3x": v3.x,
-    #                 "v3y": v3.y,
-    #                 "v3z": v3.z,
-    #             }
-    #         )
+    def show_panels(self):
+        unit_cell_id = self.selection.get("unit_cell", None)
+        site_id = self.selection.get("site", None)
+        state_id = self.selection.get("state", None)
+        if unit_cell_id:
+            # Get the selected unit cell
+            uc = self.unit_cells[unit_cell_id]
+            # Update the form model with all unit cell properties
+            # The form will automatically update due to the reactive data binding
+            self.unit_cell_data.update(
+                {
+                    "name": uc.name,
+                    "v1x": uc.v1.x,
+                    "v1y": uc.v1.y,
+                    "v1z": uc.v1.z,
+                    "v2x": uc.v2.x,
+                    "v2y": uc.v2.y,
+                    "v2z": uc.v2.z,
+                    "v3x": uc.v3.x,
+                    "v3y": uc.v3.y,
+                    "v3z": uc.v3.z,
+                    "v1periodic": uc.v1.is_periodic,
+                    "v2periodic": uc.v2.is_periodic,
+                    "v3periodic": uc.v3.is_periodic,
+                }
+            )
+            dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
+            self.unit_cell_view.radio_group.button(dim).setChecked(True)
+            self.unit_cell_view.uc_stack.setCurrentWidget(
+                self.unit_cell_view.unit_cell_panel
+            )
+            self.unit_cell_view.button_panel.new_site_btn.setEnabled(True)
+            self.unit_cell_view.button_panel.reduce_btn.setEnabled(True)
+            if site_id:
+                site = uc.sites[site_id]
+                # Update the form model with all site properties
+                # The corresponding update function to update the fields is fired automatically.
+                self.site_data.update(
+                    {
+                        "name": site.name,
+                        "c1": site.c1,
+                        "c2": site.c2,
+                        "c3": site.c3,
+                    }
+                )
+                self.unit_cell_view.site_stack.setCurrentWidget(
+                    self.unit_cell_view.site_panel
+                )
+                self.unit_cell_view.button_panel.new_state_btn.setEnabled(True)
 
+                if state_id:
+                    state = site.states[state_id]
 
-#         # Sync the UI with the model
-#         self.update_ui()
+                    # Update the form model with the state properties
+                    # The corresponding update function to update the fields is fired automatically.
+                    self.state_data.update(
+                        {
+                            "name": state.name,
+                        }
+                    )
+            else:
+                self.unit_cell_view.site_stack.setCurrentWidget(
+                    self.unit_cell_view.site_info_label
+                )
+                self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
+        else:
+            self.unit_cell_view.uc_stack.setCurrentWidget(
+                self.unit_cell_view.uc_info_label
+            )
+            self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
+            self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
 
-#     # Update model when the fields are being changed
-#     def update_model(self, key, value):
-#         self.model[key] = value
+    # def dimensionality_change(self):
+    #     btn = self.sender()
+    #     if btn.isChecked():
+    #         selected_dim = btn.text()
+    #         if selected_dim == "0D":
+    #             self.unit_cell_panel.v1[0].setEnabled(True)
+    #             self.unit_cell_panel.v1[1].setEnabled(False)
+    #             self.unit_cell_panel.v1[2].setEnabled(False)
 
-#     # Use the model to fill the form fields
-#     def update_ui(self):
-#         self.c1.setValue(self.model["c1"])
-#         self.c2.setValue(self.model["c2"])
-#         self.c3.setValue(self.model["c3"])
+    #             self.unit_cell_panel.v2[0].setEnabled(False)
+    #             self.unit_cell_panel.v2[1].setEnabled(True)
+    #             self.unit_cell_panel.v2[2].setEnabled(False)
 
+    #             self.unit_cell_panel.v3[0].setEnabled(False)
+    #             self.unit_cell_panel.v3[1].setEnabled(False)
+    #             self.unit_cell_panel.v3[2].setEnabled(True)
 
-#         # Initial render
-#         self.refresh_tree()
+    #             self.unit_cell_data.update(
+    #                 {
+    #                     "v1x": 1.0,
+    #                     "v1y": 0.0,
+    #                     "v1z": 0.0,
+    #                     "v2x": 0.0,
+    #                     "v2y": 1.0,
+    #                     "v2z": 0.0,
+    #                     "v3x": 0.0,
+    #                     "v3y": 0.0,
+    #                     "v3z": 1.0,
+    #                     "v1periodic": False,
+    #                     "v2periodic": False,
+    #                     "v3periodic": False,
+    #                 }
+    #             )
 
+    #         elif selected_dim == "1D":
+    #             self.unit_cell_panel.v1[0].setEnabled(True)
+    #             self.unit_cell_panel.v1[1].setEnabled(False)
+    #             self.unit_cell_panel.v1[2].setEnabled(False)
 
-#     # Update model when the fields are being changed
-#     def update_model(self, key, value):
-#         self.model[key] = value
+    #             self.unit_cell_panel.v2[0].setEnabled(False)
+    #             self.unit_cell_panel.v2[1].setEnabled(True)
+    #             self.unit_cell_panel.v2[2].setEnabled(False)
 
-#     # Use the model to fill the form fields
-#     def update_ui(self):
+    #             self.unit_cell_panel.v3[0].setEnabled(False)
+    #             self.unit_cell_panel.v3[1].setEnabled(False)
+    #             self.unit_cell_panel.v3[2].setEnabled(True)
 
-#         self.v1[0].setValue(self.model["v1x"])
-#         self.v1[1].setValue(self.model["v1y"])
-#         self.v1[2].setValue(self.model["v1z"])
+    #             self.unit_cell_data.update(
+    #                 {
+    #                     # "v1x": 1.0,
+    #                     "v1y": 0.0,
+    #                     "v1z": 0.0,
+    #                     "v2x": 0.0,
+    #                     # "v2y": 1.0,
+    #                     "v2z": 0.0,
+    #                     "v3x": 0.0,
+    #                     "v3y": 0.0,
+    #                     # "v3z": 1.0,
+    #                     "v1periodic": True,
+    #                     "v2periodic": False,
+    #                     "v3periodic": False,
+    #                 }
+    #             )
 
-#         self.v2[0].setValue(self.model["v2x"])
-#         self.v2[1].setValue(self.model["v2y"])
-#         self.v2[2].setValue(self.model["v2z"])
+    #         elif selected_dim == "2D":
+    #             self.unit_cell_panel.v1[0].setEnabled(True)
+    #             self.unit_cell_panel.v1[1].setEnabled(True)
+    #             self.unit_cell_panel.v1[2].setEnabled(False)
 
-#         self.v3[0].setValue(self.model["v3x"])
-#         self.v3[1].setValue(self.model["v3y"])
-#         self.v3[2].setValue(self.model["v3z"])
+    #             self.unit_cell_panel.v2[0].setEnabled(True)
+    #             self.unit_cell_panel.v2[1].setEnabled(True)
+    #             self.unit_cell_panel.v2[2].setEnabled(False)
+
+    #             self.unit_cell_panel.v3[0].setEnabled(False)
+    #             self.unit_cell_panel.v3[1].setEnabled(False)
+    #             self.unit_cell_panel.v3[2].setEnabled(True)
+
+    #             self.unit_cell_data.update(
+    #                 {
+    #                     # "v1x": 1.0,
+    #                     # "v1y": 0.0,
+    #                     "v1z": 0.0,
+    #                     # "v2x": 0.0,
+    #                     # "v2y": 1.0,
+    #                     "v2z": 0.0,
+    #                     "v3x": 0.0,
+    #                     "v3y": 0.0,
+    #                     # "v3z": 1.0,
+    #                     "v1periodic": True,
+    #                     "v2periodic": True,
+    #                     "v3periodic": False,
+    #                 }
+    #             )
+
+    #         elif selected_dim == "3D":
+    #             self.unit_cell_panel.v1[0].setEnabled(True)
+    #             self.unit_cell_panel.v1[1].setEnabled(True)
+    #             self.unit_cell_panel.v1[2].setEnabled(True)
+
+    #             self.unit_cell_panel.v2[0].setEnabled(True)
+    #             self.unit_cell_panel.v2[1].setEnabled(True)
+    #             self.unit_cell_panel.v2[2].setEnabled(True)
+
+    #             self.unit_cell_panel.v3[0].setEnabled(True)
+    #             self.unit_cell_panel.v3[1].setEnabled(True)
+    #             self.unit_cell_panel.v3[2].setEnabled(True)
+
+    #             self.unit_cell_data.update(
+    #                 {
+    #                     # "v1x": 1.0,
+    #                     # "v1y": 0.0,
+    #                     # "v1z": 0.0,
+    #                     # "v2x": 0.0,
+    #                     # "v2y": 1.0,
+    #                     # "v2z": 0.0,
+    #                     # "v3x": 0.0,
+    #                     # "v3y": 0.0,
+    #                     # "v3z": 1.0,
+    #                     "v1periodic": True,
+    #                     "v2periodic": True,
+    #                     "v3periodic": True,
+    #                 }
+    #             )
+    def update_unit_cell_data(self, key, value):
+        """
+        Update the unit cell data model with new values.
+
+        Args:
+            key: The property name to update
+            value: The new value for the property
+        """
+        self.unit_cell_data[key] = value
+
+    def update_site_data(self, key, value):
+        """
+        Update the site data model with new values.
+
+        Args:
+            key: The property name to update
+            value: The new value for the property
+        """
+        self.site_data[key] = value
+
+    def update_unit_cell_ui(self):
+        """
+        Update the UI with the current unit cell data.
+        This method sets the values of the spinboxes in the unit cell panel
+        based on the current values in the unit_cell_data dictionary.
+        """
+
+        self.v1[0].setValue(self.unit_cell_data["v1x"])
+        self.v1[1].setValue(self.unit_cell_data["v1y"])
+        self.v1[2].setValue(self.unit_cell_data["v1z"])
+
+        self.v2[0].setValue(self.unit_cell_data["v2x"])
+        self.v2[1].setValue(self.unit_cell_data["v2y"])
+        self.v2[2].setValue(self.unit_cell_data["v2z"])
+
+        self.v3[0].setValue(self.unit_cell_data["v3x"])
+        self.v3[1].setValue(self.unit_cell_data["v3y"])
+        self.v3[2].setValue(self.unit_cell_data["v3z"])
+
+    def update_site_ui(self):
+        """
+        Update the UI with the current site data.
+        This method sets the values of the spinboxes in the site panel
+        based on the current values in the site_data dictionary.
+        """
+
+        self.c1.setValue(self.site_data["c1"])
+        self.c2.setValue(self.site_data["c2"])
+        self.c3.setValue(self.site_data["c3"])
