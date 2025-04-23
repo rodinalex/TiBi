@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QMenu
 from PySide6.QtGui import QAction
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
-from views.hopping import HoppingView
+from views.hopping_view import HoppingView
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,

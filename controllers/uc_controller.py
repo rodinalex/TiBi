@@ -3,7 +3,7 @@ from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel
 from PySide6.QtGui import QStandardItem
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
-from views.uc import UnitCellView
+from views.uc_view import UnitCellView
 
 
 class UnitCellController(QObject):

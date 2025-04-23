@@ -9,12 +9,14 @@ from PySide6.QtWidgets import (
 )
 
 from views.placeholder import PlaceholderWidget
-from views.uc import UnitCellView
-from views.hopping import HoppingView
+from views.hopping_view import HoppingView
+from views.uc_view import UnitCellView
+from views.uc_plot_view import UnitCellPlotView
 
 from controllers.app_controller import AppController
 from controllers.hopping_controller import HoppingController
 from controllers.uc_controller import UnitCellController
+from controllers.uc_plot_controller import UnitCellPlotController
 
 # from controllers.bz_controller import BZController
 # from controllers.computation_controller import ComputationController
@@ -30,7 +32,7 @@ class MainWindow(QMainWindow):
     doesn't contain business logic or model manipulation.
     """
 
-    def __init__(self, uc, hopping):
+    def __init__(self, uc, hopping, uc_plot):
         super().__init__()
         self.setWindowTitle("TiBi")
         self.setFixedSize(QSize(1500, 900))
@@ -38,7 +40,7 @@ class MainWindow(QMainWindow):
         # Store references to UI components
         self.uc = uc
         self.hopping = hopping
-        # self.unit_cell_plot = unit_cell_plot
+        self.uc_plot = uc_plot
         # self.bz_plot = bz_plot
         # self.band_plot = band_plot
 
@@ -56,7 +58,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.hopping, stretch=2)
 
         # 3D visualization for the unit cell
-        mid_layout.addWidget(PlaceholderWidget("TEST"), stretch=1)
+        mid_layout.addWidget(self.uc_plot, stretch=1)
         mid_layout.addWidget(PlaceholderWidget("TEST"), stretch=1)
         mid_layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
 
@@ -148,10 +150,15 @@ class TiBiApplication:
         self.models["state_coupling"] = (
             []
         )  # List of couplings list[Tuple[int, int, int], np.complex128]
+
+        self.models["uc_plot_items"] = (
+            {}
+        )  # Dictionary to store plot items for the unit cell in the 3D view
+
         # Set views
         self.views["uc"] = UnitCellView()
-
         self.views["hopping"] = HoppingView()
+        self.views["uc_plot"] = UnitCellPlotView()
 
         # Set controllers
         self.controllers["app"] = AppController()
@@ -175,6 +182,19 @@ class TiBiApplication:
             self.views["hopping"],
         )
 
+        self.controllers["uc_plot"] = UnitCellPlotController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models["uc_plot_items"],
+            self.models[
+                "unit_cell_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.models[
+                "site_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.views["uc_plot"],
+        )
+
     def initialize(self):
         """Initialize all application components."""
         self._create_main_window()
@@ -185,7 +205,7 @@ class TiBiApplication:
         self.main_window = MainWindow(
             self.views["uc"],
             self.views["hopping"],
-            # self.views["unit_cell_plot"],
+            self.views["uc_plot"],
             # self.views["bz_plot"],
             # self.views["band_plot"],
         )
