@@ -9,11 +9,13 @@ from PySide6.QtWidgets import (
 )
 
 from views.placeholder import PlaceholderWidget
+from views.bz_plot_view import BrillouinZonePlotView
 from views.hopping_view import HoppingView
 from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
 
 from controllers.app_controller import AppController
+from controllers.bz_plot_controller import BrillouinZonePlotController
 from controllers.hopping_controller import HoppingController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
@@ -32,7 +34,7 @@ class MainWindow(QMainWindow):
     doesn't contain business logic or model manipulation.
     """
 
-    def __init__(self, uc, hopping, uc_plot):
+    def __init__(self, uc, hopping, uc_plot, bz_plot):
         super().__init__()
         self.setWindowTitle("TiBi")
         self.setFixedSize(QSize(1500, 900))
@@ -41,7 +43,7 @@ class MainWindow(QMainWindow):
         self.uc = uc
         self.hopping = hopping
         self.uc_plot = uc_plot
-        # self.bz_plot = bz_plot
+        self.bz_plot = bz_plot
         # self.band_plot = band_plot
 
         # Main Layout
@@ -59,7 +61,7 @@ class MainWindow(QMainWindow):
 
         # 3D visualization for the unit cell
         mid_layout.addWidget(self.uc_plot, stretch=1)
-        mid_layout.addWidget(PlaceholderWidget("TEST"), stretch=1)
+        mid_layout.addWidget(self.bz_plot, stretch=1)
         mid_layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
 
         # Right column for computation options and band structure
@@ -138,6 +140,7 @@ class TiBiApplication:
         self.views["uc"] = UnitCellView()
         self.views["hopping"] = HoppingView()
         self.views["uc_plot"] = UnitCellPlotView()
+        self.views["bz_plot"] = BrillouinZonePlotView()
 
         # Set controllers
         self.controllers["app"] = AppController()
@@ -169,6 +172,15 @@ class TiBiApplication:
             self.views["uc_plot"],
         )
 
+        self.controllers["bz_plot"] = BrillouinZonePlotController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models[
+                "unit_cell_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.views["bz_plot"],
+        )
+
     def initialize(self):
         """Initialize all application components."""
         self._create_main_window()
@@ -180,7 +192,7 @@ class TiBiApplication:
             self.views["uc"],
             self.views["hopping"],
             self.views["uc_plot"],
-            # self.views["bz_plot"],
+            self.views["bz_plot"],
             # self.views["band_plot"],
         )
 

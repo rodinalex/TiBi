@@ -22,7 +22,6 @@
 - update_tree_item, remove_tree_item, select_item, and find_item_by_id have some redundancy: can make more streamlined
 
 ## Function calls 
-- Fix the redundant redrawing of the unit cell when a new item is selected in the tree (see the signals connected in uc_plot_controller). This leads to two model updates that also trigger the redrawing of the plot
 
 
 ## Bugs
