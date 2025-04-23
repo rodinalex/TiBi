@@ -4,7 +4,7 @@ from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
 import pyqtgraph.opengl as gl
-
+from resources.colors import CF_red
 import numpy as np
 
 
@@ -45,20 +45,25 @@ class BrillouinZonePlotController(QObject):
         self.selection.signals.updated.connect(self._update_schedule)
         self.unit_cell_data.signals.updated.connect(self._update_schedule)
 
+        self.bz_plot_view.add_gamma_btn.clicked.connect(
+            lambda: self._add_point("gamma")
+        )
         self.bz_plot_view.prev_vertex_btn.clicked.connect(
             lambda: self._select_point(-1, "vertex")
         )
         self.bz_plot_view.next_vertex_btn.clicked.connect(
             lambda: self._select_point(+1, "vertex")
         )
-        #     self.add_vertex_btn.clicked.connect(lambda: self._add_point("vertex"))
+        self.bz_plot_view.add_vertex_btn.clicked.connect(
+            lambda: self._add_point("vertex")
+        )
         self.bz_plot_view.prev_edge_btn.clicked.connect(
             lambda: self._select_point(-1, "edge")
         )
         self.bz_plot_view.next_edge_btn.clicked.connect(
             lambda: self._select_point(+1, "edge")
         )
-        #     self.add_edge_btn.clicked.connect(lambda: self._add_point("edge"))
+        self.bz_plot_view.add_edge_btn.clicked.connect(lambda: self._add_point("edge"))
 
         self.bz_plot_view.prev_face_btn.clicked.connect(
             lambda: self._select_point(-1, "face")
@@ -67,10 +72,10 @@ class BrillouinZonePlotController(QObject):
             lambda: self._select_point(+1, "face")
         )
 
-    #     self.add_face_btn.clicked.connect(lambda: self._add_point("face"))
+        self.bz_plot_view.add_face_btn.clicked.connect(lambda: self._add_point("face"))
 
-    # self.remove_last_btn.clicked.connect(self._remove_last_point)
-    # self.clear_path_btn.clicked.connect(self._clear_path)
+        self.bz_plot_view.remove_last_btn.clicked.connect(self._remove_last_point)
+        self.bz_plot_view.clear_path_btn.clicked.connect(self._clear_path)
 
     def _update_schedule(self):
         if self._updating:
@@ -254,92 +259,83 @@ class BrillouinZonePlotController(QObject):
         self.bz_plot_view.clear_path_btn.setEnabled(False)
         self.bz_plot_view.compute_bands_btn.setEnabled(False)
 
+    def _update_path_visualization(self):
+        """
+        Update the visualization of the BZ path based on current path points.
+        """
+        # Remove existing path visualization if it exists
+        if "bz_path" in self.bz_plot_items:
+            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
+            del self.bz_plot_items["bz_path"]
 
-# def _update_path_visualization(self):
-#     """
-#     Update the visualization of the BZ path based on current path points.
-#     """
-#     # Remove existing path visualization if it exists
-#     if "bz_path" in self.plot_items:
-#         try:
-#             self.view.removeItem(self.plot_items["bz_path"])
-#             del self.plot_items["bz_path"]
-#         except Exception as e:
-#             print(f"Error removing path visualization: {e}")
+        # Only create visualization if we have at least 2 points
+        if not self.bz_path or len(self.bz_path) < 2:
+            return
 
-#     # Only create visualization if we have at least 2 points
-#     if not self.bz_path or len(self.bz_path) < 2:
-#         return
+        # Convert path points to 3D if needed
+        path_3d = self._pad_to_3d(self.bz_path)
 
-#     # Convert path points to 3D if needed
-#     path_3d = self._pad_to_3d(self.bz_path)
+        # Create line segments for the path
+        path_pos = []
+        for ii in range(len(path_3d) - 1):
+            # Add both points of each segment
+            path_pos.extend([path_3d[ii], path_3d[ii + 1]])
 
-#     # Create line segments for the path
-#     path_pos = []
-#     for ii in range(len(path_3d) - 1):
-#         # Add both points of each segment
-#         path_pos.extend([path_3d[ii], path_3d[ii + 1]])
+        # Create the path visualization
+        path_object = gl.GLLinePlotItem(
+            pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
+        )
+        self.bz_plot_view.view.addItem(path_object)
+        self.bz_plot_items["bz_path"] = path_object
 
-#     # Create the path visualization
-#     path_object = gl.GLLinePlotItem(
-#         pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
-#     )
-#     self.view.addItem(path_object)
-#     self.plot_items["bz_path"] = path_object
+    def _add_point(self, point):
+        """
+        Add a selected point to the Brillouin zone path.
 
+        Args:
+            point: The type of point to add ("gamma", "vertex", "edge", or "face")
+        """
 
-# def _add_point(self, point):
-#     """
-#     Add a selected point to the Brillouin zone path.
+        if point == "gamma":
+            self.bz_path.append([0] * self.dim)
+        else:
+            if (
+                self.bz_point_selection[point] is not None
+                and self.bz_point_lists[point] is not None
+            ):
+                self.bz_path.append(
+                    self.bz_point_lists[point][self.bz_point_selection[point]]
+                )
+            else:
+                print("No point selected")
+                return
+        # Enable the remove last button and clear path button now that we have points
+        self.bz_plot_view.remove_last_btn.setEnabled(True)
+        self.bz_plot_view.clear_path_btn.setEnabled(True)
+        # Enable the compute bands button if we have at least 2 points
+        if len(self.bz_path) >= 2:
+            self.bz_plot_view.compute_bands_btn.setEnabled(True)
+        else:
+            self.bz_plot_view.compute_bands_btn.setEnabled(False)
 
-#     Args:
-#         point: The type of point to add ("gamma", "vertex", "edge", or "face")
-#     """
+        # Update the path visualization
+        self._update_path_visualization()
 
-#     if point == "gamma":
-#         self.bz_path.append([0] * self.dim)
-#     else:
-#         if (
-#             self.selection[point] is not None
-#             and self.bz_point_lists[point] is not None
-#         ):
-#             if len(self.bz_point_lists[point]) > self.selection[point]:
-#                 self.bz_path.append(
-#                     self.bz_point_lists[point][self.selection[point]]
-#                 )
-#             else:
-#                 print(f"Invalid point index: {self.selection[point]}")
-#                 return
-#         else:
-#             print("No point selected")
-#             return
-#     # Enable the remove last button and clear path button now that we have points
-#     self.remove_last_btn.setEnabled(True)
-#     self.clear_path_btn.setEnabled(True)
-#     # Enable the compute bands button if we have at least 2 points
-#     if len(self.bz_path) >= 2:
-#         self.compute_bands_btn.setEnabled(True)
-#     else:
-#         self.compute_bands_btn.setEnabled(False)
+    def _remove_last_point(self):
+        """Remove the last point added to the path."""
+        if self.bz_path:
+            # Remove the last point
+            self.bz_path.pop()
 
-#     # Update the path visualization
-#     self._update_path_visualization()
+            # Update path visualization
+            self._update_path_visualization()
 
-# def _remove_last_point(self):
-#     """Remove the last point added to the path."""
-#     if self.bz_path:
-#         # Remove the last point
-#         self.bz_path.pop()
-
-#         # Update path visualization
-#         self._update_path_visualization()
-
-#         # Disable button if path is now empty
-#         if not self.bz_path:
-#             self.remove_last_btn.setEnabled(False)
-#             self.clear_path_btn.setEnabled(False)
-#         # Enable the compute bands button if we have at least 2 points
-#         if len(self.bz_path) >= 2:
-#             self.compute_bands_btn.setEnabled(True)
-#         else:
-#             self.compute_bands_btn.setEnabled(False)
+            # Disable button if path is now empty
+            if not self.bz_path:
+                self.bz_plot_view.remove_last_btn.setEnabled(False)
+                self.bz_plot_view.clear_path_btn.setEnabled(False)
+            # Enable the compute bands button if we have at least 2 points
+            if len(self.bz_path) >= 2:
+                self.bz_plot_view.compute_bands_btn.setEnabled(True)
+            else:
+                self.bz_plot_view.compute_bands_btn.setEnabled(False)
