@@ -1,301 +1,167 @@
 # TiBi Architecture Optimization
 
-This document provides a detailed roadmap for improving the architecture of the TiBi application, with a focus on properly implementing the Model-View-Controller (MVC) pattern to ensure maintainability as the application grows.
+This document provides recommendations for optimizing the TiBi application architecture based on a review of the current implementation.
 
-## Current State Analysis
+## Current Architecture Assessment
 
-The TiBi project has made progress implementing MVC with:
+The TiBi project has successfully implemented a robust MVC architecture with:
 
-- **Models**: Data structures in `src/tibitypes.py` and reactive models in `models/uc_models.py`
-- **Views**: UI components in the `ui/` directory
-- **Controllers**: `controllers/app_controller.py` and `controllers/uc_cotroller.py`
+- **Models**:
+  - Clean domain models in `src/tibitypes.py` (UnitCell, Site, State, etc.)
+  - Reactive data models in `models/data_models.py` with proper signal emission
+  - Clear separation of domain data from presentation
 
-The current implementation has several strengths:
-- Reactive data binding with `DataModel` class
-- Clear separation of basic UI components
-- Initial controller implementation for unit cell management
+- **Views**:
+  - Well-organized UI components in the `views/` directory
+  - Proper signal emission for user interactions
+  - Focus on presentation without business logic
 
-However, there are areas that require improvement:
-- Some views still contain business logic
-- Direct model manipulation occurs in UI components
-- Inconsistent data flow patterns across the application
-- Missing controllers for some UI components (hopping, BZ plot)
-- Computation logic embedded in UI components
+- **Controllers**:
+  - Dedicated controllers for each functional area
+  - Proper mediation between models and views
+  - Good use of the signal/slot mechanism for loose coupling
 
-## Detailed Refactoring Plan
+The implementation shows particular strengths in:
 
-### Phase 1: Controller Extraction and Standardization
+1. **Signal Mechanism**: Excellent use of Qt's signal/slot for loose coupling
+2. **Coordinating Controller Pattern**: AppController properly coordinates cross-component interactions
+3. **Clean Encapsulation**: Controllers properly encapsulate their internal state
+4. **Reactive Data Binding**: Changes in models automatically propagate to views
+5. **Signal Coalescing**: Batch updates to avoid redundant view refreshes
 
-#### 1.1. Create HoppingController
+## Optimization Recommendations
 
-Create a dedicated controller for hopping-related operations that currently reside in the `HoppingPanel` class:
+### 1. Naming Consistency
+
+Some naming inconsistencies exist that should be standardized:
+
+| Area | Current Patterns | Recommended Standard |
+|------|-----------------|---------------------|
+| Controller Constructors | Some take direct references to models/views and others take collections | All controllers should follow the same pattern |
+| Internal Method Prefixes | Mix of `_method_name` and non-prefixed methods in same controllers | Use `_` prefix consistently for all internal methods |
+| Signal Naming | Mix of verb-noun and noun patterns | Use verb-noun (e.g., `compute_bands_request` not just `bands_request`) |
+| Controller Parameter Names | Mix of `unit_cells` and `unit_cell` for same concept | Use plurals for collections, singular for individual items |
+
+Specific examples:
+
+- In `BrillouinZonePlotController`: Rename `compute_bands_request` to maintain verb-noun pattern
+- In constructors: Standardize parameter names across controllers (e.g., all controllers should use `unit_cells` not a mix of `unit_cells` and `unit_cell`)
+- In `set_unit_cell()` methods: Consider renaming to `update_unit_cell()` for clarity
+- In internal methods: Ensure all private methods have `_` prefix
+
+### 2. Consider ViewModel Layer
+
+For complex visualizations, a dedicated ViewModel layer could further improve separation of concerns:
 
 ```python
-# controllers/hopping_controller.py
-class HoppingController(QObject):
-    def __init__(self, unit_cells, hopping_panel):
-        self.unit_cells = unit_cells
-        self.hopping_panel = hopping_panel
+class BandStructureViewModel:
+    def __init__(self, band_structure_model):
+        self.band_structure_model = band_structure_model
+        self.band_structure_model.signals.updated.connect(self.prepare_view_data)
         
-        # Connect signals from UI to controller methods
-        self.hopping_panel.matrix.button_clicked.connect(self.handle_pair_selection)
-        self.hopping_panel.table.save_btn.clicked.connect(self.save_couplings)
-        
-    def handle_pair_selection(self, s1, s2):
-        # Logic moved from HoppingPanel.handle_pair_selection
-        pass
-        
-    def save_couplings(self):
-        # Logic moved from HoppingPanel.save_couplings
-        pass
-```
-
-#### 1.2. Create BZController
-
-Extract Brillouin zone path handling logic from `BrillouinZonePlot` to a dedicated controller:
-
-```python
-# controllers/bz_controller.py
-class BZController(QObject):
-    def __init__(self, bz_plot, band_plot):
-        self.bz_plot = bz_plot
-        self.band_plot = band_plot
-        
-        # Connect UI signals to controller methods
-        self.bz_plot.add_gamma_btn.clicked.connect(lambda: self.add_point("gamma"))
-        self.bz_plot.add_vertex_btn.clicked.connect(lambda: self.add_point("vertex"))
-        # ... other connections
-        
-    def add_point(self, point_type):
-        # Logic moved from BrillouinZonePlot._add_point
+    def prepare_view_data(self):
+        # Transform raw model data into view-specific format
+        # Calculate tick positions, normalize data ranges, etc.
         pass
 ```
 
-#### 1.3. Create ComputationController
+### 3. Consistent Error Handling
 
-Create a controller to handle band structure computation:
-
-```python
-# controllers/computation_controller.py
-class ComputationController(QObject):
-    def __init__(self, unit_cells, bz_plot, band_plot):
-        self.unit_cells = unit_cells
-        self.bz_plot = bz_plot
-        self.band_plot = band_plot
-        
-        self.bz_plot.compute_bands_btn.clicked.connect(self.compute_bands)
-        
-    def compute_bands(self):
-        # Logic moved from AppController.update_bands_plot
-        pass
-```
-
-### Phase 2: Refactor Existing Components
-
-#### 2.1. Refactor HoppingPanel
-
-Modify the `HoppingPanel` class to focus on UI presentation:
-
-1. Remove direct model manipulation
-2. Expose UI elements and signals
-3. Move business logic to the new `HoppingController`
-
-#### 2.2. Refactor BrillouinZonePlot
-
-Modify the `BrillouinZonePlot` class to focus on visualization:
-
-1. Change internal methods to be public, allowing controller access
-2. Remove business logic related to path construction
-3. Move decision-making logic to the controller
-4. Keep visualization methods internal
-
-#### 2.3. Refactor BandStructurePlot
-
-Simplify the `BandStructurePlot` class to focus on plotting:
-
-1. Remove any computation or data processing logic
-2. Provide public methods for plot updates
-3. Add proper signals for user interactions
-
-### Phase 3: Standardize Data Flow and Interfaces
-
-#### 3.1. Define Clear Controller Responsibilities
-
-Each controller should have specific responsibilities:
-
-- `AppController`: Application-level coordination between components
-- `UCController`: Unit cell, site, and state CRUD operations
-- `HoppingController`: Hopping parameter management
-- `BZController`: BZ visualization and path construction
-- `ComputationController`: Physics calculations and result handling
-
-#### 3.2. Standardize Controller Interfaces
-
-For consistency, all controllers should follow common patterns:
+Implement a consistent error handling strategy:
 
 ```python
-class BaseController(QObject):
-    """Base class for controllers providing common functionality"""
+# In controllers
+try:
+    result = self.perform_computation()
+except ComputationError as e:
+    self.handle_error(e)
     
-    def __init__(self, models, views):
-        super().__init__()
-        self.connect_signals()
+def handle_error(self, error):
+    # Log error
+    # Update UI with error message
+    # Reset state if needed
+```
+
+### 4. Documentation Improvements
+
+Add interface documentation to clearly define component contracts:
+
+```python
+class IBandDataModel:
+    """Interface that defines band data model requirements"""
+    def get_band_data(): 
+        """
+        Returns band structure data.
         
-    def connect_signals(self):
-        """Connect UI signals to controller methods"""
+        Returns:
+            dict: Contains 'k_path', 'bands', and 'special_points' keys
+        """
         pass
 ```
 
-#### 3.3. Implement Unidirectional Data Flow
+### 5. State Management Optimization
 
-For state changes, enforce a consistent pattern:
-1. View emits a signal in response to user action
-2. Controller method handles the signal
-3. Controller updates the model
-4. Model signals change event
-5. Controller observes model changes
-6. Controller updates view state
-
-### Phase 4: Create Dedicated Model Classes
-
-#### 4.1. Create a BZPathModel
-
-Create a dedicated model to represent the BZ path:
+Consider using a dedicated state machine for complex UI state:
 
 ```python
-class BZPathModel(DataModel):
-    """Model representing a path through the Brillouin Zone"""
-    
-    def __init__(self):
-        super().__init__(
-            points=[], 
-            special_points=[]
-        )
+class ComputationState(Enum):
+    IDLE = 0
+    SELECTING_PATH = 1
+    COMPUTING = 2
+    RESULTS_AVAILABLE = 3
+    ERROR = 4
+
+# In controller
+def transition_to(self, new_state):
+    # Handle state transitions
+    self.current_state = new_state
+    self.update_ui_for_state()
 ```
 
-#### 4.2. Create a BandStructureModel
+### 6. Performance Considerations
 
-Create a model for band structure calculation results:
+Optimize band computation and visualization:
+
+1. Consider using worker threads for band computation
+2. Implement progressive rendering for large datasets
+3. Add caching for frequently accessed computations
 
 ```python
-class BandStructureModel(DataModel):
-    """Model holding band structure calculation data"""
+# Example worker thread implementation
+class BandComputationWorker(QThread):
+    computation_finished = Signal(object)
     
-    def __init__(self):
-        super().__init__(
-            bands=None,
-            k_path=None,
-            path_positions=None,
-            special_points=[]
-        )
+    def __init__(self, hamiltonian, k_path):
+        self.hamiltonian = hamiltonian
+        self.k_path = k_path
+        
+    def run(self):
+        bands = band_compute(self.hamiltonian, self.k_path)
+        self.computation_finished.emit(bands)
 ```
 
-### Phase 5: Refactor MainWindow
+## Implementation Priorities
 
-#### 5.1. Simplify MainWindow Class
+### High Priority
 
-Refactor `MainWindow` to focus solely on UI layout setup:
+1. **Fix Naming Inconsistencies**: Standardize method and parameter names across controllers
+2. **Complete Band Structure Implementation**: Finish the band plotting with proper error handling
+3. **Optimize Signal Handling**: Ensure all DataModel updates properly coalesce signals
 
-1. Remove any logic that manipulates data models
-2. Remove signal/slot connections
-3. Move controller initialization to a separate method
+### Medium Priority
 
-#### 5.2. Create ApplicationController
+1. **Add Worker Thread for Computation**: Move band calculation to a separate thread
+2. **Enhance BZ Plot Interactivity**: Add animations and visual cues for selected points
+3. **Documentation**: Add comprehensive docstrings and interface documentation
 
-Create a top-level controller that manages all sub-controllers:
+### Low Priority
 
-```python
-class ApplicationController(QObject):
-    """Top-level controller that coordinates all sub-controllers"""
-    
-    def __init__(self, app_window):
-        self.app_window = app_window
-        
-        # Initialize sub-controllers
-        self.uc_controller = UCController(...)
-        self.hopping_controller = HoppingController(...)
-        self.bz_controller = BZController(...)
-        self.computation_controller = ComputationController(...)
-        
-        # Connect cross-controller signals
-        self.connect_controllers()
-        
-    def connect_controllers(self):
-        """Connect signals between different controllers"""
-        pass
-```
+1. **Add ViewModel Layer**: For complex visualizations like band structure
+2. **State Machine**: For managing UI state transitions
+3. **Caching Layer**: For expensive computations
 
-## Implementation Priorities and Timeline
+## Conclusion
 
-### Immediate Priorities (First Sprint)
+The TiBi application demonstrates a well-designed MVC architecture. By addressing the minor inconsistencies and implementing the recommended optimizations, it will become even more maintainable and performant as new features are added.
 
-1. **Create HoppingController**: Extract logic from HoppingPanel
-   - Move model update logic to the controller
-   - Refactor HoppingPanel to emit signals when user interacts
-   - Update AppController to use the new controller
-
-2. **Refactor BrillouinZonePlot**: Separate visualization from logic
-   - Extract internal methods that modify state to controller methods
-   - Keep visualization methods in the view
-   - Create BZController class
-
-### Medium-term Priorities (Second Sprint)
-
-3. **Create ComputationController**: Separate computation from UI
-   - Move band calculation logic to dedicated controller
-   - Create models for computation results
-   - Update UIs to observe these models
-
-4. **Standardize Controller Interfaces**: Create consistent patterns
-   - Define base controller class with common functionality
-   - Refactor existing controllers to follow this pattern
-   - Document controller responsibilities
-
-### Long-term Priorities (Third Sprint)
-
-5. **Create ApplicationController**: Top-level coordination
-   - Refactor MainWindow to focus solely on UI layout
-   - Create ApplicationController to manage all sub-controllers
-   - Connect cross-controller communication
-
-6. **Implement Comprehensive Testing**: 
-   - Create unit tests for models
-   - Create integration tests for controllers
-   - Create UI tests for critical workflows
-
-## Best Practices to Follow
-
-### Model Design
-
-1. **Model Independence**: Models should have no dependencies on views or controllers
-2. **Rich Models**: Models should encapsulate business logic related to their data
-3. **Signal-based Change Notification**: Models should emit signals when their data changes
-
-### Controller Design
-
-1. **Single Responsibility**: Each controller should focus on one aspect of the application
-2. **Thin Controllers**: Controllers should delegate business logic to models when possible
-3. **No UI Logic**: Controllers should not contain code for UI manipulation beyond updating data
-
-### View Design
-
-1. **No Direct Model Mutation**: Views should never directly modify model data
-2. **Signal-based User Input**: Views should emit signals in response to user actions
-3. **Passive Views**: Views should focus on presentation and user input handling
-
-### Testing Strategy
-
-1. **Model Testing**: Test models in isolation from controllers and views
-2. **Controller Testing**: Test controllers with mock models and views
-3. **Integration Testing**: Test critical paths through the application
-
-## Migration Plan for Existing Features
-
-To minimize disruption, implement these changes incrementally:
-
-1. Create new controllers alongside existing code
-2. Gradually migrate functionality from UI classes to controllers
-3. Once controllers are in place, refactor UI classes to rely on controllers
-4. Finally, establish the top-level ApplicationController
-
-This approach allows you to make incremental improvements without breaking existing functionality.
+The current focus on band structure implementation is well-supported by the existing architecture, and the signal-based reactive approach will scale well as the application grows more complex.
