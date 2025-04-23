@@ -28,16 +28,27 @@ class UnitCellPlotController(QObject):
         self.site_data = site_data
         self.uc_plot_view = uc_plot_view
 
+        # Flag to prevent redundant redraws during cascading signal updates
+        self._updating = False
+
         # Connect Signals
         # Signals to redraw the plot due to selections change/unit cell and site updates
-        self.selection.signals.updated.connect(self.set_unit_cell)
-        self.unit_cell_data.signals.updated.connect(self.set_unit_cell)
-        self.site_data.signals.updated.connect(self.set_unit_cell)
+        self.selection.signals.updated.connect(self._update_schedule)
+        self.unit_cell_data.signals.updated.connect(self._update_schedule)
+        self.site_data.signals.updated.connect(self._update_schedule)
 
         # Signals to update the plot when the spinners are changed
         self.uc_plot_view.n1_spinner.valueChanged.connect(self.set_unit_cell)
         self.uc_plot_view.n2_spinner.valueChanged.connect(self.set_unit_cell)
         self.uc_plot_view.n3_spinner.valueChanged.connect(self.set_unit_cell)
+
+    def _update_schedule(self):
+        if self._updating:
+            return
+        self._updating = True
+        # Schedule the update to happen after all signals are processed
+        self.set_unit_cell()
+        self._updating = False
 
     def set_unit_cell(self):
         """
@@ -167,9 +178,9 @@ class UnitCellPlotController(QObject):
             return
 
         # Extract basis vectors
-        v1 = np.array([self.unit_cell.v1.x, self.unit_cell.v1.y, self.unit_cell.v1.z])
-        v2 = np.array([self.unit_cell.v2.x, self.unit_cell.v2.y, self.unit_cell.v2.z])
-        v3 = np.array([self.unit_cell.v3.x, self.unit_cell.v3.y, self.unit_cell.v3.z])
+        v1 = self.unit_cell.v1.as_array()
+        v2 = self.unit_cell.v2.as_array()
+        v3 = self.unit_cell.v3.as_array()
 
         # Define the 8 corners of the parallelepiped
         verts = np.array(
@@ -214,4 +225,4 @@ class UnitCellPlotController(QObject):
         return line_vertices
 
     def _on_spinner_changed(self):
-        self.set_unit_cell(self.unit_cell)
+        self.set_unit_cell()
