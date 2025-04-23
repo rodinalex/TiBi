@@ -26,12 +26,6 @@ class BrillouinZonePlotView(QWidget):
         super().__init__()
         self.setMinimumSize(QSize(300, 200))
 
-        #     # Initialize data
-        #     self.bz = None
-        #     self.plot_items = {}  # Map to track mesh items
-        #     self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
-        #     self.selection = {"vertex": None, "edge": None, "face": None}
-        #     self.bz_path = []
         # Colors
         self.axis_colors = [
             CF_vermillion,

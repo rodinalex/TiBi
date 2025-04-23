@@ -14,6 +14,7 @@ class BrillouinZonePlotController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
+        bz_path,
         unit_cell_data: DataModel,
         bz_plot_view: BrillouinZonePlotView,
     ):
@@ -21,16 +22,20 @@ class BrillouinZonePlotController(QObject):
 
         self.unit_cells = unit_cells
         self.selection = selection
+        self.bz_path = bz_path
         self.unit_cell_data = unit_cell_data
         self.bz_plot_view = bz_plot_view
 
         # Internal controller state
         self.unit_cell = None
         self.bz_plot_items = {}  # Dictionary to store plot items
-        self.bz_vertices = []
-        self.bz_faces = []
+        self.bz_vertices = []  # Coordinates of BZ vertices
+        self.bz_faces = (
+            []
+        )  # A list of lists, where each inner list contains the vertices of a face
         self.dim = 0
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
+        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
 
         # Flag to prevent redundant redraws during cascading signal updates
         self._updating = False
@@ -40,15 +45,28 @@ class BrillouinZonePlotController(QObject):
         self.selection.signals.updated.connect(self._update_schedule)
         self.unit_cell_data.signals.updated.connect(self._update_schedule)
 
-        #     self.prev_vertex_btn.clicked.connect(lambda: self._select_point(-1, "vertex"))
-        #     self.next_vertex_btn.clicked.connect(lambda: self._select_point(+1, "vertex"))
+        self.bz_plot_view.prev_vertex_btn.clicked.connect(
+            lambda: self._select_point(-1, "vertex")
+        )
+        self.bz_plot_view.next_vertex_btn.clicked.connect(
+            lambda: self._select_point(+1, "vertex")
+        )
         #     self.add_vertex_btn.clicked.connect(lambda: self._add_point("vertex"))
-        #     self.prev_edge_btn.clicked.connect(lambda: self._select_point(-1, "edge"))
-        #     self.next_edge_btn.clicked.connect(lambda: self._select_point(+1, "edge"))
+        self.bz_plot_view.prev_edge_btn.clicked.connect(
+            lambda: self._select_point(-1, "edge")
+        )
+        self.bz_plot_view.next_edge_btn.clicked.connect(
+            lambda: self._select_point(+1, "edge")
+        )
         #     self.add_edge_btn.clicked.connect(lambda: self._add_point("edge"))
 
-    #     self.prev_face_btn.clicked.connect(lambda: self._select_point(-1, "face"))
-    #     self.next_face_btn.clicked.connect(lambda: self._select_point(+1, "face"))
+        self.bz_plot_view.prev_face_btn.clicked.connect(
+            lambda: self._select_point(-1, "face")
+        )
+        self.bz_plot_view.next_face_btn.clicked.connect(
+            lambda: self._select_point(+1, "face")
+        )
+
     #     self.add_face_btn.clicked.connect(lambda: self._add_point("face"))
 
     # self.remove_last_btn.clicked.connect(self._remove_last_point)
@@ -69,11 +87,13 @@ class BrillouinZonePlotController(QObject):
         for key, item in list(self.bz_plot_items.items()):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
-
+        # Reset BZ data
+        self.bz_path = []
         self.unit_cell = self.unit_cells[uc_id]
         self.bz_vertices = []
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
+        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
 
         self.bz_plot_view.remove_last_btn.setEnabled(False)
         self.bz_plot_view.clear_path_btn.setEnabled(False)
@@ -98,58 +118,55 @@ class BrillouinZonePlotController(QObject):
         pass
 
         # Create the BZ wireframe by making edges (connect the vertices based on face data)
-
         self._create_bz_wireframe()
 
-    #     # Extract vertices and faces from the BZ data
-    #     # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
-    #     self.bz_point_lists["vertex"] = np.array(bz["bz_vertices"])
+        # Extract vertices and faces from the BZ data
+        # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
+        self.bz_point_lists["vertex"] = np.array(self.bz_vertices)
 
-    #     if self.dim == 2:
-    #         # Get the edge points
-    #         self.bz_point_lists["edge"] = []
-    #         for edge in bz["bz_faces"]:
-    #             # Midpoint of the edge
-    #             mid_point = np.mean(edge, axis=0)
-    #             self.bz_point_lists["edge"].append(mid_point)
-    #         self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
+        if self.dim == 2:
+            # Get the edge points
+            for edge in self.bz_faces:
+                # Midpoint of the edge
+                mid_point = np.mean(edge, axis=0)
+                self.bz_point_lists["edge"].append(mid_point)
+            self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
 
-    #     elif self.dim == 3:
-    #         # Get the edge and face points
-    #         self.bz_point_lists["edge"] = []
-    #         self.bz_point_lists["face"] = []
-    #         for face in bz["bz_faces"]:
-    #             for ii in range(len(face)):
-    #                 next_ii = (ii + 1) % len(face)
-    #                 # Midpoint of the edge
-    #                 mid_point = np.mean([face[ii], face[next_ii]], axis=0)
-    #                 self.bz_point_lists["edge"].append(mid_point)
+        elif self.dim == 3:
+            # Get the edge and face points
+            for face in self.bz_faces:
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)
+                    # Midpoint of the edge
+                    mid_point = np.mean([face[ii], face[next_ii]], axis=0)
+                    self.bz_point_lists["edge"].append(mid_point)
 
-    #             # Midpoint of the face
-    #             mid_point = np.mean(face, axis=0)
-    #             self.bz_point_lists["face"].append(mid_point)
-    #         self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
-    #         self.bz_point_lists["face"] = np.array(self.bz_point_lists["face"])
+                # Midpoint of the face
+                mid_point = np.mean(face, axis=0)
+                self.bz_point_lists["face"].append(mid_point)
+            self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
+            self.bz_point_lists["face"] = np.array(self.bz_point_lists["face"])
 
-    #     # Plot the BZ vertices as points
-    #     # Add Gamma point at origin
-    #     sphere = self._make_point()
-    #     self.view.addItem(sphere)
-    #     self.plot_items["Gamma"] = sphere
+        # Plot the BZ vertices as points
+        # Add Gamma point at origin
+        sphere = self._make_point()
 
-    #     # Plot points for vertices, edges, and faces
-    #     for typ, pt in self.bz_point_lists.items():
-    #         if len(pt) > 0:
-    #             pt_3d = self._pad_to_3d(pt)
-    #             self.selection[typ] = 0
-    #             for ii, p in enumerate(pt_3d):
-    #                 sphere = self._make_point()
-    #                 sphere.translate(p[0], p[1], p[2])
-    #                 self.view.addItem(sphere)
-    #                 self.plot_items[f"bz_{typ}_{ii}"] = sphere
-    #                 # Highlight the first point
-    #                 if ii == 0:
-    #                     sphere.setColor(self.selected_point_color)
+        self.bz_plot_view.view.addItem(sphere)
+        self.bz_plot_items["Gamma"] = sphere
+
+        # Plot points for vertices, edges, and faces
+        for typ, pt in self.bz_point_lists.items():
+            if len(pt) > 0:
+                pt_3d = self._pad_to_3d(pt)
+                self.bz_point_selection[typ] = 0
+                for ii, p in enumerate(pt_3d):
+                    sphere = self._make_point()
+                    sphere.translate(p[0], p[1], p[2])
+                    self.bz_plot_view.view.addItem(sphere)
+                    self.bz_plot_items[f"bz_{typ}_{ii}"] = sphere
+                    # Highlight the first point
+                    if ii == 0:
+                        sphere.setColor(self.bz_plot_view.selected_point_color)
 
     def _create_bz_wireframe(self):
         if len(self.bz_faces) > 0:
@@ -204,19 +221,39 @@ class BrillouinZonePlotController(QObject):
             return np.pad(points, ((0, 0), (0, pad_width)), mode="constant")
         return np.array(points)
 
+    def _select_point(self, step, typ):
 
-# def _clear_path(self):
-#     """Remove all points from the path."""
-#     self.bz_path = []
-#     # Remove path from the plot if it exists
-#     if "bz_path" in self.plot_items:
-#         self.view.removeItem(self.plot_items["bz_path"])
-#         del self.plot_items["bz_path"]
+        # Guard against empty vertex list
+        if len(self.bz_point_lists[typ]) == 0:
+            return
 
-#     # Disable the control buttons since the path is empty
-#     self.remove_last_btn.setEnabled(False)
-#     self.clear_path_btn.setEnabled(False)
-#     self.compute_bands_btn.setEnabled(False)
+        prev_point = self.bz_point_selection[typ]
+        # Update the selection index
+        if prev_point is None:
+            self.bz_point_selection[typ] = 0
+        else:
+            self.bz_point_selection[typ] = (prev_point + step) % len(
+                self.bz_point_lists[typ]
+            )
+            prev_key = f"bz_{typ}_{prev_point}"
+            self.bz_plot_items[prev_key].setColor(self.bz_plot_view.point_color)
+
+        new_key = f"bz_{typ}_{self.bz_point_selection[typ]}"
+        self.bz_plot_items[new_key].setColor(self.bz_plot_view.selected_point_color)
+
+    def _clear_path(self):
+        """Remove all points from the path."""
+        self.bz_path = []
+        # Remove path from the plot if it exists
+        if "bz_path" in self.bz_plot_items:
+            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
+            del self.bz_plot_items["bz_path"]
+
+        # Disable the control buttons since the path is empty
+        self.bz_plot_view.remove_last_btn.setEnabled(False)
+        self.bz_plot_view.clear_path_btn.setEnabled(False)
+        self.bz_plot_view.compute_bands_btn.setEnabled(False)
+
 
 # def _update_path_visualization(self):
 #     """
@@ -250,34 +287,6 @@ class BrillouinZonePlotController(QObject):
 #     self.view.addItem(path_object)
 #     self.plot_items["bz_path"] = path_object
 
-# def _select_point(self, step, typ):
-
-#     # Guard against empty vertex list
-#     if len(self.bz_point_lists[typ]) == 0:
-#         return
-
-#     prev_point = self.selection[typ]
-
-#     if prev_point is None:
-#         self.selection[typ] = 0
-#     else:
-#         self.selection[typ] = (prev_point + step) % len(self.bz_point_lists[typ])
-
-#     try:
-#         # Skip deselection if previous vertex wasn't valid
-#         if prev_point is not None and prev_point != self.selection[typ]:
-#             # Only try to deselect if the key exists
-#             prev_key = f"bz_{typ}_{prev_point}"
-#             if prev_key in self.plot_items:
-#                 self.plot_items[prev_key].setColor(self.point_color)
-
-#         # Only try to select if the key exists
-#         new_key = f"bz_{typ}_{self.selection[typ]}"
-#         if new_key in self.plot_items:
-#             # Select the new vertex
-#             self.plot_items[new_key].setColor(self.selected_point_color)
-#     except Exception as e:
-#         print(f"Error selecting {typ}: {e}")
 
 # def _add_point(self, point):
 #     """

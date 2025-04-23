@@ -131,10 +131,9 @@ class TiBiApplication:
             name=""
         )  # State data of the selected unit cell
 
-        self.models["bz"] = {
-            "bz_vertices": [],
-            "bz_faces": [],
-        }  # Coordinates of BZ vertices and points bounding the BZ faces for the selected unit cell
+        self.models["bz_path"] = (
+            []
+        )  # Path inside the BZ used to calculate the band structure
 
         # Set views
         self.views["uc"] = UnitCellView()
@@ -175,6 +174,7 @@ class TiBiApplication:
         self.controllers["bz_plot"] = BrillouinZonePlotController(
             self.models["unit_cells"],
             self.models["selection"],
+            self.models["bz_path"],
             self.models[
                 "unit_cell_data"
             ],  # Used to keep track of changes of the unit cell for redrawing the plot
