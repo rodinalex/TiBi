@@ -8,15 +8,7 @@ import pyqtgraph.opengl as gl
 
 import numpy as np
 
-# Initialize data
 
-
-#         self.unit_cell = None
-#         self.selected_site = None
-#         self.plot_items = {}  # Map to track mesh items for selection
-#         self.n1_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
-#         self.n2_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
-#         self.n3_spinner.valueChanged.connect(lambda: self.set_unit_cell(self.unit_cell))
 class UnitCellPlotController(QObject):
 
     def __init__(
@@ -35,9 +27,17 @@ class UnitCellPlotController(QObject):
         self.unit_cell_data = unit_cell_data
         self.site_data = site_data
         self.uc_plot_view = uc_plot_view
+
         # Connect Signals
+        # Signals to redraw the plot due to selections change/unit cell and site updates
+        self.selection.signals.updated.connect(self.set_unit_cell)
         self.unit_cell_data.signals.updated.connect(self.set_unit_cell)
         self.site_data.signals.updated.connect(self.set_unit_cell)
+
+        # Signals to update the plot when the spinners are changed
+        self.uc_plot_view.n1_spinner.valueChanged.connect(self.set_unit_cell)
+        self.uc_plot_view.n2_spinner.valueChanged.connect(self.set_unit_cell)
+        self.uc_plot_view.n3_spinner.valueChanged.connect(self.set_unit_cell)
 
     def set_unit_cell(self):
         """
@@ -133,12 +133,16 @@ class UnitCellPlotController(QObject):
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
             pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
-
+            sphere_color = (
+                self.uc_plot_view.selected_site_color
+                if site_id == self.selection["site"]
+                else self.uc_plot_view.site_color
+            )
             # Create a sphere for the site
             sphere = gl.GLMeshItem(
                 meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=0.1),
                 smooth=True,
-                color=self.uc_plot_view.site_color,
+                color=sphere_color,
                 shader="shaded",
             )
 
@@ -150,33 +154,6 @@ class UnitCellPlotController(QObject):
 
             self.uc_plot_view.view.addItem(sphere)
             self.uc_plot_items[f"site_{site_id}_{a1}_{a2}_{a3}"] = sphere
-
-    def select_site(self, site_id):
-        """
-        Highlight a selected site by changing its color.
-
-        This method is called when a site is selected, either from clicking on it
-        in the 3D view or from selecting it in the tree view. It changes the color
-        of the selected site to make it stand out and resets any previously selected
-        site back to the default color.
-
-        Args:
-            site_id: The UUID of the site to highlight, or None to deselect all sites
-        """
-        # Reset previously selected site to default color
-        if self.selected_site:
-            # Find all instances of the previously selected site across unit cells
-            for key, item in list(self.plot_items.items()):
-                if key.startswith(f"site_{self.selected_site}_"):
-                    item.setColor(self.site_color)
-
-        # Highlight new selected site with the highlight color
-        self.selected_site = site_id
-        if site_id:
-            # Find all instances of the newly selected site across unit cells
-            for key, item in list(self.plot_items.items()):
-                if key.startswith(f"site_{site_id}_"):
-                    item.setColor(self.selected_site_color)
 
     def _get_unit_cell_edges(self, a1, a2, a3):
         """
@@ -236,6 +213,5 @@ class UnitCellPlotController(QObject):
 
         return line_vertices
 
-    # def _on_spinner_changed(self):
-
-    #     self.set_unit_cell(self.unit_cell)
+    def _on_spinner_changed(self):
+        self.set_unit_cell(self.unit_cell)

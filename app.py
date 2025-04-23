@@ -106,7 +106,7 @@ class TiBiApplication:
         )  # UUID's of the selected unit cell, site, and state
 
         self.models["unit_cell_data"] = DataModel(
-            name="New Unit Cell",
+            name="",
             v1x=1.0,
             v1y=0.0,
             v1z=0.0,
@@ -122,11 +122,11 @@ class TiBiApplication:
         )  # Unit cell data of the selected unit cell
 
         self.models["site_data"] = DataModel(
-            name="New Site", c1=0.0, c2=0.0, c3=0.0
+            name="", c1=0.0, c2=0.0, c3=0.0
         )  # Site data of the selected unit cell
 
         self.models["state_data"] = DataModel(
-            name="New State"
+            name=""
         )  # State data of the selected unit cell
 
         self.models["bz"] = {
