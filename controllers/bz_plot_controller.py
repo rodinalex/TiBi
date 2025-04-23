@@ -9,6 +9,19 @@ import numpy as np
 
 
 class BrillouinZonePlotController(QObject):
+    """
+    Controller for the Brillouin zone plot view.
+    
+    This controller manages the 3D visualization of the Brillouin zone and
+    provides functionality for selecting points within the BZ and creating paths
+    for band structure calculations. It observes the unit cell data model and
+    updates the visualization whenever the unit cell changes.
+    
+    The controller also handles the creation of k-paths (sequences of k-points
+    in reciprocal space) that can be used for band structure calculations. When
+    a path is complete, it can emit a signal requesting band structure computation.
+    """
+    
     # A signal for band calculation requests
     compute_bands_request = Signal(object, int)  # (path, n_points)
 
@@ -19,7 +32,15 @@ class BrillouinZonePlotController(QObject):
         unit_cell_data: DataModel,
         bz_plot_view: BrillouinZonePlotView,
     ):
-
+        """
+        Initialize the Brillouin zone plot controller.
+        
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Model tracking the currently selected unit cell, site, and state
+            unit_cell_data: Model containing the properties of the selected unit cell
+            bz_plot_view: The view component for displaying the Brillouin zone
+        """
         super().__init__()
 
         self.unit_cells = unit_cells
@@ -85,6 +106,14 @@ class BrillouinZonePlotController(QObject):
         )
 
     def _update_schedule(self):
+        """
+        Schedule an update of the Brillouin zone visualization.
+        
+        This method prevents redundant updates by using a flag to track whether
+        an update is already in progress. This is important because updates can be
+        triggered by multiple signals firing in sequence (e.g., selection changes
+        and unit cell data changes).
+        """
         if self._updating:
             return
         self._updating = True
@@ -93,7 +122,17 @@ class BrillouinZonePlotController(QObject):
         self._updating = False
 
     def _update_brillouin_zone(self):
-
+        """
+        Update the Brillouin zone visualization based on the current unit cell.
+        
+        This method is the core rendering function that:  
+        1. Clears any existing visualization
+        2. Calculates the Brillouin zone vertices and faces
+        3. Renders the BZ wireframe and key points (Gamma, vertices, edge midpoints, face centers)
+        4. Updates UI controls based on the dimensionality of the BZ
+        
+        The method is triggered whenever the unit cell changes or a new unit cell is selected.
+        """
         uc_id = self.selection.get("unit_cell")
         # Clear previous plot items except axes and grid
         for key, item in list(self.bz_plot_items.items()):
@@ -181,6 +220,16 @@ class BrillouinZonePlotController(QObject):
                         sphere.setColor(self.bz_plot_view.selected_point_color)
 
     def _create_bz_wireframe(self):
+        """
+        Create a wireframe visualization of the Brillouin zone.
+        
+        This method extracts edges from the Brillouin zone faces and creates a
+        GLLinePlotItem to visualize them. The wireframe helps users understand
+        the shape and boundaries of the Brillouin zone in reciprocal space.
+        
+        For 2D BZ, the wireframe is a polygon outline.
+        For 3D BZ, the wireframe is the edges of the polyhedron.
+        """
         if len(self.bz_faces) > 0:
             # Process faces to extract unique edges
             all_edges = []
@@ -234,7 +283,17 @@ class BrillouinZonePlotController(QObject):
         return np.array(points)
 
     def _select_point(self, step, typ):
-
+        """
+        Select a point in the Brillouin zone based on its type and step direction.
+        
+        This method implements the navigation through different types of points in the BZ
+        (vertices, edge midpoints, or face centers). It updates the visual highlighting
+        to show which point is currently selected, and maintains the selection state.
+        
+        Args:
+            step: Direction to move in the selection (+1 for next, -1 for previous)
+            typ: Type of point to select ('vertex', 'edge', or 'face')
+        """
         # Guard against empty vertex list
         if len(self.bz_point_lists[typ]) == 0:
             return
@@ -269,6 +328,13 @@ class BrillouinZonePlotController(QObject):
     def _update_path_visualization(self):
         """
         Update the visualization of the BZ path based on current path points.
+        
+        This method creates or updates the visual representation of the k-path in
+        the Brillouin zone. The path is shown as a series of connected line segments
+        between the selected k-points. The visualization helps users understand
+        the path along which the band structure will be calculated.
+        
+        If the path has fewer than 2 points, no visualization is created.
         """
         # Remove existing path visualization if it exists
         if "bz_path" in self.bz_plot_items:
@@ -298,6 +364,14 @@ class BrillouinZonePlotController(QObject):
     def _add_point(self, point):
         """
         Add a selected point to the Brillouin zone path.
+
+        This method adds the currently selected point (of the specified type) to the
+        Brillouin zone path. The path is a sequence of k-points that will be used
+        for band structure calculations. Points can be the origin (Gamma), vertices,
+        edge midpoints, or face centers depending on the dimensionality of the BZ.
+        
+        After adding a point, the path visualization is updated and the relevant
+        UI controls are enabled/disabled based on the new path state.
 
         Args:
             point: The type of point to add ("gamma", "vertex", "edge", or "face")

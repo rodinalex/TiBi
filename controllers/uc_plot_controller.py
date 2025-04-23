@@ -10,6 +10,23 @@ import numpy as np
 
 
 class UnitCellPlotController(QObject):
+    """
+    Controller for the unit cell 3D visualization.
+    
+    This controller manages the 3D visualization of unit cells, handling the
+    rendering of unit cell wireframes, site positions, and periodic repetitions.
+    It observes changes to the selected unit cell and its properties, updating
+    the visualization in response to any modifications.
+    
+    The controller provides functionality for:
+    1. Visualizing the unit cell as a wireframe parallelepiped
+    2. Displaying sites (atoms) as colored spheres
+    3. Showing multiple periodic repetitions of the unit cell
+    4. Highlighting selected sites
+    
+    The visualization updates reactively when the unit cell data changes
+    or when the user adjusts the number of periodic repetitions via spinners.
+    """
 
     def __init__(
         self,
@@ -19,6 +36,16 @@ class UnitCellPlotController(QObject):
         site_data: DataModel,
         uc_plot_view: UnitCellPlotView,
     ):
+        """
+        Initialize the unit cell plot controller.
+        
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Model tracking the currently selected unit cell, site, and state
+            unit_cell_data: Model containing the properties of the selected unit cell
+            site_data: Model containing the properties of the selected site
+            uc_plot_view: The view component for the 3D visualization
+        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
@@ -45,6 +72,14 @@ class UnitCellPlotController(QObject):
         self.uc_plot_view.n3_spinner.valueChanged.connect(self._update_unit_cell)
 
     def _update_schedule(self):
+        """
+        Schedule an update of the unit cell visualization.
+        
+        This method prevents redundant updates by using a flag to track whether
+        an update is already in progress. This is important because updates can be
+        triggered by multiple signals firing in sequence (e.g., selection changes,
+        unit cell data changes, and site data changes).
+        """
         if self._updating:
             return
         self._updating = True

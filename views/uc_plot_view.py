@@ -21,6 +21,18 @@ class UnitCellPlotView(QWidget):
     Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
     The visualization supports rotation, zooming, and site selection. The coordinate
     system shows the unit cell basis vectors and a reference grid.
+    
+    Features:
+    - Interactive 3D visualization with mouse rotation and zooming
+    - Colored axes representing the Cartesian coordinate system
+    - Unit cell visualization with wireframe parallelepiped
+    - Sites displayed as colored spheres at their fractional positions
+    - Selected sites highlighted with a different color
+    - Controls for displaying periodic repetitions of the unit cell
+    
+    This view is purely presentational and contains no business logic,
+    following the MVC pattern. The controller is responsible for updating
+    the visualization based on model changes.
     """
 
     # Signals for interacting with other components

@@ -14,6 +14,22 @@ import numpy as np
 
 
 class HoppingController(QObject):
+    """
+    Controller for the hopping parameter interface.
+    
+    This controller manages the creation and editing of hopping parameters
+    (tight-binding matrix elements) between quantum states. It handles:
+    
+    1. The interactive matrix grid where each button represents a possible
+       hopping between two states
+    2. The detailed parameter table for editing specific hopping values
+    3. The right-click context menu for performing operations like creating
+       Hermitian partners
+    
+    The controller maintains the connection between the visual representation
+    and the underlying data model, ensuring that changes in the UI are properly
+    reflected in the unit cell's hopping parameters.
+    """
 
     # Signal emitted when a button is clicked, carrying the source and destination state info
     # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
@@ -29,7 +45,14 @@ class HoppingController(QObject):
         selection: DataModel,
         hopping_view: HoppingView,
     ):
-
+        """
+        Initialize the hopping controller.
+        
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Model tracking the currently selected unit cell, site, and state
+            hopping_view: The view component for displaying and editing hopping parameters
+        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
