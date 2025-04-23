@@ -27,21 +27,29 @@ class HoppingController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        hopping_data: DataModel,
-        state_info,
-        pair_selection,
-        state_coupling,
         hopping_view: HoppingView,
     ):
 
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
-        self.hopping_data = hopping_data
-        self.state_info = state_info
-        self.pair_selection = pair_selection
-        self.state_coupling = state_coupling
         self.hopping_view = hopping_view
+
+        # Internal controller state
+        self.state_info = (
+            []
+        )  # Tuples of (site_name, state_name, state_id) for the states in the selected unit cell
+        self.pair_selection = [
+            None,
+            None,
+        ]  # Selected pair of states in the hopping matrix.
+        self.state_coupling = (
+            []
+        )  # List of couplings list[Tuple[int, int, int], np.complex128]
+        self.hopping_data = (
+            DataModel()
+        )  # A dictionary of hoppings for the selected unit cell.
+        # The keys are Tuple[uuid, uuid] and the values are list[Tuple[int, int, int], np.complex128]
 
         # Connect Signals
         self.selection.signals.updated.connect(self.set_unit_cell)

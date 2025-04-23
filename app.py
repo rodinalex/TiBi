@@ -134,27 +134,6 @@ class TiBiApplication:
             "bz_faces": [],
         }  # Coordinates of BZ vertices and points bounding the BZ faces for the selected unit cell
 
-        self.models["hopping_data"] = (
-            DataModel()
-        )  # A dictionary of hoppings for the selected unit cell.
-        # The keys are Tuple[uuid, uuid] and the values are list[Tuple[int, int, int], np.complex128]
-
-        self.models["state_info"] = (
-            []
-        )  # Tuples of (site_name, state_name, state_id) for the states in the selected unit cell
-
-        self.models["pair_selection"] = [
-            None,
-            None,
-        ]  # Selected pair of states in the hopping matrix.
-        self.models["state_coupling"] = (
-            []
-        )  # List of couplings list[Tuple[int, int, int], np.complex128]
-
-        self.models["uc_plot_items"] = (
-            {}
-        )  # Dictionary to store plot items for the unit cell in the 3D view
-
         # Set views
         self.views["uc"] = UnitCellView()
         self.views["hopping"] = HoppingView()
@@ -175,17 +154,12 @@ class TiBiApplication:
         self.controllers["hopping"] = HoppingController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["hopping_data"],
-            self.models["state_info"],
-            self.models["pair_selection"],
-            self.models["state_coupling"],
             self.views["hopping"],
         )
 
         self.controllers["uc_plot"] = UnitCellPlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["uc_plot_items"],
             self.models[
                 "unit_cell_data"
             ],  # Used to keep track of changes of the unit cell for redrawing the plot

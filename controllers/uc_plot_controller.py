@@ -15,7 +15,6 @@ class UnitCellPlotController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        uc_plot_items,
         unit_cell_data: DataModel,
         site_data: DataModel,
         uc_plot_view: UnitCellPlotView,
@@ -23,10 +22,13 @@ class UnitCellPlotController(QObject):
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
-        self.uc_plot_items = uc_plot_items
         self.unit_cell_data = unit_cell_data
         self.site_data = site_data
         self.uc_plot_view = uc_plot_view
+
+        # Internal controller state
+        self.unit_cell = None
+        self.uc_plot_items = {}  # Dictionary to store plot items
 
         # Flag to prevent redundant redraws during cascading signal updates
         self._updating = False
