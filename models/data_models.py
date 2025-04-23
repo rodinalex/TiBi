@@ -74,3 +74,28 @@ class DataModel(UserDict):
         # Only emit the signal once, and only if something actually changed
         if changed:
             self.signals.updated.emit()
+
+
+class AlwaysNotifyDataModel(UserDict):
+    """
+    A variant of DataModel that always emits signals on updates.
+
+    This is particularly useful for array data or complex objects where
+    equality comparison is expensive or unreliable.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.signals = DataModelSignals()
+        self._updating = False  # Flag to track update operation
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, key, val):
+        super().__setitem__(key, val)
+        if not self._updating:  # Only emit if not in the middle of an update
+            self.signals.updated.emit()
+
+    def update(self, d):
+        self._updating = True  # Start update operation
+        super().update(d)
+        self._updating = False  # End update operation
+        self.signals.updated.emit()  # Emit once after all updates

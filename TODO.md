@@ -1,36 +1,12 @@
 # TiBiPy Project Roadmap
 
-## Layout
-
-In the present version, the GUI consists of 3 columns
-- The left column focuses on the system generation
-  - The top panel shows a collapsable tree composed of unit cells, their child sites, and their child states.
-    The nodes of the trees are highlightable. There should be a create new unit cell button somewhere (not sure where)
-  - The second panel consists of the fields describing the nodes of the tree. E.g., basis vectors and the name
-    for the unit cell, coordinates and the name for the site, energy and the name for the state. The type of the form
-    shown in this panel changes depending which node type is selected in the tree. The panel also contains a delete button
-    that asks for a confirmation before the node and its children are deleted from the tree. The tree should always
-    reflect the current state of the system.
-  - The last panel is reserved for something else for now, not sure what
-
-
-- Middle column for visualization and (potentially) hopping parameter setting
-  - The top panel shows an interactive 3D unit cell plot with selectable sites (✅ IMPLEMENTED)
-  - The bottom focuses on setting up the hopping parameters. 
-- Right column for computation options and input. The panels will be decided on and implemented later
 
 ## Immediate Tasks
 
 
-- ✅ Add the interactive plot that would take the selected unit cell and plot it in 3D. The plot should 
-include the unit cell as a parallelepiped, as well as any of the sites found inside of it
-- ✅ Make it possible to show multiple unit cells along the periodic directions
-- ✅ Instead of clicking on "Save" button when editing UC fields, fire Save when the user finishes editing the field
-
 ## Reminders
 - Hamiltonian function with momenta along the reciprocal lattice directions
 - Check that the volume of the unit cell is non-zero
-- Fix the redundant redrawing in app.py when a new item is selected in the tree. This leads to two model updates that also trigger the redrawing of the plot
 - MAYBE: add point group information
 - Figure out how to help the user distinguish between different sites: for now they all look the same
 - Make BZ path selection context-based (that a BZ exists in the first place)
@@ -38,8 +14,14 @@ include the unit cell as a parallelepiped, as well as any of the sites found ins
 * Buttons
 * Colors
 - Add bandstructure plot
+- When creating a UC, we occasionally have problematic vectors DURING THE CREATION leading to runtime warnings (parallel vectors, zero volume, etc).
 ## Daily Plan
 - Add path-construction option using the selection
+
+## Tree structure
+- update_tree_item, remove_tree_item, select_item, and find_item_by_id have some redundancy: can make more streamlined
+
+## Function calls 
 
 
 ## Bugs

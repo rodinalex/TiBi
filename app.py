@@ -1,51 +1,56 @@
 import sys
-
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QLabel,
 )
-from ui.uc_plot import UnitCellPlot
-from ui.bz_plot import BrillouinZonePlot
-from ui.uc import UnitCellUI
-from ui.hopping import HoppingPanel
-from ui.placeholder import PlaceholderWidget
+
+from views.placeholder import PlaceholderWidget
+from views.bands_plot_view import BandStructurePlotView
+from views.bz_plot_view import BrillouinZonePlotView
+from views.hopping_view import HoppingView
+from views.uc_view import UnitCellView
+from views.uc_plot_view import UnitCellPlotView
+
+from controllers.app_controller import AppController
+from controllers.bands_plot_controller import BandStructurePlotController
+from controllers.bz_plot_controller import BrillouinZonePlotController
+from controllers.hopping_controller import HoppingController
+from controllers.uc_controller import UnitCellController
+from controllers.uc_plot_controller import UnitCellPlotController
+from controllers.computation_controller import ComputationController
+
+from models.data_models import DataModel, AlwaysNotifyDataModel
 
 
 class MainWindow(QMainWindow):
     """
-    Main application window that sets up the overall UI layout and coordinates interactions
-    between different components.
+    Main application window that defines the UI layout.
 
-    The layout consists of three columns:
-    - Left column: Unit cell hierarchy tree view and property panels
-    - Middle column: 3D visualization and hopping matrix
-    - Right column: Computation options (placeholder for future functionality)
+    This class is purely a view component that arranges the UI elements and
+    doesn't contain business logic or model manipulation.
     """
 
-    def __init__(self):
+    def __init__(self, uc, hopping, uc_plot, bz_plot, band_plot):
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1200, 900))
+        self.setFixedSize(QSize(1500, 900))
 
-        # Initialize UI panels
-        self.uc = UnitCellUI()
-
-        # Initialize the plots
-        self.unit_cell_plot = UnitCellPlot()
-        self.bz_plot = BrillouinZonePlot()
-
-        # Initialize the hopping panel
-        self.hopping = HoppingPanel(self.uc.unit_cells)
+        # Store references to UI components
+        self.uc = uc
+        self.hopping = hopping
+        self.uc_plot = uc_plot
+        self.bz_plot = bz_plot
+        self.band_plot = band_plot
 
         # Main Layout
         main_view = QWidget()
         main_layout = QHBoxLayout(main_view)
 
+        # Create three column layouts
         left_layout = QVBoxLayout()
         mid_layout = QVBoxLayout()
         right_layout = QVBoxLayout()
@@ -55,82 +60,159 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.hopping, stretch=2)
 
         # 3D visualization for the unit cell
-        mid_layout.addWidget(self.unit_cell_plot, stretch=2)
+        mid_layout.addWidget(self.uc_plot, stretch=1)
         mid_layout.addWidget(self.bz_plot, stretch=1)
-        mid_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        mid_layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
 
-        # Connect signals to update the plot after tree selection
-        self.uc.selection.signals.updated.connect(self.update_plot)
-        self.uc.selection.signals.updated.connect(self.update_BZ)
-        # Connect signals to update the plot after the model for the unit cell or site changes
-        self.uc.unit_cell_model.signals.updated.connect(self.update_plot)
-        self.uc.unit_cell_model.signals.updated.connect(self.update_BZ)
-        self.uc.site_model.signals.updated.connect(self.update_plot)
-        # Notify the hopping block when the selection changes
-        self.uc.selection.signals.updated.connect(
-            lambda: self.hopping.set_uc_id(self.uc.selection["unit_cell"])
-        )
+        # Right column for computation options and band structure
+        right_layout.addWidget(self.band_plot, stretch=1)
+        right_layout.addWidget(PlaceholderWidget("BAND"), stretch=1)
 
-        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
-        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
-        right_layout.addWidget(PlaceholderWidget("Computation Options"), stretch=1)
+        # Add the columns to the main layout
+        main_layout.addLayout(left_layout, stretch=1)
+        main_layout.addLayout(mid_layout, stretch=2)
+        main_layout.addLayout(right_layout, stretch=2)
 
-        main_layout.addLayout(left_layout, stretch=3)
-        main_layout.addLayout(mid_layout, stretch=5)
-        main_layout.addLayout(right_layout, stretch=3)
-
+        # Set as central widget
         self.setCentralWidget(main_view)
 
-    def update_plot(self):
-        """
-        Update the 3D plot with the selected unit cell.
-        Highlight the selected site in the 3D plot.
 
-        This method is called after a selection in the tree view.
-        It first updates the plot to show the correct unit cell, then tells
-        the plot to highlight the specific site with a different color.
+class TiBiApplication:
+    """
+    Main application class that initializes and connects all components.
 
-        Args:
-            unit_cell_id: UUID of the unit cell containing the site
-            site_id: UUID of the site to highlight
-            state: UUID of the state from the state selection signal
-        """
-        unit_cell_id = self.uc.selection.get("unit_cell", None)
-        site_id = self.uc.selection.get("site", None)
-        if unit_cell_id in self.uc.unit_cells:
-            unit_cell = self.uc.unit_cells[unit_cell_id]
-            self.unit_cell_plot.set_unit_cell(unit_cell)
-        else:
-            # Clear the plot if unit cell doesn't exist
-            self.unit_cell_plot.set_unit_cell(None)
+    This class is responsible for:
+    1. Creating models
+    2. Creating views
+    3. Creating controllers
+    4. Connecting everything together
+    5. Starting the application
+    """
 
-        try:
-            # Always call select_site, even with None, to ensure proper highlighting
-            self.unit_cell_plot.select_site(site_id)
-        except Exception as e:
-            print(f"Error highlighting site: {e}")
+    def __init__(self):
+        """Initialize the application without creating components yet."""
+        # Create the Qt application
+        self.app = QApplication(sys.argv)
 
-    def update_BZ(self):
-        """
-        Update the Brillouin zone visualization with data from the selected unit cell.
+        # References to components
+        self.models = {}
+        self.views = {}
+        self.controllers = {}
+        self.main_window = None
 
-        This method retrieves BZ vertices and faces from the selected unit cell,
-        stores them in the data model, and passes them to both BZ plots for visualization.
-        """
-        try:
-            uc = self.uc.unit_cells[self.uc.selection["unit_cell"]]
-            bz_vertices, bz_faces = uc.get_BZ()
-            self.uc.bz["bz_vertices"] = bz_vertices
-            self.uc.bz["bz_faces"] = bz_faces
+        # Set models
+        self.models["unit_cells"] = {}  # Dictionary of unit cells by UUID
 
-            # Pass BZ data to both plot widgets for visualization
-            self.bz_plot.set_BZ(self.uc.bz)
-        except Exception as e:
-            print(f"Error updating Brillouin zone: {e}")
+        self.models["selection"] = DataModel(
+            unit_cell=None, site=None, state=None
+        )  # UUID's of the selected unit cell, site, and state
+
+        self.models["unit_cell_data"] = DataModel(
+            name="",
+            v1x=1.0,
+            v1y=0.0,
+            v1z=0.0,
+            v2x=0.0,
+            v2y=1.0,
+            v2z=0.0,
+            v3x=0.0,
+            v3y=0.0,
+            v3z=1.0,
+            v1periodic=False,
+            v2periodic=False,
+            v3periodic=False,
+        )  # Unit cell data of the selected unit cell
+
+        self.models["site_data"] = DataModel(
+            name="", c1=0.0, c2=0.0, c3=0.0
+        )  # Site data of the selected unit cell
+
+        self.models["state_data"] = DataModel(
+            name=""
+        )  # State data of the selected unit cell
+
+        self.models["band_structure"] = AlwaysNotifyDataModel(
+            k_path=None, bands=None, special_points=None
+        )  # Band structure data. Special points are the high symmetry points obtained from the Brillouin zone
+
+        # Set views
+        self.views["uc"] = UnitCellView()
+        self.views["hopping"] = HoppingView()
+        self.views["uc_plot"] = UnitCellPlotView()
+        self.views["bz_plot"] = BrillouinZonePlotView()
+        self.views["band_plot"] = BandStructurePlotView()
+
+        # Set controllers
+
+        self.controllers["uc"] = UnitCellController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models["unit_cell_data"],
+            self.models["site_data"],
+            self.models["state_data"],
+            self.views["uc"],
+        )
+
+        self.controllers["hopping"] = HoppingController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.views["hopping"],
+        )
+
+        self.controllers["uc_plot"] = UnitCellPlotController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models[
+                "unit_cell_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.models[
+                "site_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.views["uc_plot"],
+        )
+
+        self.controllers["bz_plot"] = BrillouinZonePlotController(
+            self.models["unit_cells"],
+            self.models["selection"],
+            self.models[
+                "unit_cell_data"
+            ],  # Used to keep track of changes of the unit cell for redrawing the plot
+            self.views["bz_plot"],
+        )
+
+        self.controllers["band_plot"] = BandStructurePlotController(
+            self.models["band_structure"], self.views["band_plot"]
+        )
+
+        self.controllers["computation"] = ComputationController(
+            self.models["band_structure"]
+        )
+
+        # Initialize the main window
+        self.main_window = MainWindow(
+            self.views["uc"],
+            self.views["hopping"],
+            self.views["uc_plot"],
+            self.views["bz_plot"],
+            self.views["band_plot"],
+        )
+        # Initialize the AppController
+        self.app_controller = AppController(self.models, self.controllers)
+
+    def run(self):
+        """Run the application."""
+        self.main_window.show()
+        return self.app.exec()
 
 
-app = QApplication(sys.argv)
-window = MainWindow()
+def main():
+    """Application entry point."""
+    # Create and initialize the application
+    app = TiBiApplication()
 
-window.show()
-app.exec()
+    # Run the application
+    return app.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

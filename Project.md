@@ -24,12 +24,3 @@ a very large supercell, the user will be able to create defects by modifying loc
 
 The types of calculations that the user will be able to perform will be expanded as the project progresses.
 
-
-<!-- # CF_red = colorant"rgba(204, 121, 167, 1.0)"
-# CF_vermillion = colorant"rgba(213, 94, 0, 1.0)"
-# CF_orange = colorant"rgba(230, 159, 0, 1.0)"
-# CF_yellow = colorant"rgba(240, 228, 66, 1.0)"
-# CF_green = colorant"rgba(0, 158, 115, 1.0)"
-# CF_sky = colorant"rgba(86, 180, 233, 1.0)"
-# CF_blue = colorant"rgba(0, 114, 178, 1.0)"
-# CF_black = colorant"rgba(100, 100, 100, 1.0)" -->
