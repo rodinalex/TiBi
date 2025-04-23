@@ -89,10 +89,10 @@ class BrillouinZonePlotController(QObject):
             return
         self._updating = True
         # Schedule the update to happen after all signals are processed
-        self.set_brillouin_zone()
+        self._update_brillouin_zone()
         self._updating = False
 
-    def set_brillouin_zone(self):
+    def _update_brillouin_zone(self):
 
         uc_id = self.selection.get("unit_cell")
         # Clear previous plot items except axes and grid

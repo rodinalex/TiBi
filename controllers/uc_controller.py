@@ -62,28 +62,28 @@ class UnitCellController(QObject):
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
         # Rebuild the tree view from scratch in the beginning
-        self.refresh_tree()
+        self._refresh_tree()
 
         # Sync UI with data models
-        self.update_unit_cell_ui()
-        self.update_site_ui()
+        self._update_unit_cell_ui()
+        self._update_site_ui()
 
         # Connect signals
 
         # Tree view signals
         self.unit_cell_view.tree_view_panel.tree_view.selectionModel().selectionChanged.connect(
-            self.on_selection_changed
+            self._on_selection_changed
         )
         self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
-            self.on_item_changed
+            self._on_item_changed
         )
-        self.unit_cell_view.tree_view_panel.delete.connect(self.delete_item)
+        self.unit_cell_view.tree_view_panel.delete.connect(self._delete_item)
 
         # Unit Cell panel signals
         def connect_vector_fields(vector_name, spinboxes):
             for ii, axis in enumerate("xyz"):
                 spinboxes[ii].editingFinished.connect(
-                    lambda ii=ii, axis=axis: self.update_unit_cell_data(
+                    lambda ii=ii, axis=axis: self._update_unit_cell_data(
                         f"{vector_name}{axis}", spinboxes[ii].value()
                     )
                 )
@@ -95,43 +95,43 @@ class UnitCellController(QObject):
         # Site panel signals
 
         self.c1.editingFinished.connect(
-            lambda: self.update_site_data("c1", self.c1.value())
+            lambda: self._update_site_data("c1", self.c1.value())
         )
         self.c2.editingFinished.connect(
-            lambda: self.update_site_data("c2", self.c2.value())
+            lambda: self._update_site_data("c2", self.c2.value())
         )
         self.c3.editingFinished.connect(
-            lambda: self.update_site_data("c3", self.c3.value())
+            lambda: self._update_site_data("c3", self.c3.value())
         )
 
         # Dimensionality radio buttons
-        self.unit_cell_view.radio0D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_view.radio1D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_view.radio2D.toggled.connect(self.dimensionality_change)
-        self.unit_cell_view.radio3D.toggled.connect(self.dimensionality_change)
+        self.unit_cell_view.radio0D.toggled.connect(self._dimensionality_change)
+        self.unit_cell_view.radio1D.toggled.connect(self._dimensionality_change)
+        self.unit_cell_view.radio2D.toggled.connect(self._dimensionality_change)
+        self.unit_cell_view.radio3D.toggled.connect(self._dimensionality_change)
 
         # Button panel signals
-        self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self.add_unit_cell)
-        self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self.add_site)
-        self.unit_cell_view.button_panel.new_state_btn.clicked.connect(self.add_state)
-        self.unit_cell_view.button_panel.delete_btn.clicked.connect(self.delete_item)
+        self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self._add_unit_cell)
+        self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self._add_site)
+        self.unit_cell_view.button_panel.new_state_btn.clicked.connect(self._add_state)
+        self.unit_cell_view.button_panel.delete_btn.clicked.connect(self._delete_item)
         self.unit_cell_view.button_panel.reduce_btn.clicked.connect(
-            self.reduce_uc_basis
+            self._reduce_uc_basis
         )
         # Selection change
-        self.selection.signals.updated.connect(self.show_panels)
+        self.selection.signals.updated.connect(self._show_panels)
 
         # When model changes, update UI
-        self.unit_cell_data.signals.updated.connect(self.update_unit_cell_ui)
-        self.site_data.signals.updated.connect(self.update_site_ui)
+        self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
+        self.site_data.signals.updated.connect(self._update_site_ui)
 
         # Save data whenever the models register an update
-        self.unit_cell_data.signals.updated.connect(self.save_unit_cell)
-        self.site_data.signals.updated.connect(self.save_site)
-        self.state_data.signals.updated.connect(self.save_state)
+        self.unit_cell_data.signals.updated.connect(self._save_unit_cell)
+        self.site_data.signals.updated.connect(self._save_site)
+        self.state_data.signals.updated.connect(self._save_state)
 
     # Tree Navigation Functions
-    def refresh_tree(self):
+    def _refresh_tree(self):
         """
         Rebuild the entire tree from the current data model.
 
@@ -143,7 +143,7 @@ class UnitCellController(QObject):
         as user data, allowing for easy retrieval during selection events.
 
         Note: For better performance, prefer the more specific update methods:
-        - update_tree_item()
+        - _update_tree_item()
         - remove_tree_ite ()
         """
         self.unit_cell_view.tree_view_panel.tree_model.clear()
@@ -153,26 +153,26 @@ class UnitCellController(QObject):
 
         # Add unit cells
         for uc_id, unit_cell in self.unit_cells.items():
-            unit_cell_item = self.create_tree_item(
+            unit_cell_item = self._create_tree_item(
                 unit_cell, item_type="unit_cell", item_id=uc_id
             )
             self.root_node.appendRow(unit_cell_item)
 
             # Add sites for this unit cell
             for site_id, site in unit_cell.sites.items():
-                site_item = self.create_tree_item(
+                site_item = self._create_tree_item(
                     site, item_type="site", item_id=site_id
                 )
                 unit_cell_item.appendRow(site_item)
 
                 # Add states for this site
                 for state_id, state in site.states.items():
-                    state_item = self.create_tree_item(
+                    state_item = self._create_tree_item(
                         state, item_type="state", item_id=state_id
                     )
                     site_item.appendRow(state_item)
 
-    def find_item_by_id(self, item_id, item_type, parent_id=None, grandparent_id=None):
+    def _find_item_by_id(self, item_id, item_type, parent_id=None, grandparent_id=None):
         """
         Find a tree item by its ID and type.
 
@@ -188,16 +188,16 @@ class UnitCellController(QObject):
         if item_type == "unit_cell":
             parent = self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
         elif item_type == "site":
-            parent = self.find_item_by_id(parent_id, "unit_cell")
+            parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
-            parent = self.find_item_by_id(parent_id, "site", grandparent_id)
+            parent = self._find_item_by_id(parent_id, "site", grandparent_id)
 
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
                 return item
 
-    def update_tree_item(self, uc_id, site_id=None, state_id=None):
+    def _update_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Update or add a tree item without rebuilding the entire tree.
 
@@ -208,20 +208,20 @@ class UnitCellController(QObject):
         """
         if state_id is not None:  # Adding/updating a state
             # Get the parent site
-            parent = self.find_item_by_id(site_id, "site", uc_id)
+            parent = self._find_item_by_id(site_id, "site", uc_id)
             # Assign the meta data for the state
             item_type, item_id = "state", state_id
             # Find the item in the tree
-            item = self.find_item_by_id(state_id, item_type, site_id, uc_id)
+            item = self._find_item_by_id(state_id, item_type, site_id, uc_id)
             # Get the state object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id].states[state_id]
         elif site_id is not None:  # Adding/updating a site
             # Get the parent unit cell
-            parent = self.find_item_by_id(uc_id, "unit_cell")
+            parent = self._find_item_by_id(uc_id, "unit_cell")
             # Assign the meta data for the site
             item_type, item_id = "site", site_id
             # Find the item in the tree
-            item = self.find_item_by_id(site_id, item_type, uc_id)
+            item = self._find_item_by_id(site_id, item_type, uc_id)
             # Get the site object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id]
         else:  # Adding/updating a unit cell
@@ -230,7 +230,7 @@ class UnitCellController(QObject):
             # Assign the meta data for the unit cell
             item_type, item_id = "unit_cell", uc_id
             # Find the item in the tree
-            item = self.find_item_by_id(uc_id, item_type)
+            item = self._find_item_by_id(uc_id, item_type)
             # Get the unit cell object from the unit cell list
             data = self.unit_cells[uc_id]
 
@@ -238,10 +238,10 @@ class UnitCellController(QObject):
             item.setText(data.name)
             item.setData(data, Qt.UserRole)
         else:  # Otherwise, create a new item and insert it into the tree
-            item = self.create_tree_item(data, item_type=item_type, item_id=item_id)
+            item = self._create_tree_item(data, item_type=item_type, item_id=item_id)
             parent.appendRow(item)
 
-    def remove_tree_item(self, uc_id, site_id=None, state_id=None):
+    def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Remove an item from the tree.
 
@@ -251,18 +251,18 @@ class UnitCellController(QObject):
             state_id: UUID of the state to remove
         """
         if state_id is not None:  # Removing a state
-            parent = self.find_item_by_id(site_id, "site", uc_id)
-            item = self.find_item_by_id(state_id, "state", site_id, uc_id)
+            parent = self._find_item_by_id(site_id, "site", uc_id)
+            item = self._find_item_by_id(state_id, "state", site_id, uc_id)
         elif site_id is not None:  # Removing a site
-            parent = self.find_item_by_id(uc_id, "unit_cell")
-            item = self.find_item_by_id(site_id, "site", uc_id)
+            parent = self._find_item_by_id(uc_id, "unit_cell")
+            item = self._find_item_by_id(site_id, "site", uc_id)
         else:  # Removing a unit cell
             parent = self.root_node
-            item = self.find_item_by_id(uc_id, "unit_cell")
+            item = self._find_item_by_id(uc_id, "unit_cell")
 
         parent.removeRow(item.row())
 
-    def create_tree_item(self, item, item_type, item_id):
+    def _create_tree_item(self, item, item_type, item_id):
         """Create a QStandardItem for tree with metadata"""
         tree_item = QStandardItem(item.name)
         tree_item.setData(item, Qt.UserRole)  # Store the actual data object
@@ -275,7 +275,7 @@ class UnitCellController(QObject):
         return tree_item
 
     # Determine which node is being selected and fire the appropriate Signal
-    def on_selection_changed(self, selected, deselected):
+    def _on_selection_changed(self, selected, deselected):
         """
         Handle tree item selection events and emit appropriate signals.
 
@@ -319,7 +319,7 @@ class UnitCellController(QObject):
                 )
 
     # Programmatically select a tree item
-    def select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
+    def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
         """
         Select a tree item by its ID and type.
 
@@ -335,9 +335,9 @@ class UnitCellController(QObject):
         if item_type == "unit_cell":
             parent = self.root_node
         elif item_type == "site":
-            parent = self.find_item_by_id(parent_id, "unit_cell")
+            parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
-            parent = self.find_item_by_id(parent_id, "site", grandparent_id)
+            parent = self._find_item_by_id(parent_id, "site", grandparent_id)
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
@@ -349,7 +349,7 @@ class UnitCellController(QObject):
                 )
                 return
 
-    def on_item_changed(self, item: QStandardItem):
+    def _on_item_changed(self, item: QStandardItem):
         """
         Change the name of the selected item by double-clicking on it in the tree view.
         """
@@ -364,7 +364,7 @@ class UnitCellController(QObject):
 
     # Unit Cell/Site/State Modification Functions
 
-    def add_unit_cell(self):
+    def _add_unit_cell(self):
         """
         Create a new unit cell with default properties and add it to the model.
 
@@ -380,10 +380,10 @@ class UnitCellController(QObject):
         new_cell = UnitCell(name, v1, v2, v3)
         self.unit_cells[new_cell.id] = new_cell
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(new_cell.id)
-        self.select_item(new_cell.id, "unit_cell")
+        self._update_tree_item(new_cell.id)
+        self._select_item(new_cell.id, "unit_cell")
 
-    def add_site(self):
+    def _add_site(self):
         """
         Create a new site in the currently selected unit cell.
 
@@ -403,10 +403,10 @@ class UnitCellController(QObject):
         current_uc.sites[new_site.id] = new_site
 
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(selected_uc_id, new_site.id)
-        self.select_item(new_site.id, "site", selected_uc_id)
+        self._update_tree_item(selected_uc_id, new_site.id)
+        self._select_item(new_site.id, "site", selected_uc_id)
 
-    def add_state(self):
+    def _add_state(self):
         """
         Create a new quantum state in the currently selected site.
 
@@ -425,10 +425,10 @@ class UnitCellController(QObject):
         current_site.states[new_state.id] = new_state
 
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(selected_uc_id, selected_site_id, new_state.id)
-        self.select_item(new_state.id, "state", selected_site_id, selected_uc_id)
+        self._update_tree_item(selected_uc_id, selected_site_id, new_state.id)
+        self._select_item(new_state.id, "state", selected_site_id, selected_uc_id)
 
-    def save_unit_cell(self):
+    def _save_unit_cell(self):
         """
         Save changes from the unit cell panel to the selected unit cell model.
 
@@ -463,10 +463,10 @@ class UnitCellController(QObject):
         current_uc.v3.is_periodic = self.unit_cell_data["v3periodic"]
 
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(selected_uc_id)
-        self.select_item(selected_uc_id, "unit_cell")
+        self._update_tree_item(selected_uc_id)
+        self._select_item(selected_uc_id, "unit_cell")
 
-    def save_site(self):
+    def _save_site(self):
         """
         Save changes from the site panel to the selected site model.
 
@@ -487,10 +487,10 @@ class UnitCellController(QObject):
         current_site.c3 = float(self.site_data["c3"])
 
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(selected_uc_id, selected_site_id)
-        self.select_item(selected_site_id, "site", selected_uc_id)
+        self._update_tree_item(selected_uc_id, selected_site_id)
+        self._select_item(selected_site_id, "site", selected_uc_id)
 
-    def save_state(self):
+    def _save_state(self):
         """
         Save changes from the state panel to the selected state model.
 
@@ -510,10 +510,10 @@ class UnitCellController(QObject):
         current_state.name = self.state_data["name"]
 
         # Update UI (selective update instead of full refresh)
-        self.update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
-        self.select_item(selected_state_id, "state", selected_site_id, selected_uc_id)
+        self._update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
+        self._select_item(selected_state_id, "state", selected_site_id, selected_uc_id)
 
-    def delete_item(self):
+    def _delete_item(self):
         selected_uc_id = self.selection.get("unit_cell", None)
         selected_site_id = self.selection.get("site", None)
         selected_state_id = self.selection.get("state", None)
@@ -531,24 +531,24 @@ class UnitCellController(QObject):
                         .states[selected_state_id]
                     )
                     # Update UI and select the parent site (selective removal instead of full refresh)
-                    self.remove_tree_item(
+                    self._remove_tree_item(
                         selected_uc_id, selected_site_id, selected_state_id
                     )
-                    self.select_item(selected_site_id, "site", selected_uc_id)
+                    self._select_item(selected_site_id, "site", selected_uc_id)
                 else:
                     # No state selected, therefore remove the site from the unit cell
                     del self.unit_cells[selected_uc_id].sites[selected_site_id]
 
                     # Update UI and select the parent unit cell (selective removal instead of full refresh)
-                    self.remove_tree_item(selected_uc_id, selected_site_id)
-                    self.select_item(selected_uc_id, "unit_cell")
+                    self._remove_tree_item(selected_uc_id, selected_site_id)
+                    self._select_item(selected_uc_id, "unit_cell")
 
             else:
                 # No site selected, therefore remove the unit cell from the model
                 del self.unit_cells[selected_uc_id]
 
                 # Update UI (selective removal instead of full refresh)
-                self.remove_tree_item(selected_uc_id)
+                self._remove_tree_item(selected_uc_id)
 
                 # Clear selection explicitly
                 self.unit_cell_view.tree_view_panel.tree_view.selectionModel().clearSelection()
@@ -557,7 +557,7 @@ class UnitCellController(QObject):
                 )  # Clear the cursor/visual highlight
                 self.selection.update({"unit_cell": None, "site": None, "state": None})
 
-    def reduce_uc_basis(self):
+    def _reduce_uc_basis(self):
         selected_uc_id = self.selection.get("unit_cell", None)
         if selected_uc_id:
             uc = self.unit_cells[selected_uc_id]
@@ -581,7 +581,7 @@ class UnitCellController(QObject):
                 }
             )
 
-    def show_panels(self):
+    def _show_panels(self):
         unit_cell_id = self.selection.get("unit_cell", None)
         site_id = self.selection.get("site", None)
         state_id = self.selection.get("state", None)
@@ -653,7 +653,7 @@ class UnitCellController(QObject):
             self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
             self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
 
-    def dimensionality_change(self):
+    def _dimensionality_change(self):
         btn = self.sender()
         if btn.isChecked():
             selected_dim = btn.text()
@@ -777,7 +777,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-    def update_unit_cell_data(self, key, value):
+    def _update_unit_cell_data(self, key, value):
         """
         Update the unit cell data model with new values.
 
@@ -787,7 +787,7 @@ class UnitCellController(QObject):
         """
         self.unit_cell_data[key] = value
 
-    def update_site_data(self, key, value):
+    def _update_site_data(self, key, value):
         """
         Update the site data model with new values.
 
@@ -797,7 +797,7 @@ class UnitCellController(QObject):
         """
         self.site_data[key] = value
 
-    def update_unit_cell_ui(self):
+    def _update_unit_cell_ui(self):
         """
         Update the UI with the current unit cell data.
         This method sets the values of the spinboxes in the unit cell panel
@@ -816,7 +816,7 @@ class UnitCellController(QObject):
         self.v3[1].setValue(self.unit_cell_data["v3y"])
         self.v3[2].setValue(self.unit_cell_data["v3z"])
 
-    def update_site_ui(self):
+    def _update_site_ui(self):
         """
         Update the UI with the current site data.
         This method sets the values of the spinboxes in the site panel

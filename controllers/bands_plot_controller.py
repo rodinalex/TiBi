@@ -17,9 +17,9 @@ class BandStructurePlotController(QObject):
         self.band_plot_view = band_plot_view
 
         # Connect to model updates
-        self.band_structure.signals.updated.connect(self.update_plot)
+        self.band_structure.signals.updated.connect(self._update_plot)
 
-    def update_plot(self):
+    def _update_plot(self):
         k_path = self.band_structure.get("k_path", [])
         bands = self.band_structure.get("bands", [])
         # Get the positions along the path reflecting the point spacing

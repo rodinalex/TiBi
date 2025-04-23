@@ -40,19 +40,19 @@ class UnitCellPlotController(QObject):
         self.site_data.signals.updated.connect(self._update_schedule)
 
         # Signals to update the plot when the spinners are changed
-        self.uc_plot_view.n1_spinner.valueChanged.connect(self.set_unit_cell)
-        self.uc_plot_view.n2_spinner.valueChanged.connect(self.set_unit_cell)
-        self.uc_plot_view.n3_spinner.valueChanged.connect(self.set_unit_cell)
+        self.uc_plot_view.n1_spinner.valueChanged.connect(self._update_unit_cell)
+        self.uc_plot_view.n2_spinner.valueChanged.connect(self._update_unit_cell)
+        self.uc_plot_view.n3_spinner.valueChanged.connect(self._update_unit_cell)
 
     def _update_schedule(self):
         if self._updating:
             return
         self._updating = True
         # Schedule the update to happen after all signals are processed
-        self.set_unit_cell()
+        self._update_unit_cell()
         self._updating = False
 
-    def set_unit_cell(self):
+    def _update_unit_cell(self):
         """
         Set or update the unit cell to be displayed in the 3D view.
 
@@ -227,4 +227,4 @@ class UnitCellPlotController(QObject):
         return line_vertices
 
     def _on_spinner_changed(self):
-        self.set_unit_cell()
+        self._update_unit_cell()

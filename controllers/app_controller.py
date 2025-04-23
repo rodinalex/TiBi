@@ -10,10 +10,10 @@ class AppController(QObject):
 
         # Connect signals
         self.controllers["bz_plot"].compute_bands_request.connect(
-            self.handle_compute_bands_request
+            self._handle_compute_bands_request
         )
 
-    def handle_compute_bands_request(self, path, num_points):
+    def _handle_compute_bands_request(self, path, num_points):
         # Get the selected unit cell
         uc_id = self.models["selection"]["unit_cell"]
         unit_cell = self.models["unit_cells"][uc_id]

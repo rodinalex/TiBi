@@ -52,17 +52,17 @@ class HoppingController(QObject):
         # The keys are Tuple[uuid, uuid] and the values are list[Tuple[int, int, int], np.complex128]
 
         # Connect Signals
-        self.selection.signals.updated.connect(self.set_unit_cell)
-        self.button_clicked.connect(self.set_pair)
+        self.selection.signals.updated.connect(self._update_unit_cell)
+        self.button_clicked.connect(self._update_pair_selection)
 
-        self.hopping_view.table_panel.add_row_btn.clicked.connect(self.add_empty_row)
+        self.hopping_view.table_panel.add_row_btn.clicked.connect(self._add_empty_row)
         self.hopping_view.table_panel.remove_row_btn.clicked.connect(
-            self.remove_selected_coupling
+            self._remove_selected_coupling
         )
-        self.hopping_view.table_panel.save_btn.clicked.connect(self.save_couplings)
-        self.hoppings_changed.connect(self.handle_matrix_interaction)
+        self.hopping_view.table_panel.save_btn.clicked.connect(self._save_couplings)
+        self.hoppings_changed.connect(self._handle_matrix_interaction)
 
-    def set_unit_cell(self):
+    def _update_unit_cell(self):
         """
         Called when the selection changes in the tree view.
         Updates the hopping data model with the selected unit cell's hoppings.
@@ -101,9 +101,9 @@ class HoppingController(QObject):
                 self.hopping_view.panel_stack.setCurrentWidget(self.hopping_view.panel)
             self.state_info = new_info
 
-        self.refresh_matrix()
+        self._refresh_matrix()
 
-    def refresh_matrix(self):
+    def _refresh_matrix(self):
         """
         Refreshes the entire matrix grid by removing all existing buttons and recreating them.
         Updates button colors based on whether hoppings exist between states.
@@ -125,10 +125,10 @@ class HoppingController(QObject):
                 btn.setFixedSize(20, 20)
                 btn.setContextMenuPolicy(Qt.CustomContextMenu)
                 btn.customContextMenuRequested.connect(
-                    lambda _, row=ii, col=jj, b=btn: self.add_context_menu(b, row, col)
+                    lambda _, row=ii, col=jj, b=btn: self._add_context_menu(b, row, col)
                 )
                 # Apply the default style (no hopping initially)
-                self.apply_button_style(btn, False)
+                self._apply_button_style(btn, False)
 
                 # Set tooltip to show both states when hovering.
                 state1 = self.state_info[ii]
@@ -153,9 +153,9 @@ class HoppingController(QObject):
                 self.buttons[(ii, jj)] = btn
 
             # Update button colors based on existing hoppings
-            self.refresh_button_colors()
+            self._refresh_button_colors()
 
-    def apply_button_style(self, button: QPushButton, has_hopping, hermitian=False):
+    def _apply_button_style(self, button: QPushButton, has_hopping, hermitian=False):
         """
         Apply the appropriate style to a button based on whether it has hoppings.
 
@@ -174,7 +174,7 @@ class HoppingController(QObject):
 
         button.setStyleSheet(style)
 
-    def refresh_button_colors(self):
+    def _refresh_button_colors(self):
         """
         Updates button colors based on whether hoppings exist between states.
 
@@ -202,9 +202,9 @@ class HoppingController(QObject):
             )
             is_hermitian = hop_neg_conj == hop_herm
             # Apply the appropriate style based on hopping existence
-            self.apply_button_style(btn, has_hopping, is_hermitian)
+            self._apply_button_style(btn, has_hopping, is_hermitian)
 
-    def set_pair(self, s1, s2):
+    def _update_pair_selection(self, s1, s2):
         """
         Called when a button is clicked in the hopping matrix.
         Updates the table to display hopping terms between the selected states.
@@ -224,9 +224,9 @@ class HoppingController(QObject):
         self.hopping_view.table_panel.table_title.setText(
             f"{s2[0]}.{s2[1]} → {s1[0]}.{s1[1]}"
         )
-        self.refresh_table()
+        self._refresh_table()
 
-    def refresh_table(self):
+    def _refresh_table(self):
         """Clear the table and repopulate it with the latest hopping terms"""
         self.hopping_view.table_panel.hopping_table.setRowCount(
             0
@@ -237,11 +237,11 @@ class HoppingController(QObject):
             self.hopping_view.table_panel.hopping_table.insertRow(row_index)
 
             # Use cell widgets instead of QTableWidgetItem
-            spinbox_d1 = self.make_spinbox(value=d1)
-            spinbox_d2 = self.make_spinbox(value=d2)
-            spinbox_d3 = self.make_spinbox(value=d3)
-            re_box = self.make_doublespinbox(value=np.real(amplitude))
-            im_box = self.make_doublespinbox(value=np.imag(amplitude))
+            spinbox_d1 = self._make_spinbox(value=d1)
+            spinbox_d2 = self._make_spinbox(value=d2)
+            spinbox_d3 = self._make_spinbox(value=d3)
+            re_box = self._make_doublespinbox(value=np.real(amplitude))
+            im_box = self._make_doublespinbox(value=np.imag(amplitude))
 
             self.hopping_view.table_panel.hopping_table.setCellWidget(
                 row_index, 0, spinbox_d1
@@ -259,42 +259,42 @@ class HoppingController(QObject):
                 row_index, 4, im_box
             )
 
-    def make_spinbox(self, value=0, minimum=-99, maximum=99):
+    def _make_spinbox(self, value=0, minimum=-99, maximum=99):
         box = QSpinBox()
         box.setRange(minimum, maximum)
         box.setValue(value)
         return box
 
-    def make_doublespinbox(self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3):
+    def _make_doublespinbox(self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3):
         box = QDoubleSpinBox()
         box.setRange(minimum, maximum)
         box.setDecimals(decimals)
         box.setValue(value)
         return box
 
-    def add_empty_row(self):
+    def _add_empty_row(self):
         """Add a new empty row to the table"""
         row_index = self.hopping_view.table_panel.hopping_table.rowCount()
         self.hopping_view.table_panel.hopping_table.insertRow(row_index)
 
         # Pre-fill with default values
         self.hopping_view.table_panel.hopping_table.setCellWidget(
-            row_index, 0, self.make_spinbox()
+            row_index, 0, self._make_spinbox()
         )
         self.hopping_view.table_panel.hopping_table.setCellWidget(
-            row_index, 1, self.make_spinbox()
+            row_index, 1, self._make_spinbox()
         )
         self.hopping_view.table_panel.hopping_table.setCellWidget(
-            row_index, 2, self.make_spinbox()
+            row_index, 2, self._make_spinbox()
         )
         self.hopping_view.table_panel.hopping_table.setCellWidget(
-            row_index, 3, self.make_doublespinbox()
+            row_index, 3, self._make_doublespinbox()
         )
         self.hopping_view.table_panel.hopping_table.setCellWidget(
-            row_index, 4, self.make_doublespinbox()
+            row_index, 4, self._make_doublespinbox()
         )
 
-    def remove_selected_coupling(self):
+    def _remove_selected_coupling(self):
         """Remove selected row(s) from the table"""
         selected_rows = set()
 
@@ -312,7 +312,7 @@ class HoppingController(QObject):
         for row in sorted(selected_rows, reverse=True):
             self.hopping_view.table_panel.hopping_table.removeRow(row)
 
-    def save_couplings(self):
+    def _save_couplings(self):
         """
         Extracts data from the hopping table and saves it to the unit cell model.
 
@@ -360,33 +360,33 @@ class HoppingController(QObject):
         self.state_coupling = merged_couplings
 
         # Update the matrix and the table to show the new coupling state
-        self.refresh_matrix()
-        self.refresh_table()
+        self._refresh_matrix()
+        self._refresh_table()
 
-    def add_context_menu(self, button, ii, jj):
+    def _add_context_menu(self, button, ii, jj):
         menu = QMenu()
         # Send hopping data to the transpose element
         action_send_hoppings = QAction("Set transpose element", self)
         action_send_hoppings.triggered.connect(
-            lambda: self.create_hermitian_partner(ii, jj)
+            lambda: self._create_hermitian_partner(ii, jj)
         )
         menu.addAction(action_send_hoppings)
 
         # Get hopping data from the transpose element
         action_get_hoppings = QAction("Get transpose element", self)
         action_get_hoppings.triggered.connect(
-            lambda: self.create_hermitian_partner(jj, ii)
+            lambda: self._create_hermitian_partner(jj, ii)
         )
         menu.addAction(action_get_hoppings)
 
         # Clear hoppings
         action_clear_hoppings = QAction("Clear hoppings", self)
-        action_clear_hoppings.triggered.connect(lambda: self.delete_coupling(ii, jj))
+        action_clear_hoppings.triggered.connect(lambda: self._delete_coupling(ii, jj))
         menu.addAction(action_clear_hoppings)
 
         menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
 
-    def create_hermitian_partner(self, ii, jj):
+    def _create_hermitian_partner(self, ii, jj):
         s1 = self.state_info[ii][2]  # Destination
         s2 = self.state_info[jj][2]  # Source
         hop = self.hopping_data.get((s1, s2), [])
@@ -394,18 +394,18 @@ class HoppingController(QObject):
         self.hopping_data[(s2, s1)] = hop_herm
         self.hoppings_changed.emit()
 
-    def delete_coupling(self, ii, jj):
+    def _delete_coupling(self, ii, jj):
         s1 = self.state_info[ii][2]  # Destination
         s2 = self.state_info[jj][2]  # Source
         self.hopping_data.pop((s1, s2), None)
         self.hoppings_changed.emit()
 
-    def handle_matrix_interaction(self):
-        self.refresh_button_colors()
+    def _handle_matrix_interaction(self):
+        self._refresh_button_colors()
         updated_couplings = self.hopping_data.get(
             (self.pair_selection[0], self.pair_selection[1]), []
         )
         self.state_coupling = updated_couplings
 
-        self.refresh_matrix()
-        self.refresh_table()
+        self._refresh_matrix()
+        self._refresh_table()
