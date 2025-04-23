@@ -1,5 +1,5 @@
 import uuid
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
@@ -9,20 +9,21 @@ import numpy as np
 
 
 class BrillouinZonePlotController(QObject):
+    # A signal for band calculation requests
+    compute_bands_request = Signal(object, int)  # (path, n_points)
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        bz_path,
         unit_cell_data: DataModel,
         bz_plot_view: BrillouinZonePlotView,
     ):
+
         super().__init__()
 
         self.unit_cells = unit_cells
         self.selection = selection
-        self.bz_path = bz_path
         self.unit_cell_data = unit_cell_data
         self.bz_plot_view = bz_plot_view
 
@@ -36,6 +37,7 @@ class BrillouinZonePlotController(QObject):
         self.dim = 0
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
+        self.bz_path = []
 
         # Flag to prevent redundant redraws during cascading signal updates
         self._updating = False
@@ -76,6 +78,11 @@ class BrillouinZonePlotController(QObject):
 
         self.bz_plot_view.remove_last_btn.clicked.connect(self._remove_last_point)
         self.bz_plot_view.clear_path_btn.clicked.connect(self._clear_path)
+        self.bz_plot_view.compute_bands_btn.clicked.connect(
+            lambda: self.compute_bands_request.emit(
+                self.bz_path, self.bz_plot_view.n_points_spinbox.value()
+            )
+        )
 
     def _update_schedule(self):
         if self._updating:

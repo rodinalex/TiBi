@@ -23,7 +23,7 @@ from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 from controllers.computation_controller import ComputationController
 
-from models.data_models import DataModel
+from models.data_models import DataModel, AlwaysNotifyDataModel
 
 
 class MainWindow(QMainWindow):
@@ -131,9 +131,9 @@ class TiBiApplication:
             name=""
         )  # State data of the selected unit cell
 
-        self.models["bz_path"] = (
-            []
-        )  # Path inside the BZ used to calculate the band structure
+        self.models["band_structure"] = AlwaysNotifyDataModel(
+            k_path=None, bands=None, special_points=None
+        )  # Band structure data. Special points are the high symmetry points obtained from the Brillouin zone
 
         # Set views
         self.views["uc"] = UnitCellView()
@@ -143,7 +143,6 @@ class TiBiApplication:
         self.views["band_plot"] = BandStructurePlotView()
 
         # Set controllers
-        self.controllers["app"] = AppController()
 
         self.controllers["uc"] = UnitCellController(
             self.models["unit_cells"],
@@ -175,24 +174,21 @@ class TiBiApplication:
         self.controllers["bz_plot"] = BrillouinZonePlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["bz_path"],
             self.models[
                 "unit_cell_data"
             ],  # Used to keep track of changes of the unit cell for redrawing the plot
             self.views["bz_plot"],
         )
 
-        self.controllers["band_plot"] = BandStructurePlotController()
+        self.controllers["band_plot"] = BandStructurePlotController(
+            self.models["band_structure"], self.views["band_plot"]
+        )
 
-        self.controllers["computation"] = ComputationController(self.models["bz_path"])
+        self.controllers["computation"] = ComputationController(
+            self.models["band_structure"]
+        )
 
-    def initialize(self):
-        """Initialize all application components."""
-        self._create_main_window()
-        return self
-
-    def _create_main_window(self):
-        """Create the main application window."""
+        # Initialize the main window
         self.main_window = MainWindow(
             self.views["uc"],
             self.views["hopping"],
@@ -200,6 +196,8 @@ class TiBiApplication:
             self.views["bz_plot"],
             self.views["band_plot"],
         )
+        # Initialize the AppController
+        self.app_controller = AppController(self.models, self.controllers)
 
     def run(self):
         """Run the application."""
@@ -210,7 +208,7 @@ class TiBiApplication:
 def main():
     """Application entry point."""
     # Create and initialize the application
-    app = TiBiApplication().initialize()
+    app = TiBiApplication()
 
     # Run the application
     return app.run()

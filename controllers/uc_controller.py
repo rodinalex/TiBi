@@ -498,7 +498,6 @@ class UnitCellController(QObject):
         corresponding properties in the State model object. This includes the
         name and energy level.
         """
-        print(self.selection)
         # Get the currently selected state
         selected_uc_id = self.selection["unit_cell"]
         selected_site_id = self.selection["site"]
