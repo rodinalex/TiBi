@@ -18,15 +18,15 @@ from PySide6.QtCore import Qt, Signal
 class ButtonPanel(QWidget):
     """
     Panel containing action buttons for the unit cell editor.
-    
+
     This panel provides buttons for common operations:
     - Creating new unit cells, sites, and states
     - Deleting the currently selected item
     - Reducing the unit cell basis vectors (using the LLL algorithm)
-    
+
     Buttons are automatically enabled/disabled based on the current selection state.
     """
-    
+
     def __init__(self):
         super().__init__()
 
@@ -158,14 +158,14 @@ class TreeViewPanel(QWidget):
     1. Unit cells
     2. Sites within a unit cell
     3. States within a site
-    
+
     Features:
     - Hierarchical display of unit cells, sites, and states
     - Single selection mode for focused editing
     - Double-click to edit names directly in the tree
     - Keyboard shortcuts for deletion (Del and Backspace)
     - Signal emission on deletion requests
-    
+
     This panel is designed to work with a controller that will handle the actual
     data modifications in response to UI actions.
     """
@@ -215,12 +215,12 @@ class UnitCellView(QWidget):
     2. Button panel with actions for creating, deleting, and modifying items
     3. Form panels that change depending on what is selected in the tree
     4. Dimensionality controls for setting periodic boundary conditions
-    
+
     Following the MVC pattern, this view is responsible for:
     - Displaying the UI elements and their layout
     - Providing controls for user interaction
     - Emitting signals when user actions occur
-    
+
     However, it doesn't contain business logic - that's handled by the controller,
     which connects to these signals and interacts with the data models.
     """
@@ -267,6 +267,10 @@ class UnitCellView(QWidget):
         self.radio_group.addButton(self.radio1D, id=1)
         self.radio_group.addButton(self.radio2D, id=2)
         self.radio_group.addButton(self.radio3D, id=3)
+
+        # Start by disabling the radio buttons
+        for button in self.radio_group.buttons():
+            button.setEnabled(False)
 
         radio_layout = QHBoxLayout()
         radio_layout.addWidget(self.radio0D)

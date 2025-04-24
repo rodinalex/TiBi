@@ -145,7 +145,7 @@ class UnitCellController(QObject):
         Note: For better performance, prefer the more specific update methods:
         - _update_tree_item() - For adding or updating a single node
         - _remove_tree_item() - For removing a single node
-        
+
         This full refresh is typically only needed during initialization or when
         multiple components of the tree need to be updated simultaneously.
         """
@@ -203,11 +203,12 @@ class UnitCellController(QObject):
     def _update_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Update or add a tree item without rebuilding the entire tree.
+        The item to update is determined from the number of id arguments provided.
 
         Args:
-            uc_id: UUID of the grandparent unit cell
-            site_id: UUID of the parent site
-            state_id: UUID of the state to update
+            uc_id: UUID of the unit cell
+            site_id: UUID of the site
+            state_id: UUID of the state
         """
         if state_id is not None:  # Adding/updating a state
             # Get the parent site
@@ -284,10 +285,8 @@ class UnitCellController(QObject):
 
         This method is called when the user selects a node in the tree view.
         It determines what type of node was selected (unit cell, site, or state)
-        and emits the corresponding signal with the relevant IDs.
-
-        For site and state selections, it retrieves the parent and grandparent
-        IDs to provide the complete context of the selection.
+        and updates the selection model with the item's id and, if applicable,
+        its parent's/grandparent's id's.
 
         Args:
             selected: The newly selected items
@@ -296,8 +295,10 @@ class UnitCellController(QObject):
         indexes = selected.indexes()
         if not indexes:
             self.selection.update({"unit_cell": None, "site": None, "state": None})
+            self._dimensionality_buttons_enabled(False)
             return
 
+        self._dimensionality_buttons_enabled(True)
         # Get the selected item
         index = indexes[0]
         item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(index)
@@ -325,12 +326,12 @@ class UnitCellController(QObject):
     def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
         """
         Select a tree item by its ID and type.
-        
+
         This method programmatically selects an item in the tree view, which triggers
         the selection changed signal and updates the form panels to display the item's
         properties. It's used after operations like adding or modifying items to ensure
         the UI reflects the current state.
-        
+
         The method handles the hierarchical nature of the tree view, using parent and
         grandparent IDs to locate items at different nesting levels.
 
@@ -378,13 +379,13 @@ class UnitCellController(QObject):
 
         Creates a unit cell with orthogonal basis vectors along the x, y, and z axes,
         adds it to the unit_cells dictionary, and selects it in the tree view.
-        
+
         The default unit cell has:
         - Name: "New Unit Cell"
         - Three orthogonal unit vectors along the x, y, and z axes
         - No periodicity (0D system)
         - No sites or states initially
-        
+
         After creation, the tree view is updated and the new unit cell is automatically
         selected so the user can immediately edit its properties.
         """
@@ -427,7 +428,7 @@ class UnitCellController(QObject):
         """
         Create a new quantum state in the currently selected site.
 
-        Creates a state with default name and zero energy, adds it to the
+        Creates a state with default name, adds it to the
         states dictionary of the selected site, and selects it in the tree view.
         """
         # Create a new state with default properties
@@ -447,17 +448,12 @@ class UnitCellController(QObject):
 
     def _save_unit_cell(self):
         """
-        Save changes from the unit cell panel to the selected unit cell model.
+        Save changes from the unit cell data model to the selected unit cell.
 
-        Takes all field values from the unit cell form panel and updates the
-        corresponding properties in the UnitCell model object. This includes the
-        name and all properties of the three basis vectors (x, y, z components
-        and periodicity flags).
-        
         This method is automatically triggered when the unit_cell_data model
-        emits an updated signal, ensuring that UI changes are immediately
-        reflected in the underlying data model. After saving, the tree view
-        is updated to show any changes (like renamed items).
+        emits an updated signal following a user interaction, ensuring that UI
+        changes are immediately reflected in the underlying data model.
+        After saving, the tree view is updated to show any changes (like renamed items).
         """
         # Get the currently selected unit cell
         selected_uc_id = self.selection["unit_cell"]
@@ -490,11 +486,12 @@ class UnitCellController(QObject):
 
     def _save_site(self):
         """
-        Save changes from the site panel to the selected site model.
+        Save changes from the site data model to the selected site.
 
-        Takes all field values from the site form panel and updates the
-        corresponding properties in the Site model object. This includes the
-        name and fractional coordinates (c1, c2, c3).
+        This method is automatically triggered when the site_data model
+        emits an updated signal following a user interaction, ensuring that UI
+        changes are immediately reflected in the underlying data model.
+        After saving, the tree view is updated to show any changes (like renamed items).
         """
         # Get the currently selected site
         selected_uc_id = self.selection["unit_cell"]
@@ -514,11 +511,12 @@ class UnitCellController(QObject):
 
     def _save_state(self):
         """
-        Save changes from the state panel to the selected state model.
+        Save changes from the state data model to the selected state.
 
-        Takes all field values from the state form panel and updates the
-        corresponding properties in the State model object. This includes the
-        name and energy level.
+        This method is automatically triggered when the site_data model
+        emits an updated signal following a user interaction, ensuring that UI
+        changes are immediately reflected in the underlying data model.
+        After saving, the tree view is updated to show any changes (like renamed items).
         """
         # Get the currently selected state
         selected_uc_id = self.selection["unit_cell"]
@@ -538,16 +536,16 @@ class UnitCellController(QObject):
     def _delete_item(self):
         """
         Delete the currently selected item from the model.
-        
+
         This method handles deletion of unit cells, sites, and states based on the
         current selection. It updates both the data model and the tree view to reflect
         the deletion, and ensures that the selection is updated appropriately.
-        
+
         The deletion follows the containment hierarchy:
         - Deleting a unit cell also removes all its sites and states
         - Deleting a site also removes all its states
         - Deleting a state only removes that specific state
-        
+
         After deletion, the parent item is selected (or nothing if a unit cell was deleted).
         """
         selected_uc_id = self.selection.get("unit_cell", None)
@@ -596,12 +594,12 @@ class UnitCellController(QObject):
     def _reduce_uc_basis(self):
         """
         Reduce the basis vectors of the selected unit cell using the LLL algorithm.
-        
+
         This method applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm
         to find a more orthogonal set of basis vectors that spans the same lattice.
         This is useful for finding a 'nicer' representation of the unit cell with
         basis vectors that are shorter and more orthogonal to each other.
-        
+
         The method only affects the periodic directions of the unit cell. After
         reduction, the UI is updated to reflect the new basis vectors.
         """
@@ -631,16 +629,17 @@ class UnitCellController(QObject):
     def _show_panels(self):
         """
         Update the UI panels based on the current selection state.
-        
+
         This method is called whenever the selection changes. It determines which
         panels should be visible and populates them with data from the selected items.
         The panels are shown or hidden using a stacked widget approach.
-        
+
         The method handles all three levels of the hierarchy:
         - When a unit cell is selected, its properties are shown in the unit cell panel
         - When a site is selected, its properties are shown in the site panel
-        - When a state is selected, its properties are shown in the state panel
-        
+        - When a state is selected, no additional panel is shown as the state is only
+        described by its name
+
         Appropriate buttons are also enabled/disabled based on the selection context.
         """
         unit_cell_id = self.selection.get("unit_cell", None)
@@ -714,14 +713,22 @@ class UnitCellController(QObject):
             self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
             self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
 
+    def _dimensionality_buttons_enabled(self, enabled=bool):
+        """
+        Enable/disable dimensionality selection radio buttons. The buttons are enabled
+        only when there is a selected unit cell.
+        """
+        for button in self.unit_cell_view.radio_group.buttons():
+            button.setEnabled(enabled)
+
     def _dimensionality_change(self):
         """
         Handle changes in the dimensionality selection (0D, 1D, 2D, 3D).
-        
+
         This method is called when the user selects a different dimensionality radio button.
         It updates the unit cell's periodicity flags and enables/disables appropriate
         basis vector components based on the selected dimensionality.
-        
+
         For example:
         - 0D: All directions are non-periodic (isolated system)
         - 1D: First direction is periodic, others are not
@@ -854,7 +861,7 @@ class UnitCellController(QObject):
     def _update_unit_cell_data(self, key, value):
         """
         Update the unit cell data model with new values.
-        
+
         This method is called when the user edits a property in the unit cell form panel.
         It updates the reactive data model, which will trigger a signal that causes the
         _save_unit_cell method to update the actual UnitCell object. This separation
@@ -870,8 +877,13 @@ class UnitCellController(QObject):
         """
         Update the site data model with new values.
 
+        This method is called when the user edits a property in the site form panel.
+        It updates the reactive data model, which will trigger a signal that causes the
+        _save_site method to update the actual Site object. This separation
+        allows for validation and coalescing of multiple changes.
+
         Args:
-            key: The property name to update
+            key: The property name to update (e.g., "c1", "name")
             value: The new value for the property
         """
         self.site_data[key] = value
