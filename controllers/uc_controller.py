@@ -1,5 +1,5 @@
 import uuid
-from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel
+from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel, Signal
 from PySide6.QtGui import QStandardItem
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
@@ -22,6 +22,8 @@ class UnitCellController(QObject):
     After data model changes, the controller updates the tree view and reselects
     the appropriate node to maintain UI state consistency.
     """
+
+    plotUpdateRequested = Signal()
 
     def __init__(
         self,
@@ -273,7 +275,6 @@ class UnitCellController(QObject):
 
         return tree_item
 
-    # Determine which node is being selected and fire the appropriate Signal
     def _on_selection_changed(self, selected, deselected):
         """
         Handle tree item selection events and emit appropriate signals.
@@ -281,7 +282,8 @@ class UnitCellController(QObject):
         This method is called when the user selects a node in the tree view.
         It determines what type of node was selected (unit cell, site, or state)
         and updates the selection model with the item's id and, if applicable,
-        its parent's/grandparent's id's.
+        its parent's/grandparent's id's. After the relevant id's are saved, a request
+        to update unit cell and Brollouin zone plots is emitted.
 
         Args:
             selected: The newly selected items
@@ -317,6 +319,9 @@ class UnitCellController(QObject):
                     {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
                 )
 
+        # Now that selection is fully updated, request plot update
+        self.plotUpdateRequested.emit()
+
     # Programmatically select a tree item
     def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
         """
@@ -328,7 +333,8 @@ class UnitCellController(QObject):
         the UI reflects the current state.
 
         The method handles the hierarchical nature of the tree view, using parent and
-        grandparent IDs to locate items at different nesting levels.
+        grandparent IDs to locate items at different nesting levels. After the selection,
+        a request to update unit cell and Brollouin zone plots is emitted.
 
         Args:
             item_id: UUID of the item to find
@@ -342,6 +348,7 @@ class UnitCellController(QObject):
             parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
             parent = self._find_item_by_id(parent_id, "site", grandparent_id)
+
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
@@ -481,7 +488,9 @@ class UnitCellController(QObject):
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id)
-        self._select_item(selected_uc_id, "unit_cell")
+
+        # After unit cell object is updated, notify plot controllers
+        self.plotUpdateRequested.emit()
 
     def _save_site(self):
         """
@@ -506,7 +515,9 @@ class UnitCellController(QObject):
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id)
-        self._select_item(selected_site_id, "site", selected_uc_id)
+
+        # After site object is updated, notify plot controllers
+        self.plotUpdateRequested.emit()
 
     def _save_state(self):
         """
@@ -530,7 +541,6 @@ class UnitCellController(QObject):
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
-        self._select_item(selected_state_id, "state", selected_site_id, selected_uc_id)
 
     def _delete_item(self):
         """
@@ -546,6 +556,7 @@ class UnitCellController(QObject):
         - Deleting a state only removes that specific state
 
         After deletion, the parent item is selected (or nothing if a unit cell was deleted).
+        At the end, a request to update unit cell and Brillouin zone plots is emitted.
         """
         selected_uc_id = self.selection.get("unit_cell", None)
         selected_site_id = self.selection.get("site", None)
@@ -589,6 +600,7 @@ class UnitCellController(QObject):
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
                 self.selection.update({"unit_cell": None, "site": None, "state": None})
+        self.plotUpdateRequested.emit()
 
     def _reduce_uc_basis(self):
         """

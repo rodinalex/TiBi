@@ -12,18 +12,18 @@ import numpy as np
 class UnitCellPlotController(QObject):
     """
     Controller for the unit cell 3D visualization.
-    
+
     This controller manages the 3D visualization of unit cells, handling the
     rendering of unit cell wireframes, site positions, and periodic repetitions.
     It observes changes to the selected unit cell and its properties, updating
     the visualization in response to any modifications.
-    
+
     The controller provides functionality for:
     1. Visualizing the unit cell as a wireframe parallelepiped
     2. Displaying sites (atoms) as colored spheres
     3. Showing multiple periodic repetitions of the unit cell
     4. Highlighting selected sites
-    
+
     The visualization updates reactively when the unit cell data changes
     or when the user adjusts the number of periodic repetitions via spinners.
     """
@@ -38,7 +38,7 @@ class UnitCellPlotController(QObject):
     ):
         """
         Initialize the unit cell plot controller.
-        
+
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
@@ -60,12 +60,6 @@ class UnitCellPlotController(QObject):
         # Flag to prevent redundant redraws during cascading signal updates
         self._updating = False
 
-        # Connect Signals
-        # Signals to redraw the plot due to selections change/unit cell and site updates
-        self.selection.signals.updated.connect(self._update_schedule)
-        self.unit_cell_data.signals.updated.connect(self._update_schedule)
-        self.site_data.signals.updated.connect(self._update_schedule)
-
         # Signals to update the plot when the spinners are changed
         self.uc_plot_view.n1_spinner.valueChanged.connect(self._update_unit_cell)
         self.uc_plot_view.n2_spinner.valueChanged.connect(self._update_unit_cell)
@@ -74,7 +68,7 @@ class UnitCellPlotController(QObject):
     def _update_schedule(self):
         """
         Schedule an update of the unit cell visualization.
-        
+
         This method prevents redundant updates by using a flag to track whether
         an update is already in progress. This is important because updates can be
         triggered by multiple signals firing in sequence (e.g., selection changes,

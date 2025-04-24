@@ -63,11 +63,6 @@ class BrillouinZonePlotController(QObject):
         # Flag to prevent redundant redraws during cascading signal updates
         self._updating = False
 
-        # Connect Signals
-        # Signals to redraw the plot due to selections change/unit cell and site updates
-        self.selection.signals.updated.connect(self._update_schedule)
-        self.unit_cell_data.signals.updated.connect(self._update_schedule)
-
         self.bz_plot_view.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
         )
