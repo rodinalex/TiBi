@@ -46,10 +46,21 @@ class AppController(QObject):
         """
         # Get the selected unit cell
         uc_id = self.models["selection"]["unit_cell"]
+        if uc_id is None:
+            # Update status bar if no unit cell is selected
+            self.controllers["main_ui"].update_status("No unit cell selected")
+            return
+        
         unit_cell = self.models["unit_cells"][uc_id]
 
+        # Update status bar
+        self.controllers["main_ui"].update_status("Computing bands...")
+        
         # Call computation controller
         self.controllers["computation"].compute_bands(unit_cell, path, num_points)
+        
+        # Update status when complete
+        self.controllers["main_ui"].update_status("Ready")
 
     def _handle_plotUpdateBandsRequested(self):
         """

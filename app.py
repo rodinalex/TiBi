@@ -14,6 +14,9 @@ from views.bz_plot_view import BrillouinZonePlotView
 from views.hopping_view import HoppingView
 from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
+from views.menu_bar_view import MenuBarView
+from views.main_toolbar_view import MainToolbarView
+from views.status_bar_view import StatusBarView
 
 from controllers.app_controller import AppController
 from controllers.bands_plot_controller import BandStructurePlotController
@@ -22,6 +25,7 @@ from controllers.hopping_controller import HoppingController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 from controllers.computation_controller import ComputationController
+from controllers.main_ui_controller import MainUIController
 
 from models.data_models import DataModel, AlwaysNotifyDataModel
 
@@ -32,12 +36,15 @@ class MainWindow(QMainWindow):
 
     This class is purely a view component that arranges the UI elements and
     doesn't contain business logic or model manipulation. It creates a three-column
-    layout for organizing the different components of the application.
+    layout for organizing the different components of the application, along with
+    menu bar, toolbar, and status bar.
 
     Following the MVC pattern, this class is restricted to presentation concerns only.
     """
 
-    def __init__(self, uc, hopping, uc_plot, bz_plot, band_plot):
+    def __init__(
+        self, uc, hopping, uc_plot, bz_plot, band_plot, menu_bar, toolbar, status_bar
+    ):
         """
         Initialize the main window with views for different components.
 
@@ -47,10 +54,13 @@ class MainWindow(QMainWindow):
             uc_plot: Unit cell 3D visualization view
             bz_plot: Brillouin zone 3D visualization view
             band_plot: Band structure plot view
+            menu_bar: Menu bar view
+            toolbar: Main toolbar view
+            status_bar: Status bar view
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1500, 900))
+        self.setFixedSize(QSize(1500, 950))
 
         # Store references to UI components
         self.uc = uc
@@ -58,6 +68,15 @@ class MainWindow(QMainWindow):
         self.uc_plot = uc_plot
         self.bz_plot = bz_plot
         self.band_plot = band_plot
+
+        # Set menu bar
+        self.setMenuBar(menu_bar)
+
+        # Add toolbar
+        self.addToolBar(toolbar)
+
+        # Set status bar
+        self.setStatusBar(status_bar)
 
         # Main Layout
         main_view = QWidget()
@@ -140,10 +159,16 @@ class TiBiApplication:
             self.views["uc_plot"],
             self.views["bz_plot"],
             self.views["band_plot"],
+            self.views["menu_bar"],
+            self.views["toolbar"],
+            self.views["status_bar"],
         )
 
         # Initialize the top-level application controller
         self.app_controller = AppController(self.models, self.controllers)
+
+        # Set initial status message
+        self.controllers["main_ui"].update_status("Application started")
 
     def _init_models(self):
         """
@@ -192,13 +217,19 @@ class TiBiApplication:
         Initialize all views used in the application.
 
         Creates the UI components for different parts of the application,
-        including editors, 3D visualizations, and plots.
+        including editors, 3D visualizations, plots, and main UI elements.
         """
+        # Core visualizations and editors
         self.views["uc"] = UnitCellView()
         self.views["hopping"] = HoppingView()
         self.views["uc_plot"] = UnitCellPlotView()
         self.views["bz_plot"] = BrillouinZonePlotView()
         self.views["band_plot"] = BandStructurePlotView()
+
+        # Main UI components
+        self.views["menu_bar"] = MenuBarView()
+        self.views["toolbar"] = MainToolbarView()
+        self.views["status_bar"] = StatusBarView()
 
     def _init_controllers(self):
         """
@@ -246,6 +277,14 @@ class TiBiApplication:
         # Physics Computation Controller
         self.controllers["computation"] = ComputationController(
             self.models["band_structure"]
+        )
+
+        # Main UI Controller (menu bar, toolbar, status bar)
+        self.controllers["main_ui"] = MainUIController(
+            self.models,
+            self.views["menu_bar"],
+            self.views["toolbar"],
+            self.views["status_bar"],
         )
 
     def run(self):
