@@ -121,14 +121,9 @@ class UnitCellController(QObject):
         # Selection change
         self.selection.signals.updated.connect(self._show_panels)
 
-        # When model changes, update UI
+        # # When model changes, update UI
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
         self.site_data.signals.updated.connect(self._update_site_ui)
-
-        # Save data whenever the models register an update
-        self.unit_cell_data.signals.updated.connect(self._save_unit_cell)
-        self.site_data.signals.updated.connect(self._save_site)
-        self.state_data.signals.updated.connect(self._save_state)
 
     # Tree Navigation Functions
     def _refresh_tree(self):
@@ -361,15 +356,19 @@ class UnitCellController(QObject):
     def _on_item_changed(self, item: QStandardItem):
         """
         Change the name of the selected item by double-clicking on it in the tree view.
+        Update the data and save it.
         """
         item_type = item.data(Qt.UserRole + 1)
         new_name = item.text()
         if item_type == "unit_cell":
             self.unit_cell_data["name"] = new_name
+            self._save_unit_cell()
         elif item_type == "site":
             self.site_data["name"] = new_name
+            self._save_site()
         else:
             self.state_data["name"] = new_name
+            self._save_state()
 
     # Unit Cell/Site/State Modification Functions
 
@@ -625,6 +624,7 @@ class UnitCellController(QObject):
                     "v3z": v3.z,
                 }
             )
+            self._save_unit_cell()
 
     def _show_panels(self):
         """
@@ -690,7 +690,6 @@ class UnitCellController(QObject):
                     self.unit_cell_view.site_panel
                 )
                 self.unit_cell_view.button_panel.new_state_btn.setEnabled(True)
-
                 if state_id:
                     state = site.states[state_id]
 
@@ -857,6 +856,7 @@ class UnitCellController(QObject):
                         "v3periodic": True,
                     }
                 )
+            self._save_unit_cell()
 
     def _update_unit_cell_data(self, key, value):
         """
@@ -872,6 +872,7 @@ class UnitCellController(QObject):
             value: The new value for the property
         """
         self.unit_cell_data[key] = value
+        self._save_unit_cell()
 
     def _update_site_data(self, key, value):
         """
@@ -887,6 +888,7 @@ class UnitCellController(QObject):
             value: The new value for the property
         """
         self.site_data[key] = value
+        self._save_site()
 
     def _update_unit_cell_ui(self):
         """
