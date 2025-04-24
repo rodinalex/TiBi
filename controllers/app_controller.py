@@ -52,5 +52,13 @@ class AppController(QObject):
         self.controllers["computation"].compute_bands(unit_cell, path, num_points)
 
     def _handle_plotUpdateBandsRequested(self):
-        self.controllers["uc_plot"]._update_schedule()
-        self.controllers["bz_plot"]._update_schedule()
+        """
+        Handle requests to update unit cell and Brollouin zone plots.
+
+        This method is triggered when either a new unit cell is selected or when
+        a currently-selected unit cell is modified. Because the plotting controllers
+        have access to the unit_cells dictionary and the selection, no information needs
+        to be passed.
+        """
+        self.controllers["uc_plot"].update_unit_cell()
+        self.controllers["bz_plot"].update_brillouin_zone()

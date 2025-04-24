@@ -29,7 +29,6 @@ class BrillouinZonePlotController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        unit_cell_data: DataModel,
         bz_plot_view: BrillouinZonePlotView,
     ):
         """
@@ -38,14 +37,12 @@ class BrillouinZonePlotController(QObject):
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
-            unit_cell_data: Model containing the properties of the selected unit cell
             bz_plot_view: The view component for displaying the Brillouin zone
         """
         super().__init__()
 
         self.unit_cells = unit_cells
         self.selection = selection
-        self.unit_cell_data = unit_cell_data
         self.bz_plot_view = bz_plot_view
 
         # Internal controller state
@@ -59,9 +56,6 @@ class BrillouinZonePlotController(QObject):
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
         self.bz_path = []
-
-        # Flag to prevent redundant redraws during cascading signal updates
-        self._updating = False
 
         self.bz_plot_view.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
@@ -100,23 +94,7 @@ class BrillouinZonePlotController(QObject):
             )
         )
 
-    def _update_schedule(self):
-        """
-        Schedule an update of the Brillouin zone visualization.
-
-        This method prevents redundant updates by using a flag to track whether
-        an update is already in progress. This is important because updates can be
-        triggered by multiple signals firing in sequence (e.g., selection changes
-        and unit cell data changes).
-        """
-        if self._updating:
-            return
-        self._updating = True
-        # Schedule the update to happen after all signals are processed
-        self._update_brillouin_zone()
-        self._updating = False
-
-    def _update_brillouin_zone(self):
+    def update_brillouin_zone(self):
         """
         Update the Brillouin zone visualization based on the current unit cell.
 

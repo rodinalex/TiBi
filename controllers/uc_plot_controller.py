@@ -32,8 +32,6 @@ class UnitCellPlotController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        unit_cell_data: DataModel,
-        site_data: DataModel,
         uc_plot_view: UnitCellPlotView,
     ):
         """
@@ -42,46 +40,23 @@ class UnitCellPlotController(QObject):
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
-            unit_cell_data: Model containing the properties of the selected unit cell
-            site_data: Model containing the properties of the selected site
             uc_plot_view: The view component for the 3D visualization
         """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
-        self.unit_cell_data = unit_cell_data
-        self.site_data = site_data
         self.uc_plot_view = uc_plot_view
 
         # Internal controller state
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-        # Flag to prevent redundant redraws during cascading signal updates
-        self._updating = False
-
         # Signals to update the plot when the spinners are changed
-        self.uc_plot_view.n1_spinner.valueChanged.connect(self._update_unit_cell)
-        self.uc_plot_view.n2_spinner.valueChanged.connect(self._update_unit_cell)
-        self.uc_plot_view.n3_spinner.valueChanged.connect(self._update_unit_cell)
+        self.uc_plot_view.n1_spinner.valueChanged.connect(self.update_unit_cell)
+        self.uc_plot_view.n2_spinner.valueChanged.connect(self.update_unit_cell)
+        self.uc_plot_view.n3_spinner.valueChanged.connect(self.update_unit_cell)
 
-    def _update_schedule(self):
-        """
-        Schedule an update of the unit cell visualization.
-
-        This method prevents redundant updates by using a flag to track whether
-        an update is already in progress. This is important because updates can be
-        triggered by multiple signals firing in sequence (e.g., selection changes,
-        unit cell data changes, and site data changes).
-        """
-        if self._updating:
-            return
-        self._updating = True
-        # Schedule the update to happen after all signals are processed
-        self._update_unit_cell()
-        self._updating = False
-
-    def _update_unit_cell(self):
+    def update_unit_cell(self):
         """
         Set or update the unit cell to be displayed in the 3D view.
 

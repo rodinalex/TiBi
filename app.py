@@ -33,14 +33,14 @@ class MainWindow(QMainWindow):
     This class is purely a view component that arranges the UI elements and
     doesn't contain business logic or model manipulation. It creates a three-column
     layout for organizing the different components of the application.
-    
+
     Following the MVC pattern, this class is restricted to presentation concerns only.
     """
 
     def __init__(self, uc, hopping, uc_plot, bz_plot, band_plot):
         """
         Initialize the main window with views for different components.
-        
+
         Args:
             uc: Unit cell editor view
             hopping: Hopping parameter editor view
@@ -100,7 +100,7 @@ class TiBiApplication:
     3. Creating controllers
     4. Wiring everything together
     5. Starting the application
-    
+
     The application follows a strict MVC architecture with reactive data binding:
     - Models store application state and emit signals when they change
     - Views display data and capture user input without direct knowledge of models
@@ -110,9 +110,9 @@ class TiBiApplication:
     def __init__(self):
         """
         Initialize the application by creating and connecting all components.
-        
+
         Sets up all models, views, and controllers, and establishes the connections
-        between them according to the MVC pattern. Each component is stored in a 
+        between them according to the MVC pattern. Each component is stored in a
         dictionary for easy access.
         """
         # Create the Qt application
@@ -126,10 +126,10 @@ class TiBiApplication:
 
         # Initialize models
         self._init_models()
-        
+
         # Initialize views
         self._init_views()
-        
+
         # Initialize controllers
         self._init_controllers()
 
@@ -141,25 +141,23 @@ class TiBiApplication:
             self.views["bz_plot"],
             self.views["band_plot"],
         )
-        
+
         # Initialize the top-level application controller
         self.app_controller = AppController(self.models, self.controllers)
 
     def _init_models(self):
         """
         Initialize all data models used in the application.
-        
+
         Creates reactive data models for different aspects of the application state,
         including unit cells, selection state, form data, and calculation results.
         """
         # Dictionary mapping UUIDs to UnitCell objects
         self.models["unit_cells"] = {}
-        
+
         # Current selection state (tracks which items are selected in the UI)
-        self.models["selection"] = DataModel(
-            unit_cell=None, site=None, state=None
-        )
-        
+        self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
+
         # Form data for the currently selected unit cell
         self.models["unit_cell_data"] = DataModel(
             name="",
@@ -176,17 +174,13 @@ class TiBiApplication:
             v2periodic=False,
             v3periodic=False,
         )
-        
+
         # Form data for the currently selected site
-        self.models["site_data"] = DataModel(
-            name="", c1=0.0, c2=0.0, c3=0.0
-        )
-        
+        self.models["site_data"] = DataModel(name="", c1=0.0, c2=0.0, c3=0.0)
+
         # Form data for the currently selected state
-        self.models["state_data"] = DataModel(
-            name=""
-        )
-        
+        self.models["state_data"] = DataModel(name="")
+
         # Band structure calculation results
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
         self.models["band_structure"] = AlwaysNotifyDataModel(
@@ -196,7 +190,7 @@ class TiBiApplication:
     def _init_views(self):
         """
         Initialize all views used in the application.
-        
+
         Creates the UI components for different parts of the application,
         including editors, 3D visualizations, and plots.
         """
@@ -209,7 +203,7 @@ class TiBiApplication:
     def _init_controllers(self):
         """
         Initialize all controllers used in the application.
-        
+
         Creates controllers that connect models and views, handling the application
         logic. Each controller is responsible for a specific aspect of functionality.
         """
@@ -234,8 +228,6 @@ class TiBiApplication:
         self.controllers["uc_plot"] = UnitCellPlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["unit_cell_data"],  # For redrawing on unit cell changes
-            self.models["site_data"],       # For redrawing on site changes
             self.views["uc_plot"],
         )
 
@@ -243,14 +235,12 @@ class TiBiApplication:
         self.controllers["bz_plot"] = BrillouinZonePlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["unit_cell_data"],  # For redrawing on unit cell changes
             self.views["bz_plot"],
         )
 
         # Band Structure Plot Controller
         self.controllers["band_plot"] = BandStructurePlotController(
-            self.models["band_structure"], 
-            self.views["band_plot"]
+            self.models["band_structure"], self.views["band_plot"]
         )
 
         # Physics Computation Controller
@@ -261,9 +251,9 @@ class TiBiApplication:
     def run(self):
         """
         Run the application.
-        
+
         Shows the main window and starts the Qt event loop.
-        
+
         Returns:
             int: Application exit code
         """
@@ -274,9 +264,9 @@ class TiBiApplication:
 def main():
     """
     Application entry point.
-    
+
     Creates and runs the TiBi application.
-    
+
     Returns:
         int: Application exit code
     """
