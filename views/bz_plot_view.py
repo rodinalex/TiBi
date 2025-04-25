@@ -20,7 +20,7 @@ class BrillouinZonePlotView(QWidget):
     Displays a Brillouin zone as a wireframe with vertices shown as small spheres.
     The visualization supports rotation and zooming. The coordinate system shows
     the reciprocal space axes.
-    
+
     This view provides UI components for selecting points in the Brillouin zone
     and creating a path for band structure calculations. The actual logic for
     handling selections and path construction is implemented in the
@@ -30,7 +30,7 @@ class BrillouinZonePlotView(QWidget):
     def __init__(self):
         """
         Initialize the Brillouin zone plot view.
-        
+
         Sets up the 3D visualization area and control panels for selecting
         points in the Brillouin zone and creating paths. The buttons are
         initially disabled and will be enabled by the controller based on
@@ -54,7 +54,9 @@ class BrillouinZonePlotView(QWidget):
 
         # Create 3D plot widget
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(distance=20)
+        # Set almost-orthographic projection
+        self.view.opts["distance"] = 2000
+        self.view.opts["fov"] = 1  # In degrees
         self.view.setBackgroundColor("k")  # Black background
 
         # Axes
@@ -178,7 +180,7 @@ class BrillouinZonePlotView(QWidget):
         self.button_panel.addLayout(selection_form_layout)
         self.button_panel.addLayout(controls_layout)
         self.button_panel.setSpacing(2)
-        
+
         # Assemble the full layout
         layout.addWidget(self.view, stretch=3)
         layout.addLayout(self.button_panel, stretch=2)

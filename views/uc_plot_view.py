@@ -21,7 +21,7 @@ class UnitCellPlotView(QWidget):
     Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
     The visualization supports rotation, zooming, and site selection. The coordinate
     system shows the unit cell basis vectors and a reference grid.
-    
+
     Features:
     - Interactive 3D visualization with mouse rotation and zooming
     - Colored axes representing the Cartesian coordinate system
@@ -29,7 +29,7 @@ class UnitCellPlotView(QWidget):
     - Sites displayed as colored spheres at their fractional positions
     - Selected sites highlighted with a different color
     - Controls for displaying periodic repetitions of the unit cell
-    
+
     This view is purely presentational and contains no business logic,
     following the MVC pattern. The controller is responsible for updating
     the visualization based on model changes.
@@ -59,7 +59,10 @@ class UnitCellPlotView(QWidget):
 
         # Create 3D plot widget
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(distance=8)
+        # Set almost-orthographic projection
+        self.view.opts["distance"] = 2000
+        self.view.opts["fov"] = 1  # In degrees
+
         self.view.setBackgroundColor("k")  # Black background
 
         # Axes
