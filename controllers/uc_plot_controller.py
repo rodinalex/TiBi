@@ -6,6 +6,9 @@ from itertools import product
 from views.uc_plot_view import UnitCellPlotView
 import pyqtgraph.opengl as gl
 
+from resources.constants import default_site_scaling
+
+
 import numpy as np
 
 
@@ -150,12 +153,17 @@ class UnitCellPlotController(QObject):
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
             pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
-            sphere_color = (
-                self.uc_plot_view.selected_site_color
+            sphere_color = self.unit_cell.site_colors[self.selection["site"]]
+            # (
+            #     self.uc_plot_view.selected_site_color
+            #     if site_id == self.selection["site"]
+            #     else self.uc_plot_view.site_color
+            # )
+            sphere_radius = (
+                self.unit_cell.site_sizes[self.selection["site"]] * default_site_scaling
                 if site_id == self.selection["site"]
-                else self.uc_plot_view.site_color
+                else self.unit_cell.site_sizes[self.selection["site"]]
             )
-            sphere_radius = 0.15 if site_id == self.selection["site"] else 0.1
             # Create a sphere for the site
             sphere = gl.GLMeshItem(
                 meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),

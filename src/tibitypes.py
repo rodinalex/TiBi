@@ -16,7 +16,7 @@ class BasisVector:
     A unit cell is defined by three basis vectors that form a parallelepiped.
     The is_periodic flag indicates whether the crystal repeats along this direction.
     A non-periodic direction represents a finite dimension of the system.
-    
+
     Attributes:
         x: x-component in Cartesian coordinates
         y: y-component in Cartesian coordinates
@@ -32,7 +32,7 @@ class BasisVector:
     def as_array(self) -> np.ndarray:
         """
         Convert the basis vector to a NumPy array.
-        
+
         Returns:
             numpy.ndarray: 3D vector as a NumPy array [x, y, z]
         """
@@ -47,7 +47,7 @@ class State:
     Each state has a name and belongs to a specific site in the unit cell.
     States are the fundamental entities between which hopping can occur.
     They represent electronic quantum states like atomic orbitals or bands.
-    
+
     Attributes:
         name: Name of the state (e.g., "s", "px", "py", etc.)
         id: Unique identifier for the state (UUID)
@@ -66,7 +66,7 @@ class Site:
     basis vectors. Each site can contain multiple quantum states (orbitals).
     The position is specified using fractional coordinates within the unit cell,
     where each coordinate ranges from 0 to 1.
-    
+
     Attributes:
         name: Name of the site (e.g., atom name like "C", "Fe", etc.)
         c1: Fractional coordinate along the first basis vector (0-1)
@@ -99,7 +99,7 @@ class UnitCell:
       - displacement is a tuple of three integers (n1,n2,n3) indicating which periodic
         image of the unit cell is involved (0,0,0 means within the same unit cell)
       - amplitude is a complex number representing the hopping strength and phase
-    
+
     Attributes:
         name: Name of the unit cell
         v1: First basis vector
@@ -123,15 +123,21 @@ class UnitCell:
             Tuple[Tuple[int, int, int], np.complex128]
         ],  # [(displacement, amplitude), ...]
     ] = field(default_factory=dict)
+    site_colors: dict[uuid.UUID] = field(
+        default_factory=dict
+    )  # Site colors to be used for plotting
+    site_sizes: dict[uuid.UUID, float] = field(
+        default_factory=dict
+    )  # Radii of the site spheres to be used for plotting
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
     def volume(self) -> float:
         """
         Compute the volume of the unit cell using the scalar triple product.
-        
-        Calculates the volume of the parallelepiped defined by the three basis vectors 
+
+        Calculates the volume of the parallelepiped defined by the three basis vectors
         using the formula V = a1·(a2×a3), where a1, a2, and a3 are the basis vectors.
-        
+
         Returns:
             float: Volume of the unit cell in cubic Angstroms (or whatever units the basis vectors use)
         """
@@ -141,13 +147,13 @@ class UnitCell:
     def reciprocal_vectors(self) -> list[np.ndarray]:
         """
         Compute the reciprocal lattice vectors for the periodic directions.
-        
+
         Calculates the reciprocal lattice vectors corresponding to the periodic directions
         in the unit cell. The number of reciprocal vectors depends on the number of
         periodic dimensions (0-3). The reciprocal vectors satisfy the orthogonality
         condition: G_i · a_j = 2π δ_ij, where G_i are reciprocal vectors and a_j are
         real-space basis vectors.
-        
+
         Returns:
             list[np.ndarray]: List of 3D reciprocal vectors (0 to 3 items depending on periodicity)
         """
@@ -183,12 +189,12 @@ class UnitCell:
     def reduced_basis(self, scale: float = 1e6) -> list[BasisVector]:
         """
         Return a reduced set of periodic basis vectors using LLL algorithm.
-        
+
         Applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm to find
         a more orthogonal set of basis vectors that spans the same lattice. This is
         useful for finding a "nicer" representation of the unit cell, with basis vectors
         that are shorter and more orthogonal to each other.
-        
+
         Only the periodic vectors are reduced. Non-periodic vectors are left unchanged.
 
         Args:
@@ -240,7 +246,7 @@ class UnitCell:
         Returns:
             tuple: A tuple containing:
                 - states (list): List of State objects
-                - state_info (list): List of tuples (site_name, state_name, state_id) 
+                - state_info (list): List of tuples (site_name, state_name, state_id)
                   that provides context for each state (which site it belongs to)
         """
         states = []
@@ -254,16 +260,16 @@ class UnitCell:
     def get_BZ(self):
         """
         Compute the Brillouin zone vertices and faces.
-        
+
         The Brillouin zone is the Wigner-Seitz cell of the reciprocal lattice.
         This method calculates the vertices and faces of the Brillouin zone
         using Voronoi construction. The dimensionality of the BZ depends on
         the number of periodic dimensions in the unit cell (0-3).
-        
+
         For 1D, bz_vertices contains two points defining the BZ boundary.
         For 2D, bz_faces contains the edges of the 2D BZ polygon.
         For 3D, bz_faces contains the polygonal faces of the 3D BZ polyhedron.
-        
+
         Returns:
             tuple: A tuple containing:
                 - bz_vertices (numpy.ndarray): Array of Brillouin zone vertex coordinates
@@ -347,11 +353,11 @@ class UnitCell:
         This method creates a closure that precomputes all k-independent data needed for
         the Hamiltonian, and returns a function that efficiently builds the Hamiltonian
         matrix for any k-point in the Brillouin zone.
-        
+
         The returned function implements Bloch's theorem by transforming the real-space
         Hamiltonian (with hopping terms potentially spanning multiple unit cells) into
         k-space. This allows band structure calculations along arbitrary paths in k-space.
-        
+
         The dimension of the k-point must match the number of periodic dimensions in
         the unit cell (1D, 2D, or 3D).
 
