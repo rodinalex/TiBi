@@ -20,9 +20,22 @@ class BrillouinZonePlotView(QWidget):
     Displays a Brillouin zone as a wireframe with vertices shown as small spheres.
     The visualization supports rotation and zooming. The coordinate system shows
     the reciprocal space axes.
+
+    This view provides UI components for selecting points in the Brillouin zone
+    and creating a path for band structure calculations. The actual logic for
+    handling selections and path construction is implemented in the
+    BrillouinZonePlotController.
     """
 
     def __init__(self):
+        """
+        Initialize the Brillouin zone plot view.
+
+        Sets up the 3D visualization area and control panels for selecting
+        points in the Brillouin zone and creating paths. The buttons are
+        initially disabled and will be enabled by the controller based on
+        the dimensionality of the selected unit cell.
+        """
         super().__init__()
         self.setMinimumSize(QSize(300, 200))
 
@@ -41,7 +54,9 @@ class BrillouinZonePlotView(QWidget):
 
         # Create 3D plot widget
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(distance=20)
+        # Set almost-orthographic projection
+        self.view.opts["distance"] = 2000
+        self.view.opts["fov"] = 1  # In degrees
         self.view.setBackgroundColor("k")  # Black background
 
         # Axes
@@ -64,12 +79,12 @@ class BrillouinZonePlotView(QWidget):
         selection_form_layout = QFormLayout()
         selection_form_layout.setVerticalSpacing(2)
 
+        # Gamma point controls (Γ - origin of reciprocal space)
         gamma_pick_layout = QHBoxLayout()
         self.add_gamma_btn = QPushButton("+")
         gamma_pick_layout.addWidget(self.add_gamma_btn)
 
-        #     self.add_gamma_btn.clicked.connect(lambda: self._add_point("gamma"))
-
+        # Vertex selection controls
         vertex_pick_layout = QHBoxLayout()
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
@@ -78,6 +93,7 @@ class BrillouinZonePlotView(QWidget):
         vertex_pick_layout.addWidget(self.next_vertex_btn)
         vertex_pick_layout.addWidget(self.add_vertex_btn)
 
+        # Edge midpoint selection controls
         edge_pick_layout = QHBoxLayout()
         self.prev_edge_btn = QPushButton("←")
         self.next_edge_btn = QPushButton("→")
@@ -86,6 +102,7 @@ class BrillouinZonePlotView(QWidget):
         edge_pick_layout.addWidget(self.next_edge_btn)
         edge_pick_layout.addWidget(self.add_edge_btn)
 
+        # Face center selection controls
         face_pick_layout = QHBoxLayout()
         self.prev_face_btn = QPushButton("←")
         self.next_face_btn = QPushButton("→")
@@ -94,7 +111,7 @@ class BrillouinZonePlotView(QWidget):
         face_pick_layout.addWidget(self.next_face_btn)
         face_pick_layout.addWidget(self.add_face_btn)
 
-        # Control buttons
+        # Path controls
         controls_layout = QVBoxLayout()
         path_controls_layout = QHBoxLayout()  # Holds "Remove Last" and "Clear" buttons
         computation_controls_layout = (
@@ -107,13 +124,14 @@ class BrillouinZonePlotView(QWidget):
         self.clear_path_btn = QPushButton("Clear")
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
+        # Calculation controls
         self.n_points_spinbox = QSpinBox()
         self.n_points_spinbox.setRange(1, 1000000)
         self.n_points_spinbox.setValue(100)
         self.compute_bands_btn = QPushButton("Compute")
         self.compute_bands_btn.setEnabled(
             False
-        )  # Disabled unitl path has at least two points
+        )  # Disabled until path has at least two points
 
         path_controls_layout.addWidget(self.remove_last_btn)
         path_controls_layout.addWidget(self.clear_path_btn)
@@ -122,6 +140,7 @@ class BrillouinZonePlotView(QWidget):
         computation_controls_layout.addWidget(self.n_points_spinbox)
         computation_controls_layout.addWidget(self.compute_bands_btn)
 
+        # Initially disable all selection buttons
         btns = [
             self.add_gamma_btn,
             self.prev_vertex_btn,
@@ -137,6 +156,7 @@ class BrillouinZonePlotView(QWidget):
         for btn in btns:
             btn.setEnabled(False)
 
+        # Group buttons by type for easier controller access
         self.vertex_btns = [
             self.prev_vertex_btn,
             self.next_vertex_btn,
@@ -160,6 +180,7 @@ class BrillouinZonePlotView(QWidget):
         self.button_panel.addLayout(selection_form_layout)
         self.button_panel.addLayout(controls_layout)
         self.button_panel.setSpacing(2)
+
         # Assemble the full layout
         layout.addWidget(self.view, stretch=3)
         layout.addLayout(self.button_panel, stretch=2)

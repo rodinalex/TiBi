@@ -2,6 +2,7 @@ import sys
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QMainWindow,
     QVBoxLayout,
@@ -14,6 +15,9 @@ from views.bz_plot_view import BrillouinZonePlotView
 from views.hopping_view import HoppingView
 from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
+from views.menu_bar_view import MenuBarView
+from views.main_toolbar_view import MainToolbarView
+from views.status_bar_view import StatusBarView
 
 from controllers.app_controller import AppController
 from controllers.bands_plot_controller import BandStructurePlotController
@@ -22,6 +26,7 @@ from controllers.hopping_controller import HoppingController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 from controllers.computation_controller import ComputationController
+from controllers.main_ui_controller import MainUIController
 
 from models.data_models import DataModel, AlwaysNotifyDataModel
 
@@ -31,13 +36,32 @@ class MainWindow(QMainWindow):
     Main application window that defines the UI layout.
 
     This class is purely a view component that arranges the UI elements and
-    doesn't contain business logic or model manipulation.
+    doesn't contain business logic or model manipulation. It creates a three-column
+    layout for organizing the different components of the application, along with
+    menu bar, toolbar, and status bar.
+
+    Following the MVC pattern, this class is restricted to presentation concerns only.
     """
 
-    def __init__(self, uc, hopping, uc_plot, bz_plot, band_plot):
+    def __init__(
+        self, uc, hopping, uc_plot, bz_plot, band_plot, menu_bar, toolbar, status_bar
+    ):
+        """
+        Initialize the main window with views for different components.
+
+        Args:
+            uc: Unit cell editor view
+            hopping: Hopping parameter editor view
+            uc_plot: Unit cell 3D visualization view
+            bz_plot: Brillouin zone 3D visualization view
+            band_plot: Band structure plot view
+            menu_bar: Menu bar view
+            toolbar: Main toolbar view
+            status_bar: Status bar view
+        """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1500, 900))
+        self.setFixedSize(QSize(1600, 950))
 
         # Store references to UI components
         self.uc = uc
@@ -45,6 +69,15 @@ class MainWindow(QMainWindow):
         self.uc_plot = uc_plot
         self.bz_plot = bz_plot
         self.band_plot = band_plot
+
+        # Set menu bar
+        self.setMenuBar(menu_bar)
+
+        # Add toolbar
+        self.addToolBar(toolbar)
+
+        # Set status bar
+        self.setStatusBar(status_bar)
 
         # Main Layout
         main_view = QWidget()
@@ -56,17 +89,17 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout()
 
         # Left column for hierarchical view and form panels
-        left_layout.addWidget(self.uc, stretch=1)
-        left_layout.addWidget(self.hopping, stretch=2)
+        left_layout.addWidget(self.frame_widget(self.uc), stretch=1)
+        left_layout.addWidget(self.frame_widget(self.hopping), stretch=2)
 
-        # 3D visualization for the unit cell
-        mid_layout.addWidget(self.uc_plot, stretch=1)
-        mid_layout.addWidget(self.bz_plot, stretch=1)
-        mid_layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
+        # Middle column for 3D visualizations
+        mid_layout.addWidget(self.frame_widget(self.uc_plot), stretch=3)
+        mid_layout.addWidget(self.frame_widget(self.bz_plot), stretch=2)
+        mid_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=1)
 
-        # Right column for computation options and band structure
-        right_layout.addWidget(self.band_plot, stretch=1)
-        right_layout.addWidget(PlaceholderWidget("BAND"), stretch=1)
+        # Right column for computation results
+        right_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
+        right_layout.addWidget(self.frame_widget(PlaceholderWidget("BAND")), stretch=1)
 
         # Add the columns to the main layout
         main_layout.addLayout(left_layout, stretch=1)
@@ -76,21 +109,42 @@ class MainWindow(QMainWindow):
         # Set as central widget
         self.setCentralWidget(main_view)
 
+    def frame_widget(self, widget: QWidget) -> QFrame:
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Box)
+        frame.setLineWidth(1)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.addWidget(widget)
+        frame.setLayout(layout)
+        return frame
+
 
 class TiBiApplication:
     """
     Main application class that initializes and connects all components.
 
-    This class is responsible for:
-    1. Creating models
+    This class serves as the application composition root, responsible for:
+    1. Creating data models
     2. Creating views
     3. Creating controllers
-    4. Connecting everything together
+    4. Wiring everything together
     5. Starting the application
+
+    The application follows a strict MVC architecture with reactive data binding:
+    - Models store application state and emit signals when they change
+    - Views display data and capture user input without direct knowledge of models
+    - Controllers connect models and views, handling user actions and model updates
     """
 
     def __init__(self):
-        """Initialize the application without creating components yet."""
+        """
+        Initialize the application by creating and connecting all components.
+
+        Sets up all models, views, and controllers, and establishes the connections
+        between them according to the MVC pattern. Each component is stored in a
+        dictionary for easy access.
+        """
         # Create the Qt application
         self.app = QApplication(sys.argv)
 
@@ -100,13 +154,47 @@ class TiBiApplication:
         self.controllers = {}
         self.main_window = None
 
-        # Set models
-        self.models["unit_cells"] = {}  # Dictionary of unit cells by UUID
+        # Initialize models
+        self._init_models()
 
-        self.models["selection"] = DataModel(
-            unit_cell=None, site=None, state=None
-        )  # UUID's of the selected unit cell, site, and state
+        # Initialize views
+        self._init_views()
 
+        # Initialize controllers
+        self._init_controllers()
+
+        # Initialize the main window
+        self.main_window = MainWindow(
+            self.views["uc"],
+            self.views["hopping"],
+            self.views["uc_plot"],
+            self.views["bz_plot"],
+            self.views["band_plot"],
+            self.views["menu_bar"],
+            self.views["toolbar"],
+            self.views["status_bar"],
+        )
+
+        # Initialize the top-level application controller
+        self.app_controller = AppController(self.models, self.controllers)
+
+        # Set initial status message
+        self.controllers["main_ui"].update_status("Application started")
+
+    def _init_models(self):
+        """
+        Initialize all data models used in the application.
+
+        Creates reactive data models for different aspects of the application state,
+        including unit cells, selection state, form data, and calculation results.
+        """
+        # Dictionary mapping UUIDs to UnitCell objects
+        self.models["unit_cells"] = {}
+
+        # Current selection state (tracks which items are selected in the UI)
+        self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
+
+        # Form data for the currently selected unit cell
         self.models["unit_cell_data"] = DataModel(
             name="",
             v1x=1.0,
@@ -121,29 +209,47 @@ class TiBiApplication:
             v1periodic=False,
             v2periodic=False,
             v3periodic=False,
-        )  # Unit cell data of the selected unit cell
+        )
 
-        self.models["site_data"] = DataModel(
-            name="", c1=0.0, c2=0.0, c3=0.0
-        )  # Site data of the selected unit cell
+        # Form data for the currently selected site
+        self.models["site_data"] = DataModel(name="", c1=0.0, c2=0.0, c3=0.0)
 
-        self.models["state_data"] = DataModel(
-            name=""
-        )  # State data of the selected unit cell
+        # Form data for the currently selected state
+        self.models["state_data"] = DataModel(name="")
 
+        # Band structure calculation results
+        # Uses AlwaysNotifyDataModel to ensure UI updates on every change
         self.models["band_structure"] = AlwaysNotifyDataModel(
             k_path=None, bands=None, special_points=None
-        )  # Band structure data. Special points are the high symmetry points obtained from the Brillouin zone
+        )
 
-        # Set views
+    def _init_views(self):
+        """
+        Initialize all views used in the application.
+
+        Creates the UI components for different parts of the application,
+        including editors, 3D visualizations, plots, and main UI elements.
+        """
+        # Core visualizations and editors
         self.views["uc"] = UnitCellView()
         self.views["hopping"] = HoppingView()
         self.views["uc_plot"] = UnitCellPlotView()
         self.views["bz_plot"] = BrillouinZonePlotView()
         self.views["band_plot"] = BandStructurePlotView()
 
-        # Set controllers
+        # Main UI components
+        self.views["menu_bar"] = MenuBarView()
+        self.views["toolbar"] = MainToolbarView()
+        self.views["status_bar"] = StatusBarView()
 
+    def _init_controllers(self):
+        """
+        Initialize all controllers used in the application.
+
+        Creates controllers that connect models and views, handling the application
+        logic. Each controller is responsible for a specific aspect of functionality.
+        """
+        # Unit Cell Editor Controller
         self.controllers["uc"] = UnitCellController(
             self.models["unit_cells"],
             self.models["selection"],
@@ -153,60 +259,67 @@ class TiBiApplication:
             self.views["uc"],
         )
 
+        # Hopping Parameter Editor Controller
         self.controllers["hopping"] = HoppingController(
             self.models["unit_cells"],
             self.models["selection"],
             self.views["hopping"],
         )
 
+        # Unit Cell 3D Visualization Controller
         self.controllers["uc_plot"] = UnitCellPlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models[
-                "unit_cell_data"
-            ],  # Used to keep track of changes of the unit cell for redrawing the plot
-            self.models[
-                "site_data"
-            ],  # Used to keep track of changes of the unit cell for redrawing the plot
             self.views["uc_plot"],
         )
 
+        # Brillouin Zone Visualization Controller
         self.controllers["bz_plot"] = BrillouinZonePlotController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models[
-                "unit_cell_data"
-            ],  # Used to keep track of changes of the unit cell for redrawing the plot
             self.views["bz_plot"],
         )
 
+        # Band Structure Plot Controller
         self.controllers["band_plot"] = BandStructurePlotController(
             self.models["band_structure"], self.views["band_plot"]
         )
 
+        # Physics Computation Controller
         self.controllers["computation"] = ComputationController(
             self.models["band_structure"]
         )
 
-        # Initialize the main window
-        self.main_window = MainWindow(
-            self.views["uc"],
-            self.views["hopping"],
-            self.views["uc_plot"],
-            self.views["bz_plot"],
-            self.views["band_plot"],
+        # Main UI Controller (menu bar, toolbar, status bar)
+        self.controllers["main_ui"] = MainUIController(
+            self.models,
+            self.views["menu_bar"],
+            self.views["toolbar"],
+            self.views["status_bar"],
         )
-        # Initialize the AppController
-        self.app_controller = AppController(self.models, self.controllers)
 
     def run(self):
-        """Run the application."""
+        """
+        Run the application.
+
+        Shows the main window and starts the Qt event loop.
+
+        Returns:
+            int: Application exit code
+        """
         self.main_window.show()
         return self.app.exec()
 
 
 def main():
-    """Application entry point."""
+    """
+    Application entry point.
+
+    Creates and runs the TiBi application.
+
+    Returns:
+        int: Application exit code
+    """
     # Create and initialize the application
     app = TiBiApplication()
 

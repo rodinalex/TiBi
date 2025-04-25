@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import uuid
-from typing import Tuple
+from typing import Tuple, List, Dict, Any
 import numpy as np
 from sympy.polys.domains import ZZ
 from sympy.polys.matrices import DM
@@ -15,6 +15,13 @@ class BasisVector:
 
     A unit cell is defined by three basis vectors that form a parallelepiped.
     The is_periodic flag indicates whether the crystal repeats along this direction.
+    A non-periodic direction represents a finite dimension of the system.
+
+    Attributes:
+        x: x-component in Cartesian coordinates
+        y: y-component in Cartesian coordinates
+        z: z-component in Cartesian coordinates
+        is_periodic: Whether the crystal repeats in this direction
     """
 
     x: float  # x-component in Cartesian coordinates
@@ -23,7 +30,12 @@ class BasisVector:
     is_periodic: bool = False  # Whether the crystal repeats in this direction
 
     def as_array(self) -> np.ndarray:
-        """Return the vector as a NumPy array."""
+        """
+        Convert the basis vector to a NumPy array.
+
+        Returns:
+            numpy.ndarray: 3D vector as a NumPy array [x, y, z]
+        """
         return np.array([self.x, self.y, self.z])
 
 
@@ -32,8 +44,13 @@ class State:
     """
     Represents a quantum state (like an orbital) within a site.
 
-    Each state has an energy and belongs to a specific site in the unit cell.
+    Each state has a name and belongs to a specific site in the unit cell.
     States are the fundamental entities between which hopping can occur.
+    They represent electronic quantum states like atomic orbitals or bands.
+
+    Attributes:
+        name: Name of the state (e.g., "s", "px", "py", etc.)
+        id: Unique identifier for the state (UUID)
     """
 
     name: str  # Name of the state (e.g., "s", "px", "py", etc.)
@@ -47,6 +64,16 @@ class Site:
 
     Sites are positioned using fractional coordinates relative to the unit cell's
     basis vectors. Each site can contain multiple quantum states (orbitals).
+    The position is specified using fractional coordinates within the unit cell,
+    where each coordinate ranges from 0 to 1.
+
+    Attributes:
+        name: Name of the site (e.g., atom name like "C", "Fe", etc.)
+        c1: Fractional coordinate along the first basis vector (0-1)
+        c2: Fractional coordinate along the second basis vector (0-1)
+        c3: Fractional coordinate along the third basis vector (0-1)
+        states: Dictionary mapping state UUIDs to State objects
+        id: Unique identifier for the site (UUID)
     """
 
     name: str  # Name of the site (e.g., atom name like "C", "Fe", etc.)
@@ -67,11 +94,20 @@ class UnitCell:
     can move between states, both within the unit cell and between periodic images.
 
     The hopping dictionary has a complex structure:
-    - Keys are pairs of state UUIDs (source, destination)
+    - Keys are pairs of state UUIDs (destination_state_id, source_state_id)
     - Values are lists of (displacement, amplitude) pairs where:
       - displacement is a tuple of three integers (n1,n2,n3) indicating which periodic
         image of the unit cell is involved (0,0,0 means within the same unit cell)
       - amplitude is a complex number representing the hopping strength and phase
+
+    Attributes:
+        name: Name of the unit cell
+        v1: First basis vector
+        v2: Second basis vector
+        v3: Third basis vector
+        sites: Dictionary mapping site UUIDs to Site objects
+        hoppings: Dictionary of hopping terms between states
+        id: Unique identifier for the unit cell (UUID)
     """
 
     name: str  # Name of the unit cell
@@ -87,17 +123,39 @@ class UnitCell:
             Tuple[Tuple[int, int, int], np.complex128]
         ],  # [(displacement, amplitude), ...]
     ] = field(default_factory=dict)
+    site_colors: dict[uuid.UUID] = field(
+        default_factory=dict
+    )  # Site colors to be used for plotting
+    site_sizes: dict[uuid.UUID, float] = field(
+        default_factory=dict
+    )  # Radii of the site spheres to be used for plotting
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
     def volume(self) -> float:
-        """Compute the volume of the unit cell using the scalar triple product."""
+        """
+        Compute the volume of the unit cell using the scalar triple product.
+
+        Calculates the volume of the parallelepiped defined by the three basis vectors
+        using the formula V = a1·(a2×a3), where a1, a2, and a3 are the basis vectors.
+
+        Returns:
+            float: Volume of the unit cell in cubic Angstroms (or whatever units the basis vectors use)
+        """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
 
     def reciprocal_vectors(self) -> list[np.ndarray]:
         """
-        Compute the reciprocal lattice vectors corresponding to the periodic directions
-        in the unit cell. Returns a list of 3D reciprocal vectors (0 to 3 items).
+        Compute the reciprocal lattice vectors for the periodic directions.
+
+        Calculates the reciprocal lattice vectors corresponding to the periodic directions
+        in the unit cell. The number of reciprocal vectors depends on the number of
+        periodic dimensions (0-3). The reciprocal vectors satisfy the orthogonality
+        condition: G_i · a_j = 2π δ_ij, where G_i are reciprocal vectors and a_j are
+        real-space basis vectors.
+
+        Returns:
+            list[np.ndarray]: List of 3D reciprocal vectors (0 to 3 items depending on periodicity)
         """
         basis_vectors = [v for v in [self.v1, self.v2, self.v3] if v.is_periodic]
         num_periodic = len(basis_vectors)
@@ -132,11 +190,19 @@ class UnitCell:
         """
         Return a reduced set of periodic basis vectors using LLL algorithm.
 
+        Applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm to find
+        a more orthogonal set of basis vectors that spans the same lattice. This is
+        useful for finding a "nicer" representation of the unit cell, with basis vectors
+        that are shorter and more orthogonal to each other.
+
+        Only the periodic vectors are reduced. Non-periodic vectors are left unchanged.
+
         Args:
             scale: A float to scale the vectors for integer reduction (default: 1e6)
+                  Used because the LLL algorithm works with integer matrices.
 
         Returns:
-            A list of BasisVector objects representing the reduced basis.
+            list[BasisVector]: A list of BasisVector objects representing the reduced basis
         """
         vs = [self.v1, self.v2, self.v3]
         # Determine which vectors are periodic
@@ -171,19 +237,17 @@ class UnitCell:
 
     def get_states(self):
         """
-        Extracts all states from a unit cell along with their identifying information.
+        Extract all states from a unit cell along with their identifying information.
 
         This is a helper function used by UI components to get a flattened list of all
-        states in the unit cell, regardless of which site they belong to.
-
-        Args:
-            self: The unit cell to extract states from
+        states in the unit cell, regardless of which site they belong to. It makes it
+        easier to display states in UI components like dropdown menus or lists.
 
         Returns:
-            A tuple of (states, state_info) where:
-            - states is a list of State objects
-            - state_info is a list of tuples (site_name, state_name, state_id) that
-            provides a more displayable form of the state information
+            tuple: A tuple containing:
+                - states (list): List of State objects
+                - state_info (list): List of tuples (site_name, state_name, state_id)
+                  that provides context for each state (which site it belongs to)
         """
         states = []
         state_info = []
@@ -194,8 +258,25 @@ class UnitCell:
         return (states, state_info)
 
     def get_BZ(self):
+        """
+        Compute the Brillouin zone vertices and faces.
 
-        n_neighbors = 1
+        The Brillouin zone is the Wigner-Seitz cell of the reciprocal lattice.
+        This method calculates the vertices and faces of the Brillouin zone
+        using Voronoi construction. The dimensionality of the BZ depends on
+        the number of periodic dimensions in the unit cell (0-3).
+
+        For 1D, bz_vertices contains two points defining the BZ boundary.
+        For 2D, bz_faces contains the edges of the 2D BZ polygon.
+        For 3D, bz_faces contains the polygonal faces of the 3D BZ polyhedron.
+
+        Returns:
+            tuple: A tuple containing:
+                - bz_vertices (numpy.ndarray): Array of Brillouin zone vertex coordinates
+                - bz_faces (list): List where each element contains coordinates of points
+                  defining a BZ boundary (edge in 2D, face in 3D)
+        """
+        n_neighbors = 1  # Number of neighboring reciprocal lattice points to consider
         ranges = range(-n_neighbors, n_neighbors + 1)
 
         reciprocal_vectors = self.reciprocal_vectors()
@@ -273,9 +354,16 @@ class UnitCell:
         the Hamiltonian, and returns a function that efficiently builds the Hamiltonian
         matrix for any k-point in the Brillouin zone.
 
+        The returned function implements Bloch's theorem by transforming the real-space
+        Hamiltonian (with hopping terms potentially spanning multiple unit cells) into
+        k-space. This allows band structure calculations along arbitrary paths in k-space.
+
+        The dimension of the k-point must match the number of periodic dimensions in
+        the unit cell (1D, 2D, or 3D).
+
         Returns:
             function: A function that takes k-points (numpy array) and returns a
-                     Hamiltonian matrix (numpy array)
+                     complex Hamiltonian matrix (numpy array of shape [n_states, n_states])
         """
         # Get the list of all states in the unit cell for determining the Hamiltonian size
         states, state_info = self.get_states()
@@ -302,12 +390,18 @@ class UnitCell:
             """
             Compute the Hamiltonian matrix for a given k-point.
 
+            This function constructs the Hamiltonian matrix in k-space according to the
+            tight-binding model defined by the unit cell and its hopping parameters.
+            The matrix elements include phase factors exp(-i k·R) for hoppings between
+            different unit cells, as required by Bloch's theorem.
+
             Args:
                 k: k-point vector in the basis of reciprocal lattice vectors
                    If the system has n periodic directions, k should be an n-dimensional vector
 
             Returns:
                 numpy.ndarray: Complex Hamiltonian matrix of size (n_states, n_states)
+                              The eigenvalues of this matrix give the energy bands at k
             """
             # Validate the k-point dimension matches the number of periodic directions
             if len(k) != num_periodic:

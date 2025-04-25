@@ -16,7 +16,10 @@
 - Add bandstructure plot
 - When creating a UC, we occasionally have problematic vectors DURING THE CREATION leading to runtime warnings (parallel vectors, zero volume, etc).
 ## Daily Plan
-- Add path-construction option using the selection
+- Enable/disable radio buttons depending on whether a unit cell is selected
+- If the volume of the unit cell is zero, put up guards to not try to obtain the reciprocal lattice for BZ
+- Add menu bar
+- Add status bar
 
 ## Tree structure
 - update_tree_item, remove_tree_item, select_item, and find_item_by_id have some redundancy: can make more streamlined

@@ -6,53 +6,98 @@ from itertools import product
 from views.uc_plot_view import UnitCellPlotView
 import pyqtgraph.opengl as gl
 
+from resources.constants import default_site_scaling
+
+
 import numpy as np
 
 
 class UnitCellPlotController(QObject):
+    """
+    Controller for the unit cell 3D visualization.
+
+    This controller manages the 3D visualization of unit cells, handling the
+    rendering of unit cell wireframes, site positions, and periodic repetitions.
+    It observes changes to the selected unit cell and its properties, updating
+    the visualization in response to any modifications.
+
+    The controller provides functionality for:
+    1. Visualizing the unit cell as a wireframe parallelepiped
+    2. Displaying sites (atoms) as colored spheres
+    3. Showing multiple periodic repetitions of the unit cell
+    4. Highlighting selected sites
+
+    The visualization updates reactively when the unit cell data changes
+    or when the user adjusts the number of periodic repetitions via spinners.
+    """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        unit_cell_data: DataModel,
-        site_data: DataModel,
         uc_plot_view: UnitCellPlotView,
     ):
+        """
+        Initialize the unit cell plot controller.
+
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Model tracking the currently selected unit cell, site, and state
+            uc_plot_view: The view component for the 3D visualization
+        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
-        self.unit_cell_data = unit_cell_data
-        self.site_data = site_data
         self.uc_plot_view = uc_plot_view
 
         # Internal controller state
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-        # Flag to prevent redundant redraws during cascading signal updates
-        self._updating = False
+        # Signals to update the plot when the unit cell spinners are changed
+        self.uc_plot_view.n1_spinner.valueChanged.connect(self.update_unit_cell)
+        self.uc_plot_view.n2_spinner.valueChanged.connect(self.update_unit_cell)
+        self.uc_plot_view.n3_spinner.valueChanged.connect(self.update_unit_cell)
 
-        # Connect Signals
-        # Signals to redraw the plot due to selections change/unit cell and site updates
-        self.selection.signals.updated.connect(self._update_schedule)
-        self.unit_cell_data.signals.updated.connect(self._update_schedule)
-        self.site_data.signals.updated.connect(self._update_schedule)
+        # Signals to update the plot when the site visualization fields are changed
+        self.uc_plot_view.radius_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.red_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.green_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.blue_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.alpha_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
 
-        # Signals to update the plot when the spinners are changed
-        self.uc_plot_view.n1_spinner.valueChanged.connect(self.set_unit_cell)
-        self.uc_plot_view.n2_spinner.valueChanged.connect(self.set_unit_cell)
-        self.uc_plot_view.n3_spinner.valueChanged.connect(self.set_unit_cell)
+    def _update_site_visualization(self):
+        """
+        A function to update the visual properties of the site. First, the data is
+        collected from the radius and color fields and saved to the selected unit cell's
+        site_sizes and site_colors dictionaries. Next, the figure is redrawn.
+        """
+        new_radius = self.uc_plot_view.radius_spinner.value()
+        new_red = self.uc_plot_view.red_spinner.value()
+        new_green = self.uc_plot_view.green_spinner.value()
+        new_blue = self.uc_plot_view.blue_spinner.value()
+        new_alpha = self.uc_plot_view.alpha_spinner.value()
 
-    def _update_schedule(self):
-        if self._updating:
-            return
-        self._updating = True
-        # Schedule the update to happen after all signals are processed
-        self.set_unit_cell()
-        self._updating = False
+        self.unit_cell.site_sizes[self.selection["site"]] = new_radius
+        self.unit_cell.site_colors[self.selection["site"]] = (
+            new_red,
+            new_green,
+            new_blue,
+            new_alpha,
+        )
+        self.update_unit_cell()
 
-    def set_unit_cell(self):
+    def update_unit_cell(self):
         """
         Set or update the unit cell to be displayed in the 3D view.
 
@@ -101,6 +146,25 @@ class UnitCellPlotController(QObject):
         ]
         self.n1, self.n2, self.n3 = repeats
 
+        # If a site is selected, show the radius and the color parameters in the appropriate fields
+        site_id = self.selection.get("site")
+
+        self.uc_plot_view.red_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.green_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.blue_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.alpha_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.radius_spinner.setEnabled(site_id is not None)
+
+        if site_id is not None:
+            color_param = self.unit_cell.site_colors[site_id]
+            self.uc_plot_view.red_spinner.setValue(color_param[0])
+            self.uc_plot_view.green_spinner.setValue(color_param[1])
+            self.uc_plot_view.blue_spinner.setValue(color_param[2])
+            self.uc_plot_view.alpha_spinner.setValue(color_param[3])
+
+            size_param = self.unit_cell.site_sizes[site_id]
+            self.uc_plot_view.radius_spinner.setValue(size_param)
+
         # Collect line vertices
         line_vertices = []
         for jj, kk, ll in product(range(self.n1), range(self.n2), range(self.n3)):
@@ -146,17 +210,25 @@ class UnitCellPlotController(QObject):
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
             pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
-            sphere_color = (
-                self.uc_plot_view.selected_site_color
+            sphere_color = self.unit_cell.site_colors[site_id]
+
+            sphere_radius = (
+                self.unit_cell.site_sizes[site_id] * default_site_scaling
                 if site_id == self.selection["site"]
-                else self.uc_plot_view.site_color
+                else self.unit_cell.site_sizes[site_id]
             )
-            # Create a sphere for the site
+            # Create a sphere for the site. The color needs to be given in 0 to 1 scale for RGB
             sphere = gl.GLMeshItem(
-                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=0.1),
+                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),
                 smooth=True,
-                color=sphere_color,
+                color=(
+                    sphere_color[0] / 255,
+                    sphere_color[1] / 255,
+                    sphere_color[2] / 255,
+                    sphere_color[3],
+                ),
                 shader="shaded",
+                glOptions="translucent",
             )
 
             shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2 + pos
@@ -227,4 +299,4 @@ class UnitCellPlotController(QObject):
         return line_vertices
 
     def _on_spinner_changed(self):
-        self.set_unit_cell()
+        self._update_unit_cell()
