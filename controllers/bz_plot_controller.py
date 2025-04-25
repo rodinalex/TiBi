@@ -158,18 +158,25 @@ class BrillouinZonePlotController(QObject):
             self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
 
         elif self.dim == 3:
-            # Get the edge and face points
+            unique_edges = set()
+            edge_midpoints = []
+
             for face in self.bz_faces:
                 for ii in range(len(face)):
                     next_ii = (ii + 1) % len(face)
-                    # Midpoint of the edge
-                    mid_point = np.mean([face[ii], face[next_ii]], axis=0)
-                    self.bz_point_lists["edge"].append(mid_point)
+                    v1 = tuple(face[ii])
+                    v2 = tuple(face[next_ii])
+                    edge = tuple(sorted((v1, v2)))
+                    if edge not in unique_edges:
+                        unique_edges.add(edge)
+                        midpoint = 0.5 * (np.array(v1) + np.array(v2))
+                        edge_midpoints.append(midpoint)
 
-                # Midpoint of the face
-                mid_point = np.mean(face, axis=0)
-                self.bz_point_lists["face"].append(mid_point)
-            self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
+                # Face midpoint (no duplication issue here)
+                face_mid = np.mean(face, axis=0)
+                self.bz_point_lists["face"].append(face_mid)
+
+            self.bz_point_lists["edge"] = np.array(edge_midpoints)
             self.bz_point_lists["face"] = np.array(self.bz_point_lists["face"])
 
         # Plot the BZ vertices as points
@@ -205,19 +212,20 @@ class BrillouinZonePlotController(QObject):
         For 3D BZ, the wireframe is the edges of the polyhedron.
         """
         if len(self.bz_faces) > 0:
-            # Process faces to extract unique edges
-            all_edges = []
-            for face in self.bz_faces:
-                # Extract edges from each face (connecting consecutive vertices)
-                for ii in range(len(face)):
-                    next_ii = (ii + 1) % len(face)  # Loop back to first vertex
-                    all_edges.append([face[ii], face[next_ii]])
+            unique_edges = set()
 
-            # Create a single line item for all BZ edges
-            # Flatten the list of edges to a list of vertices for GLLinePlotItem
+            for face in self.bz_faces:
+                for ii in range(len(face)):
+                    next_ii = (ii + 1) % len(face)
+                    v1 = tuple(face[ii])
+                    v2 = tuple(face[next_ii])
+                    edge = tuple(sorted((v1, v2)))
+                    unique_edges.add(edge)
+
+            # Convert edges to line vertices
             line_vertices = []
-            for edge in all_edges:
-                line_vertices.extend(edge)
+            for v1, v2 in unique_edges:
+                line_vertices.extend([v1, v2])
 
             # Make sure all the line vertices are 3D
             line_vertices = self._pad_to_3d(line_vertices)
