@@ -2,6 +2,7 @@ import sys
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
     QMainWindow,
     QVBoxLayout,
@@ -60,7 +61,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1500, 950))
+        self.setFixedSize(QSize(1600, 950))
 
         # Store references to UI components
         self.uc = uc
@@ -88,17 +89,17 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout()
 
         # Left column for hierarchical view and form panels
-        left_layout.addWidget(self.uc, stretch=1)
-        left_layout.addWidget(self.hopping, stretch=2)
+        left_layout.addWidget(self.frame_widget(self.uc), stretch=1)
+        left_layout.addWidget(self.frame_widget(self.hopping), stretch=2)
 
         # Middle column for 3D visualizations
-        mid_layout.addWidget(self.uc_plot, stretch=1)
-        mid_layout.addWidget(self.bz_plot, stretch=1)
-        mid_layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
+        mid_layout.addWidget(self.frame_widget(self.uc_plot), stretch=3)
+        mid_layout.addWidget(self.frame_widget(self.bz_plot), stretch=2)
+        mid_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=1)
 
         # Right column for computation results
-        right_layout.addWidget(self.band_plot, stretch=1)
-        right_layout.addWidget(PlaceholderWidget("BAND"), stretch=1)
+        right_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
+        right_layout.addWidget(self.frame_widget(PlaceholderWidget("BAND")), stretch=1)
 
         # Add the columns to the main layout
         main_layout.addLayout(left_layout, stretch=1)
@@ -107,6 +108,16 @@ class MainWindow(QMainWindow):
 
         # Set as central widget
         self.setCentralWidget(main_view)
+
+    def frame_widget(self, widget: QWidget) -> QFrame:
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Box)
+        frame.setLineWidth(1)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.addWidget(widget)
+        frame.setLayout(layout)
+        return frame
 
 
 class TiBiApplication:
