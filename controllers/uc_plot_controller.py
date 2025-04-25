@@ -228,6 +228,7 @@ class UnitCellPlotController(QObject):
                     sphere_color[3],
                 ),
                 shader="shaded",
+                glOptions="translucent",
             )
 
             shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2 + pos
