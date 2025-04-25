@@ -54,10 +54,48 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-        # Signals to update the plot when the spinners are changed
+        # Signals to update the plot when the unit cell spinners are changed
         self.uc_plot_view.n1_spinner.valueChanged.connect(self.update_unit_cell)
         self.uc_plot_view.n2_spinner.valueChanged.connect(self.update_unit_cell)
         self.uc_plot_view.n3_spinner.valueChanged.connect(self.update_unit_cell)
+
+        # Signals to update the plot when the site visualization fields are changed
+        self.uc_plot_view.radius_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.red_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.green_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.blue_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+        self.uc_plot_view.alpha_spinner.editingFinished.connect(
+            self._update_site_visualization
+        )
+
+    def _update_site_visualization(self):
+        """
+        A function to update the visual properties of the site. First, the data is
+        collected from the radius and color fields and saved to the selected unit cell's
+        site_sizes and site_colors dictionaries. Next, the figure is redrawn.
+        """
+        new_radius = self.uc_plot_view.radius_spinner.value()
+        new_red = self.uc_plot_view.red_spinner.value()
+        new_green = self.uc_plot_view.green_spinner.value()
+        new_blue = self.uc_plot_view.blue_spinner.value()
+        new_alpha = self.uc_plot_view.alpha_spinner.value()
+
+        self.unit_cell.site_sizes[self.selection["site"]] = new_radius
+        self.unit_cell.site_colors[self.selection["site"]] = (
+            new_red,
+            new_green,
+            new_blue,
+            new_alpha,
+        )
+        self.update_unit_cell()
 
     def update_unit_cell(self):
         """
@@ -108,6 +146,25 @@ class UnitCellPlotController(QObject):
         ]
         self.n1, self.n2, self.n3 = repeats
 
+        # If a site is selected, show the radius and the color parameters in the appropriate fields
+        site_id = self.selection.get("site")
+
+        self.uc_plot_view.red_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.green_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.blue_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.alpha_spinner.setEnabled(site_id is not None)
+        self.uc_plot_view.radius_spinner.setEnabled(site_id is not None)
+
+        if site_id is not None:
+            color_param = self.unit_cell.site_colors[site_id]
+            self.uc_plot_view.red_spinner.setValue(color_param[0])
+            self.uc_plot_view.green_spinner.setValue(color_param[1])
+            self.uc_plot_view.blue_spinner.setValue(color_param[2])
+            self.uc_plot_view.alpha_spinner.setValue(color_param[3])
+
+            size_param = self.unit_cell.site_sizes[site_id]
+            self.uc_plot_view.radius_spinner.setValue(size_param)
+
         # Collect line vertices
         line_vertices = []
         for jj, kk, ll in product(range(self.n1), range(self.n2), range(self.n3)):
@@ -153,22 +210,23 @@ class UnitCellPlotController(QObject):
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
             pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
-            sphere_color = self.unit_cell.site_colors[self.selection["site"]]
-            # (
-            #     self.uc_plot_view.selected_site_color
-            #     if site_id == self.selection["site"]
-            #     else self.uc_plot_view.site_color
-            # )
+            sphere_color = self.unit_cell.site_colors[site_id]
+
             sphere_radius = (
-                self.unit_cell.site_sizes[self.selection["site"]] * default_site_scaling
+                self.unit_cell.site_sizes[site_id] * default_site_scaling
                 if site_id == self.selection["site"]
-                else self.unit_cell.site_sizes[self.selection["site"]]
+                else self.unit_cell.site_sizes[site_id]
             )
-            # Create a sphere for the site
+            # Create a sphere for the site. The color needs to be given in 0 to 1 scale for RGB
             sphere = gl.GLMeshItem(
                 meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),
                 smooth=True,
-                color=sphere_color,
+                color=(
+                    sphere_color[0] / 255,
+                    sphere_color[1] / 255,
+                    sphere_color[2] / 255,
+                    sphere_color[3],
+                ),
                 shader="shaded",
             )
 
