@@ -155,9 +155,10 @@ class UnitCellPlotController(QObject):
                 if site_id == self.selection["site"]
                 else self.uc_plot_view.site_color
             )
+            sphere_radius = 0.15 if site_id == self.selection["site"] else 0.1
             # Create a sphere for the site
             sphere = gl.GLMeshItem(
-                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=0.1),
+                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),
                 smooth=True,
                 color=sphere_color,
                 shader="shaded",
