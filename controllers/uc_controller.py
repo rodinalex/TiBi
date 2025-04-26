@@ -4,7 +4,9 @@ from PySide6.QtGui import QStandardItem
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
 from views.uc_view import UnitCellView
-from resources.constants import default_site_color, default_site_size
+from resources.constants import default_site_size
+
+import random
 
 
 class UnitCellController(QObject):
@@ -426,7 +428,12 @@ class UnitCellController(QObject):
         selected_uc_id = self.selection["unit_cell"]
         current_uc = self.unit_cells[selected_uc_id]
         current_uc.sites[new_site.id] = new_site
-        current_uc.site_colors[new_site.id] = default_site_color
+        current_uc.site_colors[new_site.id] = (
+            random.randrange(256),
+            random.randrange(256),
+            random.randrange(256),
+            1.0,
+        )
         current_uc.site_sizes[new_site.id] = default_site_size
 
         # Update UI (selective update instead of full refresh)

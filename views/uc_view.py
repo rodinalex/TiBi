@@ -129,8 +129,8 @@ class SitePanel(QWidget):
 
         for c in [self.c1, self.c2, self.c3]:
             c.setRange(0.0, 1.0)
-            c.setSingleStep(0.01)
             c.setDecimals(3)
+            c.setButtonSymbols(QDoubleSpinBox.NoButtons)
 
         # Create row layouts with labels on the left and spin boxes on the right
         form_layout = QFormLayout()
