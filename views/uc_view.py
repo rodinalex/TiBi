@@ -10,9 +10,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QDoubleSpinBox,
     QTreeView,
+    QGridLayout,
 )
 from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal
+from resources.colors import CF_vermillion, CF_green, CF_sky
 
 
 class ButtonPanel(QWidget):
@@ -71,9 +73,10 @@ class UnitCellPanel(QWidget):
         form_layout = QFormLayout()
         form_layout.setVerticalSpacing(2)
 
+        grid_layout = QGridLayout()
+
         # Function to create a row with (x, y, z) input fields
-        def create_vector_row(v):
-            layout = QHBoxLayout()  # Pack x, y, and z fields horizontally
+        def create_vector_row(n):
             x = QDoubleSpinBox()
             y = QDoubleSpinBox()
             z = QDoubleSpinBox()
@@ -84,25 +87,36 @@ class UnitCellPanel(QWidget):
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
 
-            layout.addWidget(x)
-            layout.addWidget(y)
-            layout.addWidget(z)
-            return layout, (x, y, z)
+            grid_layout.addWidget(x, 1, n)
+            grid_layout.addWidget(y, 2, n)
+            grid_layout.addWidget(z, 3, n)
+            return (x, y, z)
 
         # Create vector input rows
-        self.v1_layout, self.v1 = create_vector_row("v1")
-        self.v2_layout, self.v2 = create_vector_row("v2")
-        self.v3_layout, self.v3 = create_vector_row("v3")
+        self.v1 = create_vector_row(1)
+        self.v2 = create_vector_row(2)
+        self.v3 = create_vector_row(3)
 
-        form_layout.addRow("v<sub>1</sub>:", self.v1_layout)
-        form_layout.addRow("v<sub>2</sub>:", self.v2_layout)
-        form_layout.addRow("v<sub>3</sub>:", self.v3_layout)
+        # Create a coordinate label row
+        for ii, (text, color) in enumerate(
+            zip(["x", "y", "z"], [CF_vermillion, CF_green, CF_sky]), start=1
+        ):
+            label = QLabel(text)
+            label.setAlignment(Qt.AlignCenter)
+            label.setStyleSheet(
+                f"color: rgba({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)}, {color[3]});"
+            )
+            grid_layout.addWidget(label, 0, ii)
 
+        grid_layout.addWidget(QLabel("v<sub>1</sub>:"), 1, 0)
+        grid_layout.addWidget(QLabel("v<sub>2</sub>:"), 2, 0)
+        grid_layout.addWidget(QLabel("v<sub>3</sub>:"), 3, 0)
+        grid_layout.setVerticalSpacing(2)
         # Main layout
         layout = QVBoxLayout(self)
 
         layout.addWidget(basis_header)
-        layout.addLayout(form_layout)
+        layout.addLayout(grid_layout)
 
 
 class SitePanel(QWidget):
@@ -123,11 +137,12 @@ class SitePanel(QWidget):
         header.setAlignment(Qt.AlignCenter)
 
         # Coordinate fields
+        self.R = QDoubleSpinBox()
         self.c1 = QDoubleSpinBox()
         self.c2 = QDoubleSpinBox()
         self.c3 = QDoubleSpinBox()
 
-        for c in [self.c1, self.c2, self.c3]:
+        for c in [self.R, self.c1, self.c2, self.c3]:
             c.setRange(0.0, 1.0)
             c.setDecimals(3)
             c.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -135,6 +150,7 @@ class SitePanel(QWidget):
         # Create row layouts with labels on the left and spin boxes on the right
         form_layout = QFormLayout()
         form_layout.setVerticalSpacing(2)
+        form_layout.addRow("r:", self.R)
         form_layout.addRow("c<sub>1</sub>:", self.c1)
         form_layout.addRow("c<sub>2</sub>:", self.c2)
         form_layout.addRow("c<sub>3</sub>:", self.c3)
@@ -253,9 +269,6 @@ class UnitCellView(QWidget):
 
         # Radio panel
 
-        dimensionality_header = QLabel("Dimensionality")
-        dimensionality_header.setAlignment(Qt.AlignCenter)
-
         # Radio buttons
         self.radio0D = QRadioButton("0D")
         self.radio1D = QRadioButton("1D")
@@ -279,7 +292,8 @@ class UnitCellView(QWidget):
         radio_layout.addWidget(self.radio3D)
 
         radio_form = QFormLayout()
-        radio_form.addRow("Dimensionality:", radio_layout)
+        radio_form.addRow("", radio_layout)
+        # radio_form.addRow("Dimensionality:", radio_layout)
 
         # Create the interface
 
