@@ -127,6 +127,10 @@ class BrillouinZonePlotController(QObject):
         else:
             self.unit_cell = self.unit_cells[uc_id]
 
+        # Guard against 0-volume Brillouin zone: can occur in the process of creation of the unit cell or due to a mistake
+        if self.unit_cell.volume() == 0:
+            return
+
         self.bz_vertices, self.bz_faces = self.unit_cell.get_BZ()
 
         # Determine system dimensionality
