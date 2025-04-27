@@ -128,14 +128,17 @@ class UnitCellPanel(QWidget):
         grid_layout.setVerticalSpacing(2)
 
         # Add spinners to control how many unit cells are shown
-        self.n1_spinner = QSpinBox()
-        self.n2_spinner = QSpinBox()
-        self.n3_spinner = QSpinBox()
-        for ii, x in enumerate([self.n1_spinner, self.n2_spinner, self.n3_spinner]):
+        n_spinner_label = QLabel("Number of cells to show")
+        n_spinner_label.setAlignment(Qt.AlignCenter)
+        grid_layout.addWidget(n_spinner_label, 5, 1, 1, 3)
+        self.n1 = QSpinBox()
+        self.n2 = QSpinBox()
+        self.n3 = QSpinBox()
+        for ii, x in enumerate([self.n1, self.n2, self.n3]):
             x.setFixedWidth(40)
             x.setRange(1, 10)
             x.setEnabled(False)
-            grid_layout.addWidget(x, 5, 1 + ii)
+            grid_layout.addWidget(x, 6, 1 + ii)
 
 
 class SitePanel(QWidget):

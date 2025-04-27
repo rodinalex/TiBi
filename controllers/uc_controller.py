@@ -63,6 +63,10 @@ class UnitCellController(QObject):
         self.v2 = self.unit_cell_view.unit_cell_panel.v2
         self.v3 = self.unit_cell_view.unit_cell_panel.v3
 
+        self.n1 = self.unit_cell_view.unit_cell_panel.n1
+        self.n2 = self.unit_cell_view.unit_cell_panel.n2
+        self.n3 = self.unit_cell_view.unit_cell_panel.n3
+
         self.R = self.unit_cell_view.site_panel.R
         self.c1 = self.unit_cell_view.site_panel.c1
         self.c2 = self.unit_cell_view.site_panel.c2
@@ -792,6 +796,9 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
+                self.n1.setEnabled(False)
+                self.n2.setEnabled(False)
+                self.n3.setEnabled(False)
 
             elif selected_dim == "1":
                 self.v1[0].setEnabled(True)
@@ -822,6 +829,9 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
+                self.n1.setEnabled(True)
+                self.n2.setEnabled(False)
+                self.n3.setEnabled(False)
 
             elif selected_dim == "2":
                 self.v1[0].setEnabled(True)
@@ -852,6 +862,9 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
+                self.n1.setEnabled(True)
+                self.n2.setEnabled(True)
+                self.n3.setEnabled(False)
 
             elif selected_dim == "3":
                 self.v1[0].setEnabled(True)
@@ -882,6 +895,9 @@ class UnitCellController(QObject):
                         "v3periodic": True,
                     }
                 )
+                self.n1.setEnabled(True)
+                self.n2.setEnabled(True)
+                self.n3.setEnabled(True)
             self._save_unit_cell()
 
     def _update_unit_cell_data(self, key, value):
