@@ -110,17 +110,29 @@ class UnitCellController(QObject):
         )
 
         # Dimensionality radio buttons
-        self.unit_cell_view.radio0D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio1D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio2D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio3D.toggled.connect(self._dimensionality_change)
+        self.unit_cell_view.unit_cell_panel.radio0D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio1D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio2D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio3D.toggled.connect(
+            self._dimensionality_change
+        )
 
         # Button panel signals
-        self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self._add_unit_cell)
-        self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self._add_site)
-        self.unit_cell_view.button_panel.new_state_btn.clicked.connect(self._add_state)
-        self.unit_cell_view.button_panel.delete_btn.clicked.connect(self._delete_item)
-        self.unit_cell_view.button_panel.reduce_btn.clicked.connect(
+        self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
+            self._add_unit_cell
+        )
+        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(self._add_site)
+        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(self._add_state)
+        self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
+            self._delete_item
+        )
+        self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             self._reduce_uc_basis
         )
         # Selection change
@@ -295,10 +307,8 @@ class UnitCellController(QObject):
         indexes = selected.indexes()
         if not indexes:
             self.selection.update({"unit_cell": None, "site": None, "state": None})
-            self._dimensionality_buttons_enabled(False)
             return
 
-        self._dimensionality_buttons_enabled(True)
         # Get the selected item
         index = indexes[0]
         item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(index)
@@ -690,12 +700,11 @@ class UnitCellController(QObject):
                 }
             )
             dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
-            self.unit_cell_view.radio_group.button(dim).setChecked(True)
+            self.unit_cell_view.unit_cell_panel.radio_group.button(dim).setChecked(True)
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.unit_cell_panel
             )
-            self.unit_cell_view.button_panel.new_site_btn.setEnabled(True)
-            self.unit_cell_view.button_panel.reduce_btn.setEnabled(True)
+
             if site_id:
                 site = uc.sites[site_id]
                 # Update the form model with all site properties
@@ -711,7 +720,6 @@ class UnitCellController(QObject):
                 self.unit_cell_view.site_stack.setCurrentWidget(
                     self.unit_cell_view.site_panel
                 )
-                self.unit_cell_view.button_panel.new_state_btn.setEnabled(True)
                 if state_id:
                     state = site.states[state_id]
 
@@ -726,21 +734,10 @@ class UnitCellController(QObject):
                 self.unit_cell_view.site_stack.setCurrentWidget(
                     self.unit_cell_view.site_info_label
                 )
-                self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
         else:
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.uc_info_label
             )
-            self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
-            self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
-
-    def _dimensionality_buttons_enabled(self, enabled=bool):
-        """
-        Enable/disable dimensionality selection radio buttons. The buttons are enabled
-        only when there is a selected unit cell.
-        """
-        for button in self.unit_cell_view.radio_group.buttons():
-            button.setEnabled(enabled)
 
     def _dimensionality_change(self):
         """
@@ -759,7 +756,7 @@ class UnitCellController(QObject):
         btn = self.sender()
         if btn.isChecked():
             selected_dim = btn.text()
-            if selected_dim == "0D":
+            if selected_dim == "0":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(False)
                 self.v1[2].setEnabled(False)
@@ -789,7 +786,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "1D":
+            elif selected_dim == "1":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(False)
                 self.v1[2].setEnabled(False)
@@ -819,7 +816,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "2D":
+            elif selected_dim == "2":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(True)
                 self.v1[2].setEnabled(False)
@@ -849,7 +846,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "3D":
+            elif selected_dim == "3":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(True)
                 self.v1[2].setEnabled(True)

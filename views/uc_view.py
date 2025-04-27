@@ -11,43 +11,13 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QTreeView,
     QGridLayout,
+    QSpinBox,
+    QFrame,
 )
 from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut
 from PySide6.QtCore import Qt, Signal
 from resources.colors import CF_vermillion, CF_green, CF_sky
-
-
-class ButtonPanel(QWidget):
-    """
-    Panel containing action buttons for the unit cell editor.
-
-    This panel provides buttons for common operations:
-    - Creating new unit cells, sites, and states
-    - Deleting the currently selected item
-    - Reducing the unit cell basis vectors (using the LLL algorithm)
-
-    Buttons are automatically enabled/disabled based on the current selection state.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        layout = QVBoxLayout(self)
-        self.new_uc_btn = QPushButton("New UC")
-        self.new_site_btn = QPushButton("New Site")
-        self.new_state_btn = QPushButton("New State")
-        self.delete_btn = QPushButton("Delete")
-        self.reduce_btn = QPushButton("Reduce UC")
-
-        self.new_site_btn.setEnabled(False)
-        self.new_state_btn.setEnabled(False)
-        self.reduce_btn.setEnabled(False)
-
-        layout.addWidget(self.new_uc_btn)
-        layout.addWidget(self.new_site_btn)
-        layout.addWidget(self.new_state_btn)
-        layout.addWidget(self.delete_btn)
-        layout.addWidget(self.reduce_btn)
+from resources.ui_elements import divider_line
 
 
 class UnitCellPanel(QWidget):
@@ -55,9 +25,7 @@ class UnitCellPanel(QWidget):
     Form panel for editing unit cell properties.
 
     This panel provides a form interface for editing a unit cell's properties:
-    - Name
     - Three basis vectors (v1, v2, v3) with x, y, z components
-    - Periodicity flags for each basis vector
 
     The panel uses a reactive data binding approach, where UI components are
     automatically updated when the model changes, and model updates trigger
@@ -67,16 +35,54 @@ class UnitCellPanel(QWidget):
     def __init__(self):
         super().__init__()
 
-        basis_header = QLabel("Unit Cell basis")
+        # Layout
+        layout = QVBoxLayout(self)
+        grid_layout = QGridLayout()  # For basis vector creation
+
+        panel_header = QLabel("Unit Cell Parameters")
+        panel_header.setAlignment(Qt.AlignCenter)
+
+        basis_header = QLabel("Basis Vectors")
         basis_header.setAlignment(Qt.AlignCenter)
 
-        form_layout = QFormLayout()
-        form_layout.setVerticalSpacing(2)
+        dimensionality_header = QLabel("Dimensionality")
+        dimensionality_header.setAlignment(Qt.AlignCenter)
 
-        grid_layout = QGridLayout()
+        # Radio buttons
+        self.radio0D = QRadioButton("0")
+        self.radio1D = QRadioButton("1")
+        self.radio2D = QRadioButton("2")
+        self.radio3D = QRadioButton("3")
+
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.radio0D, id=0)
+        self.radio_group.addButton(self.radio1D, id=1)
+        self.radio_group.addButton(self.radio2D, id=2)
+        self.radio_group.addButton(self.radio3D, id=3)
+
+        # Add Site and Reduce UC buttons
+        button_layout = QHBoxLayout()
+        self.new_site_btn = QPushButton("+ Site")
+        self.reduce_btn = QPushButton("Reduce")
+        button_layout.addWidget(self.new_site_btn)
+        button_layout.addWidget(self.reduce_btn)
+
+        radio_layout = QHBoxLayout()
+        radio_layout.addWidget(self.radio0D)
+        radio_layout.addWidget(self.radio1D)
+        radio_layout.addWidget(self.radio2D)
+        radio_layout.addWidget(self.radio3D)
+
+        layout.addWidget(panel_header)
+        layout.addWidget(dimensionality_header)
+        layout.addLayout(radio_layout)
+        layout.addLayout(grid_layout)
+
+        layout.addLayout(button_layout)
+        grid_layout.addWidget(basis_header, 0, 1, 1, 3)
 
         # Function to create a row with (x, y, z) input fields
-        def create_vector_row(n):
+        def create_vector_column(n):
             x = QDoubleSpinBox()
             y = QDoubleSpinBox()
             z = QDoubleSpinBox()
@@ -87,15 +93,26 @@ class UnitCellPanel(QWidget):
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
 
-            grid_layout.addWidget(x, 1, n)
-            grid_layout.addWidget(y, 2, n)
-            grid_layout.addWidget(z, 3, n)
+            grid_layout.addWidget(x, 2, n)
+            grid_layout.addWidget(y, 3, n)
+            grid_layout.addWidget(z, 4, n)
             return (x, y, z)
 
         # Create vector input rows
-        self.v1 = create_vector_row(1)
-        self.v2 = create_vector_row(2)
-        self.v3 = create_vector_row(3)
+        self.v1 = create_vector_column(1)
+        self.v2 = create_vector_column(2)
+        self.v3 = create_vector_column(3)
+
+        v1_label = QLabel("v<sub>1</sub>")
+        v1_label.setAlignment(Qt.AlignCenter)
+        v2_label = QLabel("v<sub>2</sub>")
+        v2_label.setAlignment(Qt.AlignCenter)
+        v3_label = QLabel("v<sub>3</sub>")
+        v3_label.setAlignment(Qt.AlignCenter)
+
+        grid_layout.addWidget(v1_label, 1, 1)
+        grid_layout.addWidget(v2_label, 1, 2)
+        grid_layout.addWidget(v3_label, 1, 3)
 
         # Create a coordinate label row
         for ii, (text, color) in enumerate(
@@ -106,17 +123,19 @@ class UnitCellPanel(QWidget):
             label.setStyleSheet(
                 f"color: rgba({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)}, {color[3]});"
             )
-            grid_layout.addWidget(label, 0, ii)
+            grid_layout.addWidget(label, 1 + ii, 0)
 
-        grid_layout.addWidget(QLabel("v<sub>1</sub>:"), 1, 0)
-        grid_layout.addWidget(QLabel("v<sub>2</sub>:"), 2, 0)
-        grid_layout.addWidget(QLabel("v<sub>3</sub>:"), 3, 0)
         grid_layout.setVerticalSpacing(2)
-        # Main layout
-        layout = QVBoxLayout(self)
 
-        layout.addWidget(basis_header)
-        layout.addLayout(grid_layout)
+        # Add spinners to control how many unit cells are shown
+        self.n1_spinner = QSpinBox()
+        self.n2_spinner = QSpinBox()
+        self.n3_spinner = QSpinBox()
+        for ii, x in enumerate([self.n1_spinner, self.n2_spinner, self.n3_spinner]):
+            x.setFixedWidth(40)
+            x.setRange(1, 10)
+            x.setEnabled(False)
+            grid_layout.addWidget(x, 5, 1 + ii)
 
 
 class SitePanel(QWidget):
@@ -133,10 +152,13 @@ class SitePanel(QWidget):
     def __init__(self):
         super().__init__()
 
-        header = QLabel("Site coordinates")
+        panel_header = QLabel("Site Parameters")
+        panel_header.setAlignment(Qt.AlignCenter)
+
+        header = QLabel("Site Coordinates")
         header.setAlignment(Qt.AlignCenter)
 
-        # Coordinate fields
+        # Coordinate and radius fields
         self.R = QDoubleSpinBox()
         self.c1 = QDoubleSpinBox()
         self.c2 = QDoubleSpinBox()
@@ -147,18 +169,38 @@ class SitePanel(QWidget):
             c.setDecimals(3)
             c.setButtonSymbols(QDoubleSpinBox.NoButtons)
 
-        # Create row layouts with labels on the left and spin boxes on the right
-        form_layout = QFormLayout()
-        form_layout.setVerticalSpacing(2)
-        form_layout.addRow("r:", self.R)
-        form_layout.addRow("c<sub>1</sub>:", self.c1)
-        form_layout.addRow("c<sub>2</sub>:", self.c2)
-        form_layout.addRow("c<sub>3</sub>:", self.c3)
+        appearance_layout = QHBoxLayout()
+        appearance_layout.addWidget(QLabel("Radius:"))
+        appearance_layout.addWidget(self.R)
+        appearance_layout.addWidget(QLabel("Color:"))
 
+        # Create a grid layout with labels on top and spin boxes below
+        c1_label = QLabel("c<sub>1</sub>")
+        c1_label.setAlignment(Qt.AlignCenter)
+        c2_label = QLabel("c<sub>2</sub>")
+        c2_label.setAlignment(Qt.AlignCenter)
+        c3_label = QLabel("c<sub>3</sub>")
+        c3_label.setAlignment(Qt.AlignCenter)
+
+        grid_layout = QGridLayout()
+        grid_layout.addWidget(c1_label, 1, 0)
+        grid_layout.addWidget(c2_label, 1, 1)
+        grid_layout.addWidget(c3_label, 1, 2)
+
+        grid_layout.addWidget(self.c1, 2, 0)
+        grid_layout.addWidget(self.c2, 2, 1)
+        grid_layout.addWidget(self.c3, 2, 2)
+        grid_layout.setVerticalSpacing(2)
+
+        self.new_state_btn = QPushButton("+ State")
+        # self.new_state_btn.setFixedSize(60, 30)
         # Main layout
         layout = QVBoxLayout(self)
+        layout.addWidget(panel_header)
+        layout.addLayout(appearance_layout)
         layout.addWidget(header)
-        layout.addLayout(form_layout)
+        layout.addLayout(grid_layout)
+        layout.addWidget(self.new_state_btn)
 
 
 class TreeViewPanel(QWidget):
@@ -205,9 +247,17 @@ class TreeViewPanel(QWidget):
         # Set model to view
         self.tree_view.setModel(self.tree_model)
 
+        button_layout = QHBoxLayout()
+        self.new_uc_btn = QPushButton("+ UC")
+        self.delete_btn = QPushButton("Delete")
+
+        button_layout.addWidget(self.new_uc_btn)
+        button_layout.addWidget(self.delete_btn)
+
         # Layout setup
         layout = QVBoxLayout(self)
         layout.addWidget(self.tree_view)
+        layout.addLayout(button_layout)
 
         # Set up delete shortcut
         self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
@@ -249,7 +299,7 @@ class UnitCellView(QWidget):
         self.unit_cell_panel = UnitCellPanel()
         self.site_panel = SitePanel()
         self.tree_view_panel = TreeViewPanel()
-        self.button_panel = ButtonPanel()
+        # self.button_panel = ButtonPanel()
 
         # Info labels
         self.uc_info_label = QLabel("Add/Select a Unit Cell")
@@ -267,48 +317,19 @@ class UnitCellView(QWidget):
         self.site_stack.addWidget(self.site_info_label)
         self.site_stack.addWidget(self.site_panel)
 
-        # Radio panel
-
-        # Radio buttons
-        self.radio0D = QRadioButton("0D")
-        self.radio1D = QRadioButton("1D")
-        self.radio2D = QRadioButton("2D")
-        self.radio3D = QRadioButton("3D")
-
-        self.radio_group = QButtonGroup(self)
-        self.radio_group.addButton(self.radio0D, id=0)
-        self.radio_group.addButton(self.radio1D, id=1)
-        self.radio_group.addButton(self.radio2D, id=2)
-        self.radio_group.addButton(self.radio3D, id=3)
-
-        # Start by disabling the radio buttons
-        for button in self.radio_group.buttons():
-            button.setEnabled(False)
-
-        radio_layout = QHBoxLayout()
-        radio_layout.addWidget(self.radio0D)
-        radio_layout.addWidget(self.radio1D)
-        radio_layout.addWidget(self.radio2D)
-        radio_layout.addWidget(self.radio3D)
-
-        radio_form = QFormLayout()
-        radio_form.addRow("", radio_layout)
-        # radio_form.addRow("Dimensionality:", radio_layout)
-
         # Create the interface
 
-        top_panel = QHBoxLayout()
-        top_panel.addWidget(self.tree_view_panel, stretch=2)
-        top_panel.addWidget(self.button_panel, stretch=1)
+        top_panel = QVBoxLayout()
+        top_panel.addWidget(self.tree_view_panel, stretch=4)
 
         # Basis vectors and fractional coordinates
-        bottom_panel = QHBoxLayout()
+        bottom_panel = QVBoxLayout()
 
         bottom_panel.addWidget(self.uc_stack, stretch=2)
+        bottom_panel.addWidget(divider_line())
         bottom_panel.addWidget(self.site_stack, stretch=1)
 
         layout.setSpacing(0)
 
-        layout.addLayout(top_panel)
-        layout.addLayout(radio_form)
+        layout.addLayout(top_panel, stretch=2)
         layout.addLayout(bottom_panel)
