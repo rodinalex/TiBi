@@ -63,6 +63,7 @@ class UnitCellController(QObject):
         self.v2 = self.unit_cell_view.unit_cell_panel.v2
         self.v3 = self.unit_cell_view.unit_cell_panel.v3
 
+        self.R = self.unit_cell_view.site_panel.R
         self.c1 = self.unit_cell_view.site_panel.c1
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
@@ -98,6 +99,8 @@ class UnitCellController(QObject):
         connect_vector_fields("v3", self.v3)
 
         # Site panel signals
+
+        self.R.editingFinished.connect(lambda: self._update_site_size())
 
         self.c1.editingFinished.connect(
             lambda: self._update_site_data("c1", self.c1.value())
@@ -331,6 +334,10 @@ class UnitCellController(QObject):
                 self.selection.update(
                     {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
                 )
+            size_param = self.unit_cells[self.selection["unit_cell"]].site_sizes[
+                self.selection["site"]
+            ]
+            self.R.setValue(size_param)
 
         # Now that selection is fully updated, request plot update
         self.plotUpdateRequested.emit()
@@ -938,3 +945,14 @@ class UnitCellController(QObject):
         self.c1.setValue(self.site_data["c1"])
         self.c2.setValue(self.site_data["c2"])
         self.c3.setValue(self.site_data["c3"])
+
+    def _update_site_size(self):
+        """
+        Update the size of the site marker. First, the data from the
+        spinbox is saved to the dictionary of sizes. Next, an update
+        is requested.
+        """
+        self.unit_cells[self.selection["unit_cell"]].site_sizes[
+            self.selection["site"]
+        ] = self.R.value()
+        self.plotUpdateRequested.emit()

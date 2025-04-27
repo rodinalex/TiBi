@@ -151,7 +151,6 @@ class BrillouinZonePlotController(QObject):
             btn.setEnabled(self.dim > 1)
         for btn in self.bz_plot_view.face_btns:
             btn.setEnabled(self.dim > 2)
-        # pass
 
         # Create the BZ wireframe by making edges (connect the vertices based on face data)
         self._create_bz_wireframe()
