@@ -119,10 +119,10 @@ class HoppingView(QWidget):
         layout = QVBoxLayout(self)
 
         # Components
-        self.info_label = QLabel("Select a unit cell with states")
+        self.info_label = QLabel("Select a Unit Cell with States")
         self.info_label.setAlignment(Qt.AlignCenter)
 
-        self.table_info_label = QLabel("Select a pair of states")
+        self.table_info_label = QLabel("Select a matrix element to edit")
         self.table_info_label.setAlignment(Qt.AlignCenter)
 
         # Main Panel

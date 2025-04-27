@@ -145,7 +145,7 @@ class HoppingController(QObject):
         for ii in range(len(self.state_info)):
             for jj in range(len(self.state_info)):
                 btn = QPushButton("")
-                btn.setFixedSize(15, 15)
+                btn.setFixedSize(20, 20)
                 btn.setContextMenuPolicy(Qt.CustomContextMenu)
                 btn.customContextMenuRequested.connect(
                     lambda _, row=ii, col=jj, b=btn: self._add_context_menu(b, row, col)

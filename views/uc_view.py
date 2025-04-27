@@ -332,4 +332,5 @@ class UnitCellView(QWidget):
         layout.setSpacing(0)
 
         layout.addLayout(top_panel, stretch=2)
+        layout.addWidget(divider_line())
         layout.addLayout(bottom_panel)
