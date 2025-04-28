@@ -27,7 +27,7 @@ class UnitCellController(QObject):
     the appropriate node to maintain UI state consistency.
     """
 
-    plotUpdateRequested = Signal()
+    plot_update_requested = Signal()
 
     def __init__(
         self,
@@ -63,10 +63,6 @@ class UnitCellController(QObject):
         self.v1 = self.unit_cell_view.unit_cell_panel.v1
         self.v2 = self.unit_cell_view.unit_cell_panel.v2
         self.v3 = self.unit_cell_view.unit_cell_panel.v3
-
-        self.n1 = self.unit_cell_view.unit_cell_panel.n1
-        self.n2 = self.unit_cell_view.unit_cell_panel.n2
-        self.n3 = self.unit_cell_view.unit_cell_panel.n3
 
         self.R = self.unit_cell_view.site_panel.R
         self.c1 = self.unit_cell_view.site_panel.c1
@@ -362,7 +358,7 @@ class UnitCellController(QObject):
             )
 
         # Now that selection is fully updated, request plot update
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     # Programmatically select a tree item
     def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
@@ -539,7 +535,7 @@ class UnitCellController(QObject):
         self._update_tree_item(selected_uc_id)
 
         # After unit cell object is updated, notify plot controllers
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _save_site(self):
         """
@@ -566,7 +562,7 @@ class UnitCellController(QObject):
         self._update_tree_item(selected_uc_id, selected_site_id)
 
         # After site object is updated, notify plot controllers
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _save_state(self):
         """
@@ -649,7 +645,7 @@ class UnitCellController(QObject):
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
                 self.selection.update({"unit_cell": None, "site": None, "state": None})
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _reduce_uc_basis(self):
         """
@@ -814,9 +810,6 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
-                self.n1.setEnabled(False)
-                self.n2.setEnabled(False)
-                self.n3.setEnabled(False)
 
             elif selected_dim == "1":
                 self.v1[0].setEnabled(True)
@@ -847,9 +840,6 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
-                self.n1.setEnabled(True)
-                self.n2.setEnabled(False)
-                self.n3.setEnabled(False)
 
             elif selected_dim == "2":
                 self.v1[0].setEnabled(True)
@@ -880,9 +870,6 @@ class UnitCellController(QObject):
                         "v3periodic": False,
                     }
                 )
-                self.n1.setEnabled(True)
-                self.n2.setEnabled(True)
-                self.n3.setEnabled(False)
 
             elif selected_dim == "3":
                 self.v1[0].setEnabled(True)
@@ -913,9 +900,7 @@ class UnitCellController(QObject):
                         "v3periodic": True,
                     }
                 )
-                self.n1.setEnabled(True)
-                self.n2.setEnabled(True)
-                self.n3.setEnabled(True)
+
             self._save_unit_cell()
 
     def _update_unit_cell_data(self, key, value):
@@ -989,7 +974,7 @@ class UnitCellController(QObject):
         self.unit_cells[self.selection["unit_cell"]].site_sizes[
             self.selection["site"]
         ] = self.R.value()
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _pick_site_color(self):
         """
@@ -1025,4 +1010,4 @@ class UnitCellController(QObject):
                 new_color.blueF(),
                 new_color.alphaF(),
             )
-            self.plotUpdateRequested.emit()
+            self.plot_update_requested.emit()

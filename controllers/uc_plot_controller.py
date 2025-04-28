@@ -52,12 +52,7 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-        # Signals to update the plot when the unit cell spinners are changed
-        self.uc_plot_view.n1_spinner.valueChanged.connect(self.update_unit_cell)
-        self.uc_plot_view.n2_spinner.valueChanged.connect(self.update_unit_cell)
-        self.uc_plot_view.n3_spinner.valueChanged.connect(self.update_unit_cell)
-
-    def update_unit_cell(self):
+    def update_unit_cell(self, n1, n2, n3):
         """
         Set or update the unit cell to be displayed in the 3D view.
 
@@ -79,32 +74,8 @@ class UnitCellPlotController(QObject):
         if uc_id == None:
             return
         self.unit_cell = self.unit_cells[uc_id]
-        # Check which vectors of the unit cell are periodic and activate the UC spinners if they are
-        if self.unit_cell.v1.is_periodic == True:
-            self.uc_plot_view.n1_spinner.setEnabled(True)
-        else:
-            self.uc_plot_view.n1_spinner.setEnabled(False)
 
-        if self.unit_cell.v2.is_periodic == True:
-            self.uc_plot_view.n2_spinner.setEnabled(True)
-        else:
-            self.uc_plot_view.n2_spinner.setEnabled(False)
-
-        if self.unit_cell.v3.is_periodic == True:
-            self.uc_plot_view.n3_spinner.setEnabled(True)
-        else:
-            self.uc_plot_view.n3_spinner.setEnabled(False)
-
-        # Plot unit cell wireframe
-        repeats = [
-            spinner.value() if spinner.isEnabled() else 1
-            for spinner in (
-                self.uc_plot_view.n1_spinner,
-                self.uc_plot_view.n2_spinner,
-                self.uc_plot_view.n3_spinner,
-            )
-        ]
-        self.n1, self.n2, self.n3 = repeats
+        self.n1, self.n2, self.n3 = n1, n2, n3
 
         # Collect line vertices
         line_vertices = []

@@ -91,27 +91,8 @@ class MainWindow(QMainWindow):
 
         column1_layout.addWidget(self.frame_widget(self.uc), stretch=3)
 
-        # column1_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=3
-        # )
-        # column1_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=3
-        # )
-        # column1_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=3
-        # )
-        # column1_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=1
-        # )
-
         column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
-        # column2_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=1
-        # )
         column2_layout.addWidget(self.frame_widget(self.bz_plot), stretch=2)
-        # column2_layout.addWidget(
-        #     self.frame_widget(PlaceholderWidget("SPOT")), stretch=1
-        # )
 
         column3_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
         column3_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
