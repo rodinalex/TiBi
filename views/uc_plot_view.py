@@ -28,7 +28,6 @@ class UnitCellPlotView(QWidget):
     - Unit cell visualization with wireframe parallelepiped
     - Sites displayed as colored spheres at their fractional positions
     - Selected sites highlighted with an increased size
-    - Controls for displaying periodic repetitions of the unit cell
 
     This view is purely presentational and contains no business logic,
     following the MVC pattern. The controller is responsible for updating
@@ -77,50 +76,4 @@ class UnitCellPlotView(QWidget):
                 gl.GLLinePlotItem(pos=axes[ii], color=color, width=5, antialias=True)
             )
 
-        # Settings panel
-        self.control_panel = QHBoxLayout()
-        # View adjusting panel
-        self.lattice_view_control = QVBoxLayout()
-        self.lattice_view_control_label = QLabel("Number of unit cells to show")
-        self.lattice_view_control_label.setAlignment(Qt.AlignCenter)
-        self.lattice_view_control_spinners = QHBoxLayout()
-
-        # Unit cell view number
-        self.n1_spinner = QSpinBox()
-        self.n2_spinner = QSpinBox()
-        self.n3_spinner = QSpinBox()
-
-        for x in [self.n1_spinner, self.n2_spinner, self.n3_spinner]:
-            x.setFixedWidth(40)
-            x.setRange(1, 10)
-            x.setEnabled(False)
-
-        # Create row layouts with labels on the left and spin boxes on the right
-        spinner1 = QHBoxLayout()
-        spinner1.addWidget(QLabel("n<sub>1</sub>:"))
-        spinner1.addWidget(self.n1_spinner)
-
-        spinner2 = QHBoxLayout()
-        spinner2.addWidget(QLabel("n<sub>2</sub>:"))
-        spinner2.addWidget(self.n2_spinner)
-
-        spinner3 = QHBoxLayout()
-        spinner3.addWidget(QLabel("n<sub>3</sub>:"))
-        spinner3.addWidget(self.n3_spinner)
-
-        # Add spinners to the main form layout
-        self.lattice_view_control_spinners.addLayout(spinner1)
-        self.lattice_view_control_spinners.addLayout(spinner2)
-        self.lattice_view_control_spinners.addLayout(spinner3)
-
-        self.lattice_view_control.addWidget(self.lattice_view_control_label)
-        self.lattice_view_control.addLayout(self.lattice_view_control_spinners)
-
-        # Assemble control panel
-
-        self.control_panel.addLayout(self.lattice_view_control, stretch=1)
-
-        # Assemble the full panel
-
-        layout.addWidget(self.view, stretch=5)
-        layout.addLayout(self.control_panel, stretch=1)
+        layout.addWidget(self.view)
