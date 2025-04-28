@@ -1,31 +1,22 @@
 # TiBiPy Project Roadmap
 
+## Features
+- Toggle wireframe on and off
+- Export the system to a file
+- Import a system from a file
+- Add hints for the status bar
+- Selectively hide sites for clarity
+- Fix the band plotting layout
+- Figure out dragging of hoppings between different site pairs
+- Undo possibility
+- New project button with a corresponding warning
+- Progress bar for calculations
 
-## Immediate Tasks
+## Functionality
+- Threads/workers
 
-
-## Reminders
-- Hamiltonian function with momenta along the reciprocal lattice directions
-- Check that the volume of the unit cell is non-zero
-- MAYBE: add point group information
-- Figure out how to help the user distinguish between different sites: for now they all look the same
-- Make BZ path selection context-based (that a BZ exists in the first place)
-- Refactor the styling:
-* Buttons
-* Colors
-- Add bandstructure plot
-- When creating a UC, we occasionally have problematic vectors DURING THE CREATION leading to runtime warnings (parallel vectors, zero volume, etc).
-## Daily Plan
-- Enable/disable radio buttons depending on whether a unit cell is selected
-- If the volume of the unit cell is zero, put up guards to not try to obtain the reciprocal lattice for BZ
-- Add menu bar
-- Add status bar
-
-## Tree structure
-- update_tree_item, remove_tree_item, select_item, and find_item_by_id have some redundancy: can make more streamlined
-
-## Function calls 
-
+## Tasks
+- Figure out and cleanup the toolbar/menu layout to start implementing relevant actions
 
 ## Bugs
 <!-- - Check that the displacements are unique in coupling table
