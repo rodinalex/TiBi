@@ -27,7 +27,7 @@ class UnitCellPlotView(QWidget):
     - Colored axes representing the Cartesian coordinate system
     - Unit cell visualization with wireframe parallelepiped
     - Sites displayed as colored spheres at their fractional positions
-    - Selected sites highlighted with a different color
+    - Selected sites highlighted with an increased size
     - Controls for displaying periodic repetitions of the unit cell
 
     This view is purely presentational and contains no business logic,
@@ -116,85 +116,85 @@ class UnitCellPlotView(QWidget):
         self.lattice_view_control.addWidget(self.lattice_view_control_label)
         self.lattice_view_control.addLayout(self.lattice_view_control_spinners)
 
-        # Site color/size adjusting panel
-        self.site_panel = QHBoxLayout()  # Panel with two components: radius and color
-        # Radius components
-        self.site_radius_control = QVBoxLayout()
-        self.site_radius_label = QLabel("Site radius")
-        self.site_radius_label.setAlignment(Qt.AlignCenter)
+        # # Site color/size adjusting panel
+        # self.site_panel = QHBoxLayout()  # Panel with two components: radius and color
+        # # Radius components
+        # self.site_radius_control = QVBoxLayout()
+        # self.site_radius_label = QLabel("Site radius")
+        # self.site_radius_label.setAlignment(Qt.AlignCenter)
 
-        self.radius_spinner = QDoubleSpinBox()
-        self.radius_spinner.setButtonSymbols(QDoubleSpinBox.NoButtons)
-        self.radius_spinner.setEnabled(False)
-        # Color components
-        self.site_color_control = QVBoxLayout()
-        self.site_color_label = QLabel("Site color")
-        self.site_color_label.setAlignment(Qt.AlignCenter)
-        self.site_control_spinners = QHBoxLayout()
+        # self.radius_spinner = QDoubleSpinBox()
+        # self.radius_spinner.setButtonSymbols(QDoubleSpinBox.NoButtons)
+        # self.radius_spinner.setEnabled(False)
+        # # Color components
+        # self.site_color_control = QVBoxLayout()
+        # self.site_color_label = QLabel("Site color")
+        # self.site_color_label.setAlignment(Qt.AlignCenter)
+        # self.site_control_spinners = QHBoxLayout()
 
-        self.red_spinner = QSpinBox()
-        self.red_spinner.setButtonSymbols(QSpinBox.NoButtons)
-        self.red_spinner.setEnabled(False)
+        # self.red_spinner = QSpinBox()
+        # self.red_spinner.setButtonSymbols(QSpinBox.NoButtons)
+        # self.red_spinner.setEnabled(False)
 
-        self.green_spinner = QSpinBox()
-        self.green_spinner.setButtonSymbols(QSpinBox.NoButtons)
-        self.green_spinner.setEnabled(False)
+        # self.green_spinner = QSpinBox()
+        # self.green_spinner.setButtonSymbols(QSpinBox.NoButtons)
+        # self.green_spinner.setEnabled(False)
 
-        self.blue_spinner = QSpinBox()
-        self.blue_spinner.setButtonSymbols(QSpinBox.NoButtons)
-        self.blue_spinner.setEnabled(False)
+        # self.blue_spinner = QSpinBox()
+        # self.blue_spinner.setButtonSymbols(QSpinBox.NoButtons)
+        # self.blue_spinner.setEnabled(False)
 
-        self.alpha_spinner = QDoubleSpinBox()
-        self.alpha_spinner.setButtonSymbols(QDoubleSpinBox.NoButtons)
-        self.alpha_spinner.setEnabled(False)
+        # self.alpha_spinner = QDoubleSpinBox()
+        # self.alpha_spinner.setButtonSymbols(QDoubleSpinBox.NoButtons)
+        # self.alpha_spinner.setEnabled(False)
 
-        self.red_spinner.setRange(0, 255)
-        self.green_spinner.setRange(0, 255)
-        self.blue_spinner.setRange(0, 255)
-        self.alpha_spinner.setRange(0.0, 1.0)
-        self.alpha_spinner.setSingleStep(0.01)
+        # self.red_spinner.setRange(0, 255)
+        # self.green_spinner.setRange(0, 255)
+        # self.blue_spinner.setRange(0, 255)
+        # self.alpha_spinner.setRange(0.0, 1.0)
+        # self.alpha_spinner.setSingleStep(0.01)
 
-        # Create row layouts with labels on the left and spin boxes on the right
-        spinner_red = QHBoxLayout()
-        spinner_red.addWidget(QLabel("R:"), stretch=1)
-        spinner_red.addWidget(self.red_spinner, stretch=4)
+        # # Create row layouts with labels on the left and spin boxes on the right
+        # spinner_red = QHBoxLayout()
+        # spinner_red.addWidget(QLabel("R:"), stretch=1)
+        # spinner_red.addWidget(self.red_spinner, stretch=4)
 
-        spinner_green = QHBoxLayout()
-        spinner_green.addWidget(QLabel("G:"), stretch=1)
-        spinner_green.addWidget(self.green_spinner, stretch=4)
+        # spinner_green = QHBoxLayout()
+        # spinner_green.addWidget(QLabel("G:"), stretch=1)
+        # spinner_green.addWidget(self.green_spinner, stretch=4)
 
-        spinner_blue = QHBoxLayout()
-        spinner_blue.addWidget(QLabel("B:"), stretch=1)
-        spinner_blue.addWidget(self.blue_spinner, stretch=4)
+        # spinner_blue = QHBoxLayout()
+        # spinner_blue.addWidget(QLabel("B:"), stretch=1)
+        # spinner_blue.addWidget(self.blue_spinner, stretch=4)
 
-        spinner_alpha = QHBoxLayout()
-        spinner_alpha.addWidget(QLabel("α:"), stretch=1)
-        spinner_alpha.addWidget(self.alpha_spinner, stretch=4)
+        # spinner_alpha = QHBoxLayout()
+        # spinner_alpha.addWidget(QLabel("α:"), stretch=1)
+        # spinner_alpha.addWidget(self.alpha_spinner, stretch=4)
 
-        self.site_control_spinners.addLayout(spinner_red)
-        self.site_control_spinners.addLayout(spinner_green)
-        self.site_control_spinners.addLayout(spinner_blue)
-        self.site_control_spinners.addLayout(spinner_alpha)
+        # self.site_control_spinners.addLayout(spinner_red)
+        # self.site_control_spinners.addLayout(spinner_green)
+        # self.site_control_spinners.addLayout(spinner_blue)
+        # self.site_control_spinners.addLayout(spinner_alpha)
 
         # Assemble radius control
 
-        self.site_radius_control.addWidget(self.site_radius_label)
-        self.site_radius_control.addWidget(self.radius_spinner)
+        # self.site_radius_control.addWidget(self.site_radius_label)
+        # self.site_radius_control.addWidget(self.radius_spinner)
 
         # Assemble color control
 
-        self.site_color_control.addWidget(self.site_color_label)
-        self.site_color_control.addLayout(self.site_control_spinners)
+        # self.site_color_control.addWidget(self.site_color_label)
+        # self.site_color_control.addLayout(self.site_control_spinners)
 
         # Assemble site control
 
-        self.site_panel.addLayout(self.site_radius_control, stretch=1)
-        self.site_panel.addLayout(self.site_color_control, stretch=4)
+        # self.site_panel.addLayout(self.site_radius_control, stretch=1)
+        # self.site_panel.addLayout(self.site_color_control, stretch=4)
 
         # Assemble contorl panel
 
         self.control_panel.addLayout(self.lattice_view_control, stretch=1)
-        self.control_panel.addLayout(self.site_panel, stretch=3)
+        # self.control_panel.addLayout(self.site_panel, stretch=3)
 
         # Assemble the full panel
 

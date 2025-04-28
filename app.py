@@ -120,33 +120,6 @@ class MainWindow(QMainWindow):
             self.frame_widget(PlaceholderWidget("SPOT")), stretch=3
         )
 
-        # Create three column layouts
-        left_layout = QVBoxLayout()
-        mid_layout = QVBoxLayout()
-        right_layout = QVBoxLayout()
-
-        # Left column for hierarchical view and form panels
-        # left_layout.addWidget(self.frame_widget(self.uc), stretch=1)
-        # left_layout.addWidget(self.frame_widget(self.hopping), stretch=2)
-        left_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=1)
-        left_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=2)
-
-        # Middle column for 3D visualizations
-        # mid_layout.addWidget(self.frame_widget(self.uc_plot), stretch=3)
-        # mid_layout.addWidget(self.frame_widget(self.bz_plot), stretch=2)
-        mid_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=3)
-        mid_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=2)
-        mid_layout.addWidget(self.frame_widget(PlaceholderWidget("SPOT")), stretch=1)
-
-        # Right column for computation results
-        # right_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
-        right_layout.addWidget(self.frame_widget(PlaceholderWidget("BAND")), stretch=1)
-        right_layout.addWidget(self.frame_widget(PlaceholderWidget("BAND")), stretch=1)
-
-        # Add the columns to the main layout
-        # main_layout.addLayout(left_layout, stretch=1)
-        # main_layout.addLayout(mid_layout, stretch=2)
-        # main_layout.addLayout(right_layout, stretch=2)
         main_layout.addLayout(column1_layout, stretch=1)
         main_layout.addLayout(column2_layout, stretch=2)
         main_layout.addLayout(column3_layout, stretch=3)

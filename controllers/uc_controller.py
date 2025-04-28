@@ -1,6 +1,7 @@
 import uuid
+from PySide6.QtWidgets import QColorDialog
 from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel, Signal
-from PySide6.QtGui import QStandardItem
+from PySide6.QtGui import QStandardItem, QColor
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
 from views.uc_view import UnitCellView
@@ -130,7 +131,7 @@ class UnitCellController(QObject):
             self._dimensionality_change
         )
 
-        # Button panel signals
+        # Button signals
         self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
             self._add_unit_cell
         )
@@ -142,10 +143,14 @@ class UnitCellController(QObject):
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             self._reduce_uc_basis
         )
+
+        self.unit_cell_view.site_panel.color_picker_btn.clicked.connect(
+            self._pick_site_color
+        )
         # Selection change
         self.selection.signals.updated.connect(self._show_panels)
 
-        # # When model changes, update UI
+        # When model changes, update UI
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
         self.site_data.signals.updated.connect(self._update_site_ui)
 
@@ -338,10 +343,23 @@ class UnitCellController(QObject):
                 self.selection.update(
                     {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
                 )
-            size_param = self.unit_cells[self.selection["unit_cell"]].site_sizes[
+
+            # Radius and size of the site are updated upon selection, not upon model change.
+            # The reason is that size and color are not the properties of a site per se.
+            # Rather, they are visualization properties, stored in separate dictionaries.
+            # When a new site is selected, the model (coordinates) might be exactly the same as
+            # for the previously selected site, suppressing the update.
+            site_radius = self.unit_cells[self.selection["unit_cell"]].site_sizes[
                 self.selection["site"]
             ]
-            self.R.setValue(size_param)
+            self.R.setValue(site_radius)
+
+            site_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
+                self.selection["site"]
+            ]
+            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
+            )
 
         # Now that selection is fully updated, request plot update
         self.plotUpdateRequested.emit()
@@ -450,9 +468,9 @@ class UnitCellController(QObject):
         current_uc = self.unit_cells[selected_uc_id]
         current_uc.sites[new_site.id] = new_site
         current_uc.site_colors[new_site.id] = (
-            random.randrange(256),
-            random.randrange(256),
-            random.randrange(256),
+            random.uniform(0, 1),
+            random.uniform(0, 1),
+            random.uniform(0, 1),
             1.0,
         )
         current_uc.site_sizes[new_site.id] = default_site_size
@@ -965,10 +983,46 @@ class UnitCellController(QObject):
     def _update_site_size(self):
         """
         Update the size of the site marker. First, the data from the
-        spinbox is saved to the dictionary of sizes. Next, an update
-        is requested.
+        spinbox is saved to the dictionary of sizes. Next, a UC plot
+        update is requested.
         """
         self.unit_cells[self.selection["unit_cell"]].site_sizes[
             self.selection["site"]
         ] = self.R.value()
         self.plotUpdateRequested.emit()
+
+    def _pick_site_color(self):
+        """
+        Use a color dialog to choose a color for the selected site to be used
+        in the UC plot. The color is saved in the dictionary of colors. Next,
+        a UC plot update is requested.
+        """
+        old_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
+            self.selection["site"]
+        ]
+        # Open the color dialog with the current color selected
+        start_color = QColor(
+            int(old_color[0] * 255),
+            int(old_color[1] * 255),
+            int(old_color[2] * 255),
+            int(old_color[3] * 255),
+        )
+        new_color = QColorDialog.getColor(
+            initial=start_color,
+            options=QColorDialog.ShowAlphaChannel,
+        )
+        # Update the button color
+        if new_color.isValid():
+            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                f"background-color: rgba({new_color.red()}, {new_color.green()}, {new_color.blue()}, {new_color.alpha()});"
+            )
+            # Update the color in the dictionary
+            self.unit_cells[self.selection["unit_cell"]].site_colors[
+                self.selection["site"]
+            ] = (
+                new_color.redF(),
+                new_color.greenF(),
+                new_color.blueF(),
+                new_color.alphaF(),
+            )
+            self.plotUpdateRequested.emit()

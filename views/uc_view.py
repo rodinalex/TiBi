@@ -172,10 +172,15 @@ class SitePanel(QWidget):
             c.setDecimals(3)
             c.setButtonSymbols(QDoubleSpinBox.NoButtons)
 
+        # Color picker button
+        self.color_picker_btn = QPushButton()
+        self.color_picker_btn.setFixedWidth(25)
+
         appearance_layout = QHBoxLayout()
         appearance_layout.addWidget(QLabel("Radius:"))
         appearance_layout.addWidget(self.R)
         appearance_layout.addWidget(QLabel("Color:"))
+        appearance_layout.addWidget(self.color_picker_btn)
 
         # Create a grid layout with labels on top and spin boxes below
         c1_label = QLabel("c<sub>1</sub>")
