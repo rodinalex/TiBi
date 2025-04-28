@@ -44,9 +44,9 @@ class BrillouinZonePlotView(QWidget):
         self.axis_colors = [
             CF_vermillion,
             CF_green,
-            CF_blue,
+            CF_sky,
         ]  # R, G, B for x, y, z
-        self.point_color = CF_sky
+        self.point_color = CF_blue
         self.selected_point_color = CF_yellow
 
         # Setup layout

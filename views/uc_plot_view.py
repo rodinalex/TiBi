@@ -46,11 +46,9 @@ class UnitCellPlotView(QWidget):
         self.axis_colors = [
             CF_vermillion,
             CF_green,
-            CF_blue,
+            CF_sky,
         ]  # R, G, B for x, y, z
         self.cell_color = (0.8, 0.8, 0.8, 0.3)  # Light gray, semi-transparent
-        self.site_color = CF_sky
-        self.selected_site_color = CF_yellow
 
         # Setup layout
         layout = QVBoxLayout(self)
