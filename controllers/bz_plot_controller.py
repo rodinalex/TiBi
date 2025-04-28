@@ -123,9 +123,20 @@ class BrillouinZonePlotController(QObject):
         self.bz_plot_view.compute_bands_btn.setEnabled(False)
 
         if uc_id == None:
+            self.bz_plot_view.add_gamma_btn.setEnabled(False)
+            for btn in self.bz_plot_view.vertex_btns:
+                btn.setEnabled(False)
+            for btn in self.bz_plot_view.edge_btns:
+                btn.setEnabled(False)
+            for btn in self.bz_plot_view.face_btns:
+                btn.setEnabled(False)
             return
         else:
             self.unit_cell = self.unit_cells[uc_id]
+
+        # Guard against 0-volume Brillouin zone: can occur in the process of creation of the unit cell or due to a mistake
+        if self.unit_cell.volume() == 0:
+            return
 
         self.bz_vertices, self.bz_faces = self.unit_cell.get_BZ()
 
@@ -140,7 +151,6 @@ class BrillouinZonePlotController(QObject):
             btn.setEnabled(self.dim > 1)
         for btn in self.bz_plot_view.face_btns:
             btn.setEnabled(self.dim > 2)
-        pass
 
         # Create the BZ wireframe by making edges (connect the vertices based on face data)
         self._create_bz_wireframe()

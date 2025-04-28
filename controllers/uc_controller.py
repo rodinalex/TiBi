@@ -1,10 +1,13 @@
 import uuid
+from PySide6.QtWidgets import QColorDialog
 from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel, Signal
-from PySide6.QtGui import QStandardItem
+from PySide6.QtGui import QStandardItem, QColor
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
 from views.uc_view import UnitCellView
-from resources.constants import default_site_color, default_site_size
+from resources.constants import default_site_size
+
+import random
 
 
 class UnitCellController(QObject):
@@ -24,7 +27,7 @@ class UnitCellController(QObject):
     the appropriate node to maintain UI state consistency.
     """
 
-    plotUpdateRequested = Signal()
+    plot_update_requested = Signal()
 
     def __init__(
         self,
@@ -61,6 +64,7 @@ class UnitCellController(QObject):
         self.v2 = self.unit_cell_view.unit_cell_panel.v2
         self.v3 = self.unit_cell_view.unit_cell_panel.v3
 
+        self.R = self.unit_cell_view.site_panel.R
         self.c1 = self.unit_cell_view.site_panel.c1
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
@@ -97,6 +101,8 @@ class UnitCellController(QObject):
 
         # Site panel signals
 
+        self.R.editingFinished.connect(lambda: self._update_site_size())
+
         self.c1.editingFinished.connect(
             lambda: self._update_site_data("c1", self.c1.value())
         )
@@ -108,23 +114,39 @@ class UnitCellController(QObject):
         )
 
         # Dimensionality radio buttons
-        self.unit_cell_view.radio0D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio1D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio2D.toggled.connect(self._dimensionality_change)
-        self.unit_cell_view.radio3D.toggled.connect(self._dimensionality_change)
+        self.unit_cell_view.unit_cell_panel.radio0D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio1D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio2D.toggled.connect(
+            self._dimensionality_change
+        )
+        self.unit_cell_view.unit_cell_panel.radio3D.toggled.connect(
+            self._dimensionality_change
+        )
 
-        # Button panel signals
-        self.unit_cell_view.button_panel.new_uc_btn.clicked.connect(self._add_unit_cell)
-        self.unit_cell_view.button_panel.new_site_btn.clicked.connect(self._add_site)
-        self.unit_cell_view.button_panel.new_state_btn.clicked.connect(self._add_state)
-        self.unit_cell_view.button_panel.delete_btn.clicked.connect(self._delete_item)
-        self.unit_cell_view.button_panel.reduce_btn.clicked.connect(
+        # Button signals
+        self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
+            self._add_unit_cell
+        )
+        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(self._add_site)
+        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(self._add_state)
+        self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
+            self._delete_item
+        )
+        self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             self._reduce_uc_basis
+        )
+
+        self.unit_cell_view.site_panel.color_picker_btn.clicked.connect(
+            self._pick_site_color
         )
         # Selection change
         self.selection.signals.updated.connect(self._show_panels)
 
-        # # When model changes, update UI
+        # When model changes, update UI
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
         self.site_data.signals.updated.connect(self._update_site_ui)
 
@@ -293,10 +315,8 @@ class UnitCellController(QObject):
         indexes = selected.indexes()
         if not indexes:
             self.selection.update({"unit_cell": None, "site": None, "state": None})
-            self._dimensionality_buttons_enabled(False)
             return
 
-        self._dimensionality_buttons_enabled(True)
         # Get the selected item
         index = indexes[0]
         item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(index)
@@ -320,8 +340,25 @@ class UnitCellController(QObject):
                     {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
                 )
 
+            # Radius and size of the site are updated upon selection, not upon model change.
+            # The reason is that size and color are not the properties of a site per se.
+            # Rather, they are visualization properties, stored in separate dictionaries.
+            # When a new site is selected, the model (coordinates) might be exactly the same as
+            # for the previously selected site, suppressing the update.
+            site_radius = self.unit_cells[self.selection["unit_cell"]].site_sizes[
+                self.selection["site"]
+            ]
+            self.R.setValue(site_radius)
+
+            site_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
+                self.selection["site"]
+            ]
+            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
+            )
+
         # Now that selection is fully updated, request plot update
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     # Programmatically select a tree item
     def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
@@ -426,7 +463,12 @@ class UnitCellController(QObject):
         selected_uc_id = self.selection["unit_cell"]
         current_uc = self.unit_cells[selected_uc_id]
         current_uc.sites[new_site.id] = new_site
-        current_uc.site_colors[new_site.id] = default_site_color
+        current_uc.site_colors[new_site.id] = (
+            random.uniform(0, 1),
+            random.uniform(0, 1),
+            random.uniform(0, 1),
+            1.0,
+        )
         current_uc.site_sizes[new_site.id] = default_site_size
 
         # Update UI (selective update instead of full refresh)
@@ -493,7 +535,7 @@ class UnitCellController(QObject):
         self._update_tree_item(selected_uc_id)
 
         # After unit cell object is updated, notify plot controllers
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _save_site(self):
         """
@@ -520,7 +562,7 @@ class UnitCellController(QObject):
         self._update_tree_item(selected_uc_id, selected_site_id)
 
         # After site object is updated, notify plot controllers
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _save_state(self):
         """
@@ -603,7 +645,7 @@ class UnitCellController(QObject):
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
                 self.selection.update({"unit_cell": None, "site": None, "state": None})
-        self.plotUpdateRequested.emit()
+        self.plot_update_requested.emit()
 
     def _reduce_uc_basis(self):
         """
@@ -683,12 +725,11 @@ class UnitCellController(QObject):
                 }
             )
             dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
-            self.unit_cell_view.radio_group.button(dim).setChecked(True)
+            self.unit_cell_view.unit_cell_panel.radio_group.button(dim).setChecked(True)
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.unit_cell_panel
             )
-            self.unit_cell_view.button_panel.new_site_btn.setEnabled(True)
-            self.unit_cell_view.button_panel.reduce_btn.setEnabled(True)
+
             if site_id:
                 site = uc.sites[site_id]
                 # Update the form model with all site properties
@@ -704,7 +745,6 @@ class UnitCellController(QObject):
                 self.unit_cell_view.site_stack.setCurrentWidget(
                     self.unit_cell_view.site_panel
                 )
-                self.unit_cell_view.button_panel.new_state_btn.setEnabled(True)
                 if state_id:
                     state = site.states[state_id]
 
@@ -719,21 +759,10 @@ class UnitCellController(QObject):
                 self.unit_cell_view.site_stack.setCurrentWidget(
                     self.unit_cell_view.site_info_label
                 )
-                self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
         else:
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.uc_info_label
             )
-            self.unit_cell_view.button_panel.new_site_btn.setEnabled(False)
-            self.unit_cell_view.button_panel.new_state_btn.setEnabled(False)
-
-    def _dimensionality_buttons_enabled(self, enabled=bool):
-        """
-        Enable/disable dimensionality selection radio buttons. The buttons are enabled
-        only when there is a selected unit cell.
-        """
-        for button in self.unit_cell_view.radio_group.buttons():
-            button.setEnabled(enabled)
 
     def _dimensionality_change(self):
         """
@@ -752,7 +781,7 @@ class UnitCellController(QObject):
         btn = self.sender()
         if btn.isChecked():
             selected_dim = btn.text()
-            if selected_dim == "0D":
+            if selected_dim == "0":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(False)
                 self.v1[2].setEnabled(False)
@@ -782,7 +811,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "1D":
+            elif selected_dim == "1":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(False)
                 self.v1[2].setEnabled(False)
@@ -812,7 +841,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "2D":
+            elif selected_dim == "2":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(True)
                 self.v1[2].setEnabled(False)
@@ -842,7 +871,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "3D":
+            elif selected_dim == "3":
                 self.v1[0].setEnabled(True)
                 self.v1[1].setEnabled(True)
                 self.v1[2].setEnabled(True)
@@ -871,6 +900,7 @@ class UnitCellController(QObject):
                         "v3periodic": True,
                     }
                 )
+
             self._save_unit_cell()
 
     def _update_unit_cell_data(self, key, value):
@@ -934,3 +964,50 @@ class UnitCellController(QObject):
         self.c1.setValue(self.site_data["c1"])
         self.c2.setValue(self.site_data["c2"])
         self.c3.setValue(self.site_data["c3"])
+
+    def _update_site_size(self):
+        """
+        Update the size of the site marker. First, the data from the
+        spinbox is saved to the dictionary of sizes. Next, a UC plot
+        update is requested.
+        """
+        self.unit_cells[self.selection["unit_cell"]].site_sizes[
+            self.selection["site"]
+        ] = self.R.value()
+        self.plot_update_requested.emit()
+
+    def _pick_site_color(self):
+        """
+        Use a color dialog to choose a color for the selected site to be used
+        in the UC plot. The color is saved in the dictionary of colors. Next,
+        a UC plot update is requested.
+        """
+        old_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
+            self.selection["site"]
+        ]
+        # Open the color dialog with the current color selected
+        start_color = QColor(
+            int(old_color[0] * 255),
+            int(old_color[1] * 255),
+            int(old_color[2] * 255),
+            int(old_color[3] * 255),
+        )
+        new_color = QColorDialog.getColor(
+            initial=start_color,
+            options=QColorDialog.ShowAlphaChannel,
+        )
+        # Update the button color
+        if new_color.isValid():
+            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                f"background-color: rgba({new_color.red()}, {new_color.green()}, {new_color.blue()}, {new_color.alpha()});"
+            )
+            # Update the color in the dictionary
+            self.unit_cells[self.selection["unit_cell"]].site_colors[
+                self.selection["site"]
+            ] = (
+                new_color.redF(),
+                new_color.greenF(),
+                new_color.blueF(),
+                new_color.alphaF(),
+            )
+            self.plot_update_requested.emit()

@@ -27,8 +27,18 @@ class AppController(QObject):
         self.controllers["bz_plot"].compute_bands_request.connect(
             self._handle_compute_bands_request
         )
-        self.controllers["uc"].plotUpdateRequested.connect(
-            self._handle_plotUpdateBandsRequested
+        self.controllers["uc"].plot_update_requested.connect(
+            self._handle_plot_update_requested
+        )
+
+        self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
+            self._handle_plot_update_requested
+        )
+        self.controllers["main_ui"].toolbar.n2_spinbox.valueChanged.connect(
+            self._handle_plot_update_requested
+        )
+        self.controllers["main_ui"].toolbar.n3_spinbox.valueChanged.connect(
+            self._handle_plot_update_requested
         )
 
     def _handle_compute_bands_request(self, path, num_points):
@@ -50,19 +60,19 @@ class AppController(QObject):
             # Update status bar if no unit cell is selected
             self.controllers["main_ui"].update_status("No unit cell selected")
             return
-        
+
         unit_cell = self.models["unit_cells"][uc_id]
 
         # Update status bar
         self.controllers["main_ui"].update_status("Computing bands...")
-        
+
         # Call computation controller
         self.controllers["computation"].compute_bands(unit_cell, path, num_points)
-        
+
         # Update status when complete
         self.controllers["main_ui"].update_status("Ready")
 
-    def _handle_plotUpdateBandsRequested(self):
+    def _handle_plot_update_requested(self):
         """
         Handle requests to update unit cell and Brollouin zone plots.
 
@@ -71,5 +81,41 @@ class AppController(QObject):
         have access to the unit_cells dictionary and the selection, no information needs
         to be passed.
         """
-        self.controllers["uc_plot"].update_unit_cell()
+
+        # Depending on the dimensionality, update the unit cell spinners in the toolbar
+
+        uc_id = self.models["selection"].get("unit_cell")
+        if uc_id is not None:
+            unit_cell = self.models["unit_cells"][uc_id]
+
+            # Check which vectors of the unit cell are periodic and activate the UC spinners if they are
+            if unit_cell.v1.is_periodic == True:
+                self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(True)
+            else:
+                self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(False)
+
+            if unit_cell.v2.is_periodic == True:
+                self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(True)
+            else:
+                self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(False)
+
+            if unit_cell.v3.is_periodic == True:
+                self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(True)
+            else:
+                self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(False)
+        else:
+            self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(False)
+            self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(False)
+            self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(False)
+
+        n1, n2, n3 = [
+            spinbox.value() if spinbox.isEnabled() else 1
+            for spinbox in (
+                self.controllers["main_ui"].toolbar.n1_spinbox,
+                self.controllers["main_ui"].toolbar.n2_spinbox,
+                self.controllers["main_ui"].toolbar.n3_spinbox,
+            )
+        ]
+
+        self.controllers["uc_plot"].update_unit_cell(n1, n2, n3)
         self.controllers["bz_plot"].update_brillouin_zone()

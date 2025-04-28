@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QPushButton,
     QSpinBox,
+    QGridLayout,
 )
 from PySide6.QtCore import QSize, Qt
 import pyqtgraph.opengl as gl
@@ -43,9 +44,9 @@ class BrillouinZonePlotView(QWidget):
         self.axis_colors = [
             CF_vermillion,
             CF_green,
-            CF_blue,
+            CF_sky,
         ]  # R, G, B for x, y, z
-        self.point_color = CF_sky
+        self.point_color = CF_blue
         self.selected_point_color = CF_yellow
 
         # Setup layout
@@ -72,73 +73,75 @@ class BrillouinZonePlotView(QWidget):
             )
 
         # Selection panel
-        self.button_panel = QVBoxLayout()
-        self.button_panel_label = QLabel("Create a BZ Path")
-        self.button_panel_label.setAlignment(Qt.AlignCenter)
+        self.control_panel = QVBoxLayout()
+        self.selection_grid = QGridLayout()
+        self.control_panel.addLayout(self.selection_grid)
 
         selection_form_layout = QFormLayout()
         selection_form_layout.setVerticalSpacing(2)
 
         # Gamma point controls (Γ - origin of reciprocal space)
-        gamma_pick_layout = QHBoxLayout()
-        self.add_gamma_btn = QPushButton("+")
-        gamma_pick_layout.addWidget(self.add_gamma_btn)
+        self.add_gamma_btn = QPushButton("Γ")
+        gamma_label = QLabel("Brillouin Zone Path")
+        gamma_label.setAlignment(Qt.AlignCenter)
+        self.selection_grid.addWidget(gamma_label, 0, 0, 1, 3)
+        self.selection_grid.addWidget(self.add_gamma_btn, 1, 1)
 
         # Vertex selection controls
-        vertex_pick_layout = QHBoxLayout()
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
-        self.add_vertex_btn = QPushButton("+")
-        vertex_pick_layout.addWidget(self.prev_vertex_btn)
-        vertex_pick_layout.addWidget(self.next_vertex_btn)
-        vertex_pick_layout.addWidget(self.add_vertex_btn)
+        self.add_vertex_btn = QPushButton("V")
+        self.selection_grid.addWidget(self.prev_vertex_btn, 2, 0)
+        self.selection_grid.addWidget(self.add_vertex_btn, 2, 1)
+        self.selection_grid.addWidget(self.next_vertex_btn, 2, 2)
 
         # Edge midpoint selection controls
-        edge_pick_layout = QHBoxLayout()
         self.prev_edge_btn = QPushButton("←")
         self.next_edge_btn = QPushButton("→")
-        self.add_edge_btn = QPushButton("+")
-        edge_pick_layout.addWidget(self.prev_edge_btn)
-        edge_pick_layout.addWidget(self.next_edge_btn)
-        edge_pick_layout.addWidget(self.add_edge_btn)
+        self.add_edge_btn = QPushButton("E")
+        self.selection_grid.addWidget(self.prev_edge_btn, 3, 0)
+        self.selection_grid.addWidget(self.add_edge_btn, 3, 1)
+        self.selection_grid.addWidget(self.next_edge_btn, 3, 2)
 
         # Face center selection controls
-        face_pick_layout = QHBoxLayout()
         self.prev_face_btn = QPushButton("←")
         self.next_face_btn = QPushButton("→")
-        self.add_face_btn = QPushButton("+")
-        face_pick_layout.addWidget(self.prev_face_btn)
-        face_pick_layout.addWidget(self.next_face_btn)
-        face_pick_layout.addWidget(self.add_face_btn)
+        self.add_face_btn = QPushButton("F")
+        self.selection_grid.addWidget(self.prev_face_btn, 4, 0)
+        self.selection_grid.addWidget(self.add_face_btn, 4, 1)
+        self.selection_grid.addWidget(self.next_face_btn, 4, 2)
+
+        self.selection_grid.setVerticalSpacing(2)
+        self.selection_grid.setHorizontalSpacing(2)
 
         # Path controls
-        controls_layout = QVBoxLayout()
-        path_controls_layout = QHBoxLayout()  # Holds "Remove Last" and "Clear" buttons
-        computation_controls_layout = (
-            QHBoxLayout()
-        )  # Holds "Number of Points" field and "Compute Bands" button
+        remove_clear_layout = QHBoxLayout()
+        self.control_panel.addLayout(remove_clear_layout)
 
-        self.remove_last_btn = QPushButton("Remove Last")
+        computation_control_layout = QHBoxLayout()
+        self.control_panel.addLayout(computation_control_layout)
+
+        self.remove_last_btn = QPushButton("Undo")
         self.remove_last_btn.setEnabled(False)  # Disabled until path has points
 
         self.clear_path_btn = QPushButton("Clear")
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
+        remove_clear_layout.addWidget(self.remove_last_btn)
+        remove_clear_layout.addWidget(self.clear_path_btn)
         # Calculation controls
         self.n_points_spinbox = QSpinBox()
-        self.n_points_spinbox.setRange(1, 1000000)
+        self.n_points_spinbox.setRange(1, 10000)
         self.n_points_spinbox.setValue(100)
+        self.n_points_spinbox.setButtonSymbols(QSpinBox.NoButtons)
         self.compute_bands_btn = QPushButton("Compute")
         self.compute_bands_btn.setEnabled(
             False
         )  # Disabled until path has at least two points
 
-        path_controls_layout.addWidget(self.remove_last_btn)
-        path_controls_layout.addWidget(self.clear_path_btn)
-
-        computation_controls_layout.addWidget(QLabel("Points:"))
-        computation_controls_layout.addWidget(self.n_points_spinbox)
-        computation_controls_layout.addWidget(self.compute_bands_btn)
+        computation_control_layout.addWidget(QLabel("K Points:"))
+        computation_control_layout.addWidget(self.n_points_spinbox)
+        # computation_control_layout.addWidget(self.compute_bands_btn)
 
         # Initially disable all selection buttons
         btns = [
@@ -164,23 +167,9 @@ class BrillouinZonePlotView(QWidget):
         ]
         self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
         self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
-
-        # Assemble the point-addition panel
-        selection_form_layout.addRow("Γ:", gamma_pick_layout)
-        selection_form_layout.addRow("Vertex:", vertex_pick_layout)
-        selection_form_layout.addRow("Edge:", edge_pick_layout)
-        selection_form_layout.addRow("Face:", face_pick_layout)
-
-        # Add controls to the layout
-        controls_layout.addLayout(path_controls_layout)
-        controls_layout.addLayout(computation_controls_layout)
-
-        # Assemble buttons panel
-        self.button_panel.addWidget(self.button_panel_label)
-        self.button_panel.addLayout(selection_form_layout)
-        self.button_panel.addLayout(controls_layout)
-        self.button_panel.setSpacing(2)
+        self.control_panel.addWidget(self.compute_bands_btn)
+        self.control_panel.setSpacing(3)
 
         # Assemble the full layout
-        layout.addWidget(self.view, stretch=3)
-        layout.addLayout(self.button_panel, stretch=2)
+        layout.addWidget(self.view, stretch=2)
+        layout.addLayout(self.control_panel, stretch=1)

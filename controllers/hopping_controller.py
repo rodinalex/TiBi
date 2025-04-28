@@ -16,16 +16,16 @@ import numpy as np
 class HoppingController(QObject):
     """
     Controller for the hopping parameter interface.
-    
+
     This controller manages the creation and editing of hopping parameters
     (tight-binding matrix elements) between quantum states. It handles:
-    
+
     1. The interactive matrix grid where each button represents a possible
        hopping between two states
     2. The detailed parameter table for editing specific hopping values
     3. The right-click context menu for performing operations like creating
        Hermitian partners
-    
+
     The controller maintains the connection between the visual representation
     and the underlying data model, ensuring that changes in the UI are properly
     reflected in the unit cell's hopping parameters.
@@ -47,7 +47,7 @@ class HoppingController(QObject):
     ):
         """
         Initialize the hopping controller.
-        
+
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
@@ -286,6 +286,7 @@ class HoppingController(QObject):
         box = QSpinBox()
         box.setRange(minimum, maximum)
         box.setValue(value)
+        box.setButtonSymbols(QSpinBox.NoButtons)
         return box
 
     def _make_doublespinbox(self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3):
@@ -293,6 +294,8 @@ class HoppingController(QObject):
         box.setRange(minimum, maximum)
         box.setDecimals(decimals)
         box.setValue(value)
+        box.setButtonSymbols(QDoubleSpinBox.NoButtons)
+
         return box
 
     def _add_empty_row(self):

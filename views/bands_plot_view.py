@@ -13,7 +13,7 @@ class BandStructurePlotView(QWidget):
     This widget creates a matplotlib figure embedded in a Qt widget to display
     band structure calculations along a path in k-space. It includes navigation
     controls for zooming, panning, and saving the plot.
-    
+
     The actual plotting logic is handled by the BandStructurePlotController,
     keeping this view focused solely on UI components. This separation follows
     the MVC pattern, allowing for easier testing and maintenance.
@@ -22,7 +22,7 @@ class BandStructurePlotView(QWidget):
     def __init__(self):
         """
         Initialize the band structure plot view.
-        
+
         Sets up the matplotlib figure, canvas, and toolbar for band structure
         visualization. Initial axes and labels are created, but the plot is
         empty until data is provided by the controller.
@@ -43,6 +43,7 @@ class BandStructurePlotView(QWidget):
         self.figure = mpl_fig.Figure(figsize=(5, 4), dpi=100)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar.setIconSize(QSize(20, 20))
 
         # Add widgets to layout
         layout.addWidget(self.toolbar)
