@@ -52,8 +52,6 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-        self.uc_hopping_segments = {}  # Dictionary to store hopping segments
-
     def update_unit_cell(self, wireframe_shown, n1, n2, n3):
         """
         Set or update the unit cell to be displayed in the 3D view.
@@ -216,36 +214,52 @@ class UnitCellPlotController(QObject):
     def update_hopping_segments(self, pair_selection):
 
         # Clear previous hopping segments
-        for key, item in list(self.uc_hopping_segments.items()):
-            self.uc_plot_view.view.removeItem(item)
-            del self.uc_plot_items[key]
+
+        hopping_segments = self.uc_plot_items.get("hopping_segments")
+        if hopping_segments is not None:
+            self.uc_plot_view.view.removeItem(hopping_segments)
+            del self.uc_plot_items["hopping_segments"]
 
         # s1 and s2 are tuples (site_name, state_name, state_id)
         s1, s2 = pair_selection
-        hoppings = self.unit_cell.hoppings.get((s1[2], s2[2]))
-        print(s1)
-        print(s2)
-        if hoppings is not None:
-            ds = [x[0] for x in hoppings]
-        else:
-            ds = []
+        hoppings = self.unit_cell.hoppings.get((s1[3], s2[3]))
+        if hoppings is None:
+            return
+
+        v1 = self.unit_cell.v1.as_array()
+        v2 = self.unit_cell.v2.as_array()
+        v3 = self.unit_cell.v3.as_array()
 
         # Get the location of the source site
         source = self.unit_cell.sites[s2[1]]
-        source_pos = (
-            source.c1 * self.unit_cell.v1.as_array()
-            + source.c2 * self.unit_cell.v2.as_array()
-            + source.c3 * self.unit_cell.v3.as_array()
-        )
-        # Get the locations of the target sites
+        source_pos = source.c1 * v1 + source.c2 * v2 + source.c3 * v3
+
+        # Get the location of the target sites in the (0,0,0) unit cell
         target = self.unit_cell.sites[s1[1]]
         target_pos = (
             target.c1 * self.unit_cell.v1.as_array()
             + target.c2 * self.unit_cell.v2.as_array()
             + target.c3 * self.unit_cell.v3.as_array()
         )
-        # print(ds)
-        print(source_pos)
-        print(target_pos)
-        # s1, s2 = pair_selection
-        # print(s1, s2)
+
+        segments = []
+        for (d1, d2, d3), _ in hoppings:
+            target = target_pos + d1 * v1 + d2 * v2 + d3 * v3
+            segments.append(source_pos)
+            segments.append(target)
+        segment_array = np.array(segments, dtype=np.float32)
+
+        hopping_segments = gl.GLLinePlotItem(
+            pos=segment_array,
+            color=(1.0, 0.0, 0.0, 1.0),  # Red color (RGBA)
+            width=5,
+            mode="lines",
+        )
+
+        shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2
+        hopping_segments.translate(shift[0], shift[1], shift[2])
+
+        # Add to the view
+        self.uc_plot_view.view.addItem(hopping_segments)
+        # # Store it so we can remove it later
+        self.uc_plot_items["hopping_segments"] = hopping_segments
