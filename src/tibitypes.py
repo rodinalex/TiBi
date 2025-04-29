@@ -246,7 +246,7 @@ class UnitCell:
         Returns:
             tuple: A tuple containing:
                 - states (list): List of State objects
-                - state_info (list): List of tuples (site_name, state_name, state_id)
+                - state_info (list): List of tuples (site_name, site_id, state_name, state_id)
                   that provides context for each state (which site it belongs to)
         """
         states = []
@@ -254,7 +254,7 @@ class UnitCell:
         for site_id, site in self.sites.items():
             for state_id, state in site.states.items():
                 states.append(state)
-                state_info.append((site.name, state.name, state_id))
+                state_info.append((site.name, site_id, state.name, state_id))
         return (states, state_info)
 
     def get_BZ(self):
@@ -375,7 +375,7 @@ class UnitCell:
         # Create a mapping from state IDs to indices in the Hamiltonian matrix
         # state_id identifies the state, idx is its index in the Hamiltonian matrix (to keep track of rows/columns)
         state_to_idx = {
-            state_id: idx for idx, (_, _, state_id) in enumerate(state_info)
+            state_id: idx for idx, (_, _, _, state_id) in enumerate(state_info)
         }
 
         # Store the total number of states for matrix size

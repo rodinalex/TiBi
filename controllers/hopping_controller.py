@@ -32,12 +32,17 @@ class HoppingController(QObject):
     """
 
     # Signal emitted when a button is clicked, carrying the source and destination state info
-    # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
+    # Params: (destination_state_info, source_state_info) [in accordance with UnitCell type]
+    # where each is (site_name, state_name, state_id)
     button_clicked = Signal(object, object)
 
     # Signal emitted when couplings are modified from right-clicking on the button grid.
     # The signal triggers a table and matrix update
     hoppings_changed = Signal()
+
+    # Signal emitted when the coupling table is updated. The signal triggers
+    # an update of hopping segments in the unit cell plot
+    hopping_segments_requested = Signal()
 
     def __init__(
         self,
@@ -61,7 +66,7 @@ class HoppingController(QObject):
         # Internal controller state
         self.state_info = (
             []
-        )  # Tuples of (site_name, state_name, state_id) for the states in the selected unit cell
+        )  # Tuples of (site_name, site_id, state_name, state_id) for the states in the selected unit cell
         self.pair_selection = [
             None,
             None,
@@ -159,7 +164,7 @@ class HoppingController(QObject):
                 # Show the state and site names.
                 # From second quantization, the hopping goes FROM column INTO row
                 # (columns multiply annihilation operators, rows multiply creation)
-                btn.setToolTip(f"{state2[0]}.{state2[1]} → {state1[0]}.{state1[1]}")
+                btn.setToolTip(f"{state2[0]}.{state2[2]} → {state1[0]}.{state1[2]}")
 
                 # Button click handler implementation:
                 # 1. Qt buttons can only connect to argumentless functions
@@ -168,7 +173,8 @@ class HoppingController(QObject):
                 # 4. This approach avoids the "closure capture" problem with lambda in loops
                 btn.clicked.connect(
                     lambda checked=False, row=ii, col=jj: self.button_clicked.emit(
-                        self.state_info[row], self.state_info[col]
+                        self.state_info[row],
+                        self.state_info[col],  # Format (TO_state, FROM_state)
                     )
                 )
 
@@ -214,8 +220,8 @@ class HoppingController(QObject):
         # Iterate through all buttons and update their colors
         for pos, btn in self.buttons.items():
             ii, jj = pos
-            s1 = self.state_info[ii][2]  # Destination state ID
-            s2 = self.state_info[jj][2]  # Source state ID
+            s1 = self.state_info[ii][3]  # Destination state ID
+            s2 = self.state_info[jj][3]  # Source state ID
             hop = set(self.hopping_data.get((s1, s2), []))
             hop_herm = set(self.hopping_data.get((s2, s1), []))
             has_hopping = bool(hop)
@@ -233,19 +239,19 @@ class HoppingController(QObject):
         Updates the table to display hopping terms between the selected states.
 
         Args:
-            s1: Tuple of (site_name, state_name, state_id) for the destination state (row)
-            s2: Tuple of (site_name, state_name, state_id) for the source state (column)
+            s1: Tuple of (site_name, site_id, state_name, state_id) for the destination state (row)
+            s2: Tuple of (site_name, site_id, state_name, state_id) for the source state (column)
         """
         # Store the UUIDs of the selected states
-        self.pair_selection = [s1[2], s2[2]]
+        self.pair_selection = [s1, s2]
         self.hopping_view.table_stack.setCurrentWidget(self.hopping_view.table_panel)
 
         # Retrieve existing hopping terms between these states, or empty list if none exist
-        self.state_coupling = self.hopping_data.get((s1[2], s2[2]), [])
+        self.state_coupling = self.hopping_data.get((s1[3], s2[3]), [])
 
         # Update the table title to show the selected states (source → destination)
         self.hopping_view.table_panel.table_title.setText(
-            f"{s2[0]}.{s2[1]} → {s1[0]}.{s1[1]}"
+            f"{s2[0]}.{s2[2]} → {s1[0]}.{s1[2]}"
         )
         self._refresh_table()
 
@@ -281,6 +287,7 @@ class HoppingController(QObject):
             self.hopping_view.table_panel.hopping_table.setCellWidget(
                 row_index, 4, im_box
             )
+        self.hopping_segments_requested.emit()
 
     def _make_spinbox(self, value=0, minimum=-99, maximum=99):
         box = QSpinBox()
@@ -377,7 +384,7 @@ class HoppingController(QObject):
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
         # Update the data model with the new couplings
-        self.hopping_data[(self.pair_selection[0], self.pair_selection[1])] = (
+        self.hopping_data[(self.pair_selection[0][3], self.pair_selection[1][3])] = (
             merged_couplings
         )
         self.unit_cells[self.selection["unit_cell"]].hoppings = self.hopping_data
@@ -413,23 +420,23 @@ class HoppingController(QObject):
         menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
 
     def _create_hermitian_partner(self, ii, jj):
-        s1 = self.state_info[ii][2]  # Destination
-        s2 = self.state_info[jj][2]  # Source
+        s1 = self.state_info[ii][3]  # Destination
+        s2 = self.state_info[jj][3]  # Source
         hop = self.hopping_data.get((s1, s2), [])
         hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
         self.hopping_data[(s2, s1)] = hop_herm
         self.hoppings_changed.emit()
 
     def _delete_coupling(self, ii, jj):
-        s1 = self.state_info[ii][2]  # Destination
-        s2 = self.state_info[jj][2]  # Source
+        s1 = self.state_info[ii][3]  # Destination
+        s2 = self.state_info[jj][3]  # Source
         self.hopping_data.pop((s1, s2), None)
         self.hoppings_changed.emit()
 
     def _handle_matrix_interaction(self):
         self._refresh_button_colors()
         updated_couplings = self.hopping_data.get(
-            (self.pair_selection[0], self.pair_selection[1]), []
+            (self.pair_selection[0][3], self.pair_selection[1][3]), []
         )
         self.state_coupling = updated_couplings
 

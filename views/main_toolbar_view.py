@@ -26,36 +26,35 @@ class MainToolbarView(QToolBar):
         Args:
             action_manager: ActionManager instance containing all actions
         """
-        # Add New Unit Cell action
-        self.addAction(action_manager.file_actions["new_unit_cell"])
-
-        # Add separator
-        self.addSeparator()
-
-        # Add Open and Save actions
+        # Add File actions
+        self.addAction(action_manager.file_actions["new_project"])
         self.addAction(action_manager.file_actions["open_project"])
+        self.addAction(action_manager.file_actions["import"])
         self.addAction(action_manager.file_actions["save_project"])
 
-        # Add separator
+        # # Add separator
+        # self.addSeparator()
+
+        # # Add separator
+        # self.addSeparator()
+
+        # # Add Export action
+        # self.addAction(action_manager.file_actions["export"])
+
+        # # Add separator
+        # self.addSeparator()
+
+        # # Add Compute Bands action
+        # self.addAction(action_manager.computation_actions["compute_bands"])
+
+        # # Add separator
+        # self.addSeparator()
+
+        # # Add Preferences action
+        # self.addAction(action_manager.edit_actions["preferences"])
+
         self.addSeparator()
-
-        # Add Export action
-        self.addAction(action_manager.file_actions["export"])
-
-        # Add separator
-        self.addSeparator()
-
-        # Add Compute Bands action
-        self.addAction(action_manager.computation_actions["compute_bands"])
-
-        # Add separator
-        self.addSeparator()
-
-        # Add Preferences action
-        self.addAction(action_manager.edit_actions["preferences"])
-
-        self.addSeparator()
-
+        self.addAction(action_manager.unit_cell_actions["wireframe"])
         # Add the grouped spinboxes
         self.addWidget(self._create_uc_spinbox_group())
 
@@ -72,10 +71,13 @@ class MainToolbarView(QToolBar):
         self.n2_spinbox = QSpinBox()
         self.n3_spinbox = QSpinBox()
 
-        for spinbox in (self.n1_spinbox, self.n2_spinbox, self.n3_spinbox):
+        for ii, spinbox in enumerate(
+            [self.n1_spinbox, self.n2_spinbox, self.n3_spinbox]
+        ):
             spinbox.setRange(1, 10)
             spinbox.setFixedWidth(50)
-            spinbox.setToolTip("Number of repetitions along basis vector")
+            spinbox.setToolTip(f"Along v<sub>{ii+1}</sub>")
+            spinbox.setStatusTip(f"Number of unit cells")
             spinbox.setEnabled(False)
 
         layout.addWidget(QLabel("n<sub>1</sub>:"))
