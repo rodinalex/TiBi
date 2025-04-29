@@ -42,29 +42,39 @@ class MainUIController(QObject):
         # Create a dictionary mapping action names to handler methods
         handlers = {
             # File actions
-            "new_unit_cell": self._handle_new_unit_cell,
-            "open_project": self._handle_open_project,
-            "save_project": self._handle_save_project,
-            "save_as": self._handle_save_as,
-            "export": self._handle_export,
-            "quit": self._handle_quit,
-            # Edit actions
-            "preferences": self._handle_preferences,
-            # View actions
-            "show_toolbar": self._handle_show_toolbar,
-            "show_statusbar": self._handle_show_statusbar,
-            # Computation actions
-            "compute_bands": self._handle_compute_bands,
-            "compute_dos": self._handle_compute_dos,
-            # Help actions
-            "about": self._handle_about,
-            "help": self._handle_help,
+            "new_project": self._handle_new_project,
+            # "new_unit_cell": self._handle_new_unit_cell,
+            # "open_project": self._handle_open_project,
+            # "save_project": self._handle_save_project,
+            # "save_as": self._handle_save_as,
+            # "export": self._handle_export,
+            # "quit": self._handle_quit,
+            # # Edit actions
+            # "preferences": self._handle_preferences,
+            # # View actions
+            # "show_toolbar": self._handle_show_toolbar,
+            # "show_statusbar": self._handle_show_statusbar,
+            # # Computation actions
+            # "compute_bands": self._handle_compute_bands,
+            # "compute_dos": self._handle_compute_dos,
+            # # Help actions
+            # "about": self._handle_about,
+            # "help": self._handle_help,
+            # Unit cell actions
+            "wireframe": self._handle_wireframe,
         }
 
         # Connect actions to handlers
         self.action_manager.connect_signals(handlers)
 
     # Handler methods for actions
+
+    @Slot()
+    def _handle_new_project(self):
+        """Handle request to create a new project."""
+        self.update_status("Creating new project...")
+        print("TESTING")
+        # Implementation will be added later
 
     @Slot()
     def _handle_new_unit_cell(self):
@@ -155,6 +165,13 @@ class MainUIController(QObject):
         """Handle request to show help."""
         self.update_status("Opening help...")
         # Implementation will be added later
+
+    @Slot()
+    def _handle_wireframe(self, is_checked):
+        """Handle wireframe toggle."""
+        self.update_status("Wireframe...")
+        # Implementation will be added later
+        print(is_checked)
 
     # Methods to be called from other controllers
 

@@ -24,8 +24,8 @@ class AppController(QObject):
         self.controllers = controllers
 
         # Connect signals
-        self.controllers["bz_plot"].compute_bands_request.connect(
-            self._handle_compute_bands_request
+        self.controllers["bz_plot"].compute_bands_requested.connect(
+            self._handle_compute_bands_requested
         )
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
@@ -41,12 +41,12 @@ class AppController(QObject):
             self._handle_plot_update_requested
         )
 
-    def _handle_compute_bands_request(self, path, num_points):
+    def _handle_compute_bands_requested(self, path, num_points):
         """
         Handle requests to compute band structures.
 
         This method is triggered when the Brillouin zone plot controller
-        emits a compute_bands_request signal. It retrieves the currently
+        emits a compute_bands_requested signal. It retrieves the currently
         selected unit cell and delegates the band structure calculation
         to the computation controller.
 

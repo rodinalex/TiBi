@@ -23,7 +23,7 @@ class BrillouinZonePlotController(QObject):
     """
 
     # A signal for band calculation requests
-    compute_bands_request = Signal(object, int)  # (path, n_points)
+    compute_bands_requested = Signal(object, int)  # (path, n_points)
 
     def __init__(
         self,
@@ -89,7 +89,7 @@ class BrillouinZonePlotController(QObject):
         self.bz_plot_view.remove_last_btn.clicked.connect(self._remove_last_point)
         self.bz_plot_view.clear_path_btn.clicked.connect(self._clear_path)
         self.bz_plot_view.compute_bands_btn.clicked.connect(
-            lambda: self.compute_bands_request.emit(
+            lambda: self.compute_bands_requested.emit(
                 self.bz_path, self.bz_plot_view.n_points_spinbox.value()
             )
         )
