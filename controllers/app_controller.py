@@ -30,6 +30,10 @@ class AppController(QObject):
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
         )
+
+        self.controllers["hopping"].hopping_segments_requested.connect(
+            self._handle_hopping_segments_requested
+        )
         # Toolbar signals
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
@@ -138,11 +142,8 @@ class AppController(QObject):
                 self.controllers["main_ui"].toolbar.n3_spinbox,
             )
         ]
-        # wireframe_shown = (
-        #     self.controllers["main_ui"]
-        #     .action_manager.unit_cell_actions["wireframe"]
-        #     .isChecked()
-        # )
         self.controllers["uc_plot"].update_unit_cell(status, n1, n2, n3)
-        # print
-        # # print(status)
+
+    def _handle_hopping_segments_requested(self):
+        pair_selection = self.controllers["hopping"].pair_selection
+        self.controllers["uc_plot"].update_hopping_segments(pair_selection)

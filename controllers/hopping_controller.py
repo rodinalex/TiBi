@@ -32,12 +32,17 @@ class HoppingController(QObject):
     """
 
     # Signal emitted when a button is clicked, carrying the source and destination state info
-    # Params: (source_state_info, destination_state_info) where each is (site_name, state_name, state_id)
+    # Params: (destination_state_info, source_state_info) [in accordance with UnitCell type]
+    # where each is (site_name, state_name, state_id)
     button_clicked = Signal(object, object)
 
     # Signal emitted when couplings are modified from right-clicking on the button grid.
     # The signal triggers a table and matrix update
     hoppings_changed = Signal()
+
+    # Signal emitted when the coupling table is updated. The signal triggers
+    # an update of hopping segments in the unit cell plot
+    hopping_segments_requested = Signal()
 
     def __init__(
         self,
@@ -281,6 +286,7 @@ class HoppingController(QObject):
             self.hopping_view.table_panel.hopping_table.setCellWidget(
                 row_index, 4, im_box
             )
+        self.hopping_segments_requested.emit()
 
     def _make_spinbox(self, value=0, minimum=-99, maximum=99):
         box = QSpinBox()

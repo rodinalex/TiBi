@@ -210,3 +210,7 @@ class UnitCellPlotController(QObject):
         line_vertices = np.array(line_vertices)
 
         return line_vertices
+
+    def update_hopping_segments(self, pair_selection):
+        s1, s2 = pair_selection
+        # print(s1, s2)
