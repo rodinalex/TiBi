@@ -173,7 +173,8 @@ class HoppingController(QObject):
                 # 4. This approach avoids the "closure capture" problem with lambda in loops
                 btn.clicked.connect(
                     lambda checked=False, row=ii, col=jj: self.button_clicked.emit(
-                        self.state_info[row], self.state_info[col]
+                        self.state_info[row],
+                        self.state_info[col],  # Format (TO_state, FROM_state)
                     )
                 )
 
@@ -242,7 +243,7 @@ class HoppingController(QObject):
             s2: Tuple of (site_name, state_name, state_id) for the source state (column)
         """
         # Store the UUIDs of the selected states
-        self.pair_selection = [s1[2], s2[2]]
+        self.pair_selection = [s1, s2]
         self.hopping_view.table_stack.setCurrentWidget(self.hopping_view.table_panel)
 
         # Retrieve existing hopping terms between these states, or empty list if none exist
@@ -383,7 +384,7 @@ class HoppingController(QObject):
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
         # Update the data model with the new couplings
-        self.hopping_data[(self.pair_selection[0], self.pair_selection[1])] = (
+        self.hopping_data[(self.pair_selection[0][2], self.pair_selection[1][2])] = (
             merged_couplings
         )
         self.unit_cells[self.selection["unit_cell"]].hoppings = self.hopping_data
@@ -435,7 +436,7 @@ class HoppingController(QObject):
     def _handle_matrix_interaction(self):
         self._refresh_button_colors()
         updated_couplings = self.hopping_data.get(
-            (self.pair_selection[0], self.pair_selection[1]), []
+            (self.pair_selection[0][2], self.pair_selection[1][2]), []
         )
         self.state_coupling = updated_couplings
 

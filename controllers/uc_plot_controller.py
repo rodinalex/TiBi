@@ -52,6 +52,8 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
+        self.uc_hopping_segments = {}  # Dictionary to store hopping segments
+
     def update_unit_cell(self, wireframe_shown, n1, n2, n3):
         """
         Set or update the unit cell to be displayed in the 3D view.
@@ -212,5 +214,38 @@ class UnitCellPlotController(QObject):
         return line_vertices
 
     def update_hopping_segments(self, pair_selection):
+
+        # Clear previous hopping segments
+        for key, item in list(self.uc_hopping_segments.items()):
+            self.uc_plot_view.view.removeItem(item)
+            del self.uc_plot_items[key]
+
+        # s1 and s2 are tuples (site_name, state_name, state_id)
         s1, s2 = pair_selection
+        hoppings = self.unit_cell.hoppings.get((s1[2], s2[2]))
+        print(s1)
+        print(s2)
+        if hoppings is not None:
+            ds = [x[0] for x in hoppings]
+        else:
+            ds = []
+
+        # Get the location of the source site
+        source = self.unit_cell.sites[s2[1]]
+        source_pos = (
+            source.c1 * self.unit_cell.v1.as_array()
+            + source.c2 * self.unit_cell.v2.as_array()
+            + source.c3 * self.unit_cell.v3.as_array()
+        )
+        # Get the locations of the target sites
+        target = self.unit_cell.sites[s1[1]]
+        target_pos = (
+            target.c1 * self.unit_cell.v1.as_array()
+            + target.c2 * self.unit_cell.v2.as_array()
+            + target.c3 * self.unit_cell.v3.as_array()
+        )
+        # print(ds)
+        print(source_pos)
+        print(target_pos)
+        # s1, s2 = pair_selection
         # print(s1, s2)
