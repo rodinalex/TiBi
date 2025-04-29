@@ -252,20 +252,16 @@ class UnitCellPlotController(QObject):
 
         hopping_segments = gl.GLLinePlotItem(
             pos=segment_array,
-            color=CF_yellow,  # Red color (RGBA)
+            color=CF_yellow,
             width=5,
             mode="lines",
         )
 
-        shift = (
-            (np.floor((self.n1 - 1) / 2) - self.n1 / 2) * v1
-            + (np.floor((self.n2 - 1) / 2) - self.n2 / 2) * v2
-            + (np.floor((self.n3 - 1) / 2) - self.n3 / 2) * v3
-        )
+        shift = (self.n1 % 2) * v1 / 2 + (self.n2 % 2) * v2 / 2 + (self.n3 % 2) * v3 / 2
 
-        hopping_segments.translate(shift[0], shift[1], shift[2])
+        hopping_segments.translate(-shift[0], -shift[1], -shift[2])
 
         # Add to the view
         self.uc_plot_view.view.addItem(hopping_segments)
-        # # Store it so we can remove it later
+        # Store it so we can remove it later
         self.uc_plot_items["hopping_segments"] = hopping_segments
