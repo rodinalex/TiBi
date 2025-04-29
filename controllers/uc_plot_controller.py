@@ -7,6 +7,7 @@ from views.uc_plot_view import UnitCellPlotView
 import pyqtgraph.opengl as gl
 
 from resources.constants import default_site_scaling
+from resources.colors import CF_yellow
 import numpy as np
 
 
@@ -251,12 +252,17 @@ class UnitCellPlotController(QObject):
 
         hopping_segments = gl.GLLinePlotItem(
             pos=segment_array,
-            color=(1.0, 0.0, 0.0, 1.0),  # Red color (RGBA)
+            color=CF_yellow,  # Red color (RGBA)
             width=5,
             mode="lines",
         )
 
-        shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2
+        shift = (
+            (np.floor((self.n1 - 1) / 2) - self.n1 / 2) * v1
+            + (np.floor((self.n2 - 1) / 2) - self.n2 / 2) * v2
+            + (np.floor((self.n3 - 1) / 2) - self.n3 / 2) * v3
+        )
+
         hopping_segments.translate(shift[0], shift[1], shift[2])
 
         # Add to the view

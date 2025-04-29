@@ -1,7 +1,6 @@
 # TiBiPy Project Roadmap
 
 ## Features
-- Toggle wireframe on and off
 - Export the system to a file
 - Import a system from a file
 - Add hints for the status bar
