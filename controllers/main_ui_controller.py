@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Slot, Signal
 
 from resources.action_manager import ActionManager
 
@@ -10,6 +10,8 @@ class MainUIController(QObject):
     This controller connects the UI elements to the application logic and manages
     the action manager that provides shared actions to the menu bar and toolbar.
     """
+
+    wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
 
     def __init__(self, models, menu_bar_view, toolbar_view, status_bar_view):
         """
@@ -61,7 +63,7 @@ class MainUIController(QObject):
             # "about": self._handle_about,
             # "help": self._handle_help,
             # Unit cell actions
-            "wireframe": self._handle_wireframe,
+            "wireframe": self._handle_wireframe_toggle,
         }
 
         # Connect actions to handlers
@@ -167,11 +169,11 @@ class MainUIController(QObject):
         # Implementation will be added later
 
     @Slot()
-    def _handle_wireframe(self, is_checked):
+    def _handle_wireframe_toggle(self, is_checked):
         """Handle wireframe toggle."""
         self.update_status("Wireframe...")
         # Implementation will be added later
-        print(is_checked)
+        self.wireframe_toggled.emit(is_checked)
 
     # Methods to be called from other controllers
 

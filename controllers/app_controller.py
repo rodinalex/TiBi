@@ -30,7 +30,7 @@ class AppController(QObject):
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
         )
-
+        # Toolbar signals
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
         )
@@ -39,6 +39,11 @@ class AppController(QObject):
         )
         self.controllers["main_ui"].toolbar.n3_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
+        )
+
+        # Action signals
+        self.controllers["main_ui"].wireframe_toggled.connect(
+            self._handle_wireframe_toggled
         )
 
     def _handle_compute_bands_requested(self, path, num_points):
@@ -116,6 +121,28 @@ class AppController(QObject):
                 self.controllers["main_ui"].toolbar.n3_spinbox,
             )
         ]
-
-        self.controllers["uc_plot"].update_unit_cell(n1, n2, n3)
+        wireframe_shown = (
+            self.controllers["main_ui"]
+            .action_manager.unit_cell_actions["wireframe"]
+            .isChecked()
+        )
+        self.controllers["uc_plot"].update_unit_cell(wireframe_shown, n1, n2, n3)
         self.controllers["bz_plot"].update_brillouin_zone()
+
+    def _handle_wireframe_toggled(self, status):
+        n1, n2, n3 = [
+            spinbox.value() if spinbox.isEnabled() else 1
+            for spinbox in (
+                self.controllers["main_ui"].toolbar.n1_spinbox,
+                self.controllers["main_ui"].toolbar.n2_spinbox,
+                self.controllers["main_ui"].toolbar.n3_spinbox,
+            )
+        ]
+        # wireframe_shown = (
+        #     self.controllers["main_ui"]
+        #     .action_manager.unit_cell_actions["wireframe"]
+        #     .isChecked()
+        # )
+        self.controllers["uc_plot"].update_unit_cell(status, n1, n2, n3)
+        # print
+        # # print(status)

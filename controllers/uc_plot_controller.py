@@ -52,7 +52,7 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-    def update_unit_cell(self, n1, n2, n3):
+    def update_unit_cell(self, wireframe_shown, n1, n2, n3):
         """
         Set or update the unit cell to be displayed in the 3D view.
 
@@ -98,8 +98,9 @@ class UnitCellPlotController(QObject):
             / 2
         )
         unit_cell_edges.translate(shift[0], shift[1], shift[2])
-        self.uc_plot_view.view.addItem(unit_cell_edges)
-        self.uc_plot_items["unit_cell_edges"] = unit_cell_edges
+        if wireframe_shown:
+            self.uc_plot_view.view.addItem(unit_cell_edges)
+            self.uc_plot_items["unit_cell_edges"] = unit_cell_edges
 
     def _plot_sites(self, a1, a2, a3):
         """
