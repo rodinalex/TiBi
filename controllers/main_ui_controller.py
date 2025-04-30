@@ -1,4 +1,5 @@
 import os
+from functools import partial
 from PySide6.QtCore import QObject, Slot, Signal
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
@@ -55,10 +56,12 @@ class MainUIController(QObject):
         handlers = {
             # File actions
             "new_project": self._handle_new_project,
-            # "open_project": self._handle_open_project,
-            # "import_project": self._handle_import_project,
-            "save_project": self._handle_save_project,
-            "save_project_as": self._handle_save_project_as,
+            "open_project": self._handle_open_project,
+            "import_project": self._handle_import_project,
+            "save_project": partial(self._handle_save_project, use_existing_path=True),
+            "save_project_as": partial(
+                self._handle_save_project, use_existing_path=False
+            ),
             # "export": self._handle_export,
             # "quit": self._handle_quit,
             # # Edit actions
@@ -96,19 +99,28 @@ class MainUIController(QObject):
         if reply == QMessageBox.Yes:
             self.new_project_requested.emit()
 
-    # @Slot()
-    # def _handle_open_project(self):
-    #     """Handle request to open a project."""
-    #     self.update_status("Opening project...")
-    #     # Implementation will be added later
+    @Slot()
+    def _handle_open_project(self):
+        """Handle request to open a project."""
+        self.update_status("Opening project...")
+        # Implementation will be added later
 
     @Slot()
-    def _handle_save_project(self):
+    def _handle_import_project(self):
+        """Handle request to import a project."""
+        self.update_status("Importing project...")
+        # Implementation will be added later
+
+    @Slot()
+    def _handle_save_project(self, use_existing_path=True):
         """Handle request to save the current project."""
         self.update_status("Saving project...")
         json_string = serialize_unit_cells(self.models["unit_cells"])
+        if use_existing_path:
+            file_path = self.models["project_path"]
+        else:
+            file_path = None
 
-        file_path = self.models["project_path"]
         if not file_path:
             # Open a save file dialog
             file_path, _ = QFileDialog.getSaveFileName(
@@ -126,25 +138,22 @@ class MainUIController(QObject):
             self.models["project_path"] = file_path
 
     @Slot()
-    def _handle_save_project_as(self):
-        """Handle request to save the project with a new name."""
-        self.update_status("Saving project as...")
-        json_string = serialize_unit_cells(self.models["unit_cells"])
+    def _handle_wireframe_toggle(self, is_checked):
+        """Handle wireframe toggle."""
+        self.update_status("Wireframe...")
+        # Implementation will be added later
+        self.wireframe_toggled.emit(is_checked)
 
-        # Open a save file dialog
-        file_path, _ = QFileDialog.getSaveFileName(
-            self.main_window,
-            "Save Unit Cells As JSON",
-            os.getcwd(),  # starting directory
-            "JSON Files (*.json)",
-        )
+    # Methods to be called from other controllers
 
-        if file_path:
-            if file_path and not file_path.endswith(".json"):
-                file_path += ".json"
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(json_string)
-            self.models["project_path"] = file_path
+    def update_status(self, message):
+        """
+        Display a message in the status bar.
+
+        Args:
+            message: Message to display
+        """
+        self.status_bar.update_status(message)
 
     # @Slot()
     # def _handle_export(self):
@@ -211,21 +220,3 @@ class MainUIController(QObject):
     #     """Handle request to show help."""
     #     self.update_status("Opening help...")
     #     # Implementation will be added later
-
-    @Slot()
-    def _handle_wireframe_toggle(self, is_checked):
-        """Handle wireframe toggle."""
-        self.update_status("Wireframe...")
-        # Implementation will be added later
-        self.wireframe_toggled.emit(is_checked)
-
-    # Methods to be called from other controllers
-
-    def update_status(self, message):
-        """
-        Display a message in the status bar.
-
-        Args:
-            message: Message to display
-        """
-        self.status_bar.update_status(message)
