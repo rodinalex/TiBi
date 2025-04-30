@@ -160,9 +160,6 @@ class TiBiApplication:
         # Initialize views
         self._init_views()
 
-        # Initialize controllers
-        self._init_controllers()
-
         # Initialize the main window
         self.main_window = MainWindow(
             self.views["uc"],
@@ -174,6 +171,9 @@ class TiBiApplication:
             self.views["toolbar"],
             self.views["status_bar"],
         )
+
+        # Initialize controllers
+        self._init_controllers()
 
         # Initialize the top-level application controller
         self.app_controller = AppController(self.models, self.controllers)
@@ -293,6 +293,7 @@ class TiBiApplication:
         # Main UI Controller (menu bar, toolbar, status bar)
         self.controllers["main_ui"] = MainUIController(
             self.models,
+            self.main_window,
             self.views["menu_bar"],
             self.views["toolbar"],
             self.views["status_bar"],

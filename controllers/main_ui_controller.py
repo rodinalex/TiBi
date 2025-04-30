@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject, Slot, Signal
+from PySide6.QtWidgets import QMessageBox
 
 from resources.action_manager import ActionManager
 
@@ -13,18 +14,22 @@ class MainUIController(QObject):
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
 
-    def __init__(self, models, menu_bar_view, toolbar_view, status_bar_view):
+    def __init__(
+        self, models, main_window, menu_bar_view, toolbar_view, status_bar_view
+    ):
         """
         Initialize the main UI controller.
 
         Args:
             models: Dictionary of data models used in the application
+            main_window: MainWindow instance
             menu_bar_view: MenuBarView instance
             toolbar_view: MainToolbarView instance
             status_bar_view: StatusBarView instance
         """
         super().__init__()
         self.models = models
+        self.main_window = main_window
         self.menu_bar = menu_bar_view
         self.toolbar = toolbar_view
         self.status_bar = status_bar_view
@@ -77,6 +82,21 @@ class MainUIController(QObject):
         self.update_status("Creating new project...")
         print("TESTING")
         # Implementation will be added later
+        reply = QMessageBox.question(
+            self.main_window,
+            "Start New Project?",
+            "This will clear your current project. Are you sure?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if reply == QMessageBox.Yes:
+            print("USER SAID YES")
+            # self.update_status("Creating new project...")
+            # self.app_controller.create_new_project()  # delegate to AppController
+        else:
+            print("USER SAID NO")
+            # self.update_status("New project canceled.")
 
     @Slot()
     def _handle_new_unit_cell(self):
