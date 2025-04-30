@@ -13,6 +13,9 @@ class MainUIController(QObject):
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
+    new_project_requested = (
+        Signal()
+    )  # New project signal: handled by the AppController to reset all models to their pristine state
 
     def __init__(
         self, models, main_window, menu_bar_view, toolbar_view, status_bar_view
@@ -80,23 +83,16 @@ class MainUIController(QObject):
     def _handle_new_project(self):
         """Handle request to create a new project."""
         self.update_status("Creating new project...")
-        print("TESTING")
-        # Implementation will be added later
         reply = QMessageBox.question(
             self.main_window,
             "Start New Project?",
-            "This will clear your current project. Are you sure?",
+            "⚠️  This will clear your current project.\n\nAre you sure you want to continue?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
 
         if reply == QMessageBox.Yes:
-            print("USER SAID YES")
-            # self.update_status("Creating new project...")
-            # self.app_controller.create_new_project()  # delegate to AppController
-        else:
-            print("USER SAID NO")
-            # self.update_status("New project canceled.")
+            self.new_project_requested.emit()
 
     @Slot()
     def _handle_new_unit_cell(self):

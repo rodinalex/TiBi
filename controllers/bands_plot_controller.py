@@ -8,7 +8,7 @@ from views.bands_plot_view import BandStructurePlotView
 class BandStructurePlotController(QObject):
     """
     Controller for the band structure plotting view.
-    
+
     This controller manages the visualization of electronic band structures.
     It observes the band structure data model and updates the plot view
     whenever the data changes. The plotting logic is contained here,
@@ -22,7 +22,7 @@ class BandStructurePlotController(QObject):
     ):
         """
         Initialize the band structure plot controller.
-        
+
         Args:
             band_structure: Data model containing band structure calculation results
             band_plot_view: View that displays the band structure plot
@@ -37,18 +37,21 @@ class BandStructurePlotController(QObject):
     def _update_plot(self):
         """
         Update the band structure plot with current data.
-        
+
         This method is called whenever the band structure data model changes.
         It retrieves the current k-path and band data, transforms them into
         a format suitable for plotting, and updates the matplotlib figure.
         """
         k_path = self.band_structure.get("k_path", [])
         bands = self.band_structure.get("bands", [])
-        
+        if k_path is None or bands is None:
+            self.band_plot_view.ax.clear()
+            return
+
         # Skip if not enough data
         if len(k_path) == 0 or len(bands) == 0:
             return
-            
+
         # Get the positions along the path reflecting the point spacing
         step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
         pos = np.hstack((0, np.cumsum(step)))
@@ -63,6 +66,7 @@ class BandStructurePlotController(QObject):
         self.band_plot_view.ax.grid(True)
         # Draw the canvas
         self.band_plot_view.canvas.draw()
+
 
 # Future enhancement: Add special point labels and vertical lines
 # # Add vertical lines at special points

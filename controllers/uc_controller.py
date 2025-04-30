@@ -75,7 +75,7 @@ class UnitCellController(QObject):
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
         # Rebuild the tree view from scratch in the beginning
-        self._refresh_tree()
+        self.refresh_tree()
 
         # Sync UI with data models
         self._update_unit_cell_ui()
@@ -157,7 +157,7 @@ class UnitCellController(QObject):
         self.site_data.signals.updated.connect(self._update_site_ui)
 
     # Tree Navigation Functions
-    def _refresh_tree(self):
+    def refresh_tree(self):
         """
         Rebuild the entire tree from the current data model.
 
@@ -769,6 +769,9 @@ class UnitCellController(QObject):
         else:
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.uc_info_label
+            )
+            self.unit_cell_view.site_stack.setCurrentWidget(
+                self.unit_cell_view.site_info_label
             )
 
     def _dimensionality_change(self):

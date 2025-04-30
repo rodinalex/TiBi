@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject
+from models.data_models import DataModel, AlwaysNotifyDataModel
 
 
 class AppController(QObject):
@@ -38,6 +39,11 @@ class AppController(QObject):
         self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
         # Toolbar signals
+
+        self.controllers["main_ui"].new_project_requested.connect(
+            self._handle_new_project_requested
+        )
+
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
         )
@@ -174,3 +180,50 @@ class AppController(QObject):
         hopping matrix and hopping table accurately reflect the item names.
         """
         self.controllers["hopping"]._update_unit_cell()
+
+    def _handle_new_project_requested(self):
+        """
+        Handle a new project request. Reset the app to the pristine configuration.
+        """
+
+        # Dictionary mapping UUIDs to UnitCell objects
+        self.models["unit_cells"].clear()
+
+        # Current selection state (tracks which items are selected in the UI)
+        self.models["selection"].update(
+            {"unit_cell": None, "site": None, "state": None}
+        )
+
+        # Form data for the currently selected unit cell
+        self.models["unit_cell_data"].update(
+            {
+                "name": "",
+                "v1x": 1.0,
+                "v1y": 0.0,
+                "v1z": 0.0,
+                "v2x": 0.0,
+                "v2y": 1.0,
+                "v2z": 0.0,
+                "v3x": 0.0,
+                "v3y": 0.0,
+                "v3z": 1.0,
+                "v1periodic": False,
+                "v2periodic": False,
+                "v3periodic": False,
+            }
+        )
+
+        # Form data for the currently selected site
+        self.models["site_data"].update({"name": "", "c1": 0.0, "c2": 0.0, "c3": 0.0})
+
+        # Form data for the currently selected state
+        self.models["state_data"].update({"name": ""})
+
+        # Band structure calculation results
+        # Uses AlwaysNotifyDataModel to ensure UI updates on every change
+        self.models["band_structure"].update(
+            {"k_path": None, "bands": None, "special_points": None}
+        )
+
+        self.controllers["uc"].refresh_tree()
+        self._handle_plot_update_requested()
