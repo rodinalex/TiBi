@@ -34,6 +34,9 @@ class AppController(QObject):
         self.controllers["hopping"].hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
+
+        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
+
         # Toolbar signals
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
@@ -134,6 +137,13 @@ class AppController(QObject):
         self.controllers["bz_plot"].update_brillouin_zone()
 
     def _handle_wireframe_toggled(self, status):
+        """
+        Handle the toggling of the wireframe button in the toolbar.
+
+        Extract the number of unit cells to be plotted along each direction from the
+        corresponding spinboxes, check whether the wireframe is toggled on or off,
+        and call the update_unit_cell function with the relevant parameters.
+        """
         n1, n2, n3 = [
             spinbox.value() if spinbox.isEnabled() else 1
             for spinbox in (
@@ -145,5 +155,22 @@ class AppController(QObject):
         self.controllers["uc_plot"].update_unit_cell(status, n1, n2, n3)
 
     def _handle_hopping_segments_requested(self):
+        """
+        Handle the request to draw hopping segments after a pair of states
+        is selected from the hopping button matrix.
+
+        The function obtains the states selected by the button click and passes
+        them to the update_hopping_segments function to draw the lines
+        connecting the source state with the destination ones.
+        """
         pair_selection = self.controllers["hopping"].pair_selection
         self.controllers["uc_plot"].update_hopping_segments(pair_selection)
+
+    def _handle_item_changed(self):
+        """
+        Handle the change in the name of the tree items.
+
+        This function is necessary to make sure that the label names in the
+        hopping matrix and hopping table accurately reflect the item names.
+        """
+        self.controllers["hopping"]._update_unit_cell()

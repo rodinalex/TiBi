@@ -13,9 +13,10 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QSpinBox,
     QFrame,
+    QStyledItemDelegate,
 )
 from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QEvent
 from resources.colors import CF_vermillion, CF_green, CF_sky
 from resources.ui_elements import divider_line
 
@@ -211,6 +212,35 @@ class SitePanel(QWidget):
         layout.addWidget(self.new_state_btn)
 
 
+class EnterOnlyDelegate(QStyledItemDelegate):
+    """
+    A delegate that requires the user to commit changes to tree item names by pressing "Enter".
+    Clicking away/defocusing resets the tree item name to its pre-edit form. The purpose is to
+    handle the Qt default behavior, where defocusing keeps the new display name in the tree
+    but does not send an updated signal so that the data can be updated internally.
+    """
+
+    def eventFilter(self, editor, event):
+        if event.type() == QEvent.FocusOut:
+            # Cancel editing on focus out
+            editor.blockSignals(True)
+            editor.setText(editor.property("originalText"))
+            editor.blockSignals(False)
+            self.closeEditor.emit(editor, QStyledItemDelegate.RevertModelCache)
+            return True
+
+        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+            # Accept editing on Enter
+            return super().eventFilter(editor, event)
+
+        return super().eventFilter(editor, event)
+
+    def createEditor(self, parent, option, index):
+        editor = super().createEditor(parent, option, index)
+        editor.setProperty("originalText", index.data())  # Store original value
+        return editor
+
+
 class TreeViewPanel(QWidget):
     """
     Tree view panel for displaying and selecting the unit cell hierarchy.
@@ -255,6 +285,10 @@ class TreeViewPanel(QWidget):
         # Set model to view
         self.tree_view.setModel(self.tree_model)
 
+        # Set the delegate to save the data only on Enter-press
+        delegate = EnterOnlyDelegate(self.tree_view)
+        self.tree_view.setItemDelegate(delegate)
+
         button_layout = QHBoxLayout()
         self.new_uc_btn = QPushButton("+ UC")
         self.delete_btn = QPushButton("Delete")
@@ -267,11 +301,11 @@ class TreeViewPanel(QWidget):
         layout.addWidget(self.tree_view)
         layout.addLayout(button_layout)
 
-        # Set up delete shortcut
+        # Set up Delete shortcut
         self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
         self.delete_shortcut.activated.connect(lambda: self.delete.emit())
 
-        # Optional: Add Backspace as an alternative shortcut
+        # Add Backspace as an alternative shortcut
         self.backspace_shortcut = QShortcut(QKeySequence("Backspace"), self.tree_view)
         self.backspace_shortcut.activated.connect(lambda: self.delete.emit())
 

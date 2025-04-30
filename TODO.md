@@ -18,6 +18,7 @@
 - Figure out and cleanup the toolbar/menu layout to start implementing relevant actions
 
 ## Bugs
+- When changing the name of a tree item, clicking away does not trigger an update so that there can be a disagreement between the name shown in the tree and the one stored internally
 <!-- - Check that the displacements are unique in coupling table
 - Add button coloring
 - Add "Hermitian Check" -->

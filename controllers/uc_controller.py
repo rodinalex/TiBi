@@ -28,6 +28,12 @@ class UnitCellController(QObject):
     """
 
     plot_update_requested = Signal()
+    item_changed = (
+        Signal()
+    )  # A signal emitted when the user changes the item by interacting
+    # with the tree. Used to notify the app_controller
+    # that the hopping matrix needs to be redrawn to
+    # reflect the correct site/state names
 
     def __init__(
         self,
@@ -414,6 +420,7 @@ class UnitCellController(QObject):
         else:
             self.state_data["name"] = new_name
             self._save_state()
+        self.item_changed.emit()
 
     # Unit Cell/Site/State Modification Functions
 
