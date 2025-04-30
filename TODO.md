@@ -8,14 +8,12 @@
 - Fix the band plotting layout
 - Figure out dragging of hoppings between different site pairs
 - Undo possibility
-- New project button with a corresponding warning
 - Progress bar for calculations
 
 ## Functionality
 - Threads/workers
 
 ## Tasks
-- Figure out and cleanup the toolbar/menu layout to start implementing relevant actions
 
 ## Bugs
 
