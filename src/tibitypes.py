@@ -123,7 +123,7 @@ class UnitCell:
             Tuple[Tuple[int, int, int], np.complex128]
         ],  # [(displacement, amplitude), ...]
     ] = field(default_factory=dict)
-    site_colors: dict[uuid.UUID] = field(
+    site_colors: dict[uuid.UUID, Tuple[float, float, float, float]] = field(
         default_factory=dict
     )  # Site colors to be used for plotting
     site_sizes: dict[uuid.UUID, float] = field(

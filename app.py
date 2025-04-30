@@ -188,6 +188,9 @@ class TiBiApplication:
         Creates reactive data models for different aspects of the application state,
         including unit cells, selection state, form data, and calculation results.
         """
+        # Project path for saving
+        self.models["project_path"] = None
+
         # Dictionary mapping UUIDs to UnitCell objects
         self.models["unit_cells"] = {}
 

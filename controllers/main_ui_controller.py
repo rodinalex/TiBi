@@ -1,7 +1,9 @@
+import os
 from PySide6.QtCore import QObject, Slot, Signal
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 from resources.action_manager import ActionManager
+from src.serialization import serialize_unit_cells, deserialize_unit_cells
 
 
 class MainUIController(QObject):
@@ -53,10 +55,10 @@ class MainUIController(QObject):
         handlers = {
             # File actions
             "new_project": self._handle_new_project,
-            # "new_unit_cell": self._handle_new_unit_cell,
             # "open_project": self._handle_open_project,
-            # "save_project": self._handle_save_project,
-            # "save_as": self._handle_save_as,
+            # "import_project": self._handle_import_project,
+            "save_project": self._handle_save_project,
+            "save_project_as": self._handle_save_project_as,
             # "export": self._handle_export,
             # "quit": self._handle_quit,
             # # Edit actions
@@ -94,95 +96,121 @@ class MainUIController(QObject):
         if reply == QMessageBox.Yes:
             self.new_project_requested.emit()
 
-    @Slot()
-    def _handle_new_unit_cell(self):
-        """Handle request to create a new unit cell."""
-        self.update_status("Creating new unit cell...")
-        # Implementation will be added later
-
-    @Slot()
-    def _handle_open_project(self):
-        """Handle request to open a project."""
-        self.update_status("Opening project...")
-        # Implementation will be added later
+    # @Slot()
+    # def _handle_open_project(self):
+    #     """Handle request to open a project."""
+    #     self.update_status("Opening project...")
+    #     # Implementation will be added later
 
     @Slot()
     def _handle_save_project(self):
         """Handle request to save the current project."""
         self.update_status("Saving project...")
-        # Implementation will be added later
+        json_string = serialize_unit_cells(self.models["unit_cells"])
+
+        file_path = self.models["project_path"]
+        if not file_path:
+            # Open a save file dialog
+            file_path, _ = QFileDialog.getSaveFileName(
+                self.main_window,
+                "Save Unit Cells As JSON",
+                os.getcwd(),  # starting directory
+                "JSON Files (*.json)",
+            )
+
+        if file_path:
+            if file_path and not file_path.endswith(".json"):
+                file_path += ".json"
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(json_string)
+            self.models["project_path"] = file_path
 
     @Slot()
-    def _handle_save_as(self):
+    def _handle_save_project_as(self):
         """Handle request to save the project with a new name."""
         self.update_status("Saving project as...")
-        # Implementation will be added later
+        json_string = serialize_unit_cells(self.models["unit_cells"])
 
-    @Slot()
-    def _handle_export(self):
-        """Handle request to export data."""
-        self.update_status("Exporting data...")
-        # Implementation will be added later
+        # Open a save file dialog
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.main_window,
+            "Save Unit Cells As JSON",
+            os.getcwd(),  # starting directory
+            "JSON Files (*.json)",
+        )
 
-    @Slot()
-    def _handle_quit(self):
-        """Handle request to quit the application."""
-        self.update_status("Quitting application...")
-        # Implementation will be added later
+        if file_path:
+            if file_path and not file_path.endswith(".json"):
+                file_path += ".json"
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(json_string)
+            self.models["project_path"] = file_path
 
-    @Slot()
-    def _handle_preferences(self):
-        """Handle request to open preferences."""
-        self.update_status("Opening preferences...")
-        # Implementation will be added later
+    # @Slot()
+    # def _handle_export(self):
+    #     """Handle request to export data."""
+    #     self.update_status("Exporting data...")
+    #     # Implementation will be added later
 
-    @Slot(bool)
-    def _handle_show_toolbar(self, checked):
-        """
-        Handle request to show/hide toolbar.
+    # @Slot()
+    # def _handle_quit(self):
+    #     """Handle request to quit the application."""
+    #     self.update_status("Quitting application...")
+    #     # Implementation will be added later
 
-        Args:
-            checked: Whether the action is checked or not
-        """
-        self.toolbar.setVisible(checked)
-        self.update_status(f"Toolbar {'shown' if checked else 'hidden'}")
+    # @Slot()
+    # def _handle_preferences(self):
+    #     """Handle request to open preferences."""
+    #     self.update_status("Opening preferences...")
+    #     # Implementation will be added later
 
-    @Slot(bool)
-    def _handle_show_statusbar(self, checked):
-        """
-        Handle request to show/hide status bar.
+    # @Slot(bool)
+    # def _handle_show_toolbar(self, checked):
+    #     """
+    #     Handle request to show/hide toolbar.
 
-        Args:
-            checked: Whether the action is checked or not
-        """
-        self.status_bar.setVisible(checked)
-        # Can't update status if it's hidden
-        if checked:
-            self.update_status("Status bar shown")
+    #     Args:
+    #         checked: Whether the action is checked or not
+    #     """
+    #     self.toolbar.setVisible(checked)
+    #     self.update_status(f"Toolbar {'shown' if checked else 'hidden'}")
 
-    @Slot()
-    def _handle_compute_bands(self):
-        """Handle request to compute band structure."""
-        self.update_status("Computing bands...")
-        # Implementation will be added later
+    # @Slot(bool)
+    # def _handle_show_statusbar(self, checked):
+    #     """
+    #     Handle request to show/hide status bar.
 
-    @Slot()
-    def _handle_compute_dos(self):
-        """Handle request to compute density of states."""
-        self.update_status("Computing density of states...")
-        # Implementation will be added later
+    #     Args:
+    #         checked: Whether the action is checked or not
+    #     """
+    #     self.status_bar.setVisible(checked)
+    #     # Can't update status if it's hidden
+    #     if checked:
+    #         self.update_status("Status bar shown")
 
-    @Slot()
-    def _handle_about(self):
-        """Handle request to show about dialog."""
-        self.update_status("About TiBi")
-        # Implementation will be added later
+    # @Slot()
+    # def _handle_compute_bands(self):
+    #     """Handle request to compute band structure."""
+    #     self.update_status("Computing bands...")
+    #     # Implementation will be added later
 
-    @Slot()
-    def _handle_help(self):
-        """Handle request to show help."""
-        self.update_status("Opening help...")
-        # Implementation will be added later
+    # @Slot()
+    # def _handle_compute_dos(self):
+    #     """Handle request to compute density of states."""
+    #     self.update_status("Computing density of states...")
+    #     # Implementation will be added later
+
+    # @Slot()
+    # def _handle_about(self):
+    #     """Handle request to show about dialog."""
+    #     self.update_status("About TiBi")
+    #     # Implementation will be added later
+
+    # @Slot()
+    # def _handle_help(self):
+    #     """Handle request to show help."""
+    #     self.update_status("Opening help...")
+    #     # Implementation will be added later
 
     @Slot()
     def _handle_wireframe_toggle(self, is_checked):

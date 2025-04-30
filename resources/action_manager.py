@@ -59,8 +59,8 @@ class ActionManager(QObject):
         self.file_actions["save_project"].setStatusTip("Save the current project")
 
         # Save As action
-        self.file_actions["save_as"] = QAction("Save Project As...", self)
-        self.file_actions["save_as"].setStatusTip(
+        self.file_actions["save_project_as"] = QAction("Save Project As...", self)
+        self.file_actions["save_project_as"].setStatusTip(
             "Save the current project to a new file"
         )
 
@@ -75,6 +75,54 @@ class ActionManager(QObject):
             QIcon(os.path.join(basedir, "icons/import.png")), "Import...", self
         )
         self.file_actions["import"].setStatusTip("Import data from an exiting project")
+
+    def _create_unit_cell_actions(self):
+        """Create actions for unit cell visualization."""
+        # Toggle wireframe action
+        self.unit_cell_actions["wireframe"] = QAction(
+            QIcon(os.path.join(basedir, "icons/box.png")), "Toggle wireframe", self
+        )
+        self.unit_cell_actions["wireframe"].setCheckable(True)
+        self.unit_cell_actions["wireframe"].setStatusTip(
+            "Show/hide unit cell wireframe"
+        )
+
+    def connect_signals(self, handlers):
+        """
+        Connect actions to their handlers.
+
+        Args:
+            handlers: Dictionary mapping action names to handler functions
+        """
+        # Connect file actions
+        for action_name, action in self.file_actions.items():
+            if action_name in handlers:
+                action.triggered.connect(handlers[action_name])
+
+        # Connect unit cell actions
+        for action_name, action in self.unit_cell_actions.items():
+            if action_name in handlers:
+                action.triggered.connect(handlers[action_name])
+
+    #     # Connect edit actions
+    #     for action_name, action in self.edit_actions.items():
+    #         if action_name in handlers:
+    #             action.triggered.connect(handlers[action_name])
+
+    #     # Connect view actions
+    #     for action_name, action in self.view_actions.items():
+    #         if action_name in handlers:
+    #             action.triggered.connect(handlers[action_name])
+
+    #     # Connect computation actions
+    #     for action_name, action in self.computation_actions.items():
+    #         if action_name in handlers:
+    #             action.triggered.connect(handlers[action_name])
+
+    #     # Connect help actions
+    #     for action_name, action in self.help_actions.items():
+    #         if action_name in handlers:
+    #             action.triggered.connect(handlers[action_name])
 
     # # Export action
     # self.file_actions["export"] = QAction("Export...", self)
@@ -143,51 +191,3 @@ class ActionManager(QObject):
     #     # Help action
     #     self.help_actions["help"] = QAction("Help Contents", self)
     #     self.help_actions["help"].setStatusTip("View help contents")
-
-    def _create_unit_cell_actions(self):
-        """Create actions for unit cell visualization."""
-        # Toggle wireframe action
-        self.unit_cell_actions["wireframe"] = QAction(
-            QIcon(os.path.join(basedir, "icons/box.png")), "Toggle wireframe", self
-        )
-        self.unit_cell_actions["wireframe"].setCheckable(True)
-        self.unit_cell_actions["wireframe"].setStatusTip(
-            "Show/hide unit cell wireframe"
-        )
-
-    def connect_signals(self, handlers):
-        """
-        Connect actions to their handlers.
-
-        Args:
-            handlers: Dictionary mapping action names to handler functions
-        """
-        # Connect file actions
-        for action_name, action in self.file_actions.items():
-            if action_name in handlers:
-                action.triggered.connect(handlers[action_name])
-
-        # Connect unit cell actions
-        for action_name, action in self.unit_cell_actions.items():
-            if action_name in handlers:
-                action.triggered.connect(handlers[action_name])
-
-    #     # Connect edit actions
-    #     for action_name, action in self.edit_actions.items():
-    #         if action_name in handlers:
-    #             action.triggered.connect(handlers[action_name])
-
-    #     # Connect view actions
-    #     for action_name, action in self.view_actions.items():
-    #         if action_name in handlers:
-    #             action.triggered.connect(handlers[action_name])
-
-    #     # Connect computation actions
-    #     for action_name, action in self.computation_actions.items():
-    #         if action_name in handlers:
-    #             action.triggered.connect(handlers[action_name])
-
-    #     # Connect help actions
-    #     for action_name, action in self.help_actions.items():
-    #         if action_name in handlers:
-    #             action.triggered.connect(handlers[action_name])
