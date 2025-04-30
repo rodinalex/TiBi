@@ -16,9 +16,9 @@ class MainUIController(QObject):
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
-    new_project_requested = (
+    project_refresh_requested = (
         Signal()
-    )  # New project signal: handled by the AppController to reset all models to their pristine state
+    )  # Request a UI refresh after creating a new project or loading an existing one
 
     def __init__(
         self, models, main_window, menu_bar_view, toolbar_view, status_bar_view
@@ -97,13 +97,37 @@ class MainUIController(QObject):
         )
 
         if reply == QMessageBox.Yes:
-            self.new_project_requested.emit()
+            self.models["unit_cells"].clear()
+            self.models["project_path"] = None
+            self.project_refresh_requested.emit()
 
     @Slot()
     def _handle_open_project(self):
-        """Handle request to open a project."""
+        """Handle request to open a project from a JSON file."""
         self.update_status("Opening project...")
-        # Implementation will be added later
+
+        # Open a file dialog for selecting a JSON file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.main_window,
+            "Open Unit Cells JSON",
+            os.getcwd(),  # starting directory
+            "JSON Files (*.json);;All Files (*)",
+        )
+
+        if file_path:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    json_string = f.read()
+                unit_cells = deserialize_unit_cells(json_string)
+                self.models["unit_cells"].clear()
+                self.models["unit_cells"].update(unit_cells)
+                self.models["project_path"] = file_path
+                self.project_refresh_requested.emit()
+            except Exception as e:
+                QMessageBox.critical(
+                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                )
+                self.update_status("Failed to open project.")
 
     @Slot()
     def _handle_import_project(self):

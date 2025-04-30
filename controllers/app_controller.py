@@ -40,8 +40,8 @@ class AppController(QObject):
 
         # Toolbar signals
 
-        self.controllers["main_ui"].new_project_requested.connect(
-            self._handle_new_project_requested
+        self.controllers["main_ui"].project_refresh_requested.connect(
+            self._handle_project_refresh_requested
         )
 
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
@@ -181,14 +181,11 @@ class AppController(QObject):
         """
         self.controllers["hopping"]._update_unit_cell()
 
-    def _handle_new_project_requested(self):
+    def _handle_project_refresh_requested(self):
         """
-        Handle a new project request. Reset the app to the pristine configuration.
+        Handle a project refresh request. The unit cell dictionary and the project path have already been updated.
+        Here, the models and the views are refreshed.
         """
-
-        # Dictionary mapping UUIDs to UnitCell objects
-        self.models["unit_cells"].clear()
-
         # Current selection state (tracks which items are selected in the UI)
         self.models["selection"].update(
             {"unit_cell": None, "site": None, "state": None}
