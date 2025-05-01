@@ -28,6 +28,12 @@ class UnitCellController(QObject):
     """
 
     plot_update_requested = Signal()
+    item_changed = (
+        Signal()
+    )  # A signal emitted when the user changes the item by interacting
+    # with the tree. Used to notify the app_controller
+    # that the hopping matrix needs to be redrawn to
+    # reflect the correct site/state names
 
     def __init__(
         self,
@@ -69,7 +75,7 @@ class UnitCellController(QObject):
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
         # Rebuild the tree view from scratch in the beginning
-        self._refresh_tree()
+        self.refresh_tree()
 
         # Sync UI with data models
         self._update_unit_cell_ui()
@@ -151,7 +157,7 @@ class UnitCellController(QObject):
         self.site_data.signals.updated.connect(self._update_site_ui)
 
     # Tree Navigation Functions
-    def _refresh_tree(self):
+    def refresh_tree(self):
         """
         Rebuild the entire tree from the current data model.
 
@@ -414,6 +420,7 @@ class UnitCellController(QObject):
         else:
             self.state_data["name"] = new_name
             self._save_state()
+        self.item_changed.emit()
 
     # Unit Cell/Site/State Modification Functions
 
@@ -762,6 +769,9 @@ class UnitCellController(QObject):
         else:
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.uc_info_label
+            )
+            self.unit_cell_view.site_stack.setCurrentWidget(
+                self.unit_cell_view.site_info_label
             )
 
     def _dimensionality_change(self):

@@ -24,9 +24,7 @@ class AppController(QObject):
         self.controllers = controllers
 
         # Connect signals
-        self.controllers["bz_plot"].compute_bands_requested.connect(
-            self._handle_compute_bands_requested
-        )
+
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
         )
@@ -34,7 +32,15 @@ class AppController(QObject):
         self.controllers["hopping"].hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
+
+        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
+
         # Toolbar signals
+
+        self.controllers["main_ui"].project_refresh_requested.connect(
+            self._handle_project_refresh_requested
+        )
+
         self.controllers["main_ui"].toolbar.n1_spinbox.valueChanged.connect(
             self._handle_plot_update_requested
         )
@@ -49,37 +55,6 @@ class AppController(QObject):
         self.controllers["main_ui"].wireframe_toggled.connect(
             self._handle_wireframe_toggled
         )
-
-    def _handle_compute_bands_requested(self, path, num_points):
-        """
-        Handle requests to compute band structures.
-
-        This method is triggered when the Brillouin zone plot controller
-        emits a compute_bands_requested signal. It retrieves the currently
-        selected unit cell and delegates the band structure calculation
-        to the computation controller.
-
-        Args:
-            path: List of k-points defining the path in reciprocal space
-            num_points: Number of points to compute along the path
-        """
-        # Get the selected unit cell
-        uc_id = self.models["selection"]["unit_cell"]
-        if uc_id is None:
-            # Update status bar if no unit cell is selected
-            self.controllers["main_ui"].update_status("No unit cell selected")
-            return
-
-        unit_cell = self.models["unit_cells"][uc_id]
-
-        # Update status bar
-        self.controllers["main_ui"].update_status("Computing bands...")
-
-        # Call computation controller
-        self.controllers["computation"].compute_bands(unit_cell, path, num_points)
-
-        # Update status when complete
-        self.controllers["main_ui"].update_status("Ready")
 
     def _handle_plot_update_requested(self):
         """
@@ -134,6 +109,13 @@ class AppController(QObject):
         self.controllers["bz_plot"].update_brillouin_zone()
 
     def _handle_wireframe_toggled(self, status):
+        """
+        Handle the toggling of the wireframe button in the toolbar.
+
+        Extract the number of unit cells to be plotted along each direction from the
+        corresponding spinboxes, check whether the wireframe is toggled on or off,
+        and call the update_unit_cell function with the relevant parameters.
+        """
         n1, n2, n3 = [
             spinbox.value() if spinbox.isEnabled() else 1
             for spinbox in (
@@ -145,5 +127,66 @@ class AppController(QObject):
         self.controllers["uc_plot"].update_unit_cell(status, n1, n2, n3)
 
     def _handle_hopping_segments_requested(self):
+        """
+        Handle the request to draw hopping segments after a pair of states
+        is selected from the hopping button matrix.
+
+        The function obtains the states selected by the button click and passes
+        them to the update_hopping_segments function to draw the lines
+        connecting the source state with the destination ones.
+        """
         pair_selection = self.controllers["hopping"].pair_selection
         self.controllers["uc_plot"].update_hopping_segments(pair_selection)
+
+    def _handle_item_changed(self):
+        """
+        Handle the change in the name of the tree items.
+
+        This function is necessary to make sure that the label names in the
+        hopping matrix and hopping table accurately reflect the item names.
+        """
+        self.controllers["hopping"]._update_unit_cell()
+
+    def _handle_project_refresh_requested(self):
+        """
+        Handle a project refresh request. The unit cell dictionary and the project path have already been updated.
+        Here, the models and the views are refreshed.
+        """
+        # Current selection state (tracks which items are selected in the UI)
+        self.models["selection"].update(
+            {"unit_cell": None, "site": None, "state": None}
+        )
+
+        # Form data for the currently selected unit cell
+        self.models["unit_cell_data"].update(
+            {
+                "name": "",
+                "v1x": 1.0,
+                "v1y": 0.0,
+                "v1z": 0.0,
+                "v2x": 0.0,
+                "v2y": 1.0,
+                "v2z": 0.0,
+                "v3x": 0.0,
+                "v3y": 0.0,
+                "v3z": 1.0,
+                "v1periodic": False,
+                "v2periodic": False,
+                "v3periodic": False,
+            }
+        )
+
+        # Form data for the currently selected site
+        self.models["site_data"].update({"name": "", "c1": 0.0, "c2": 0.0, "c3": 0.0})
+
+        # Form data for the currently selected state
+        self.models["state_data"].update({"name": ""})
+
+        # Band structure calculation results
+        # Uses AlwaysNotifyDataModel to ensure UI updates on every change
+        self.models["band_structure"].update(
+            {"k_path": None, "bands": None, "special_points": None}
+        )
+
+        self.controllers["uc"].refresh_tree()
+        self._handle_plot_update_requested()

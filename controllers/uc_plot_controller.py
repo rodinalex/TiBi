@@ -213,6 +213,13 @@ class UnitCellPlotController(QObject):
         return line_vertices
 
     def update_hopping_segments(self, pair_selection):
+        """
+        Draw segments to indicate hopping connections. When a pair is selected from
+        the hopping matrix, this function draws lines starting from the site hosting the source state
+        inside the unit cell around (0,0,0) to all the sites hosting the target sites.
+
+        Args: a tuple of (site_name, site_id, state_name, state_id) objects passed from the hopping controller.
+        """
 
         # Clear previous hopping segments
 

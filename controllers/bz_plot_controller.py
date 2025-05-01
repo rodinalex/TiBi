@@ -1,8 +1,9 @@
 import uuid
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
+from views.computation_view import ComputationView
 import pyqtgraph.opengl as gl
 from resources.colors import CF_red
 import numpy as np
@@ -22,14 +23,13 @@ class BrillouinZonePlotController(QObject):
     a path is complete, it can emit a signal requesting band structure computation.
     """
 
-    # A signal for band calculation requests
-    compute_bands_requested = Signal(object, int)  # (path, n_points)
-
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
+        bz_path,
         bz_plot_view: BrillouinZonePlotView,
+        computation_view: ComputationView,
     ):
         """
         Initialize the Brillouin zone plot controller.
@@ -37,13 +37,17 @@ class BrillouinZonePlotController(QObject):
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
+            bz_path: A list of high-symmetry points in the BZ
             bz_plot_view: The view component for displaying the Brillouin zone
+            computational_view: The view component that contains controls for creating a path in the BZ.
         """
         super().__init__()
 
         self.unit_cells = unit_cells
         self.selection = selection
+        self.bz_path = bz_path
         self.bz_plot_view = bz_plot_view
+        self.computation_view = computation_view
 
         # Internal controller state
         self.unit_cell = None
@@ -55,43 +59,45 @@ class BrillouinZonePlotController(QObject):
         self.dim = 0
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
-        self.bz_path = []
 
-        self.bz_plot_view.add_gamma_btn.clicked.connect(
+        self.computation_view.bands_panel.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
         )
-        self.bz_plot_view.prev_vertex_btn.clicked.connect(
+        self.computation_view.bands_panel.prev_vertex_btn.clicked.connect(
             lambda: self._select_point(-1, "vertex")
         )
-        self.bz_plot_view.next_vertex_btn.clicked.connect(
+        self.computation_view.bands_panel.next_vertex_btn.clicked.connect(
             lambda: self._select_point(+1, "vertex")
         )
-        self.bz_plot_view.add_vertex_btn.clicked.connect(
+        self.computation_view.bands_panel.add_vertex_btn.clicked.connect(
             lambda: self._add_point("vertex")
         )
-        self.bz_plot_view.prev_edge_btn.clicked.connect(
+        self.computation_view.bands_panel.prev_edge_btn.clicked.connect(
             lambda: self._select_point(-1, "edge")
         )
-        self.bz_plot_view.next_edge_btn.clicked.connect(
+        self.computation_view.bands_panel.next_edge_btn.clicked.connect(
             lambda: self._select_point(+1, "edge")
         )
-        self.bz_plot_view.add_edge_btn.clicked.connect(lambda: self._add_point("edge"))
+        self.computation_view.bands_panel.add_edge_btn.clicked.connect(
+            lambda: self._add_point("edge")
+        )
 
-        self.bz_plot_view.prev_face_btn.clicked.connect(
+        self.computation_view.bands_panel.prev_face_btn.clicked.connect(
             lambda: self._select_point(-1, "face")
         )
-        self.bz_plot_view.next_face_btn.clicked.connect(
+        self.computation_view.bands_panel.next_face_btn.clicked.connect(
             lambda: self._select_point(+1, "face")
         )
 
-        self.bz_plot_view.add_face_btn.clicked.connect(lambda: self._add_point("face"))
+        self.computation_view.bands_panel.add_face_btn.clicked.connect(
+            lambda: self._add_point("face")
+        )
 
-        self.bz_plot_view.remove_last_btn.clicked.connect(self._remove_last_point)
-        self.bz_plot_view.clear_path_btn.clicked.connect(self._clear_path)
-        self.bz_plot_view.compute_bands_btn.clicked.connect(
-            lambda: self.compute_bands_requested.emit(
-                self.bz_path, self.bz_plot_view.n_points_spinbox.value()
-            )
+        self.computation_view.bands_panel.remove_last_btn.clicked.connect(
+            self._remove_last_point
+        )
+        self.computation_view.bands_panel.clear_path_btn.clicked.connect(
+            self._clear_path
         )
 
     def update_brillouin_zone(self):
@@ -112,23 +118,23 @@ class BrillouinZonePlotController(QObject):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
         # Reset BZ data
-        self.bz_path = []
+        self.bz_path.clear()
         self.bz_vertices = []
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
 
-        self.bz_plot_view.remove_last_btn.setEnabled(False)
-        self.bz_plot_view.clear_path_btn.setEnabled(False)
-        self.bz_plot_view.compute_bands_btn.setEnabled(False)
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
+        self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
 
         if uc_id == None:
-            self.bz_plot_view.add_gamma_btn.setEnabled(False)
-            for btn in self.bz_plot_view.vertex_btns:
+            self.computation_view.bands_panel.add_gamma_btn.setEnabled(False)
+            for btn in self.computation_view.bands_panel.vertex_btns:
                 btn.setEnabled(False)
-            for btn in self.bz_plot_view.edge_btns:
+            for btn in self.computation_view.bands_panel.edge_btns:
                 btn.setEnabled(False)
-            for btn in self.bz_plot_view.face_btns:
+            for btn in self.computation_view.bands_panel.face_btns:
                 btn.setEnabled(False)
             return
         else:
@@ -144,12 +150,12 @@ class BrillouinZonePlotController(QObject):
         self.dim = 0 if len(self.bz_vertices) == 0 else len(self.bz_vertices[0])
 
         # Activate/deactivate buttons based on dimensionality
-        self.bz_plot_view.add_gamma_btn.setEnabled(self.dim > 0)
-        for btn in self.bz_plot_view.vertex_btns:
+        self.computation_view.bands_panel.add_gamma_btn.setEnabled(self.dim > 0)
+        for btn in self.computation_view.bands_panel.vertex_btns:
             btn.setEnabled(self.dim > 0)
-        for btn in self.bz_plot_view.edge_btns:
+        for btn in self.computation_view.bands_panel.edge_btns:
             btn.setEnabled(self.dim > 1)
-        for btn in self.bz_plot_view.face_btns:
+        for btn in self.computation_view.bands_panel.face_btns:
             btn.setEnabled(self.dim > 2)
 
         # Create the BZ wireframe by making edges (connect the vertices based on face data)
@@ -313,9 +319,9 @@ class BrillouinZonePlotController(QObject):
             del self.bz_plot_items["bz_path"]
 
         # Disable the control buttons since the path is empty
-        self.bz_plot_view.remove_last_btn.setEnabled(False)
-        self.bz_plot_view.clear_path_btn.setEnabled(False)
-        self.bz_plot_view.compute_bands_btn.setEnabled(False)
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
+        self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
 
     def _update_path_visualization(self):
         """
@@ -383,13 +389,13 @@ class BrillouinZonePlotController(QObject):
                 print("No point selected")
                 return
         # Enable the remove last button and clear path button now that we have points
-        self.bz_plot_view.remove_last_btn.setEnabled(True)
-        self.bz_plot_view.clear_path_btn.setEnabled(True)
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(True)
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(True)
         # Enable the compute bands button if we have at least 2 points
         if len(self.bz_path) >= 2:
-            self.bz_plot_view.compute_bands_btn.setEnabled(True)
+            self.computation_view.bands_panel.compute_bands_btn.setEnabled(True)
         else:
-            self.bz_plot_view.compute_bands_btn.setEnabled(False)
+            self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
 
         # Update the path visualization
         self._update_path_visualization()
@@ -405,10 +411,10 @@ class BrillouinZonePlotController(QObject):
 
             # Disable button if path is now empty
             if not self.bz_path:
-                self.bz_plot_view.remove_last_btn.setEnabled(False)
-                self.bz_plot_view.clear_path_btn.setEnabled(False)
+                self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
+                self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
             # Enable the compute bands button if we have at least 2 points
             if len(self.bz_path) >= 2:
-                self.bz_plot_view.compute_bands_btn.setEnabled(True)
+                self.computation_view.bands_panel.compute_bands_btn.setEnabled(True)
             else:
-                self.bz_plot_view.compute_bands_btn.setEnabled(False)
+                self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)

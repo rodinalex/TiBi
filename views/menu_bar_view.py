@@ -45,7 +45,7 @@ class MenuBarView(QMenuBar):
 
         self.file_menu.addSeparator()
         self.file_menu.addAction(action_manager.file_actions["save_project"])
-        self.file_menu.addAction(action_manager.file_actions["save_as"])
+        self.file_menu.addAction(action_manager.file_actions["save_project_as"])
 
     #     self.file_menu.addSeparator()
     #     self.file_menu.addAction(action_manager.file_actions["export"])
