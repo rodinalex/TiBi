@@ -15,20 +15,20 @@ class ComputationController(QObject):
     the MVC pattern.
     """
 
-    def __init__(
-        self, computation_view: ComputationView, band_structure: AlwaysNotifyDataModel
-    ):
+    def __init__(self, models, computation_view: ComputationView):
         """
         Initialize the computation controller.
 
         Args:
+            models: System models. All are provided for computational convenience
             band_structure: Data model that will store calculation results
         """
         super().__init__()
+        self.models = models
         self.computation_view = computation_view
-        self.band_structure = band_structure
 
         # Connect the signales
+        # self.computation_view.bands_panel
 
     def compute_bands(self, unit_cell: UnitCell, path, num_points):
         """
@@ -52,6 +52,6 @@ class ComputationController(QObject):
         bands = band_compute(hamiltonian_func, k_path)
 
         # Update model
-        self.band_structure.update(
+        self.models["band_structure"].update(
             {"k_path": k_path, "bands": bands, "special_points": path}
         )

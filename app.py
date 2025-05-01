@@ -313,7 +313,7 @@ class TiBiApplication:
 
         # Physics Computation Controller
         self.controllers["computation"] = ComputationController(
-            self.views["computation"], self.models["band_structure"]
+            self.models, self.views["computation"]
         )
 
         # Main UI Controller (menu bar, toolbar, status bar)

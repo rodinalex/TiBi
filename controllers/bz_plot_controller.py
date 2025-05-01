@@ -40,7 +40,9 @@ class BrillouinZonePlotController(QObject):
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
             selection: Model tracking the currently selected unit cell, site, and state
+            bz_path: A list of high-symmetry points in the BZ
             bz_plot_view: The view component for displaying the Brillouin zone
+            computational_view: The view component that contains controls for creating a path in the BZ.
         """
         super().__init__()
 
@@ -60,7 +62,6 @@ class BrillouinZonePlotController(QObject):
         self.dim = 0
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
-        # self.bz_path = []
 
         self.computation_view.bands_panel.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
