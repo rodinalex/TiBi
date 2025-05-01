@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
+    QSizePolicy,
 )
 
 from views.placeholder import PlaceholderWidget
@@ -17,6 +18,7 @@ from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
+from views.computation_view import ComputationView
 from views.status_bar_view import StatusBarView
 
 from controllers.app_controller import AppController
@@ -44,7 +46,16 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(
-        self, uc, hopping, uc_plot, bz_plot, band_plot, menu_bar, toolbar, status_bar
+        self,
+        uc,
+        hopping,
+        uc_plot,
+        bz_plot,
+        band_plot,
+        computation_view,
+        menu_bar,
+        toolbar,
+        status_bar,
     ):
         """
         Initialize the main window with views for different components.
@@ -69,6 +80,7 @@ class MainWindow(QMainWindow):
         self.uc_plot = uc_plot
         self.bz_plot = bz_plot
         self.band_plot = band_plot
+        self.computation_view = computation_view
 
         # Set menu bar
         self.setMenuBar(menu_bar)
@@ -92,13 +104,17 @@ class MainWindow(QMainWindow):
         column1_layout.addWidget(self.frame_widget(self.uc), stretch=3)
 
         column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
-        column2_layout.addWidget(self.frame_widget(self.bz_plot), stretch=2)
+        column2_layout.addWidget(
+            self.frame_widget(PlaceholderWidget("[SPOT]")), stretch=2
+        )
 
         column3_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
         column3_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
 
+        column4_layout.addWidget(self.frame_widget(self.bz_plot), stretch=6)
+        column4_layout.addWidget(self.frame_widget(self.computation_view), stretch=10)
         column4_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("SPOT")), stretch=3
+            self.frame_widget(PlaceholderWidget("[PROGRESS]")), stretch=1
         )
 
         main_layout.addLayout(column1_layout, stretch=1)
@@ -115,7 +131,7 @@ class MainWindow(QMainWindow):
         frame.setLineWidth(1)
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(widget)
+        layout.addWidget(widget, stretch=1)
         frame.setLayout(layout)
         return frame
 
@@ -167,6 +183,7 @@ class TiBiApplication:
             self.views["uc_plot"],
             self.views["bz_plot"],
             self.views["band_plot"],
+            self.views["computation"],
             self.views["menu_bar"],
             self.views["toolbar"],
             self.views["status_bar"],
@@ -239,6 +256,7 @@ class TiBiApplication:
         self.views["uc_plot"] = UnitCellPlotView()
         self.views["bz_plot"] = BrillouinZonePlotView()
         self.views["band_plot"] = BandStructurePlotView()
+        self.views["computation"] = ComputationView()
 
         # Main UI components
         self.views["menu_bar"] = MenuBarView()
@@ -281,6 +299,7 @@ class TiBiApplication:
             self.models["unit_cells"],
             self.models["selection"],
             self.views["bz_plot"],
+            self.views["computation"],
         )
 
         # Band Structure Plot Controller
@@ -290,7 +309,7 @@ class TiBiApplication:
 
         # Physics Computation Controller
         self.controllers["computation"] = ComputationController(
-            self.models["band_structure"]
+            self.views["computation"], self.models["band_structure"]
         )
 
         # Main UI Controller (menu bar, toolbar, status bar)

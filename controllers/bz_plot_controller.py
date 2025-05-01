@@ -3,6 +3,7 @@ from PySide6.QtCore import QObject, Signal
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
+from views.computation_view import ComputationView
 import pyqtgraph.opengl as gl
 from resources.colors import CF_red
 import numpy as np
@@ -30,6 +31,7 @@ class BrillouinZonePlotController(QObject):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
         bz_plot_view: BrillouinZonePlotView,
+        computation_view: ComputationView,
     ):
         """
         Initialize the Brillouin zone plot controller.
@@ -44,6 +46,7 @@ class BrillouinZonePlotController(QObject):
         self.unit_cells = unit_cells
         self.selection = selection
         self.bz_plot_view = bz_plot_view
+        self.computation_view = computation_view
 
         # Internal controller state
         self.unit_cell = None
