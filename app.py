@@ -237,6 +237,9 @@ class TiBiApplication:
         # Form data for the currently selected state
         self.models["state_data"] = DataModel(name="")
 
+        # A path of high-symmetry points in the BZ
+        self.models["bz_path"] = []
+
         # Band structure calculation results
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
         self.models["band_structure"] = AlwaysNotifyDataModel(
@@ -298,6 +301,7 @@ class TiBiApplication:
         self.controllers["bz_plot"] = BrillouinZonePlotController(
             self.models["unit_cells"],
             self.models["selection"],
+            self.models["bz_path"],
             self.views["bz_plot"],
             self.views["computation"],
         )

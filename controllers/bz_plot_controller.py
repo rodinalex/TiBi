@@ -30,6 +30,7 @@ class BrillouinZonePlotController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
+        bz_path,
         bz_plot_view: BrillouinZonePlotView,
         computation_view: ComputationView,
     ):
@@ -45,6 +46,7 @@ class BrillouinZonePlotController(QObject):
 
         self.unit_cells = unit_cells
         self.selection = selection
+        self.bz_path = bz_path
         self.bz_plot_view = bz_plot_view
         self.computation_view = computation_view
 
@@ -58,7 +60,7 @@ class BrillouinZonePlotController(QObject):
         self.dim = 0
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
-        self.bz_path = []
+        # self.bz_path = []
 
         self.computation_view.bands_panel.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
