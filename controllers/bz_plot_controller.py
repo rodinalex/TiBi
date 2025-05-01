@@ -1,5 +1,5 @@
 import uuid
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject
 from src.tibitypes import UnitCell
 from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
@@ -22,9 +22,6 @@ class BrillouinZonePlotController(QObject):
     in reciprocal space) that can be used for band structure calculations. When
     a path is complete, it can emit a signal requesting band structure computation.
     """
-
-    # A signal for band calculation requests
-    compute_bands_requested = Signal(object, int)  # (path, n_points)
 
     def __init__(
         self,
@@ -102,11 +99,6 @@ class BrillouinZonePlotController(QObject):
         self.computation_view.bands_panel.clear_path_btn.clicked.connect(
             self._clear_path
         )
-        self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
-            lambda: self.compute_bands_requested.emit(
-                self.bz_path, self.computation_view.bands_panel.n_points_spinbox.value()
-            )
-        )
 
     def update_brillouin_zone(self):
         """
@@ -126,7 +118,7 @@ class BrillouinZonePlotController(QObject):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
         # Reset BZ data
-        self.bz_path = []
+        self.bz_path.clear()
         self.bz_vertices = []
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}

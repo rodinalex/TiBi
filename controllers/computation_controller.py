@@ -1,7 +1,5 @@
 from PySide6.QtCore import QObject
-from src.tibitypes import UnitCell
 from src.band_structure import band_compute, interpolate_k_path
-from models.data_models import AlwaysNotifyDataModel
 from views.computation_view import ComputationView
 
 
@@ -28,22 +26,26 @@ class ComputationController(QObject):
         self.computation_view = computation_view
 
         # Connect the signales
-        # self.computation_view.bands_panel
+        self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
+            self._compute_bands
+        )
 
-    def compute_bands(self, unit_cell: UnitCell, path, num_points):
+    def _compute_bands(self):
         """
         Calculate the electronic band structure along a specified k-path.
 
         This method performs a tight-binding calculation of electronic bands
         by diagonalizing the Hamiltonian at each k-point along the path. The
         results are stored in the band_structure model.
-
-        Args:
-            unit_cell: The unit cell containing the tight-binding model
-            path: List of k-points defining special points along the path
-            num_points: Total number of points to calculate along the path
-                        (distributed according to segment lengths)
         """
+
+        path = self.models["bz_path"]
+        num_points = self.computation_view.bands_panel.n_points_spinbox.value()
+
+        # Get the selected unit cell
+        uc_id = self.models["selection"]["unit_cell"]
+        unit_cell = self.models["unit_cells"][uc_id]
+
         # Get Hamiltonian function
         hamiltonian_func = unit_cell.get_hamiltonian_function()
 
