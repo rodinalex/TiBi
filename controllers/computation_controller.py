@@ -78,6 +78,7 @@ class ComputationController(QObject):
             {
                 "k_path": k_path,
                 "bands": np.array(eigenvalues),
+                # TODO: SPECIAL POINTS SHOULD TAKE A DEEP COPY, NOT REFERENCE
                 "special_points": special_points,
             }
         )
