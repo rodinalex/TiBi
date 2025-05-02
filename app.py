@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QSizePolicy,
 )
 
 from views.placeholder import PlaceholderWidget
@@ -240,9 +239,9 @@ class TiBiApplication:
         # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
         self.models["bz_path"] = []
 
-        # Band structure calculation results
+        # Dictionary containing the information for the currently-shown bands
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
-        self.models["band_structure"] = AlwaysNotifyDataModel(
+        self.models["active_band_structure"] = AlwaysNotifyDataModel(
             k_path=None, bands=None, special_points=None
         )
 
@@ -313,7 +312,7 @@ class TiBiApplication:
 
         # Band Structure Plot Controller
         self.controllers["band_plot"] = BandStructurePlotController(
-            self.models["band_structure"], self.views["band_plot"]
+            self.models["active_band_structure"], self.views["band_plot"]
         )
 
         # Physics Computation Controller

@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 from src.band_structure import band_compute, interpolate_k_path
 from views.computation_view import ComputationView
+import numpy as np
 
 
 class ComputationController(QObject):
@@ -59,10 +60,11 @@ class ComputationController(QObject):
         # Perform calculation
         k_path = interpolate_k_path(path, num_points)
         self.status_updated.emit("Computing the bands")
-        bands = band_compute(hamiltonian_func, k_path)
+
+        eigenvalues, eigenvectors = band_compute(hamiltonian_func, k_path)
         self.status_updated.emit("Bands computation complete")
 
         # Update model
-        self.models["band_structure"].update(
-            {"k_path": k_path, "bands": bands, "special_points": path}
+        self.models["active_band_structure"].update(
+            {"k_path": k_path, "bands": np.array(eigenvalues), "special_points": path}
         )

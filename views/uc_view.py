@@ -6,13 +6,10 @@ from PySide6.QtWidgets import (
     QLabel,
     QButtonGroup,
     QRadioButton,
-    QFormLayout,
     QPushButton,
     QDoubleSpinBox,
     QTreeView,
     QGridLayout,
-    QSpinBox,
-    QFrame,
     QStyledItemDelegate,
 )
 from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut

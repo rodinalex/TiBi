@@ -193,7 +193,7 @@ class AppController(QObject):
 
         # Band structure calculation results
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
-        self.models["band_structure"].update(
+        self.models["active_band_structure"].update(
             {"k_path": None, "bands": None, "special_points": None}
         )
 
