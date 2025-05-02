@@ -1,5 +1,6 @@
 from PySide6.QtCore import QObject
 import numpy as np
+import copy
 
 
 class AppController(QObject):
@@ -120,9 +121,9 @@ class AppController(QObject):
         if band_structure is not None:
             self.models["active_band_structure"].update(
                 {
-                    "k_path": band_structure.path,
-                    "bands": np.array(band_structure.eigenvalues),
-                    "special_points": band_structure.special_points,
+                    "k_path": copy.deepcopy(band_structure.path),
+                    "bands": copy.deepcopy(np.array(band_structure.eigenvalues)),
+                    "special_points": copy.deepcopy(band_structure.special_points),
                 }
             )
         else:

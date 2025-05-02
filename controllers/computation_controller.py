@@ -3,6 +3,7 @@ from src.band_structure import band_compute, interpolate_k_path
 from views.computation_view import ComputationView
 from src.tibitypes import BandStructure
 import numpy as np
+import copy
 
 
 class ComputationController(QObject):
@@ -51,7 +52,7 @@ class ComputationController(QObject):
         unit_cell = self.models["unit_cells"][uc_id]
 
         # Check if the coupling is Hermitian and only then proceed to calculation
-        if unit_cell.is_hermitian() == False:
+        if not unit_cell.is_hermitian():
             self.status_updated.emit("Computation halted: the system is non-Hermitian")
             return
 
@@ -76,9 +77,8 @@ class ComputationController(QObject):
         # Update model
         self.models["active_band_structure"].update(
             {
-                "k_path": k_path,
-                "bands": np.array(eigenvalues),
-                # TODO: SPECIAL POINTS SHOULD TAKE A DEEP COPY, NOT REFERENCE
-                "special_points": special_points,
+                "k_path": copy.deepcopy(k_path),
+                "bands": copy.deepcopy(np.array(eigenvalues)),
+                "special_points": copy.deepcopy(special_points),
             }
         )

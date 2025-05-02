@@ -359,6 +359,17 @@ class UnitCellController(QObject):
             # for the previously selected site. Because the coordinate field update would not be triggered,
             # the radius and color fields would contain wrong data
 
+            if item_type == "site":  # site selected
+                self.selection.update(
+                    {"unit_cell": parent_id, "site": item_id, "state": None}
+                )
+            else:  # state selected
+                grandparent_item = parent_item.parent()
+                grandparent_id = grandparent_item.data(Qt.UserRole + 2)
+                self.selection.update(
+                    {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+                )
+
             site_radius = self.unit_cells[self.selection["unit_cell"]].site_sizes[
                 self.selection["site"]
             ]
@@ -370,17 +381,6 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
                 f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
             )
-
-            if item_type == "site":  # site selected
-                self.selection.update(
-                    {"unit_cell": parent_id, "site": item_id, "state": None}
-                )
-            else:  # state selected
-                grandparent_item = parent_item.parent()
-                grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-                self.selection.update(
-                    {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
-                )
 
     # Programmatically select a tree item
     def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
