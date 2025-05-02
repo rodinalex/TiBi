@@ -210,12 +210,13 @@ class TiBiApplication:
         # Dictionary mapping UUIDs to UnitCell objects
         self.models["unit_cells"] = {}
 
-        # Current selection state (tracks which items are selected in the UI)
+        # Current selection state (tracks which items are selected in the UI using their UUID's)
         self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
 
-        # Form data for the currently selected unit cell
+        # Data for the selected cell/site/state
+
         self.models["unit_cell_data"] = DataModel(
-            name="",
+            unit_cell_name="",
             v1x=1.0,
             v1y=0.0,
             v1z=0.0,
@@ -228,13 +229,35 @@ class TiBiApplication:
             v1periodic=False,
             v2periodic=False,
             v3periodic=False,
+            site_name="",
+            c1=0.0,
+            c2=0.0,
+            c3=0.0,
+            state_name="",
         )
 
-        # Form data for the currently selected site
-        self.models["site_data"] = DataModel(name="", c1=0.0, c2=0.0, c3=0.0)
+        # # Form data for the currently selected unit cell
+        # self.models["unit_cell_data"] = DataModel(
+        #     name="",
+        #     v1x=1.0,
+        #     v1y=0.0,
+        #     v1z=0.0,
+        #     v2x=0.0,
+        #     v2y=1.0,
+        #     v2z=0.0,
+        #     v3x=0.0,
+        #     v3y=0.0,
+        #     v3z=1.0,
+        #     v1periodic=False,
+        #     v2periodic=False,
+        #     v3periodic=False,
+        # )
 
-        # Form data for the currently selected state
-        self.models["state_data"] = DataModel(name="")
+        # # Form data for the currently selected site
+        # self.models["site_data"] = DataModel(name="", c1=0.0, c2=0.0, c3=0.0)
+
+        # # Form data for the currently selected state
+        # self.models["state_data"] = DataModel(name="")
 
         # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
         self.models["bz_path"] = []
@@ -282,8 +305,8 @@ class TiBiApplication:
             self.models["unit_cells"],
             self.models["selection"],
             self.models["unit_cell_data"],
-            self.models["site_data"],
-            self.models["state_data"],
+            # self.models["site_data"],
+            # self.models["state_data"],
             self.views["uc"],
         )
 

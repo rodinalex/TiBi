@@ -40,8 +40,8 @@ class UnitCellController(QObject):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
         unit_cell_data: DataModel,
-        site_data: DataModel,
-        state_data: DataModel,
+        # site_data: DataModel,
+        # state_data: DataModel,
         unit_cell_view: UnitCellView,
     ):
         """
@@ -60,8 +60,8 @@ class UnitCellController(QObject):
         self.unit_cells = unit_cells
         self.selection = selection
         self.unit_cell_data = unit_cell_data
-        self.site_data = site_data
-        self.state_data = state_data
+        # self.site_data = site_data
+        # self.state_data = state_data
         self.unit_cell_view = unit_cell_view
 
         # Get the fields from unit_cell_view for convenience
@@ -131,13 +131,13 @@ class UnitCellController(QObject):
 
         # Site fractional coordinates
         self.c1.editingFinished.connect(
-            lambda: self._update_site_data("c1", self.c1.value())
+            lambda: self._update_unit_cell_data("c1", self.c1.value())
         )
         self.c2.editingFinished.connect(
-            lambda: self._update_site_data("c2", self.c2.value())
+            lambda: self._update_unit_cell_data("c2", self.c2.value())
         )
         self.c3.editingFinished.connect(
-            lambda: self._update_site_data("c3", self.c3.value())
+            lambda: self._update_unit_cell_data("c3", self.c3.value())
         )
 
         # Button signals
@@ -167,7 +167,7 @@ class UnitCellController(QObject):
 
         # When model changes, update UI. If the model changes programmatically, the updates fill out the relevant fields
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
-        self.site_data.signals.updated.connect(self._update_site_ui)
+        # self.site_data.signals.updated.connect(self._update_site_ui)
 
     # Tree Navigation Functions
     def refresh_tree(self):
@@ -422,13 +422,13 @@ class UnitCellController(QObject):
         item_type = item.data(Qt.UserRole + 1)
         new_name = item.text()
         if item_type == "unit_cell":
-            self.unit_cell_data["name"] = new_name
+            self.unit_cell_data["unit_cell_name"] = new_name
             self._save_unit_cell()
         elif item_type == "site":
-            self.site_data["name"] = new_name
+            self.unit_cell_data["site_name"] = new_name
             self._save_site()
         else:
-            self.state_data["name"] = new_name
+            self.unit_cell_data["state_name"] = new_name
             self._save_state()
         self.item_changed.emit()
 
@@ -528,7 +528,7 @@ class UnitCellController(QObject):
         current_uc = self.unit_cells[selected_uc_id]
 
         # Update name and basic properties
-        current_uc.name = self.unit_cell_data["name"]
+        current_uc.name = self.unit_cell_data["unit_cell_name"]
 
         # Update first basis vector (v1)
         current_uc.v1.x = float(self.unit_cell_data["v1x"])
@@ -570,10 +570,10 @@ class UnitCellController(QObject):
         current_site = current_uc.sites[selected_site_id]
 
         # Update site properties
-        current_site.name = self.site_data["name"]
-        current_site.c1 = float(self.site_data["c1"])
-        current_site.c2 = float(self.site_data["c2"])
-        current_site.c3 = float(self.site_data["c3"])
+        current_site.name = self.unit_cell_data["site_name"]
+        current_site.c1 = float(self.unit_cell_data["c1"])
+        current_site.c2 = float(self.unit_cell_data["c2"])
+        current_site.c3 = float(self.unit_cell_data["c3"])
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id)
@@ -599,7 +599,7 @@ class UnitCellController(QObject):
         current_state = current_site.states[selected_state_id]
 
         # Update state properties
-        current_state.name = self.state_data["name"]
+        current_state.name = self.unit_cell_data["state_name"]
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
@@ -725,7 +725,7 @@ class UnitCellController(QObject):
             # The form will automatically update due to the reactive data binding
             self.unit_cell_data.update(
                 {
-                    "name": uc.name,
+                    "unit_cell_name": uc.name,
                     "v1x": uc.v1.x,
                     "v1y": uc.v1.y,
                     "v1z": uc.v1.z,
@@ -755,9 +755,9 @@ class UnitCellController(QObject):
                 site = uc.sites[site_id]
                 # Update the form model with all site properties
                 # The corresponding update function to update the fields is fired automatically.
-                self.site_data.update(
+                self.unit_cell_data.update(
                     {
-                        "name": site.name,
+                        "site_name": site.name,
                         "c1": site.c1,
                         "c2": site.c2,
                         "c3": site.c3,
@@ -771,9 +771,9 @@ class UnitCellController(QObject):
 
                     # Update the form model with the state properties
                     # The corresponding update function to update the fields is fired automatically.
-                    self.state_data.update(
+                    self.unit_cell_data.update(
                         {
-                            "name": state.name,
+                            "state_name": state.name,
                         }
                     )
             else:
@@ -989,9 +989,9 @@ class UnitCellController(QObject):
         based on the current values in the site_data dictionary.
         """
 
-        self.c1.setValue(self.site_data["c1"])
-        self.c2.setValue(self.site_data["c2"])
-        self.c3.setValue(self.site_data["c3"])
+        self.c1.setValue(self.unit_cell_data["c1"])
+        self.c2.setValue(self.unit_cell_data["c2"])
+        self.c3.setValue(self.unit_cell_data["c3"])
 
     def _update_site_size(self):
         """
