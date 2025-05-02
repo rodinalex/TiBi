@@ -29,7 +29,7 @@ class MainToolbarView(QToolBar):
         # Add File actions
         self.addAction(action_manager.file_actions["new_project"])
         self.addAction(action_manager.file_actions["open_project"])
-        self.addAction(action_manager.file_actions["import"])
+        self.addAction(action_manager.file_actions["import_project"])
         self.addAction(action_manager.file_actions["save_project"])
 
         # # Add separator

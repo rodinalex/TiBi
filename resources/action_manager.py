@@ -71,10 +71,12 @@ class ActionManager(QObject):
         self.file_actions["open_project"].setStatusTip("Open an existing project")
 
         # Import action
-        self.file_actions["import"] = QAction(
+        self.file_actions["import_project"] = QAction(
             QIcon(os.path.join(basedir, "icons/import.png")), "Import...", self
         )
-        self.file_actions["import"].setStatusTip("Import data from an exiting project")
+        self.file_actions["import_project"].setStatusTip(
+            "Import data from an exiting project"
+        )
 
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
