@@ -35,6 +35,8 @@ class AppController(QObject):
 
         self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
+        self.controllers["computation"].status_updated.connect(self._relay_status)
+
         # Toolbar signals
 
         self.controllers["main_ui"].project_refresh_requested.connect(
@@ -55,6 +57,13 @@ class AppController(QObject):
         self.controllers["main_ui"].wireframe_toggled.connect(
             self._handle_wireframe_toggled
         )
+
+    def _relay_status(self, msg):
+        """
+        Relaying function that sends status updates from various controllers to the main_ui
+        controller to be displayed in the status bar.
+        """
+        self.controllers["main_ui"].update_status(msg)
 
     def _handle_plot_update_requested(self):
         """

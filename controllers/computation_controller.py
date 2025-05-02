@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 from src.band_structure import band_compute, interpolate_k_path
 from views.computation_view import ComputationView
 
@@ -12,6 +12,8 @@ class ComputationController(QObject):
     It isolates the calculation logic from both the UI and the data storage, following
     the MVC pattern.
     """
+
+    status_updated = Signal(str)
 
     def __init__(self, models, computation_view: ComputationView):
         """
@@ -46,12 +48,19 @@ class ComputationController(QObject):
         uc_id = self.models["selection"]["unit_cell"]
         unit_cell = self.models["unit_cells"][uc_id]
 
+        # Check if the coupling is Hermitian and only then proceed to calculation
+        if unit_cell.is_hermitian() == False:
+            self.status_updated.emit("The system is non-Hermitian")
+            return
+
         # Get Hamiltonian function
         hamiltonian_func = unit_cell.get_hamiltonian_function()
 
         # Perform calculation
         k_path = interpolate_k_path(path, num_points)
+        self.status_updated.emit("Computing the bands")
         bands = band_compute(hamiltonian_func, k_path)
+        self.status_updated.emit("Bands computation complete")
 
         # Update model
         self.models["band_structure"].update(
