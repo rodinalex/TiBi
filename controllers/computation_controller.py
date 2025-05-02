@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 from src.band_structure import band_compute, interpolate_k_path
 from views.computation_view import ComputationView
+from src.tibitypes import BandStructure
 import numpy as np
 
 
@@ -42,7 +43,7 @@ class ComputationController(QObject):
         results are stored in the band_structure model.
         """
 
-        path = self.models["bz_path"]
+        special_points = self.models["bz_path"]
         num_points = self.computation_view.bands_panel.n_points_spinbox.value()
 
         # Get the selected unit cell
@@ -58,13 +59,25 @@ class ComputationController(QObject):
         hamiltonian_func = unit_cell.get_hamiltonian_function()
 
         # Perform calculation
-        k_path = interpolate_k_path(path, num_points)
+        k_path = interpolate_k_path(special_points, num_points)
         self.status_updated.emit("Computing the bands")
 
         eigenvalues, eigenvectors = band_compute(hamiltonian_func, k_path)
         self.status_updated.emit("Bands computation complete")
 
+        band_structure = BandStructure(
+            path=k_path,
+            special_points=special_points,
+            eigenvalues=eigenvalues,
+            eigenvectors=eigenvectors,
+        )
+        self.models["band_structures"][uc_id] = band_structure
+
         # Update model
         self.models["active_band_structure"].update(
-            {"k_path": k_path, "bands": np.array(eigenvalues), "special_points": path}
+            {
+                "k_path": k_path,
+                "bands": np.array(eigenvalues),
+                "special_points": special_points,
+            }
         )

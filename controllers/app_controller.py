@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject
+import numpy as np
 
 
 class AppController(QObject):
@@ -114,6 +115,21 @@ class AppController(QObject):
             .action_manager.unit_cell_actions["wireframe"]
             .isChecked()
         )
+        band_structure = self.models["band_structures"].get(uc_id)
+
+        if band_structure is not None:
+            self.models["active_band_structure"].update(
+                {
+                    "k_path": band_structure.path,
+                    "bands": np.array(band_structure.eigenvalues),
+                    "special_points": band_structure.special_points,
+                }
+            )
+        else:
+            self.models["active_band_structure"].update(
+                {"k_path": None, "bands": None, "special_points": None}
+            )
+
         self.controllers["uc_plot"].update_unit_cell(wireframe_shown, n1, n2, n3)
         self.controllers["bz_plot"].update_brillouin_zone()
 

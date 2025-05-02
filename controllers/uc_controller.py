@@ -319,6 +319,7 @@ class UnitCellController(QObject):
             deselected: The previously selected items that are now deselected
         """
         indexes = selected.indexes()
+
         if not indexes:
             self.selection.update({"unit_cell": None, "site": None, "state": None})
             return
@@ -362,7 +363,6 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
                 f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
             )
-
         # Now that selection is fully updated, request plot update
         self.plot_update_requested.emit()
 
@@ -392,7 +392,6 @@ class UnitCellController(QObject):
             parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
             parent = self._find_item_by_id(parent_id, "site", grandparent_id)
-
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
@@ -731,8 +730,12 @@ class UnitCellController(QObject):
                     "v3periodic": uc.v3.is_periodic,
                 }
             )
+
             dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
+            print("ALMOST")
             self.unit_cell_view.unit_cell_panel.radio_group.button(dim).setChecked(True)
+            print("THERE")
+
             self.unit_cell_view.uc_stack.setCurrentWidget(
                 self.unit_cell_view.unit_cell_panel
             )
