@@ -50,7 +50,7 @@ class ComputationController(QObject):
 
         # Check if the coupling is Hermitian and only then proceed to calculation
         if unit_cell.is_hermitian() == False:
-            self.status_updated.emit("The system is non-Hermitian")
+            self.status_updated.emit("Computation halted: the system is non-Hermitian")
             return
 
         # Get Hamiltonian function

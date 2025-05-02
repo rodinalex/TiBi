@@ -462,3 +462,21 @@ class UnitCell:
             return H
 
         return hamiltonian
+
+
+@dataclass
+class BandStructure:
+    """
+    An object containing a system's band structure.
+
+    Attributes:
+        path: a list of point coordinates along which the bands are calculated
+        special_points: a list of high-symmetry point coordinates used to construct the path
+        eigenvalues: a list of arrays, where each array contains eivenvalues corresponding to each point on the path
+        eigenvectors: a list of 2D arrays, where each array the eigenvectors corresponding to each point on the path
+    """
+
+    path: list[np.ndarray]
+    special_points: list[np.ndarray] = field(default_factory=list)
+    eigenvalues: list[np.ndarray] = field(default_factory=list)
+    eigenvectors: list[np.ndarray] = field(default_factory=list)

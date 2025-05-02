@@ -237,7 +237,7 @@ class TiBiApplication:
         # Form data for the currently selected state
         self.models["state_data"] = DataModel(name="")
 
-        # A path of high-symmetry points in the BZ
+        # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
         self.models["bz_path"] = []
 
         # Band structure calculation results
@@ -245,6 +245,11 @@ class TiBiApplication:
         self.models["band_structure"] = AlwaysNotifyDataModel(
             k_path=None, bands=None, special_points=None
         )
+
+        # A dictionary of the band structures that have been obtained in the current sessions for the unit cells
+        # The keys are unit cells UUID's and the values are BandStructure objects. Storing the band structures
+        # allows the user to quickly switch between different unit cells to compare their band structures
+        self.models["band_structures"] = AlwaysNotifyDataModel()
 
     def _init_views(self):
         """

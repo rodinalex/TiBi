@@ -376,7 +376,7 @@ class BrillouinZonePlotController(QObject):
         """
 
         if point == "gamma":
-            self.bz_path.append([0] * self.dim)
+            self.bz_path.append(np.array([0] * self.dim))
         else:
             if (
                 self.bz_point_selection[point] is not None
