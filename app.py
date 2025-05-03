@@ -214,26 +214,26 @@ class TiBiApplication:
         self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
 
         # Data for the selected cell/site/state in the UnitCellView
-        self.models["unit_cell_data"] = DataModel(
-            unit_cell_name="",
-            v1x=1.0,
-            v1y=0.0,
-            v1z=0.0,
-            v2x=0.0,
-            v2y=1.0,
-            v2z=0.0,
-            v3x=0.0,
-            v3y=0.0,
-            v3z=1.0,
-            v1periodic=False,
-            v2periodic=False,
-            v3periodic=False,
-            site_name="",
-            c1=0.0,
-            c2=0.0,
-            c3=0.0,
-            state_name="",
-        )
+        # self.models["unit_cell_data"] = DataModel(
+        #     unit_cell_name="",
+        #     v1x=1.0,
+        #     v1y=0.0,
+        #     v1z=0.0,
+        #     v2x=0.0,
+        #     v2y=1.0,
+        #     v2z=0.0,
+        #     v3x=0.0,
+        #     v3y=0.0,
+        #     v3z=1.0,
+        #     v1periodic=False,
+        #     v2periodic=False,
+        #     v3periodic=False,
+        #     site_name="",
+        #     c1=0.0,
+        #     c2=0.0,
+        #     c3=0.0,
+        #     state_name="",
+        # )
 
         # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
         self.models["bz_path"] = []
@@ -280,7 +280,7 @@ class TiBiApplication:
         self.controllers["uc"] = UnitCellController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["unit_cell_data"],
+            # self.models["unit_cell_data"],
             self.views["uc"],
         )
 
