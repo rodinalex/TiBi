@@ -1,5 +1,6 @@
 import os
 from functools import partial
+import uuid
 from PySide6.QtCore import QObject, Slot, Signal
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
@@ -86,7 +87,14 @@ class MainUIController(QObject):
 
     @Slot()
     def _handle_new_project(self):
-        """Handle request to create a new project."""
+        """
+        Handle request to create a new project.
+
+        A new project clears the current project, so the user has to respond to a warning.
+        If the user confirms the creation of the project, the unit_cells dictionary is cleared,
+        the project_path is set to None and a request is set to reset all the models to the
+        pristine state.
+        """
         self.update_status("Creating new project...")
         reply = QMessageBox.question(
             self.main_window,
@@ -103,7 +111,13 @@ class MainUIController(QObject):
 
     @Slot()
     def _handle_open_project(self):
-        """Handle request to open a project from a JSON file."""
+        """
+        Handle request to open a project from a JSON file.
+
+        Opening a project clears the current project. The JSON data from the loaded file
+        is deserialized so that the unit_cell dictionary can be filled. The project path is updated
+        and a request is sent out to reset all other models to the pristine state (nothing selected).
+        """
         self.update_status("Opening project...")
 
         # Open a file dialog for selecting a JSON file
@@ -131,13 +145,56 @@ class MainUIController(QObject):
 
     @Slot()
     def _handle_import_project(self):
-        """Handle request to import a project."""
+        """
+        Handle request to import a project.
+
+        Importing a project is similar to loading with the difference being that the
+        imported unit cells are added to the current project rather than replacing them.
+        To avoid UUID clashes (if one imports the same project twice), the newly-imported
+        unit cells have their UUID's regenerated.
+        """
         self.update_status("Importing project...")
-        # Implementation will be added later
+
+        # Open a file dialog for selecting a JSON file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.main_window,
+            "Open Unit Cells JSON",
+            os.getcwd(),  # starting directory
+            "JSON Files (*.json);;All Files (*)",
+        )
+
+        if file_path:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    json_string = f.read()
+                unit_cells = deserialize_unit_cells(json_string)
+
+                # Go over the newly imported unit cells and regenerate their UUID's
+                new_unit_cells = {}
+                for _, uc in unit_cells.items():
+                    new_id = uuid.uuid4()
+                    uc.id = new_id
+                    new_unit_cells[new_id] = uc
+
+                self.models["unit_cells"].update(new_unit_cells)
+                self.project_refresh_requested.emit()
+                print(self.models["unit_cells"])
+            except Exception as e:
+                QMessageBox.critical(
+                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                )
+                self.update_status("Failed to open project.")
 
     @Slot()
     def _handle_save_project(self, use_existing_path=True):
-        """Handle request to save the current project."""
+        """
+        Handle request to save the current project.
+
+        Save the current project to a JSON file. If the project already has a path,
+        depending on whether the user clicks on Save or Save As, the project is either
+        saved to that path or the user chooses a new file name. If there is no path,
+        Save acts as Save As.
+        """
         self.update_status("Saving project...")
         json_string = serialize_unit_cells(self.models["unit_cells"])
         if use_existing_path:
@@ -163,7 +220,11 @@ class MainUIController(QObject):
 
     @Slot()
     def _handle_wireframe_toggle(self, is_checked):
-        """Handle wireframe toggle."""
+        """
+        Handle wireframe toggle.
+
+        Request a redrawing of the unit cell plot with/without the wireframe.
+        """
         self.update_status("Wireframe...")
         # Implementation will be added later
         self.wireframe_toggled.emit(is_checked)

@@ -41,7 +41,7 @@ class MenuBarView(QMenuBar):
         # Populate File menu
         self.file_menu.addAction(action_manager.file_actions["new_project"])
         self.file_menu.addAction(action_manager.file_actions["open_project"])
-        self.file_menu.addAction(action_manager.file_actions["import"])
+        self.file_menu.addAction(action_manager.file_actions["import_project"])
 
         self.file_menu.addSeparator()
         self.file_menu.addAction(action_manager.file_actions["save_project"])

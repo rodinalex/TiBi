@@ -1,17 +1,9 @@
 import numpy as np
-from PySide6.QtWidgets import (
-    QWidget,
-    QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
-    QFormLayout,
-    QPushButton,
-    QSpinBox,
-    QGridLayout,
-)
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QWidget, QHBoxLayout
+
+from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
-from resources.colors import CF_red, CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
+from resources.colors import CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
 
 
 class BrillouinZonePlotView(QWidget):

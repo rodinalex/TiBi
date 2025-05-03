@@ -4,15 +4,15 @@ import numpy as np
 def interpolate_k_path(points, n_total):
     """
     Interpolate a path through k-space with points distributed by segment length.
-    
+
     This function takes a list of special k-points (like high-symmetry points
-    in the Brillouin zone) and creates a path with points distributed along 
+    in the Brillouin zone) and creates a path with points distributed along
     segments proportionally to their lengths in reciprocal space.
-    
+
     Args:
         points: List or array of k-points defining the path
         n_total: Total number of points to distribute along the entire path
-        
+
     Returns:
         numpy.ndarray: Array of interpolated k-points along the path
     """
@@ -45,26 +45,29 @@ def interpolate_k_path(points, n_total):
 def band_compute(hamiltonian, k_path):
     """
     Compute electronic band structure along a k-path.
-    
+
     This function calculates the energy eigenvalues of the Hamiltonian
     at each k-point along the provided path. The Hamiltonian should be
     a function that takes a k-point and returns a matrix.
-    
+
     Args:
         hamiltonian: Function that generates a Hamiltonian matrix for a given k-point
         k_path: Array of k-points along which to calculate bands
-        
+
     Returns:
         numpy.ndarray: Array of shape (n_kpoints, n_bands) containing the energy
                        eigenvalues at each k-point
     """
-    # Interpolate the path
-    bands = []
+    eigenvalues = []
+    eigenvectors = []
 
     for k in k_path:
         H = hamiltonian(k)
-        eigenvalues = np.linalg.eigh(H)[0]  # Only eigenvalues
-        bands.append(eigenvalues)
+        solution = np.linalg.eigh(H)
+        eigenvalues.append(solution[0])
+        eigenvectors.append(solution[1])
+        # eigenvalues = np.linalg.eigh(H)[0]  # Only eigenvalues
+        # bands.append(eigenvalues)
 
-    bands = np.array(bands)
-    return bands
+    # bands = np.array(bands)
+    return eigenvalues, eigenvectors

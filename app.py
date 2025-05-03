@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QSizePolicy,
 )
 
 from views.placeholder import PlaceholderWidget
@@ -211,40 +210,22 @@ class TiBiApplication:
         # Dictionary mapping UUIDs to UnitCell objects
         self.models["unit_cells"] = {}
 
-        # Current selection state (tracks which items are selected in the UI)
+        # Current selection state (tracks which items are selected in the UI using their UUID's)
         self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
 
-        # Form data for the currently selected unit cell
-        self.models["unit_cell_data"] = DataModel(
-            name="",
-            v1x=1.0,
-            v1y=0.0,
-            v1z=0.0,
-            v2x=0.0,
-            v2y=1.0,
-            v2z=0.0,
-            v3x=0.0,
-            v3y=0.0,
-            v3z=1.0,
-            v1periodic=False,
-            v2periodic=False,
-            v3periodic=False,
-        )
-
-        # Form data for the currently selected site
-        self.models["site_data"] = DataModel(name="", c1=0.0, c2=0.0, c3=0.0)
-
-        # Form data for the currently selected state
-        self.models["state_data"] = DataModel(name="")
-
-        # A path of high-symmetry points in the BZ
+        # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
         self.models["bz_path"] = []
 
-        # Band structure calculation results
+        # Dictionary containing the information for the currently-shown bands
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
-        self.models["band_structure"] = AlwaysNotifyDataModel(
+        self.models["active_band_structure"] = AlwaysNotifyDataModel(
             k_path=None, bands=None, special_points=None
         )
+
+        # A dictionary of the band structures that have been obtained in the current sessions for the unit cells
+        # The keys are unit cells UUID's and the values are BandStructure objects. Storing the band structures
+        # allows the user to quickly switch between different unit cells to compare their band structures
+        self.models["band_structures"] = AlwaysNotifyDataModel()
 
     def _init_views(self):
         """
@@ -277,9 +258,6 @@ class TiBiApplication:
         self.controllers["uc"] = UnitCellController(
             self.models["unit_cells"],
             self.models["selection"],
-            self.models["unit_cell_data"],
-            self.models["site_data"],
-            self.models["state_data"],
             self.views["uc"],
         )
 
@@ -308,7 +286,7 @@ class TiBiApplication:
 
         # Band Structure Plot Controller
         self.controllers["band_plot"] = BandStructurePlotController(
-            self.models["band_structure"], self.views["band_plot"]
+            self.models["active_band_structure"], self.views["band_plot"]
         )
 
         # Physics Computation Controller

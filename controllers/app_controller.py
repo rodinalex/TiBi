@@ -1,4 +1,6 @@
 from PySide6.QtCore import QObject
+import numpy as np
+import copy
 
 
 class AppController(QObject):
@@ -35,6 +37,8 @@ class AppController(QObject):
 
         self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
+        self.controllers["computation"].status_updated.connect(self._relay_status)
+
         # Toolbar signals
 
         self.controllers["main_ui"].project_refresh_requested.connect(
@@ -55,6 +59,13 @@ class AppController(QObject):
         self.controllers["main_ui"].wireframe_toggled.connect(
             self._handle_wireframe_toggled
         )
+
+    def _relay_status(self, msg):
+        """
+        Relaying function that sends status updates from various controllers to the main_ui
+        controller to be displayed in the status bar.
+        """
+        self.controllers["main_ui"].update_status(msg)
 
     def _handle_plot_update_requested(self):
         """
@@ -105,6 +116,21 @@ class AppController(QObject):
             .action_manager.unit_cell_actions["wireframe"]
             .isChecked()
         )
+        band_structure = self.models["band_structures"].get(uc_id)
+
+        if band_structure is not None:
+            self.models["active_band_structure"].update(
+                {
+                    "k_path": copy.deepcopy(band_structure.path),
+                    "bands": copy.deepcopy(np.array(band_structure.eigenvalues)),
+                    "special_points": copy.deepcopy(band_structure.special_points),
+                }
+            )
+        else:
+            self.models["active_band_structure"].update(
+                {"k_path": None, "bands": None, "special_points": None}
+            )
+
         self.controllers["uc_plot"].update_unit_cell(wireframe_shown, n1, n2, n3)
         self.controllers["bz_plot"].update_brillouin_zone()
 
@@ -184,7 +210,7 @@ class AppController(QObject):
 
         # Band structure calculation results
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change
-        self.models["band_structure"].update(
+        self.models["active_band_structure"].update(
             {"k_path": None, "bands": None, "special_points": None}
         )
 

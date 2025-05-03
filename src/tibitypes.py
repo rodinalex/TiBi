@@ -144,6 +144,32 @@ class UnitCell:
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
 
+    def is_hermitian(self) -> bool:
+        """
+        Check whether the Hamiltonian is Hermitian.
+
+        For each key (destination_state_id, source_state_id) in the hoppings dictionary, check
+        if there is a key (source_state_id, destination_state_id). If so, check that the entries
+        are related by Hermitian conjugation.
+        """
+        hermitian = True
+
+        for key, val in self.hoppings.items():
+            s1 = key[0]
+            s2 = key[1]
+
+            hop = set(val)
+            hop_transpose = set(self.hoppings.get((s2, s1), []))
+
+            hop_neg_conj = set(
+                ((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop
+            )
+
+            if hop_neg_conj != hop_transpose:
+                hermitian = False
+                break
+        return hermitian
+
     def reciprocal_vectors(self) -> list[np.ndarray]:
         """
         Compute the reciprocal lattice vectors for the periodic directions.
@@ -436,3 +462,21 @@ class UnitCell:
             return H
 
         return hamiltonian
+
+
+@dataclass
+class BandStructure:
+    """
+    An object containing a system's band structure.
+
+    Attributes:
+        path: a list of point coordinates along which the bands are calculated
+        special_points: a list of high-symmetry point coordinates used to construct the path
+        eigenvalues: a list of arrays, where each array contains eivenvalues corresponding to each point on the path
+        eigenvectors: a list of 2D arrays, where each array the eigenvectors corresponding to each point on the path
+    """
+
+    path: list[np.ndarray]
+    special_points: list[np.ndarray] = field(default_factory=list)
+    eigenvalues: list[np.ndarray] = field(default_factory=list)
+    eigenvectors: list[np.ndarray] = field(default_factory=list)

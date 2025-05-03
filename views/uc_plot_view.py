@@ -1,17 +1,13 @@
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget,
-    QHBoxLayout,
     QVBoxLayout,
-    QSpinBox,
-    QDoubleSpinBox,
-    QLabel,
 )
-from PySide6.QtCore import Signal, Qt, QSize
+from PySide6.QtCore import Signal, QSize
 import pyqtgraph.opengl as gl
 
 # from itertools import product
-from resources.colors import CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
+from resources.colors import CF_vermillion, CF_green, CF_sky
 
 
 class UnitCellPlotView(QWidget):

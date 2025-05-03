@@ -42,28 +42,24 @@ class BandStructurePlotController(QObject):
         It retrieves the current k-path and band data, transforms them into
         a format suitable for plotting, and updates the matplotlib figure.
         """
-        k_path = self.band_structure.get("k_path", [])
-        bands = self.band_structure.get("bands", [])
-        if k_path is None or bands is None:
-            self.band_plot_view.ax.clear()
-            return
 
-        # Skip if not enough data
-        if len(k_path) == 0 or len(bands) == 0:
-            return
-
-        # Get the positions along the path reflecting the point spacing
-        step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
-        pos = np.hstack((0, np.cumsum(step)))
+        k_path = self.band_structure.get("k_path")
+        bands = self.band_structure.get("bands")
 
         self.band_plot_view.ax.clear()
-        for band_idx in range(bands.shape[1]):
-            self.band_plot_view.ax.plot(pos, bands[:, band_idx], "b-")
-
         # Set labels and grid
         self.band_plot_view.ax.set_xlabel("k-vector")
         self.band_plot_view.ax.set_ylabel("Energy")
         self.band_plot_view.ax.grid(True)
+
+        if k_path is not None and bands is not None:
+            # Get the positions along the path reflecting the point spacing
+            step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
+            pos = np.hstack((0, np.cumsum(step)))
+
+            for band_idx in range(bands.shape[1]):
+                self.band_plot_view.ax.plot(pos, bands[:, band_idx], "b-")
+
         # Draw the canvas
         self.band_plot_view.canvas.draw()
 
