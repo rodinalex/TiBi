@@ -45,21 +45,37 @@ class BandStructurePlotController(QObject):
 
         k_path = self.band_structure.get("k_path")
         bands = self.band_structure.get("bands")
+        special_points = self.band_structure.get("special_points")
 
         self.band_plot_view.ax.clear()
         # Set labels and grid
         self.band_plot_view.ax.set_xlabel("k-vector")
         self.band_plot_view.ax.set_ylabel("Energy")
-        self.band_plot_view.ax.grid(True)
+        self.band_plot_view.ax.set_xticks([])  # <-- hide x-axis ticks
+        self.band_plot_view.ax.grid(True, axis="y")  # <-- grid only on y-axis
 
         if k_path is not None and bands is not None:
             # Get the positions along the path reflecting the point spacing
             step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
             pos = np.hstack((0, np.cumsum(step)))
 
+            pos = pos / pos[-1]  # Normalize the path length to 1
+
+            # Repeat the same for special points
+            # step_special_points = np.linalg.norm(
+            #     np.diff(special_points, axis=0), axis=1
+            # )
+            # pos_special_points = np.hstack((0, np.cumsum(step_special_points)))
+            # pos_special_points = pos_special_points / pos_special_points[-1]
+            # Plot the bands
             for band_idx in range(bands.shape[1]):
                 self.band_plot_view.ax.plot(pos, bands[:, band_idx], "b-")
 
+            # Plot vertical lines at special points
+            # for x in pos_special_points:
+            #     self.band_plot_view.ax.axvline(
+            #         x=x, color="gray", linestyle="--", linewidth=0.8
+            #     )
         # Draw the canvas
         self.band_plot_view.canvas.draw()
 

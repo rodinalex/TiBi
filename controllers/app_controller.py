@@ -126,6 +126,8 @@ class AppController(QObject):
                     "special_points": copy.deepcopy(band_structure.special_points),
                 }
             )
+            self.models["bz_path"].clear()
+            # self.models["bz_path"].append(copy.deepcopy(band_structure.special_points))
         else:
             self.models["active_band_structure"].update(
                 {"k_path": None, "bands": None, "special_points": None}
@@ -186,7 +188,7 @@ class AppController(QObject):
         # Form data for the currently selected unit cell
         self.models["unit_cell_data"].update(
             {
-                "name": "",
+                "unit_cell_name": "",
                 "v1x": 1.0,
                 "v1y": 0.0,
                 "v1z": 0.0,
@@ -199,14 +201,13 @@ class AppController(QObject):
                 "v1periodic": False,
                 "v2periodic": False,
                 "v3periodic": False,
+                "site_name": "",
+                "c1": 0.0,
+                "c2": 0.0,
+                "c3": 0.0,
+                "state_name": "",
             }
         )
-
-        # Form data for the currently selected site
-        self.models["site_data"].update({"name": "", "c1": 0.0, "c2": 0.0, "c3": 0.0})
-
-        # Form data for the currently selected state
-        self.models["state_data"].update({"name": ""})
 
         # Band structure calculation results
         # Uses AlwaysNotifyDataModel to ensure UI updates on every change

@@ -39,6 +39,7 @@ class UnitCellController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
+        unit_cell_data: DataModel,
         unit_cell_view: UnitCellView,
     ):
         """
@@ -53,30 +54,8 @@ class UnitCellController(QObject):
         # Store references to UI components and data models
         self.unit_cells = unit_cells
         self.selection = selection
-        # self.unit_cell_data = unit_cell_data
+        self.unit_cell_data = unit_cell_data
         self.unit_cell_view = unit_cell_view
-
-        # Internal model
-        self.unit_cell_data = DataModel(
-            unit_cell_name="",
-            v1x=1.0,
-            v1y=0.0,
-            v1z=0.0,
-            v2x=0.0,
-            v2y=1.0,
-            v2z=0.0,
-            v3x=0.0,
-            v3y=0.0,
-            v3z=1.0,
-            v1periodic=False,
-            v2periodic=False,
-            v3periodic=False,
-            site_name="",
-            c1=0.0,
-            c2=0.0,
-            c3=0.0,
-            state_name="",
-        )
 
         # Get the fields from unit_cell_view for convenience
         # For the basis vectors, each reference has three spinboxes
