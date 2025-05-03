@@ -117,8 +117,8 @@ class BrillouinZonePlotController(QObject):
         for key, item in list(self.bz_plot_items.items()):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
-        # Reset BZ data
-        self.bz_path.clear()
+        # Reset BZ data, but not the path which is provided by the app controller
+        # self.bz_path.clear()
         self.bz_vertices = []
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
