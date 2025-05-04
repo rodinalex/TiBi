@@ -57,6 +57,7 @@ class HoppingTable(QWidget):
         super().__init__()
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         self.table_title = QLabel("")
         self.table_title.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -117,6 +118,7 @@ class HoppingView(QWidget):
 
         # Main layout
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(1, 1, 1, 1)
 
         # Components
         self.info_label = QLabel("Select a Unit Cell with States")

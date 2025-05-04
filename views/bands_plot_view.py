@@ -38,6 +38,7 @@ class BandStructurePlotView(QWidget):
 
         # Setup layout
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(1, 1, 1, 1)
 
         # Matplotlib Figure
         self.figure = mpl_fig.Figure(figsize=(5, 4), dpi=100)

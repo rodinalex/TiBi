@@ -35,6 +35,8 @@ class UnitCellPanel(QWidget):
 
         # Layout
         layout = QVBoxLayout(self)
+        # layout.setContentsMargins(1, 1, 1, 1)
+
         grid_layout = QGridLayout()  # For basis vector creation
 
         panel_header = QLabel("Unit Cell Parameters")
@@ -320,6 +322,7 @@ class UnitCellView(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(1, 1, 1, 1)
 
         # Initialize UI panels
         self.unit_cell_panel = UnitCellPanel()

@@ -36,7 +36,7 @@ class UnitCellPlotView(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setMinimumSize(QSize(400, 400))
+        self.setMinimumSize(QSize(350, 350))
 
         # Colors
         self.axis_colors = [
