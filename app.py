@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1600, 950))
+        self.setFixedSize(QSize(1400, 825))
 
         # Store references to UI components
         self.uc = uc
@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
 
         column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
         column2_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("[SPOT]")), stretch=2
+            self.frame_widget(PlaceholderWidget("[SPOT]")), stretch=1
         )
 
         column3_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
@@ -117,9 +117,9 @@ class MainWindow(QMainWindow):
         )
 
         main_layout.addLayout(column1_layout, stretch=1)
-        main_layout.addLayout(column2_layout, stretch=2)
-        main_layout.addLayout(column3_layout, stretch=3)
-        main_layout.addLayout(column4_layout, stretch=2)
+        main_layout.addLayout(column2_layout, stretch=6)
+        main_layout.addLayout(column3_layout, stretch=9)
+        main_layout.addLayout(column4_layout, stretch=4)
 
         # Set as central widget
         self.setCentralWidget(main_view)

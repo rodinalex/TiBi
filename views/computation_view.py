@@ -23,6 +23,7 @@ class BandsView(QWidget):
 
         # Selection panel
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.selection_grid = QGridLayout()
         layout.addLayout(self.selection_grid, stretch=1)
         layout.addWidget(divider_line())
@@ -178,7 +179,7 @@ class ComputationView(QWidget):
         self.tabs.addTab(self.bands_panel, "Bands")
         self.tabs.addTab(self.dos_panel, "DOS")
         self.tabs.addTab(self.topology_panel, "Topology")
-        self.tabs.setTabPosition(QTabWidget.East)
+        self.tabs.setTabPosition(QTabWidget.North)
         self.tabs.setDocumentMode(True)
         # Set size policy to make the tab widget expand
         self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
