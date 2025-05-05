@@ -375,6 +375,26 @@ class BrillouinZonePlotController(QObject):
             point: The type of point to add ("gamma", "vertex", "edge", or "face")
         """
 
+
+        # Get the point's coordinate
+
+        # if point == "gamma":
+        #     coord = np.array([0] * self.dim)
+        # else:
+        #     if (
+        #         self.bz_point_selection[point] is not None
+        #         and self.bz_point_lists[point] is not None
+        #     ):
+        #          coord = self.bz_point_lists[point][self.bz_point_selection[point]]
+            
+        #     else:
+        #         print("No point selected")
+        #         return
+        # # Add the points if it is different from the last point
+
+        # if len(self.bz_path) == 0 or not any(self.bz_path[-1] - coord):
+        #     self.bz_path.append(coord)
+
         if point == "gamma":
             self.bz_path.append(np.array([0] * self.dim))
         else:

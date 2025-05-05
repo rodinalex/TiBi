@@ -128,7 +128,7 @@ class UnitCellPlotController(QObject):
 
             sphere_radius = (
                 self.unit_cell.site_sizes[site_id] * default_site_scaling
-                if site_id == self.selection["site"]
+                if site_id == self.selection.get("site")
                 else self.unit_cell.site_sizes[site_id]
             )
             # Create a sphere for the site. The color needs to be given in 0 to 1 scale for RGB

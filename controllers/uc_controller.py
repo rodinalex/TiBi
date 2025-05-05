@@ -83,7 +83,7 @@ class UnitCellController(QObject):
             self._on_selection_changed
         )  # Triggered when the tree selection changed, either manually or programmatically
         self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
-            self._on_item_changed
+            self._on_item_renamed
         )  # Triggered when a tree item's name is changed by double clicking on it
         self.unit_cell_view.tree_view_panel.delete.connect(
             self._delete_item
@@ -404,7 +404,7 @@ class UnitCellController(QObject):
                 )
                 return
 
-    def _on_item_changed(self, item: QStandardItem):
+    def _on_item_renamed(self, item: QStandardItem):
         """
         Change the name of the selected item by double-clicking on it in the tree view.
         Update the data and save it.

@@ -73,7 +73,6 @@ class ComputationController(QObject):
             eigenvectors=eigenvectors,
         )
         self.models["band_structures"][uc_id] = band_structure
-
         # Update model
         self.models["active_band_structure"].update(
             {
