@@ -68,7 +68,7 @@ class ComputationController(QObject):
 
         band_structure = BandStructure(
             path=k_path,
-            special_points=special_points,
+            special_points=copy.deepcopy(special_points),
             eigenvalues=eigenvalues,
             eigenvectors=eigenvectors,
         )

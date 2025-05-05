@@ -123,6 +123,8 @@ class BrillouinZonePlotController(QObject):
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
+        # print("UPDATING")
+        # self._update_path_visualization()
 
         self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
         self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
@@ -342,7 +344,6 @@ class BrillouinZonePlotController(QObject):
         # Only create visualization if we have at least 2 points
         if not self.bz_path or len(self.bz_path) < 2:
             return
-
         # Convert path points to 3D if needed
         path_3d = self._pad_to_3d(self.bz_path)
 

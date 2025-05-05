@@ -42,7 +42,6 @@ class BandStructurePlotController(QObject):
         It retrieves the current k-path and band data, transforms them into
         a format suitable for plotting, and updates the matplotlib figure.
         """
-        print("UPDATED")
         k_path = self.band_structure.get("k_path")
         bands = self.band_structure.get("bands")
         special_points = self.band_structure.get("special_points")
