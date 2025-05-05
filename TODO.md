@@ -26,6 +26,7 @@
 
 ## Bugs
 
+- Make sure that we cannot add the same BZ point multiple times
 
 
 🔧 Core Functionalities You Already Have (and are spot-on):

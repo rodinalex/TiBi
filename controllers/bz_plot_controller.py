@@ -312,7 +312,7 @@ class BrillouinZonePlotController(QObject):
 
     def _clear_path(self):
         """Remove all points from the path."""
-        self.bz_path = []
+        self.bz_path.clear()
         # Remove path from the plot if it exists
         if "bz_path" in self.bz_plot_items:
             self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
