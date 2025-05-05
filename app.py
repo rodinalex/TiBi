@@ -30,6 +30,11 @@ from controllers.computation_controller import ComputationController
 from controllers.main_ui_controller import MainUIController
 
 from models.data_models import DataModel, AlwaysNotifyDataModel
+from resources.constants import (
+    unit_cell_data_init,
+    selection_init,
+    active_band_structure_init,
+)
 
 
 class MainWindow(QMainWindow):
@@ -37,11 +42,12 @@ class MainWindow(QMainWindow):
     Main application window that defines the UI layout.
 
     This class is purely a view component that arranges the UI elements and
-    doesn't contain business logic or model manipulation. It creates a three-column
-    layout for organizing the different components of the application, along with
-    menu bar, toolbar, and status bar.
+    doesn't contain business logic or model manipulation. It creates a
+    three-column layout for organizing the different components of the
+    application, along with menu bar, toolbar, and status bar.
 
-    Following the MVC pattern, this class is restricted to presentation concerns only.
+    Following the MVC pattern, this class is restricted to presentation
+    concerns only.
     """
 
     def __init__(
@@ -111,7 +117,9 @@ class MainWindow(QMainWindow):
         column3_layout.addWidget(self.frame_widget(self.band_plot), stretch=1)
 
         column4_layout.addWidget(self.frame_widget(self.bz_plot), stretch=6)
-        column4_layout.addWidget(self.frame_widget(self.computation_view), stretch=10)
+        column4_layout.addWidget(
+            self.frame_widget(self.computation_view), stretch=10
+        )
         column4_layout.addWidget(
             self.frame_widget(PlaceholderWidget("[PROGRESS]")), stretch=1
         )
@@ -146,19 +154,20 @@ class TiBiApplication:
     4. Wiring everything together
     5. Starting the application
 
-    The application follows a strict MVC architecture with reactive data binding:
+    The application follows the MVC architecture with reactive data binding:
     - Models store application state and emit signals when they change
-    - Views display data and capture user input without direct knowledge of models
-    - Controllers connect models and views, handling user actions and model updates
+    - Views display data and capture user input without knowledge of models
+    - Controllers link models and views, handling user actions and
+    model updates
     """
 
     def __init__(self):
         """
         Initialize the application by creating and connecting all components.
 
-        Sets up all models, views, and controllers, and establishes the connections
-        between them according to the MVC pattern. Each component is stored in a
-        dictionary for easy access.
+        Sets up all models, views, and controllers, and establishes the
+        connections between them according to the MVC pattern. Each component
+        is stored in a dictionary for easy access.
         """
         # Create the Qt application
         self.app = QApplication(sys.argv)
@@ -201,8 +210,9 @@ class TiBiApplication:
         """
         Initialize all data models used in the application.
 
-        Creates reactive data models for different aspects of the application state,
-        including unit cells, selection state, form data, and calculation results.
+        Creates reactive data models for different aspects of the
+        application state, including unit cells, selection state,
+        form data, and calculation results.
         """
         # Project path for saving
         self.models["project_path"] = None
@@ -231,10 +241,14 @@ class TiBiApplication:
             state_name="",
         )
 
-        # Current selection state (tracks which items are selected in the UI using their UUID's)
-        self.models["selection"] = DataModel(unit_cell=None, site=None, state=None)
+        # Current selection state (tracks which items are selected in
+        # the UI using their UUID's)
+        self.models["selection"] = DataModel(
+            unit_cell=None, site=None, state=None
+        )
 
-        # A path of high-symmetry points in the BZ. Shared by the bz_plot_controller and computation_controller
+        # A path of high-symmetry points in the BZ. Shared by the
+        # bz_plot_controller and computation_controller
         self.models["bz_path"] = []
 
         # Dictionary containing the information for the currently-shown bands
@@ -243,9 +257,11 @@ class TiBiApplication:
             k_path=None, bands=None, special_points=None
         )
 
-        # A dictionary of the band structures that have been obtained in the current sessions for the unit cells
-        # The keys are unit cells UUID's and the values are BandStructure objects. Storing the band structures
-        # allows the user to quickly switch between different unit cells to compare their band structures
+        # A dictionary of the band structures that have been obtained in the
+        # current sessions for the unit cells. The keys are unit cells UUID's
+        # and the values are BandStructure objects. Storing the band structures
+        # allows the user to quickly switch between different unit cells to
+        # compare their band structures.
         self.models["band_structures"] = AlwaysNotifyDataModel()
 
     def _init_views(self):
@@ -272,8 +288,9 @@ class TiBiApplication:
         """
         Initialize all controllers used in the application.
 
-        Creates controllers that connect models and views, handling the application
-        logic. Each controller is responsible for a specific aspect of functionality.
+        Creates controllers that connect models and views, handling the
+        application logic. Each controller is responsible for a specific
+        aspect of functionality.
         """
         # Unit Cell Editor Controller
         self.controllers["uc"] = UnitCellController(

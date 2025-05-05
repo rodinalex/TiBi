@@ -24,3 +24,6 @@ a very large supercell, the user will be able to create defects by modifying loc
 
 The types of calculations that the user will be able to perform will be expanded as the project progresses.
 
+## Structure
+
+The project follows the MVC principle with the Model, View, and Controller logic separated. The main application class, TiBiApplication, is defined in app.py and holds global Models, all Views, and all Controllers.
