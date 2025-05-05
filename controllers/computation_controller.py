@@ -44,7 +44,7 @@ class ComputationController(QObject):
         results are stored in the band_structure model.
         """
 
-        special_points = self.models["bz_path"]
+        special_points = copy.deepcopy(self.models["bz_path"])
         num_points = self.computation_view.bands_panel.n_points_spinbox.value()
 
         # Get the selected unit cell
@@ -68,7 +68,7 @@ class ComputationController(QObject):
 
         band_structure = BandStructure(
             path=k_path,
-            special_points=copy.deepcopy(special_points),
+            special_points=special_points,
             eigenvalues=eigenvalues,
             eigenvectors=eigenvectors,
         )

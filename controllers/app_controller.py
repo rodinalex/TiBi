@@ -117,6 +117,7 @@ class AppController(QObject):
             .isChecked()
         )
         band_structure = self.models["band_structures"].get(uc_id)
+        self.models["bz_path"].clear()
 
         if band_structure is not None:
             self.models["active_band_structure"].update(
@@ -127,8 +128,7 @@ class AppController(QObject):
                 }
             )
 
-            self.models["bz_path"].clear()
-            self.models["bz_path"].append(copy.deepcopy(band_structure.special_points))
+            self.models["bz_path"].extend(copy.deepcopy(band_structure.special_points))
         else:
             self.models["active_band_structure"].update(
                 {"k_path": None, "bands": None, "special_points": None}
