@@ -118,16 +118,14 @@ class BrillouinZonePlotController(QObject):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
         # Reset BZ data, but not the path which is provided by the app controller
-        print(self.bz_path)
         self.bz_vertices = []
         self.bz_faces = []
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
-        # print("UPDATING")
 
-        self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
-        self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
-        self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(len(self.bz_path) >= 1)
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(len(self.bz_path) >= 1)
+        self.computation_view.bands_panel.compute_bands_btn.setEnabled(len(self.bz_path) >= 2)
 
         if uc_id == None:
             self.computation_view.bands_panel.add_gamma_btn.setEnabled(False)
@@ -338,29 +336,21 @@ class BrillouinZonePlotController(QObject):
 
         If the path has fewer than 2 points, no visualization is created.
         """
-        print(self.bz_path)
         # Remove existing path visualization if it exists
         if "bz_path" in self.bz_plot_items:
             self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
             del self.bz_plot_items["bz_path"]
-        print("HERE 1")
         # Only create visualization if we have at least 2 points
         if not self.bz_path or len(self.bz_path) < 2:
             return
         
-        print("HERE 2")
-
         # Convert path points to 3D if needed
         path_3d = self._pad_to_3d(self.bz_path)
-        print("HERE 3")
-
         # Create line segments for the path
         path_pos = []
         for ii in range(len(path_3d) - 1):
             # Add both points of each segment
             path_pos.extend([path_3d[ii], path_3d[ii + 1]])
-        print("HERE 4")
-        print(path_pos)
         # Create the path visualization
         path_object = gl.GLLinePlotItem(
             pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
