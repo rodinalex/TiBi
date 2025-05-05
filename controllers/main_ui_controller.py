@@ -59,7 +59,9 @@ class MainUIController(QObject):
             "new_project": self._handle_new_project,
             "open_project": self._handle_open_project,
             "import_project": self._handle_import_project,
-            "save_project": partial(self._handle_save_project, use_existing_path=True),
+            "save_project": partial(
+                self._handle_save_project, use_existing_path=True
+            ),
             "save_project_as": partial(
                 self._handle_save_project, use_existing_path=False
             ),
@@ -139,7 +141,9 @@ class MainUIController(QObject):
                 self.project_refresh_requested.emit()
             except Exception as e:
                 QMessageBox.critical(
-                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                    self.main_window,
+                    "Error",
+                    f"Failed to open file:\n{str(e)}",
                 )
                 self.update_status("Failed to open project.")
 
@@ -181,7 +185,9 @@ class MainUIController(QObject):
                 print(self.models["unit_cells"])
             except Exception as e:
                 QMessageBox.critical(
-                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                    self.main_window,
+                    "Error",
+                    f"Failed to open file:\n{str(e)}",
                 )
                 self.update_status("Failed to open project.")
 

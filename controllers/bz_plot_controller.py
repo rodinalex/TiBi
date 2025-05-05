@@ -123,9 +123,15 @@ class BrillouinZonePlotController(QObject):
         self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
         self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
 
-        self.computation_view.bands_panel.remove_last_btn.setEnabled(len(self.bz_path) >= 1)
-        self.computation_view.bands_panel.clear_path_btn.setEnabled(len(self.bz_path) >= 1)
-        self.computation_view.bands_panel.compute_bands_btn.setEnabled(len(self.bz_path) >= 2)
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(
+            len(self.bz_path) >= 1
+        )
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(
+            len(self.bz_path) >= 1
+        )
+        self.computation_view.bands_panel.compute_bands_btn.setEnabled(
+            len(self.bz_path) >= 2
+        )
 
         if uc_id == None:
             self.computation_view.bands_panel.add_gamma_btn.setEnabled(False)
@@ -146,13 +152,17 @@ class BrillouinZonePlotController(QObject):
         self.bz_vertices, self.bz_faces = self.unit_cell.get_BZ()
 
         # Determine system dimensionality
-        self.dim = 0 if len(self.bz_vertices) == 0 else len(self.bz_vertices[0])
+        self.dim = (
+            0 if len(self.bz_vertices) == 0 else len(self.bz_vertices[0])
+        )
 
         # Draw the path
         self._update_path_visualization()
 
         # Activate/deactivate buttons based on dimensionality
-        self.computation_view.bands_panel.add_gamma_btn.setEnabled(self.dim > 0)
+        self.computation_view.bands_panel.add_gamma_btn.setEnabled(
+            self.dim > 0
+        )
         for btn in self.computation_view.bands_panel.vertex_btns:
             btn.setEnabled(self.dim > 0)
         for btn in self.computation_view.bands_panel.edge_btns:
@@ -307,10 +317,14 @@ class BrillouinZonePlotController(QObject):
                 self.bz_point_lists[typ]
             )
             prev_key = f"bz_{typ}_{prev_point}"
-            self.bz_plot_items[prev_key].setColor(self.bz_plot_view.point_color)
+            self.bz_plot_items[prev_key].setColor(
+                self.bz_plot_view.point_color
+            )
 
         new_key = f"bz_{typ}_{self.bz_point_selection[typ]}"
-        self.bz_plot_items[new_key].setColor(self.bz_plot_view.selected_point_color)
+        self.bz_plot_items[new_key].setColor(
+            self.bz_plot_view.selected_point_color
+        )
 
     def _clear_path(self):
         """Remove all points from the path."""
@@ -343,7 +357,7 @@ class BrillouinZonePlotController(QObject):
         # Only create visualization if we have at least 2 points
         if not self.bz_path or len(self.bz_path) < 2:
             return
-        
+
         # Convert path points to 3D if needed
         path_3d = self._pad_to_3d(self.bz_path)
         # Create line segments for the path
@@ -374,7 +388,6 @@ class BrillouinZonePlotController(QObject):
             point: The type of point to add ("gamma", "vertex", "edge", or "face")
         """
 
-
         # Get the point's coordinate
 
         # if point == "gamma":
@@ -385,7 +398,7 @@ class BrillouinZonePlotController(QObject):
         #         and self.bz_point_lists[point] is not None
         #     ):
         #          coord = self.bz_point_lists[point][self.bz_point_selection[point]]
-            
+
         #     else:
         #         print("No point selected")
         #         return
@@ -412,9 +425,13 @@ class BrillouinZonePlotController(QObject):
         self.computation_view.bands_panel.clear_path_btn.setEnabled(True)
         # Enable the compute bands button if we have at least 2 points
         if len(self.bz_path) >= 2:
-            self.computation_view.bands_panel.compute_bands_btn.setEnabled(True)
+            self.computation_view.bands_panel.compute_bands_btn.setEnabled(
+                True
+            )
         else:
-            self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
+            self.computation_view.bands_panel.compute_bands_btn.setEnabled(
+                False
+            )
 
         # Update the path visualization
         self._update_path_visualization()
@@ -430,10 +447,18 @@ class BrillouinZonePlotController(QObject):
 
             # Disable button if path is now empty
             if not self.bz_path:
-                self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
-                self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
+                self.computation_view.bands_panel.remove_last_btn.setEnabled(
+                    False
+                )
+                self.computation_view.bands_panel.clear_path_btn.setEnabled(
+                    False
+                )
             # Enable the compute bands button if we have at least 2 points
             if len(self.bz_path) >= 2:
-                self.computation_view.bands_panel.compute_bands_btn.setEnabled(True)
+                self.computation_view.bands_panel.compute_bands_btn.setEnabled(
+                    True
+                )
             else:
-                self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
+                self.computation_view.bands_panel.compute_bands_btn.setEnabled(
+                    False
+                )

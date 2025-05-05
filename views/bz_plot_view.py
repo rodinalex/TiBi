@@ -3,7 +3,13 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout
 
 from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
-from resources.colors import CF_vermillion, CF_yellow, CF_green, CF_sky, CF_blue
+from resources.colors import (
+    CF_vermillion,
+    CF_yellow,
+    CF_green,
+    CF_sky,
+    CF_blue,
+)
 
 
 class BrillouinZonePlotView(QWidget):
@@ -61,7 +67,9 @@ class BrillouinZonePlotView(QWidget):
         ]
         for ii, color in enumerate(self.axis_colors):
             self.view.addItem(
-                gl.GLLinePlotItem(pos=axes[ii], color=color, width=5, antialias=True)
+                gl.GLLinePlotItem(
+                    pos=axes[ii], color=color, width=5, antialias=True
+                )
             )
 
         layout.addWidget(self.view, stretch=1)

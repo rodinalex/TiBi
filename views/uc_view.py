@@ -223,7 +223,9 @@ class EnterOnlyDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
-        editor.setProperty("originalText", index.data())  # Store original value
+        editor.setProperty(
+            "originalText", index.data()
+        )  # Store original value
         return editor
 
 
@@ -292,7 +294,9 @@ class TreeViewPanel(QWidget):
         self.delete_shortcut.activated.connect(lambda: self.delete.emit())
 
         # Add Backspace as an alternative shortcut
-        self.backspace_shortcut = QShortcut(QKeySequence("Backspace"), self.tree_view)
+        self.backspace_shortcut = QShortcut(
+            QKeySequence("Backspace"), self.tree_view
+        )
         self.backspace_shortcut.activated.connect(lambda: self.delete.emit())
 
 

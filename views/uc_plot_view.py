@@ -1,22 +1,20 @@
 import numpy as np
+import pyqtgraph.opengl as gl
+from PySide6.QtCore import QSize, Signal
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
 )
-from PySide6.QtCore import Signal, QSize
-import pyqtgraph.opengl as gl
 
-# from itertools import product
-from resources.colors import CF_vermillion, CF_green, CF_sky
+from resources.constants import CF_vermillion, CF_green, CF_sky
 
 
 class UnitCellPlotView(QWidget):
     """
     A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
 
-    Displays a unit cell as a wireframe parallelepiped with sites (atoms) as spheres.
-    The visualization supports rotation, zooming, and site selection. The coordinate
-    system shows the unit cell basis vectors and a reference grid.
+    Displays a unit cell as a wireframe parallelepiped with sites as spheres.
+    The visualization supports rotation, zooming, and site selection.
 
     Features:
     - Interactive 3D visualization with mouse rotation and zooming
@@ -67,7 +65,9 @@ class UnitCellPlotView(QWidget):
         ]
         for ii, color in enumerate(self.axis_colors):
             self.view.addItem(
-                gl.GLLinePlotItem(pos=axes[ii], color=color, width=5, antialias=True)
+                gl.GLLinePlotItem(
+                    pos=axes[ii], color=color, width=5, antialias=True
+                )
             )
 
         layout.addWidget(self.view)

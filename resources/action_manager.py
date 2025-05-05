@@ -54,21 +54,31 @@ class ActionManager(QObject):
 
         # Save Project action
         self.file_actions["save_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/save.png")), "Save Project", self
+            QIcon(os.path.join(basedir, "icons/save.png")),
+            "Save Project",
+            self,
         )
-        self.file_actions["save_project"].setStatusTip("Save the current project")
+        self.file_actions["save_project"].setStatusTip(
+            "Save the current project"
+        )
 
         # Save As action
-        self.file_actions["save_project_as"] = QAction("Save Project As...", self)
+        self.file_actions["save_project_as"] = QAction(
+            "Save Project As...", self
+        )
         self.file_actions["save_project_as"].setStatusTip(
             "Save the current project to a new file"
         )
 
         # Open Project action
         self.file_actions["open_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/open.png")), "Open Project...", self
+            QIcon(os.path.join(basedir, "icons/open.png")),
+            "Open Project...",
+            self,
         )
-        self.file_actions["open_project"].setStatusTip("Open an existing project")
+        self.file_actions["open_project"].setStatusTip(
+            "Open an existing project"
+        )
 
         # Import action
         self.file_actions["import_project"] = QAction(
@@ -82,7 +92,9 @@ class ActionManager(QObject):
         """Create actions for unit cell visualization."""
         # Toggle wireframe action
         self.unit_cell_actions["wireframe"] = QAction(
-            QIcon(os.path.join(basedir, "icons/box.png")), "Toggle wireframe", self
+            QIcon(os.path.join(basedir, "icons/box.png")),
+            "Toggle wireframe",
+            self,
         )
         self.unit_cell_actions["wireframe"].setCheckable(True)
         self.unit_cell_actions["wireframe"].setStatusTip(

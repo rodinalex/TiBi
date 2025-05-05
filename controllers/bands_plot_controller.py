@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject
 from models.data_models import AlwaysNotifyDataModel
 import numpy as np
 
-from views.bands_plot_view import BandStructurePlotView
+from views.plot_view import PlotView
 
 
 class BandStructurePlotController(QObject):
@@ -18,7 +18,7 @@ class BandStructurePlotController(QObject):
     def __init__(
         self,
         band_structure: AlwaysNotifyDataModel,
-        band_plot_view: BandStructurePlotView,
+        band_plot_view: PlotView,
     ):
         """
         Initialize the band structure plot controller.

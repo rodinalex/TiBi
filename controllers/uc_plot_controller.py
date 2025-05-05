@@ -80,7 +80,9 @@ class UnitCellPlotController(QObject):
 
         # Collect line vertices
         line_vertices = []
-        for jj, kk, ll in product(range(self.n1), range(self.n2), range(self.n3)):
+        for jj, kk, ll in product(
+            range(self.n1), range(self.n2), range(self.n3)
+        ):
             line_vertices.extend(self._get_unit_cell_edges(jj, kk, ll))
             self._plot_sites(jj, kk, ll)
 
@@ -123,7 +125,9 @@ class UnitCellPlotController(QObject):
         # Plot each site as a sphere
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
-            pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
+            pos = (
+                (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
+            )
             sphere_color = self.unit_cell.site_colors[site_id]
 
             sphere_radius = (
@@ -133,7 +137,9 @@ class UnitCellPlotController(QObject):
             )
             # Create a sphere for the site. The color needs to be given in 0 to 1 scale for RGB
             sphere = gl.GLMeshItem(
-                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),
+                meshdata=gl.MeshData.sphere(
+                    rows=10, cols=10, radius=sphere_radius
+                ),
                 smooth=True,
                 color=(
                     sphere_color[0],
@@ -264,7 +270,11 @@ class UnitCellPlotController(QObject):
             mode="lines",
         )
 
-        shift = (self.n1 % 2) * v1 / 2 + (self.n2 % 2) * v2 / 2 + (self.n3 % 2) * v3 / 2
+        shift = (
+            (self.n1 % 2) * v1 / 2
+            + (self.n2 % 2) * v2 / 2
+            + (self.n3 % 2) * v3 / 2
+        )
 
         hopping_segments.translate(-shift[0], -shift[1], -shift[2])
 

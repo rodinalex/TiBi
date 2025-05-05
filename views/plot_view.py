@@ -2,11 +2,15 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import QSize
 
 import matplotlib.figure as mpl_fig
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvasQTAgg as FigureCanvas,
+)
+from matplotlib.backends.backend_qt5agg import (
+    NavigationToolbar2QT as NavigationToolbar,
+)
 
 
-class BandStructurePlotView(QWidget):
+class PlotView(QWidget):
     """
     Widget for displaying band structure plots.
 

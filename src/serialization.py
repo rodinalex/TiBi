@@ -27,7 +27,9 @@ class UnitCellEncoder(json.JSONEncoder):
         # if isinstance(obj, np.complex128):
         #     return [obj.real, obj.imag]
 
-        if isinstance(obj, complex) or np.issubdtype(type(obj), np.complexfloating):
+        if isinstance(obj, complex) or np.issubdtype(
+            type(obj), np.complexfloating
+        ):
             return [obj.real, obj.imag]
 
         # Handle NumPy arrays
@@ -68,7 +70,9 @@ class UnitCellEncoder(json.JSONEncoder):
             sites_dict = {str(k): v for k, v in obj.sites.items()}
 
             # Convert hoppings dictionary with tuple keys to string keys
-            hoppings_dict = {f"({k[0]}, {k[1]})": v for k, v in obj.hoppings.items()}
+            hoppings_dict = {
+                f"({k[0]}, {k[1]})": v for k, v in obj.hoppings.items()
+            }
 
             # Convert site_colors dictionary to have string keys
             site_colors_dict = {str(k): v for k, v in obj.site_colors.items()}
@@ -153,7 +157,9 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
 
             # Convert hoppings dict with tuple of string keys back to tuple of UUID keys
             # and convert complex values from [real, imag] format back to complex numbers
-            for hopping_key_str, hopping_values in json_obj["hoppings"].items():
+            for hopping_key_str, hopping_values in json_obj[
+                "hoppings"
+            ].items():
                 # Parse the string key '(uuid1, uuid2)' back to tuple of UUIDs
                 key_parts = hopping_key_str.strip("()").split(", ")
                 key = (uuid.UUID(key_parts[0]), uuid.UUID(key_parts[1]))

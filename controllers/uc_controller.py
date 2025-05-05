@@ -1,6 +1,12 @@
 import uuid
 from PySide6.QtWidgets import QColorDialog
-from PySide6.QtCore import QObject, Qt, QModelIndex, QItemSelectionModel, Signal
+from PySide6.QtCore import (
+    QObject,
+    Qt,
+    QModelIndex,
+    QItemSelectionModel,
+    Signal,
+)
 from PySide6.QtGui import QStandardItem, QColor
 from src.tibitypes import UnitCell, Site, State, BasisVector
 from models.data_models import DataModel
@@ -137,9 +143,13 @@ class UnitCellController(QObject):
             self._add_unit_cell
         )
         # New Site button
-        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(self._add_site)
+        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(
+            self._add_site
+        )
         # New State button
-        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(self._add_state)
+        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(
+            self._add_state
+        )
         # Delete button--deletes the highlighted tree item
         self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
             self._delete_item
@@ -204,7 +214,9 @@ class UnitCellController(QObject):
                     )
                     site_item.appendRow(state_item)
 
-    def _find_item_by_id(self, item_id, item_type, parent_id=None, grandparent_id=None):
+    def _find_item_by_id(
+        self, item_id, item_type, parent_id=None, grandparent_id=None
+    ):
         """
         Find a tree item by its ID and type.
 
@@ -218,7 +230,9 @@ class UnitCellController(QObject):
             The QStandardItem if found, None otherwise
         """
         if item_type == "unit_cell":
-            parent = self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
+            parent = (
+                self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
+            )
         elif item_type == "site":
             parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
@@ -271,7 +285,9 @@ class UnitCellController(QObject):
             item.setText(data.name)
             item.setData(data, Qt.UserRole)
         else:  # Otherwise, create a new item and insert it into the tree
-            item = self._create_tree_item(data, item_type=item_type, item_id=item_id)
+            item = self._create_tree_item(
+                data, item_type=item_type, item_id=item_id
+            )
             parent.appendRow(item)
 
     def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
@@ -298,7 +314,9 @@ class UnitCellController(QObject):
     def _create_tree_item(self, item_data, item_type, item_id):
         """Create a QStandardItem for tree with metadata"""
         tree_item = QStandardItem(item_data.name)
-        tree_item.setData(item_data, Qt.UserRole)  # Store the actual data object
+        tree_item.setData(
+            item_data, Qt.UserRole
+        )  # Store the actual data object
         tree_item.setData(item_type, Qt.UserRole + 1)  # Store the type
         tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
 
@@ -325,18 +343,24 @@ class UnitCellController(QObject):
         indexes = selected.indexes()
 
         if not indexes:
-            self.selection.update({"unit_cell": None, "site": None, "state": None})
+            self.selection.update(
+                {"unit_cell": None, "site": None, "state": None}
+            )
             return
 
         # Get the selected item
         index = indexes[0]
-        item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(index)
+        item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(
+            index
+        )
 
         item_type = item.data(Qt.UserRole + 1)
         item_id = item.data(Qt.UserRole + 2)
 
         if item_type == "unit_cell":  # unit cell selected
-            self.selection.update({"unit_cell": item_id, "site": None, "state": None})
+            self.selection.update(
+                {"unit_cell": item_id, "site": None, "state": None}
+            )
         else:  # site or state selected
             parent_item = item.parent()
             parent_id = parent_item.data(Qt.UserRole + 2)
@@ -357,23 +381,29 @@ class UnitCellController(QObject):
                 grandparent_item = parent_item.parent()
                 grandparent_id = grandparent_item.data(Qt.UserRole + 2)
                 self.selection.update(
-                    {"unit_cell": grandparent_id, "site": parent_id, "state": item_id}
+                    {
+                        "unit_cell": grandparent_id,
+                        "site": parent_id,
+                        "state": item_id,
+                    }
                 )
 
-            site_radius = self.unit_cells[self.selection["unit_cell"]].site_sizes[
-                self.selection["site"]
-            ]
+            site_radius = self.unit_cells[
+                self.selection["unit_cell"]
+            ].site_sizes[self.selection["site"]]
             self.R.setValue(site_radius)
 
-            site_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
-                self.selection["site"]
-            ]
+            site_color = self.unit_cells[
+                self.selection["unit_cell"]
+            ].site_colors[self.selection["site"]]
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
                 f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
             )
 
     # Programmatically select a tree item
-    def _select_item(self, item_id, item_type, parent_id=None, grandparent_id=None):
+    def _select_item(
+        self, item_id, item_type, parent_id=None, grandparent_id=None
+    ):
         """
         Select a tree item by its ID and type.
 
@@ -502,7 +532,9 @@ class UnitCellController(QObject):
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id, new_state.id)
-        self._select_item(new_state.id, "state", selected_site_id, selected_uc_id)
+        self._select_item(
+            new_state.id, "state", selected_site_id, selected_uc_id
+        )
 
     def _save_unit_cell(self):
         """
@@ -592,7 +624,9 @@ class UnitCellController(QObject):
         current_state.name = self.unit_cell_data["state_name"]
 
         # Update UI (selective update instead of full refresh)
-        self._update_tree_item(selected_uc_id, selected_site_id, selected_state_id)
+        self._update_tree_item(
+            selected_uc_id, selected_site_id, selected_state_id
+        )
 
     def _delete_item(self):
         """
@@ -651,7 +685,9 @@ class UnitCellController(QObject):
                 self.unit_cell_view.tree_view_panel.tree_view.setCurrentIndex(
                     QModelIndex()
                 )  # Clear the cursor/visual highlight
-                self.selection.update({"unit_cell": None, "site": None, "state": None})
+                self.selection.update(
+                    {"unit_cell": None, "site": None, "state": None}
+                )
 
     def _reduce_uc_basis(self):
         """
@@ -722,7 +758,9 @@ class UnitCellController(QObject):
             # Set the dimensionality radio button.
             # Suppress the dim_listener since we are updating the radio button programmatically
             self._suppress_dim_listener = True
-            self.unit_cell_view.unit_cell_panel.radio_group.button(dim).setChecked(True)
+            self.unit_cell_view.unit_cell_panel.radio_group.button(
+                dim
+            ).setChecked(True)
             self._suppress_dim_listener = False
 
             # Get the model fields that are going to be updated from the selected unit cell.

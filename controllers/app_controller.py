@@ -37,7 +37,9 @@ class AppController(QObject):
 
         self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
-        self.controllers["computation"].status_updated.connect(self._relay_status)
+        self.controllers["computation"].status_updated.connect(
+            self._relay_status
+        )
 
         # Toolbar signals
 
@@ -87,17 +89,23 @@ class AppController(QObject):
             if unit_cell.v1.is_periodic == True:
                 self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(True)
             else:
-                self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(False)
+                self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(
+                    False
+                )
 
             if unit_cell.v2.is_periodic == True:
                 self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(True)
             else:
-                self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(False)
+                self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(
+                    False
+                )
 
             if unit_cell.v3.is_periodic == True:
                 self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(True)
             else:
-                self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(False)
+                self.controllers["main_ui"].toolbar.n3_spinbox.setEnabled(
+                    False
+                )
         else:
             self.controllers["main_ui"].toolbar.n1_spinbox.setEnabled(False)
             self.controllers["main_ui"].toolbar.n2_spinbox.setEnabled(False)
@@ -123,18 +131,26 @@ class AppController(QObject):
             self.models["active_band_structure"].update(
                 {
                     "k_path": copy.deepcopy(band_structure.path),
-                    "bands": copy.deepcopy(np.array(band_structure.eigenvalues)),
-                    "special_points": copy.deepcopy(band_structure.special_points),
+                    "bands": copy.deepcopy(
+                        np.array(band_structure.eigenvalues)
+                    ),
+                    "special_points": copy.deepcopy(
+                        band_structure.special_points
+                    ),
                 }
             )
 
-            self.models["bz_path"].extend(copy.deepcopy(band_structure.special_points))
+            self.models["bz_path"].extend(
+                copy.deepcopy(band_structure.special_points)
+            )
         else:
             self.models["active_band_structure"].update(
                 {"k_path": None, "bands": None, "special_points": None}
             )
 
-        self.controllers["uc_plot"].update_unit_cell(wireframe_shown, n1, n2, n3)
+        self.controllers["uc_plot"].update_unit_cell(
+            wireframe_shown, n1, n2, n3
+        )
         self.controllers["bz_plot"].update_brillouin_zone()
 
     def _handle_wireframe_toggled(self, status):

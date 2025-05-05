@@ -80,7 +80,9 @@ class BandsView(QWidget):
         )  # Disabled until path has at least two points
 
         self.selection_grid.addWidget(self.remove_last_btn, 1, 6)
-        self.remove_last_btn.setEnabled(False)  # Disabled until path has points
+        self.remove_last_btn.setEnabled(
+            False
+        )  # Disabled until path has points
 
         self.selection_grid.addWidget(self.clear_path_btn, 1, 7)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
@@ -115,8 +117,16 @@ class BandsView(QWidget):
             self.next_vertex_btn,
             self.add_vertex_btn,
         ]
-        self.edge_btns = [self.prev_edge_btn, self.next_edge_btn, self.add_edge_btn]
-        self.face_btns = [self.prev_face_btn, self.next_face_btn, self.add_face_btn]
+        self.edge_btns = [
+            self.prev_edge_btn,
+            self.next_edge_btn,
+            self.add_edge_btn,
+        ]
+        self.face_btns = [
+            self.prev_face_btn,
+            self.next_face_btn,
+            self.add_face_btn,
+        ]
 
         # self.control_panel.addWidget(self.compute_bands_btn)
         # self.control_panel.setSpacing(3)
@@ -129,7 +139,9 @@ class DOSView(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
+        layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove margins to maximize space
 
         layout.addWidget(PlaceholderWidget("DOS"))
 
@@ -138,7 +150,9 @@ class TopologyView(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
+        layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove margins to maximize space
 
         layout.addWidget(PlaceholderWidget("TOPOLOGY"))
 
@@ -170,7 +184,9 @@ class ComputationView(QWidget):
 
         # Create a layout for the TabView itself
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
+        layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove margins to maximize space
         self.bands_panel = BandsView()
         self.dos_panel = DOSView()
         self.topology_panel = TopologyView()
