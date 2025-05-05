@@ -8,7 +8,9 @@ from PySide6.QtCore import Qt
 
 
 class PlaceholderWidget(QWidget):
-    """Placeholder widget with a label to show where future components will go"""
+    """
+    Placeholder widget with a label to show where future components will go
+    """
 
     def __init__(self, name):
         super().__init__()

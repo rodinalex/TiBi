@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 from PySide6.QtCore import QSize
 
 import matplotlib.figure as mpl_fig
@@ -12,20 +12,20 @@ from matplotlib.backends.backend_qt5agg import (
 
 class PlotView(QWidget):
     """
-    Widget for displaying band structure plots.
+    Widget for displaying 2D plots.
 
     This widget creates a matplotlib figure embedded in a Qt widget to display
-    band structure calculations along a path in k-space. It includes navigation
-    controls for zooming, panning, and saving the plot.
+    data as 2D plots. It includes navigation controls for zooming, panning,
+    and saving the plot.
 
-    The actual plotting logic is handled by the BandStructurePlotController,
+    The actual plotting logic is handled by the PlotController,
     keeping this view focused solely on UI components. This separation follows
     the MVC pattern, allowing for easier testing and maintenance.
     """
 
     def __init__(self):
         """
-        Initialize the band structure plot view.
+        Initialize the plot view.
 
         Sets up the matplotlib figure, canvas, and toolbar for band structure
         visualization. Initial axes and labels are created, but the plot is
@@ -33,12 +33,6 @@ class PlotView(QWidget):
         """
         super().__init__()
         self.setMinimumSize(QSize(400, 300))
-
-        # Data default values (used only for initialization)
-        self.unit_cell = None
-        self.bz_path = []
-        self.special_point_labels = []
-        self.num_points = 100
 
         # Setup layout
         layout = QVBoxLayout(self)
@@ -56,8 +50,6 @@ class PlotView(QWidget):
 
         # Initialize plot
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_xlabel("k-vector")
-        self.ax.set_ylabel("Energy")
         self.ax.grid(True)
 
         # Initial draw
