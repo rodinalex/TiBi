@@ -27,11 +27,11 @@ from views.placeholder import PlaceholderWidget
 
 # Controller Components
 from controllers.app_controller import AppController
-from controllers.bands_plot_controller import BandStructurePlotController
 from controllers.bz_plot_controller import BrillouinZonePlotController
 from controllers.computation_controller import ComputationController
 from controllers.hopping_controller import HoppingController
 from controllers.main_ui_controller import MainUIController
+from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 
@@ -140,6 +140,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_view)
 
     def frame_widget(self, widget: QWidget) -> QFrame:
+        """
+        Enclose a widget in a frame. Used to make the layout look more
+        structured.
+        """
         frame = QFrame()
         frame.setFrameShape(QFrame.Box)
         frame.setLineWidth(1)
@@ -287,16 +291,19 @@ class TiBiApplication:
             self.unit_cell_data,
             self.uc_view,
         )
+
         self.hopping_controller = HoppingController(
             self.unit_cells,
             self.selection,
             self.hopping_view,
         )
+
         self.uc_plot_controller = UnitCellPlotController(
             self.unit_cells,
             self.selection,
             self.uc_plot_view,
         )
+
         self.bz_plot_controller = BrillouinZonePlotController(
             self.unit_cells,
             self.selection,
@@ -304,7 +311,8 @@ class TiBiApplication:
             self.bz_plot_view,
             self.computation_view,
         )
-        self.plot_controller = BandStructurePlotController(
+
+        self.plot_controller = PlotController(
             self.active_band_structure, self.plot_view
         )
 

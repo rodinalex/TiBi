@@ -91,7 +91,7 @@ class UnitCellController(QObject):
         self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
             self._on_item_renamed
         )  # Triggered when a tree item's name is changed by double clicking on it
-        self.unit_cell_view.tree_view_panel.delete.connect(
+        self.unit_cell_view.tree_view_panel.delete_requested.connect(
             self._delete_item
         )  # Triggered when the user presses Del or Backspace while a tree item is highlighted, or clicks the Delete button
 

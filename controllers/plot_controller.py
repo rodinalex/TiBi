@@ -5,7 +5,7 @@ import numpy as np
 from views.plot_view import PlotView
 
 
-class BandStructurePlotController(QObject):
+class PlotController(QObject):
     """
     Controller for the band structure plotting view.
 
