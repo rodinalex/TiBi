@@ -433,37 +433,6 @@ class UnitCellController(QObject):
             )
 
     # Programmatically select a tree item
-    # def _select_item(
-    #     self, item_id, item_type, parent_id=None, grandparent_id=None
-    # ):
-    #     """
-    #     Select a tree item by its ID and type.
-
-    #     This method programmatically selects an item in the tree view.
-    #     This selection triggers _on_selection_changed function.
-
-    #     Args:
-    #         item_id: UUID of the item to find
-    #         item_type: Type of the item ("unit_cell", "site", or "state")
-    #         parent_id: UUID of the parent item (for site or state)
-    #         grandparent_id: UUID of the grandparent item (for state)
-    #     """
-    #     if item_type == "unit_cell":
-    #         parent = self.root_node
-    #     elif item_type == "site":
-    #         parent = self._find_item_by_id(parent_id)
-    #     else:
-    #         parent = self._find_item_by_id(grandparent_id, parent_id)
-
-    #     for row in range(parent.rowCount()):
-    #         item = parent.child(row)
-    #         if item.data(Qt.UserRole + 2) == item_id:
-    #             index = self.tree_model.indexFromItem(item)
-    #             self.tree_view.selectionModel().setCurrentIndex(
-    #                 index, QItemSelectionModel.ClearAndSelect
-    #             )
-    #             return
-
     def _select_item(self, uc_id, site_id=None, state_id=None):
         """
         Select a tree item by its ID and type.
@@ -543,7 +512,6 @@ class UnitCellController(QObject):
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(new_cell.id)
         self._select_item(new_cell.id)
-        # self._select_item(new_cell.id, "unit_cell")
 
     def _add_site(self):
         """
@@ -574,7 +542,6 @@ class UnitCellController(QObject):
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, new_site.id)
         self._select_item(selected_uc_id, new_site.id)
-        # self._select_item(new_site.id, "site", selected_uc_id)
 
     def _add_state(self):
         """
@@ -596,9 +563,6 @@ class UnitCellController(QObject):
 
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(selected_uc_id, selected_site_id, new_state.id)
-        # self._select_item(
-        #     new_state.id, "state", selected_site_id, selected_uc_id
-        # )
         self._select_item(selected_uc_id, selected_site_id, new_state.id)
 
     def _save_unit_cell(self):
@@ -730,7 +694,6 @@ class UnitCellController(QObject):
                         selected_uc_id, selected_site_id, selected_state_id
                     )
                     self._select_item(selected_uc_id, selected_site_id)
-                    # self._select_item(selected_site_id, "site", selected_uc_id)
                 else:
                     # No state selected, therefore remove the site from the unit cell
                     del self.unit_cells[selected_uc_id].sites[selected_site_id]
@@ -738,7 +701,6 @@ class UnitCellController(QObject):
                     # Update UI and select the parent unit cell (selective removal instead of full refresh)
                     self._remove_tree_item(selected_uc_id, selected_site_id)
                     self._select_item(selected_uc_id)
-                    # self._select_item(selected_uc_id, "unit_cell")
 
             else:
                 # No site selected, therefore remove the unit cell from the model
