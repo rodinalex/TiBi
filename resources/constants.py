@@ -17,36 +17,58 @@ CF_blue = (0, 114 / 255, 178 / 255, 1.0)
 default_site_size = 0.1  # Default size of the sphere
 default_site_scaling = 1.5  # Default scaling of the sphere for selected sites
 
+
 # Model initialization values.
-unit_cell_data_init = {
-    "unit_cell_name": "",
-    "v1x": 1.0,
-    "v1y": 0.0,
-    "v1z": 0.0,
-    "v2x": 0.0,
-    "v2y": 1.0,
-    "v2z": 0.0,
-    "v3x": 0.0,
-    "v3y": 0.0,
-    "v3z": 1.0,
-    "v1periodic": False,
-    "v2periodic": False,
-    "v3periodic": False,
-    "site_name": "",
-    "c1": 0.0,
-    "c2": 0.0,
-    "c3": 0.0,
-    "state_name": "",
-}  # Values for the unit cell panel
+def unit_cell_data_init():
+    return {
+        "unit_cell_name": "",
+        "v1x": 1.0,
+        "v1y": 0.0,
+        "v1z": 0.0,
+        "v2x": 0.0,
+        "v2y": 1.0,
+        "v2z": 0.0,
+        "v3x": 0.0,
+        "v3y": 0.0,
+        "v3z": 1.0,
+        "v1periodic": False,
+        "v2periodic": False,
+        "v3periodic": False,
+        "site_name": "",
+        "c1": 0.0,
+        "c2": 0.0,
+        "c3": 0.0,
+        "state_name": "",
+    }  # Values for the unit cell panel
 
-selection_init = {
-    "unit_cell": None,
-    "site": None,
-    "state": None,
-}  # Item selection from the tree
 
-active_band_structure_init = {
-    "k_path": None,
-    "bands": None,
-    "special_points": None,
-}  # Active band structure used for plotting
+def selection_init():
+    return {
+        "unit_cell": None,
+        "site": None,
+        "state": None,
+    }  # Item selection from the tree
+
+
+def active_band_structure_init():
+    return {
+        "k_path": None,
+        "bands": None,
+        "special_points": None,
+    }  # Active band structure used for plotting
+
+
+def bz_point_selection_init():
+    return {
+        "vertex": None,
+        "edge": None,
+        "face": None,
+    }  # Indices of the selected high-symmetry points in the BZ
+
+
+def bz_point_lists_init():
+    return {
+        "vertex": [],
+        "edge": [],
+        "face": [],
+    }  # Lists of the high-symmetry points in the BZ, grouped by type

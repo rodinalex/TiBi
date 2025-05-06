@@ -1,33 +1,40 @@
+import numpy as np
+from numpy.typing import NDArray
+import pyqtgraph.opengl as gl
 import uuid
 from PySide6.QtCore import QObject
-from src.tibitypes import UnitCell
+
 from models.data_models import DataModel
+from resources.constants import (
+    CF_red,
+    bz_point_lists_init,
+    bz_point_selection_init,
+)
+from src.tibitypes import UnitCell
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
-import pyqtgraph.opengl as gl
-from resources.constants import CF_red
-import numpy as np
 
 
 class BrillouinZonePlotController(QObject):
     """
     Controller for the Brillouin zone plot view.
 
-    This controller manages the 3D visualization of the Brillouin zone and
-    provides functionality for selecting points within the BZ and creating paths
-    for band structure calculations. It observes the unit cell data model and
-    updates the visualization whenever the unit cell changes.
+    This controller manages the 3D visualization of the Brillouin zone.
+    It handles the visualization of selected high-symmetry points within
+    the BZ and paths for band structure calculations.
+    The controller observes the selection model and updates
+    the visualization whenever the unit cell changes.
 
-    The controller also handles the creation of k-paths (sequences of k-points
-    in reciprocal space) that can be used for band structure calculations. When
-    a path is complete, it can emit a signal requesting band structure computation.
+    The controller also handles the visualization of k-paths
+    (sequences of k-points in reciprocal space) used for band structure
+    calculations.
     """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        bz_path,
+        bz_path: list[np.ndarray],
         bz_plot_view: BrillouinZonePlotView,
         computation_view: ComputationView,
     ):
@@ -36,10 +43,12 @@ class BrillouinZonePlotController(QObject):
 
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected unit cell, site, and state
+            selection: Model tracking the currently selected
+            unit cell, site, and state
             bz_path: A list of high-symmetry points in the BZ
             bz_plot_view: The view component for displaying the Brillouin zone
-            computational_view: The view component that contains controls for creating a path in the BZ.
+            computational_view: The view component that contains controls
+            for creating a path in the BZ.
         """
         super().__init__()
 
@@ -52,14 +61,14 @@ class BrillouinZonePlotController(QObject):
         # Internal controller state
         self.unit_cell = None
         self.bz_plot_items = {}  # Dictionary to store plot items
-        self.bz_vertices = []  # Coordinates of BZ vertices
-        self.bz_faces = (
-            []
-        )  # A list of lists, where each inner list contains the vertices of a face
-        self.dim = 0
-        self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
-        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
+        self.dim = 0  # Dimensionality
+        # Indices of the selected high-symmetry points in the BZ
+        self.bz_point_selection = bz_point_selection_init()
+        # Lists of high-symmetry points, grouped by type
+        self.bz_point_lists = bz_point_lists_init()
 
+        # Signals from the ComputationView used for selecting/picking
+        # high-symmetry points in the BZ
         self.computation_view.bands_panel.add_gamma_btn.clicked.connect(
             lambda: self._add_point("gamma")
         )
@@ -107,33 +116,41 @@ class BrillouinZonePlotController(QObject):
         This method is the core rendering function that:
         1. Clears any existing visualization
         2. Calculates the Brillouin zone vertices and faces
-        3. Renders the BZ wireframe and key points (Gamma, vertices, edge midpoints, face centers)
+        3. Renders the BZ wireframe and key points (Gamma, vertices,
+        edge midpoints, face centers)
         4. Updates UI controls based on the dimensionality of the BZ
 
-        The method is triggered whenever the unit cell changes or a new unit cell is selected.
+        The method is triggered whenever the unit cell changes or
+        a new unit cell is selected.
         """
         uc_id = self.selection.get("unit_cell")
-        # Clear previous plot items except axes and grid
+        # Clear previous plot items except axes
         for key, item in list(self.bz_plot_items.items()):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
-        # Reset BZ data, but not the path which is provided by the app controller
-        self.bz_vertices = []
-        self.bz_faces = []
-        self.bz_point_selection = {"vertex": None, "edge": None, "face": None}
-        self.bz_point_lists = {"vertex": [], "edge": [], "face": []}
+        # Reset BZ data, but not the path which is provided by the
+        # app controller. The reason for this feature is that, if a unit cell
+        # already has a calculated band structure, the band structure comes
+        # with a specific path in the BZ. Hence, the app conroller sets
+        # the band structure plot in the appropriate panel and the BZ path
+        # in the BZ plot.
+
+        # Indices of the selected high-symmetry points in the BZ
+        self.bz_point_selection = bz_point_selection_init()
+        # Lists of high-symmetry points, grouped by type
+        self.bz_point_lists = bz_point_lists_init()
 
         self.computation_view.bands_panel.remove_last_btn.setEnabled(
-            len(self.bz_path) >= 1
+            len(self.bz_path) > 0
         )
         self.computation_view.bands_panel.clear_path_btn.setEnabled(
-            len(self.bz_path) >= 1
+            len(self.bz_path) > 0
         )
         self.computation_view.bands_panel.compute_bands_btn.setEnabled(
-            len(self.bz_path) >= 2
+            len(self.bz_path) > 1
         )
 
-        if uc_id == None:
+        if uc_id is None:
             self.computation_view.bands_panel.add_gamma_btn.setEnabled(False)
             for btn in self.computation_view.bands_panel.vertex_btns:
                 btn.setEnabled(False)
@@ -145,7 +162,8 @@ class BrillouinZonePlotController(QObject):
         else:
             self.unit_cell = self.unit_cells[uc_id]
 
-        # Guard against 0-volume Brillouin zone: can occur in the process of creation of the unit cell or due to a mistake
+        # Guard against 0-volume Brillouin zone: can occur in the process
+        # of creation of the unit cell or due to a mistake
         if self.unit_cell.volume() == 0:
             return
 
@@ -170,11 +188,13 @@ class BrillouinZonePlotController(QObject):
         for btn in self.computation_view.bands_panel.face_btns:
             btn.setEnabled(self.dim > 2)
 
-        # Create the BZ wireframe by making edges (connect the vertices based on face data)
+        # Create the BZ wireframe by making edges
+        # (connect the vertices based on face data)
         self._create_bz_wireframe()
 
         # Extract vertices and faces from the BZ data
-        # Note: In 2D, the faces are equivalent to edges. In 3D, the faces are polygons.
+        # Note: In 2D, the faces are equivalent to edges.
+        # In 3D, the faces are polygons.
         self.bz_point_lists["vertex"] = np.array(self.bz_vertices)
 
         if self.dim == 2:
@@ -186,6 +206,8 @@ class BrillouinZonePlotController(QObject):
             self.bz_point_lists["edge"] = np.array(self.bz_point_lists["edge"])
 
         elif self.dim == 3:
+            # Use the set of unique edges to avoid duplication
+            # due to faces sharing edges
             unique_edges = set()
             edge_midpoints = []
 
@@ -217,9 +239,14 @@ class BrillouinZonePlotController(QObject):
         # Plot points for vertices, edges, and faces
         for typ, pt in self.bz_point_lists.items():
             if len(pt) > 0:
+                # Pad all the points of the same type
                 pt_3d = self._pad_to_3d(pt)
+                # Select the 1st point of the type
                 self.bz_point_selection[typ] = 0
+                # Loop over all the padded points
                 for ii, p in enumerate(pt_3d):
+                    # Make a sphere and position it
+                    # at the appropriate location
                     sphere = self._make_point()
                     sphere.translate(p[0], p[1], p[2])
                     self.bz_plot_view.view.addItem(sphere)
@@ -277,7 +304,7 @@ class BrillouinZonePlotController(QObject):
             shader="shaded",
         )
 
-    def _pad_to_3d(self, points):
+    def _pad_to_3d(self, points) -> NDArray[np.float64]:
         """
         Ensure points have 3D coordinates by padding with zeros if needed.
 
@@ -294,14 +321,17 @@ class BrillouinZonePlotController(QObject):
 
     def _select_point(self, step, typ):
         """
-        Select a point in the Brillouin zone based on its type and step direction.
+        Select a point in the Brillouin zone based on its type and
+        step direction.
 
-        This method implements the navigation through different types of points in the BZ
-        (vertices, edge midpoints, or face centers). It updates the visual highlighting
-        to show which point is currently selected, and maintains the selection state.
+        This method implements the navigation through different types
+        of points in the BZ (vertices, edge midpoints, or face centers).
+        It updates the visual highlighting to show which point is currently
+        selected, and maintains the selection state.
 
         Args:
-            step: Direction to move in the selection (+1 for next, -1 for previous)
+            step: Direction to move in the selection
+            (+1 for next, -1 for previous)
             typ: Type of point to select ('vertex', 'edge', or 'face')
         """
         # Guard against empty vertex list
@@ -326,86 +356,23 @@ class BrillouinZonePlotController(QObject):
             self.bz_plot_view.selected_point_color
         )
 
-    def _clear_path(self):
-        """Remove all points from the path."""
-        self.bz_path.clear()
-        # Remove path from the plot if it exists
-        if "bz_path" in self.bz_plot_items:
-            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
-            del self.bz_plot_items["bz_path"]
-
-        # Disable the control buttons since the path is empty
-        self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
-        self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
-        self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
-
-    def _update_path_visualization(self):
-        """
-        Update the visualization of the BZ path based on current path points.
-
-        This method creates or updates the visual representation of the k-path in
-        the Brillouin zone. The path is shown as a series of connected line segments
-        between the selected k-points. The visualization helps users understand
-        the path along which the band structure will be calculated.
-
-        If the path has fewer than 2 points, no visualization is created.
-        """
-        # Remove existing path visualization if it exists
-        if "bz_path" in self.bz_plot_items:
-            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
-            del self.bz_plot_items["bz_path"]
-        # Only create visualization if we have at least 2 points
-        if not self.bz_path or len(self.bz_path) < 2:
-            return
-
-        # Convert path points to 3D if needed
-        path_3d = self._pad_to_3d(self.bz_path)
-        # Create line segments for the path
-        path_pos = []
-        for ii in range(len(path_3d) - 1):
-            # Add both points of each segment
-            path_pos.extend([path_3d[ii], path_3d[ii + 1]])
-        # Create the path visualization
-        path_object = gl.GLLinePlotItem(
-            pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
-        )
-        self.bz_plot_view.view.addItem(path_object)
-        self.bz_plot_items["bz_path"] = path_object
-
     def _add_point(self, point):
         """
         Add a selected point to the Brillouin zone path.
 
-        This method adds the currently selected point (of the specified type) to the
-        Brillouin zone path. The path is a sequence of k-points that will be used
-        for band structure calculations. Points can be the origin (Gamma), vertices,
-        edge midpoints, or face centers depending on the dimensionality of the BZ.
+        This method adds the currently selected point (of the specified type)
+        to the Brillouin zone path. The path is a sequence of k-points
+        that will be used for band structure calculations.
+        Points can be the origin (Gamma), vertices, edge midpoints, or
+        face centers depending on the dimensionality of the BZ.
 
-        After adding a point, the path visualization is updated and the relevant
-        UI controls are enabled/disabled based on the new path state.
+        After adding a point, the path visualization is updated and the
+        relevant UI controls are enabled/disabled based on the new path state.
 
         Args:
-            point: The type of point to add ("gamma", "vertex", "edge", or "face")
+            point: The type of point to add
+            ("gamma", "vertex", "edge", or "face")
         """
-
-        # Get the point's coordinate
-
-        # if point == "gamma":
-        #     coord = np.array([0] * self.dim)
-        # else:
-        #     if (
-        #         self.bz_point_selection[point] is not None
-        #         and self.bz_point_lists[point] is not None
-        #     ):
-        #          coord = self.bz_point_lists[point][self.bz_point_selection[point]]
-
-        #     else:
-        #         print("No point selected")
-        #         return
-        # # Add the points if it is different from the last point
-
-        # if len(self.bz_path) == 0 or not any(self.bz_path[-1] - coord):
-        #     self.bz_path.append(coord)
 
         if point == "gamma":
             self.bz_path.append(np.array([0] * self.dim))
@@ -420,11 +387,12 @@ class BrillouinZonePlotController(QObject):
             else:
                 print("No point selected")
                 return
-        # Enable the remove last button and clear path button now that we have points
+        # Enable the "remove last" and "clear path" buttons
+        # now that we have points
         self.computation_view.bands_panel.remove_last_btn.setEnabled(True)
         self.computation_view.bands_panel.clear_path_btn.setEnabled(True)
         # Enable the compute bands button if we have at least 2 points
-        if len(self.bz_path) >= 2:
+        if len(self.bz_path) > 1:
             self.computation_view.bands_panel.compute_bands_btn.setEnabled(
                 True
             )
@@ -454,7 +422,7 @@ class BrillouinZonePlotController(QObject):
                     False
                 )
             # Enable the compute bands button if we have at least 2 points
-            if len(self.bz_path) >= 2:
+            if len(self.bz_path) > 1:
                 self.computation_view.bands_panel.compute_bands_btn.setEnabled(
                     True
                 )
@@ -462,3 +430,50 @@ class BrillouinZonePlotController(QObject):
                 self.computation_view.bands_panel.compute_bands_btn.setEnabled(
                     False
                 )
+
+    def _clear_path(self):
+        """Remove all points from the path."""
+        self.bz_path.clear()
+        # Remove path from the plot if it exists
+        if "bz_path" in self.bz_plot_items:
+            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
+            del self.bz_plot_items["bz_path"]
+
+        # Disable the control buttons since the path is empty
+        self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
+        self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
+        self.computation_view.bands_panel.compute_bands_btn.setEnabled(False)
+
+    def _update_path_visualization(self):
+        """
+        Update the visualization of the BZ path based on current path points.
+
+        This method creates or updates the visual representation of the k-path
+        in the Brillouin zone. The path is shown as a series of connected
+        line segments between the selected k-points.
+        The visualization helps users understand the path along which
+        the band structure will be calculated.
+
+        If the path has fewer than 2 points, no visualization is created.
+        """
+        # Remove existing path visualization if it exists
+        if "bz_path" in self.bz_plot_items:
+            self.bz_plot_view.view.removeItem(self.bz_plot_items["bz_path"])
+            del self.bz_plot_items["bz_path"]
+        # Only create visualization if we have at least 2 points
+        if not self.bz_path or len(self.bz_path) < 2:
+            return
+
+        # Convert path points to 3D if needed
+        path_3d = self._pad_to_3d(self.bz_path)
+        # Create line segments for the path
+        path_pos = []
+        for ii in range(len(path_3d) - 1):
+            # Add both points of each segment
+            path_pos.extend([path_3d[ii], path_3d[ii + 1]])
+        # Create the path visualization
+        path_object = gl.GLLinePlotItem(
+            pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
+        )
+        self.bz_plot_view.view.addItem(path_object)
+        self.bz_plot_items["bz_path"] = path_object

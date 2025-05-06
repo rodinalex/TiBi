@@ -226,11 +226,11 @@ class TiBiApplication:
         # Initialize global models
         self.project_path = None
         self.unit_cells = {}
-        self.unit_cell_data = DataModel(unit_cell_data_init)
-        self.selection = DataModel(selection_init)
+        self.unit_cell_data = DataModel(unit_cell_data_init())
+        self.selection = DataModel(selection_init())
         self.bz_path = []
         self.active_band_structure = AlwaysNotifyDataModel(
-            active_band_structure_init
+            active_band_structure_init()
         )
         self.band_structures = AlwaysNotifyDataModel()
 
