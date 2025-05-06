@@ -230,8 +230,35 @@ class UnitCellController(QObject):
                     )
                     site_item.appendRow(state_item)
 
+    # def _find_item_by_id(
+    #     self, item_id, item_type, parent_id=None, grandparent_id=None
+    # ) -> QStandardItem | None:
+    #     """
+    #     Find a tree item by its ID and type.
+
+    #     Args:
+    #         item_id: UUID of the item to find
+    #         item_type: Type of the item ("unit_cell", "site", or "state")
+    #         parent_id: UUID of the parent item (for site or state)
+    #         grandparent_id: UUID of the grandparent item (for state)
+
+    #     Returns:
+    #         The QStandardItem if found, None otherwise
+    #     """
+    #     if item_type == "unit_cell":
+    #         parent = self.tree_model.invisibleRootItem()
+    #     elif item_type == "site":
+    #         parent = self._find_item_by_id(parent_id, "unit_cell")
+    #     else:
+    #         parent = self._find_item_by_id(parent_id, "site", grandparent_id)
+
+    #     for row in range(parent.rowCount()):
+    #         item = parent.child(row)
+    #         if item.data(Qt.UserRole + 2) == item_id:
+    #             return item
+
     def _find_item_by_id(
-        self, item_id, item_type, parent_id=None, grandparent_id=None
+        self, uc_id, site_id=None, state_id=None
     ) -> QStandardItem | None:
         """
         Find a tree item by its ID and type.
@@ -245,12 +272,15 @@ class UnitCellController(QObject):
         Returns:
             The QStandardItem if found, None otherwise
         """
-        if item_type == "unit_cell":
-            parent = self.tree_model.invisibleRootItem()
-        elif item_type == "site":
-            parent = self._find_item_by_id(parent_id, "unit_cell")
+        if state_id is not None:
+            parent = self._find_item_by_id(uc_id, site_id)
+            item_id = state_id
+        elif site_id is not None:
+            parent = self._find_item_by_id(uc_id)
+            item_id = site_id
         else:
-            parent = self._find_item_by_id(parent_id, "site", grandparent_id)
+            parent = self.tree_model.invisibleRootItem()
+            item_id = uc_id
 
         for row in range(parent.rowCount()):
             item = parent.child(row)
@@ -269,20 +299,24 @@ class UnitCellController(QObject):
         """
         if state_id is not None:  # Adding/updating a state
             # Get the parent site
-            parent = self._find_item_by_id(site_id, "site", uc_id)
+            parent = self._find_item_by_id(uc_id, site_id)
+            # parent = self._find_item_by_id(site_id, "site", uc_id)
             # Assign the meta data for the state
             item_type, item_id = "state", state_id
             # Find the item in the tree
-            item = self._find_item_by_id(state_id, item_type, site_id, uc_id)
+            item = self._find_item_by_id(uc_id, site_id, state_id)
+            # item = self._find_item_by_id(state_id, item_type, site_id, uc_id)
             # Get the state object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id].states[state_id]
         elif site_id is not None:  # Adding/updating a site
             # Get the parent unit cell
-            parent = self._find_item_by_id(uc_id, "unit_cell")
+            parent = self._find_item_by_id(uc_id)
+            # parent = self._find_item_by_id(uc_id, "unit_cell")
             # Assign the meta data for the site
             item_type, item_id = "site", site_id
             # Find the item in the tree
-            item = self._find_item_by_id(site_id, item_type, uc_id)
+            item = self._find_item_by_id(item_type, uc_id, site_id)
+            # item = self._find_item_by_id(site_id, item_type, uc_id)
             # Get the site object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id]
         else:  # Adding/updating a unit cell
@@ -291,7 +325,8 @@ class UnitCellController(QObject):
             # Assign the meta data for the unit cell
             item_type, item_id = "unit_cell", uc_id
             # Find the item in the tree
-            item = self._find_item_by_id(uc_id, item_type)
+            item = self._find_item_by_id(uc_id)
+            # item = self._find_item_by_id(uc_id, item_type)
             # Get the unit cell object from the unit cell list
             data = self.unit_cells[uc_id]
 
@@ -314,14 +349,21 @@ class UnitCellController(QObject):
             state_id: UUID of the state to remove
         """
         if state_id is not None:  # Removing a state
-            parent = self._find_item_by_id(site_id, "site", uc_id)
-            item = self._find_item_by_id(state_id, "state", site_id, uc_id)
+            parent = self._find_item_by_id(uc_id, site_id)
+            item = self._find_item_by_id(uc_id, site_id, state_id)
+
+            # parent = self._find_item_by_id(site_id, "site", uc_id)
+            # item = self._find_item_by_id(state_id, "state", site_id, uc_id)
         elif site_id is not None:  # Removing a site
-            parent = self._find_item_by_id(uc_id, "unit_cell")
-            item = self._find_item_by_id(site_id, "site", uc_id)
+            parent = self._find_item_by_id(uc_id)
+            item = self._find_item_by_id(uc_id, site_id)
+
+            # parent = self._find_item_by_id(uc_id, "unit_cell")
+            # item = self._find_item_by_id(site_id, "site", uc_id)
         else:  # Removing a unit cell
             parent = self.root_node
-            item = self._find_item_by_id(uc_id, "unit_cell")
+            item = self._find_item_by_id(uc_id)
+            # item = self._find_item_by_id(uc_id, "unit_cell")
 
         parent.removeRow(item.row())
 
@@ -448,9 +490,11 @@ class UnitCellController(QObject):
         if item_type == "unit_cell":
             parent = self.root_node
         elif item_type == "site":
-            parent = self._find_item_by_id(parent_id, "unit_cell")
+            parent = self._find_item_by_id(parent_id)
+            # parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
-            parent = self._find_item_by_id(parent_id, "site", grandparent_id)
+            parent = self._find_item_by_id(grandparent_id, parent_id)
+            # parent = self._find_item_by_id(parent_id, "site", grandparent_id)
 
         for row in range(parent.rowCount()):
             item = parent.child(row)
