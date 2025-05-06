@@ -96,6 +96,18 @@ class ActionManager(QObject):
         )
         self.undo_redo_actions["redo"].setStatusTip("Redo")
 
+        # # Optional: Disable/enable based on stack state
+        # self.undo_redo_actions["undo"].setEnabled(self.undo_stack.canUndo())
+        # self.undo_redo_actions["redo"].setEnabled(self.undo_stack.canRedo())
+
+        # # Keep them updated as the stack changes
+        # self.undo_stack.canUndoChanged.connect(
+        #     self.undo_redo_actions["undo"].setEnabled
+        # )
+        # self.undo_stack.canRedoChanged.connect(
+        #     self.undo_redo_actions["redo"].setEnabled
+        # )
+
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
         # Toggle wireframe action

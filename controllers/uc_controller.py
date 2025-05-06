@@ -1,36 +1,37 @@
-import uuid
-from PySide6.QtWidgets import QColorDialog
 from PySide6.QtCore import (
+    QItemSelectionModel,
+    QModelIndex,
     QObject,
     Qt,
-    QModelIndex,
-    QItemSelectionModel,
     Signal,
 )
-from PySide6.QtGui import QStandardItem, QColor
-from src.tibitypes import UnitCell, Site, State, BasisVector
-from models.data_models import DataModel
-from views.uc_view import UnitCellView
-from resources.constants import default_site_size
-
+from PySide6.QtGui import QColor, QStandardItem
+from PySide6.QtWidgets import QColorDialog, QDoubleSpinBox
 import random
+import uuid
+
+from models.data_models import DataModel
+from resources.constants import default_site_size, selection_init
+from src.tibitypes import BasisVector, Site, State, UnitCell
+from views.uc_view import UnitCellView
 
 
 class UnitCellController(QObject):
     """
-    Controller that manages interactions between the UI and data models for unit cells.
+    Controller managing interactions between the UI and unit cell data model.
 
-    This controller connects UI signals from the form panels and tree view to appropriate
-    actions that modify the underlying data models. It handles all CRUD (create, read,
-    update, delete) operations for the hierarchy of unit cells, sites, and states.
+    This controller connects UI signals from the form panels and tree view to
+    appropriate actions that modify the underlying data models.
+    It handles all CRUD (create, read, update, delete) operations for
+    the hierarchy of unit cells, sites, and states.
 
     The controller follows the MVC (Model-View-Controller) pattern:
     - Models: The unit_cells dictionary and the form panel models
     - Views: The tree view and form panels
     - Controller: This class, which updates models in response to UI events
 
-    After data model changes, the controller updates the tree view and reselects
-    the appropriate node to maintain UI state consistency.
+    After data model changes, the controller updates the tree view and
+    reselects the appropriate node to maintain UI state consistency.
     """
 
     plot_update_requested = Signal()
@@ -53,8 +54,12 @@ class UnitCellController(QObject):
 
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: DataModel tracking the currently selected unit cell, site, and state
-            unit_cell_view: The main view component containing tree view and form panels
+            selection: DataModel tracking the currently selected
+            unit cell, site, and state
+            unit_cell_data: DataModel tracking the parameters of
+            the selected unit cell and site
+            unit_cell_view: The main view component containing
+            tree view and form panels
         """
         super().__init__()
         # Store references to UI components and data models
@@ -65,6 +70,7 @@ class UnitCellController(QObject):
 
         # Get the fields from unit_cell_view for convenience
         # For the basis vectors, each reference has three spinboxes
+        # corresponding to the Cartesian coordinates
         self.v1 = self.unit_cell_view.unit_cell_panel.v1
         self.v2 = self.unit_cell_view.unit_cell_panel.v2
         self.v3 = self.unit_cell_view.unit_cell_panel.v3
@@ -74,8 +80,13 @@ class UnitCellController(QObject):
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
 
-        # A flag to suppress the change of dimensionality listener. Used when the dimensionality
-        # radio buttons are triggered programmatically to avoid unnecessary update cycles.
+        # Store the tree_view and tree_model as parameters for convenience
+        self.tree_view = self.unit_cell_view.tree_view_panel.tree_view
+        self.tree_model = self.unit_cell_view.tree_view_panel.tree_model
+
+        # A flag to suppress the change of dimensionality listener.
+        # Used when the dimensionality radio buttons are triggered
+        # programmatically to avoid unnecessary update cycles.
         self._suppress_dim_listener = False
         # Rebuild the tree view from scratch in the beginning
         self.refresh_tree()
@@ -85,18 +96,23 @@ class UnitCellController(QObject):
 
         # Connect signals
         # Tree view signals
-        self.unit_cell_view.tree_view_panel.tree_view.selectionModel().selectionChanged.connect(
+        # Triggered when the tree selection changed,
+        # either manually or programmatically
+        self.tree_view.selectionModel().selectionChanged.connect(
             self._on_selection_changed
-        )  # Triggered when the tree selection changed, either manually or programmatically
-        self.unit_cell_view.tree_view_panel.tree_model.itemChanged.connect(
-            self._on_item_renamed
-        )  # Triggered when a tree item's name is changed by double clicking on it
+        )
+        # Triggered when a tree item's name is changed by double clicking on it
+        self.tree_model.itemChanged.connect(self._on_item_renamed)
+        # Triggered when the user presses Del or Backspace while
+        # a tree item is highlighted, or clicks the Delete button
         self.unit_cell_view.tree_view_panel.delete_requested.connect(
             self._delete_item
-        )  # Triggered when the user presses Del or Backspace while a tree item is highlighted, or clicks the Delete button
+        )
 
         # Unit Cell basis vector signals.
-        def connect_vector_fields(vector_name, spinboxes):
+        def connect_vector_fields(
+            vector_name, spinboxes: list[QDoubleSpinBox]
+        ):
             for ii, axis in enumerate("xyz"):
                 spinboxes[ii].editingFinished.connect(
                     lambda ii=ii, axis=axis: self._update_unit_cell_data(
@@ -163,10 +179,12 @@ class UnitCellController(QObject):
             self._pick_site_color
         )
 
-        # Selection change. Triggered by the change of the selection model to show the appropriate panels and plots
+        # Selection change. Triggered by the change of the selection model
+        # to show the appropriate panels and plots
         self.selection.signals.updated.connect(self._show_panels)
 
-        # When model changes, update UI. If the model changes programmatically, the updates fill out the relevant fields
+        # When model changes, update UI. If the model changes
+        # programmatically, the updates fill out the relevant fields
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
 
     # Tree Navigation Functions
@@ -185,13 +203,11 @@ class UnitCellController(QObject):
         - _update_tree_item() - For adding or updating a single node
         - _remove_tree_item() - For removing a single node
 
-        This full refresh is typically only needed during initialization or when
-        multiple components of the tree need to be updated simultaneously.
+        This full refresh is typically only needed during initialization or
+        when multiple components of the tree need to be updated simultaneously.
         """
-        self.unit_cell_view.tree_view_panel.tree_model.clear()
-        self.root_node = (
-            self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
-        )
+        self.tree_model.clear()
+        self.root_node = self.tree_model.invisibleRootItem()
 
         # Add unit cells
         for uc_id, unit_cell in self.unit_cells.items():
@@ -216,7 +232,7 @@ class UnitCellController(QObject):
 
     def _find_item_by_id(
         self, item_id, item_type, parent_id=None, grandparent_id=None
-    ):
+    ) -> QStandardItem | None:
         """
         Find a tree item by its ID and type.
 
@@ -230,9 +246,7 @@ class UnitCellController(QObject):
             The QStandardItem if found, None otherwise
         """
         if item_type == "unit_cell":
-            parent = (
-                self.unit_cell_view.tree_view_panel.tree_model.invisibleRootItem()
-            )
+            parent = self.tree_model.invisibleRootItem()
         elif item_type == "site":
             parent = self._find_item_by_id(parent_id, "unit_cell")
         else:
@@ -246,7 +260,7 @@ class UnitCellController(QObject):
     def _update_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Update or add a tree item without rebuilding the entire tree.
-        The item to update is determined from the number of id arguments provided.
+        The item to update is determined from the number of id arguments.
 
         Args:
             uc_id: UUID of the unit cell
@@ -311,8 +325,17 @@ class UnitCellController(QObject):
 
         parent.removeRow(item.row())
 
-    def _create_tree_item(self, item_data, item_type, item_id):
-        """Create a QStandardItem for tree with metadata"""
+    def _create_tree_item(
+        self, item_data, item_type, item_id
+    ) -> QStandardItem:
+        """
+        Create a QStandardItem for tree with metadata
+
+        Args:
+            item_data: UnitCell, Site, or State object
+            item_type: item type ("unit_cell", "site", or "state")
+            item_id: UUID of the item
+        """
         tree_item = QStandardItem(item_data.name)
         tree_item.setData(
             item_data, Qt.UserRole
@@ -331,10 +354,11 @@ class UnitCellController(QObject):
 
         This method is called when the user selects a node in the tree view or
         the selection occurs programmatically.
-        It determines what type of node was selected (unit cell, site, or state)
-        and updates the selection model with the item's id and, if applicable,
-        its parent's/grandparent's id's. The change in the selection dictionary
-        triggers the _show_panels function.
+        It determines what type of node was selected
+        (unit cell, site, or state) and updates the selection model with
+        the item's id and, if applicable, its parent's/grandparent's id's.
+        The change in the selection dictionary triggers
+        the _show_panels function.
 
         Args:
             selected: The newly selected items
@@ -343,16 +367,12 @@ class UnitCellController(QObject):
         indexes = selected.indexes()
 
         if not indexes:
-            self.selection.update(
-                {"unit_cell": None, "site": None, "state": None}
-            )
+            self.selection.update(selection_init())
             return
 
         # Get the selected item
         index = indexes[0]
-        item = self.unit_cell_view.tree_view_panel.tree_model.itemFromIndex(
-            index
-        )
+        item = self.tree_model.itemFromIndex(index)
 
         item_type = item.data(Qt.UserRole + 1)
         item_id = item.data(Qt.UserRole + 2)
@@ -364,14 +384,6 @@ class UnitCellController(QObject):
         else:  # site or state selected
             parent_item = item.parent()
             parent_id = parent_item.data(Qt.UserRole + 2)
-
-            # Since we are selecting a site or a state, we need to fill in the site radius and color properties.
-            # Note that the radius and color of the site are updated upon selection, not upon model change.
-            # The reason is that size and color are not the properties of a site per se, but rather visualization properties,
-            # stored in separate dictionaries.
-            # When a new site is selected, the site model (coordinates) might be exactly the same as
-            # for the previously selected site. Because the coordinate field update would not be triggered,
-            # the radius and color fields would contain wrong data
 
             if item_type == "site":  # site selected
                 self.selection.update(
@@ -387,7 +399,16 @@ class UnitCellController(QObject):
                         "state": item_id,
                     }
                 )
-
+            # Since we are selecting a site or a state, we need to fill
+            # in the site radius and color properties.
+            # Note that the radius and color of the site are updated
+            # upon selection, not upon model change. The reason is that size
+            # and color are not the properties of a site per se, but rather
+            # visualization properties, stored in separate dictionaries.
+            # When a new site is selected, the site model (coordinates)
+            # might be exactly the same as for the previously
+            # selected site. Because the coordinate field update would not be
+            # triggered, the radius and color fields would contain wrong data
             site_radius = self.unit_cells[
                 self.selection["unit_cell"]
             ].site_sizes[self.selection["site"]]
@@ -396,8 +417,16 @@ class UnitCellController(QObject):
             site_color = self.unit_cells[
                 self.selection["unit_cell"]
             ].site_colors[self.selection["site"]]
+
+            c = (
+                int(site_color[0] * 255),
+                int(site_color[1] * 255),
+                int(site_color[2] * 255),
+                int(site_color[3]),
+            )  # Color in 0-255 component range
+
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-                f"background-color: rgba({int(255*site_color[0])}, {int(255*site_color[1])}, {int(255*site_color[2])}, {site_color[3]});"
+                f"background-color: rgba({c[0]}, {c[1]}, {c[2]}, {c[3]});"
             )
 
     # Programmatically select a tree item
@@ -407,8 +436,8 @@ class UnitCellController(QObject):
         """
         Select a tree item by its ID and type.
 
-        This method programmatically selects an item in the tree view. This selection triggers
-         _on selection_changed function.
+        This method programmatically selects an item in the tree view.
+        This selection triggers _on_selection_changed function.
 
         Args:
             item_id: UUID of the item to find
@@ -426,18 +455,16 @@ class UnitCellController(QObject):
         for row in range(parent.rowCount()):
             item = parent.child(row)
             if item.data(Qt.UserRole + 2) == item_id:
-                index = self.unit_cell_view.tree_view_panel.tree_model.indexFromItem(
-                    item
-                )
-                self.unit_cell_view.tree_view_panel.tree_view.selectionModel().setCurrentIndex(
+                index = self.tree_model.indexFromItem(item)
+                self.tree_view.selectionModel().setCurrentIndex(
                     index, QItemSelectionModel.ClearAndSelect
                 )
                 return
 
     def _on_item_renamed(self, item: QStandardItem):
         """
-        Change the name of the selected item by double-clicking on it in the tree view.
-        Update the data and save it.
+        Change the name of the selected item by double-clicking on it in
+        the tree view. Update the data and save it.
         """
         item_type = item.data(Qt.UserRole + 1)
         new_name = item.text()

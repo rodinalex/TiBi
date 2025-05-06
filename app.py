@@ -226,6 +226,7 @@ class TiBiApplication:
 
         # Create an undo stack
         self.undo_stack = QUndoStack()
+        self.undo_stack.setUndoLimit(100)
 
         # Initialize global models
         self.project_path = None
