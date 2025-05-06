@@ -9,7 +9,7 @@ class MainToolbarView(QToolBar):
     such as creating new unit cells, saving/loading projects, and accessing
     computation options.
 
-    It does not create actions itself, but receives them from an action manager.
+    It does not create actions itself, receiving them from an action manager.
     """
 
     def __init__(self):
@@ -62,7 +62,7 @@ class MainToolbarView(QToolBar):
             spinbox.setRange(1, 10)
             spinbox.setFixedWidth(50)
             spinbox.setToolTip(f"Along v<sub>{ii+1}</sub>")
-            spinbox.setStatusTip(f"Number of unit cells")
+            spinbox.setStatusTip("Number of unit cells")
             spinbox.setEnabled(False)
 
         layout.addWidget(QLabel("n<sub>1</sub>:"))

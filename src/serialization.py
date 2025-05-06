@@ -1,7 +1,7 @@
 import json
 import uuid
 import numpy as np
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any
 from src.tibitypes import UnitCell, Site, State, BasisVector
 
 
@@ -13,8 +13,8 @@ class UnitCellEncoder(json.JSONEncoder):
     - UUID objects are converted to strings
     - NumPy complex values are converted to [real, imag] lists
     - NumPy arrays are converted to lists
-    - BasisVector, State, Site, and UnitCell objects are converted to dictionaries
-    - Dictionaries with UUID keys are converted to dictionaries with string keys
+    - BasisVector, State, Site, and UnitCell objects are converted to dicts
+    - Dictionaries with UUID keys are converted to dicts with string keys
     - Tuples with UUID elements are converted to strings
     """
 
@@ -24,9 +24,6 @@ class UnitCellEncoder(json.JSONEncoder):
             return str(obj)
 
         # Handle NumPy complex numbers
-        # if isinstance(obj, np.complex128):
-        #     return [obj.real, obj.imag]
-
         if isinstance(obj, complex) or np.issubdtype(
             type(obj), np.complexfloating
         ):
@@ -155,8 +152,9 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
             for site_id_str, site in json_obj["sites"].items():
                 unit_cell.sites[uuid.UUID(site_id_str)] = site
 
-            # Convert hoppings dict with tuple of string keys back to tuple of UUID keys
-            # and convert complex values from [real, imag] format back to complex numbers
+            # Convert hoppings dict with tuple of string keys back to tuple of
+            # UUID keys and convert complex values from [real, imag] format
+            # back to complex numbers
             for hopping_key_str, hopping_values in json_obj[
                 "hoppings"
             ].items():

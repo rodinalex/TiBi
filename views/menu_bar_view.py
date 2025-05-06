@@ -8,7 +8,7 @@ class MenuBarView(QMenuBar):
     This class is a view component that organizes application actions
     into menus, providing a standard way to access all functionality.
 
-    It does not create actions itself, but receives them from an action manager.
+    It does not create actions itself, receiving them from an action manager.
     """
 
     def __init__(self):
@@ -30,8 +30,6 @@ class MenuBarView(QMenuBar):
         # self.addMenu(self.help_menu)
 
     def set_actions(self, action_manager):
-        pass
-
         """
         Set actions from the action manager to the appropriate menus.
 
