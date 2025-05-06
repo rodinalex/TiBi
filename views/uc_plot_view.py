@@ -30,6 +30,7 @@ class UnitCellPlotView(QWidget):
 
         self.setMinimumSize(QSize(350, 350))
 
+        # Setup layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
