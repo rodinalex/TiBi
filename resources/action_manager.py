@@ -29,16 +29,16 @@ class ActionManager(QObject):
         super().__init__(parent)
 
         # Initialize action dictionaries for different categories
-        self.file_actions = {}
-        self.edit_actions = {}
-        self.view_actions = {}
-        self.computation_actions = {}
-        self.help_actions = {}
-        self.unit_cell_actions = {}
+        self.file_actions: dict[str, QAction] = {}
+        self.undo_redo_actions: dict[str, QAction] = {}
+        self.view_actions: dict[str, QAction] = {}
+        self.computation_actions: dict[str, QAction] = {}
+        self.help_actions: dict[str, QAction] = {}
+        self.unit_cell_actions: dict[str, QAction] = {}
 
         # Create all actions
         self._create_file_actions()
-        self._create_edit_actions()
+        self._create_undo_redo_actions()
         self._create_unit_cell_actions()
 
     def _create_file_actions(self):
@@ -85,16 +85,16 @@ class ActionManager(QObject):
             "Import data from an exiting project"
         )
 
-    def _create_edit_actions(self):
-        self.edit_actions["undo"] = QAction(
+    def _create_undo_redo_actions(self):
+        self.undo_redo_actions["undo"] = QAction(
             QIcon(os.path.join(basedir, "icons/undo.png")), "Undo", self
         )
-        self.edit_actions["undo"].setStatusTip("Undo")
+        self.undo_redo_actions["undo"].setStatusTip("Undo")
 
-        self.edit_actions["redo"] = QAction(
+        self.undo_redo_actions["redo"] = QAction(
             QIcon(os.path.join(basedir, "icons/redo.png")), "Redo", self
         )
-        self.edit_actions["redo"].setStatusTip("Redo")
+        self.undo_redo_actions["redo"].setStatusTip("Redo")
 
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
@@ -120,7 +120,10 @@ class ActionManager(QObject):
         for action_name, action in self.file_actions.items():
             if action_name in handlers:
                 action.triggered.connect(handlers[action_name])
-
+        # Connect undo/redo actions
+        for action_name, action in self.undo_redo_actions.items():
+            if action_name in handlers:
+                action.triggered.connect(handlers[action_name])
         # Connect unit cell actions
         for action_name, action in self.unit_cell_actions.items():
             if action_name in handlers:

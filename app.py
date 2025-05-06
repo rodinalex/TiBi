@@ -1,5 +1,6 @@
 import sys
 from PySide6.QtCore import QSize
+from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -223,6 +224,9 @@ class TiBiApplication:
         # Create the Qt application
         self.app = QApplication(sys.argv)
 
+        # Create an undo stack
+        self.undo_stack = QUndoStack()
+
         # Initialize global models
         self.project_path = None
         self.unit_cells = {}
@@ -326,6 +330,7 @@ class TiBiApplication:
             self.menu_bar,
             self.toolbar,
             self.status_bar,
+            self.undo_stack,
         )
 
         self.controllers = {

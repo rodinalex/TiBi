@@ -1,5 +1,7 @@
 from PySide6.QtWidgets import QToolBar, QWidget, QLabel, QSpinBox, QHBoxLayout
 
+from resources.action_manager import ActionManager
+
 
 class MainToolbarView(QToolBar):
     """
@@ -19,7 +21,7 @@ class MainToolbarView(QToolBar):
         # Allow the toolbar to be moved by the user
         self.setMovable(True)
 
-    def set_actions(self, action_manager):
+    def set_actions(self, action_manager: ActionManager):
         """
         Set actions from the action manager to the toolbar.
 
@@ -34,8 +36,8 @@ class MainToolbarView(QToolBar):
 
         self.addSeparator()
 
-        self.addAction(action_manager.edit_actions["undo"])
-        self.addAction(action_manager.edit_actions["redo"])
+        self.addAction(action_manager.undo_redo_actions["undo"])
+        self.addAction(action_manager.undo_redo_actions["redo"])
 
         self.addSeparator()
 
