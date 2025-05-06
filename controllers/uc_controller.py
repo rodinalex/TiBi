@@ -300,12 +300,31 @@ class UnitCellController(QObject):
 
         if item:  # If the item exists, update it
             item.setText(data.name)
-            item.setData(data, Qt.UserRole)
         else:  # Otherwise, create a new item and insert it into the tree
             item = self._create_tree_item(
                 data, item_type=item_type, item_id=item_id
             )
             parent.appendRow(item)
+
+    # Programmatically select a tree item
+    def _select_item(self, uc_id, site_id=None, state_id=None):
+        """
+        Select a tree item by its ID and type.
+
+        This method programmatically selects an item in the tree view.
+        This selection triggers _on_selection_changed function.
+
+        Args:
+            uc_id: UUID of the unit cell
+            site_id: UUID of the site
+            state_id: UUID of the state
+        """
+        item = self._find_item_by_id(uc_id, site_id, state_id)
+        if item is not None:
+            index = self.tree_model.indexFromItem(item)
+            self.tree_view.selectionModel().setCurrentIndex(
+                index, QItemSelectionModel.ClearAndSelect
+            )
 
     def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
@@ -316,16 +335,10 @@ class UnitCellController(QObject):
             site_id: UUID of the parent site
             state_id: UUID of the state to remove
         """
-        if state_id is not None:  # Removing a state
-            parent = self._find_item_by_id(uc_id, site_id)
-            item = self._find_item_by_id(uc_id, site_id, state_id)
-        elif site_id is not None:  # Removing a site
-            parent = self._find_item_by_id(uc_id)
-            item = self._find_item_by_id(uc_id, site_id)
-        else:  # Removing a unit cell
-            parent = self.root_node
-            item = self._find_item_by_id(uc_id)
-
+        item = self._find_item_by_id(uc_id, site_id, state_id)
+        # If the item is a unit cell, the parent is None, so we
+        # default to the invisibleRootItem
+        parent = item.parent() or self.tree_model.invisibleRootItem()
         parent.removeRow(item.row())
 
     def _create_tree_item(
@@ -340,9 +353,6 @@ class UnitCellController(QObject):
             item_id: UUID of the item
         """
         tree_item = QStandardItem(item_data.name)
-        tree_item.setData(
-            item_data, Qt.UserRole
-        )  # Store the actual data object
         tree_item.setData(item_type, Qt.UserRole + 1)  # Store the type
         tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
 
@@ -431,39 +441,6 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
                 f"background-color: rgba({c[0]}, {c[1]}, {c[2]}, {c[3]});"
             )
-
-    # Programmatically select a tree item
-    def _select_item(self, uc_id, site_id=None, state_id=None):
-        """
-        Select a tree item by its ID and type.
-
-        This method programmatically selects an item in the tree view.
-        This selection triggers _on_selection_changed function.
-
-        Args:
-            item_id: UUID of the item to find
-            item_type: Type of the item ("unit_cell", "site", or "state")
-            parent_id: UUID of the parent item (for site or state)
-            grandparent_id: UUID of the grandparent item (for state)
-        """
-        if state_id is not None:
-            parent = self._find_item_by_id(uc_id, site_id)
-            item_id = state_id
-        elif site_id is not None:
-            parent = self._find_item_by_id(uc_id)
-            item_id = site_id
-        else:
-            parent = self.root_node
-            item_id = uc_id
-
-        for row in range(parent.rowCount()):
-            item = parent.child(row)
-            if item.data(Qt.UserRole + 2) == item_id:
-                index = self.tree_model.indexFromItem(item)
-                self.tree_view.selectionModel().setCurrentIndex(
-                    index, QItemSelectionModel.ClearAndSelect
-                )
-                return
 
     def _on_item_renamed(self, item: QStandardItem):
         """
