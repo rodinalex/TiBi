@@ -1,14 +1,13 @@
-import uuid
-from PySide6.QtCore import QObject
-from src.tibitypes import UnitCell
-from models.data_models import DataModel
 from itertools import product
-from views.uc_plot_view import UnitCellPlotView
-import pyqtgraph.opengl as gl
-
-from resources.constants import default_site_scaling
-from resources.colors import CF_yellow
 import numpy as np
+from PySide6.QtCore import QObject
+import pyqtgraph.opengl as gl
+import uuid
+
+from models.data_models import DataModel
+from resources.constants import CF_yellow, default_site_scaling
+from src.tibitypes import UnitCell
+from views.uc_plot_view import UnitCellPlotView
 
 
 class UnitCellPlotController(QObject):
@@ -16,9 +15,9 @@ class UnitCellPlotController(QObject):
     Controller for the unit cell 3D visualization.
 
     This controller manages the 3D visualization of unit cells, handling the
-    rendering of unit cell wireframes, site positions, and periodic repetitions.
-    It observes changes to the selected unit cell and its properties, updating
-    the visualization in response to any modifications.
+    rendering of unit cell wireframes, site positions, and periodic
+    repetitions. It observes changes to the selected unit cell and its
+    properties, updating the visualization in response to any modifications.
 
     The controller provides functionality for:
     1. Visualizing the unit cell as a wireframe parallelepiped
@@ -41,7 +40,8 @@ class UnitCellPlotController(QObject):
 
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected unit cell, site, and state
+            selection: Model tracking the currently selected
+            unit cell, site, and state
             uc_plot_view: The view component for the 3D visualization
         """
         super().__init__()
@@ -50,7 +50,7 @@ class UnitCellPlotController(QObject):
         self.uc_plot_view = uc_plot_view
 
         # Internal controller state
-        self.unit_cell = None
+        self.unit_cell = None  # Unit cell being plotted
         self.uc_plot_items = {}  # Dictionary to store plot items
 
     def update_unit_cell(self, wireframe_shown, n1, n2, n3):
@@ -64,18 +64,23 @@ class UnitCellPlotController(QObject):
         4. Updates the coordinate axes to match the unit cell basis vectors
 
         Args:
-            unit_cell: The UnitCell object to display, or None to clear the view
+            unit_cell: UnitCell object to display, or None to clear the view
+            wireframe_shown: bool denoting whether the primitive vector
+            wireframe is drawn
+            n1: number of unit cell repetitions along the 1st basis vector
+            n2: number of unit cell repetitions along the 2nd basis vector
+            n3: number of unit cell repetitions along the 3d basis vector
         """
         uc_id = self.selection.get("unit_cell")
-        # Clear previous plot items except axes and grid
+        # Clear previous plot items except axes
         for key, item in list(self.uc_plot_items.items()):
             self.uc_plot_view.view.removeItem(item)
             del self.uc_plot_items[key]
 
-        if uc_id == None:
+        if uc_id is None:
             return
-        self.unit_cell = self.unit_cells[uc_id]
 
+        self.unit_cell = self.unit_cells[uc_id]
         self.n1, self.n2, self.n3 = n1, n2, n3
 
         # Collect line vertices
@@ -162,11 +167,16 @@ class UnitCellPlotController(QObject):
 
     def _get_unit_cell_edges(self, a1, a2, a3):
         """
-        Plot the unit cell as a wireframe parallelepiped.
+        Get the edges of the unit cell parallelepiped.
 
-        Creates a 3D wireframe representation of the unit cell using the three
-        basis vectors to define the shape. The parallelepiped is drawn as a set
-        of 12 lines connecting 8 vertices in 3D space.
+        Args:
+            a1: integer multiple of v1
+            a2: integer multiple of v2
+            a3: integer multiple of v3
+
+        Returns:
+            A list of Tuple([float, float, float], [float, float, float]),
+            where the lists give the vertex coordinates
         """
         if not self.unit_cell:
             return

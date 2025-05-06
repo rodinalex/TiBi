@@ -32,28 +32,13 @@ class MainToolbarView(QToolBar):
         self.addAction(action_manager.file_actions["import_project"])
         self.addAction(action_manager.file_actions["save_project"])
 
-        # # Add separator
-        # self.addSeparator()
+        self.addSeparator()
 
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Export action
-        # self.addAction(action_manager.file_actions["export"])
-
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Compute Bands action
-        # self.addAction(action_manager.computation_actions["compute_bands"])
-
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Preferences action
-        # self.addAction(action_manager.edit_actions["preferences"])
+        self.addAction(action_manager.edit_actions["undo"])
+        self.addAction(action_manager.edit_actions["redo"])
 
         self.addSeparator()
+
         self.addAction(action_manager.unit_cell_actions["wireframe"])
         # Add the grouped spinboxes
         self.addWidget(self._create_uc_spinbox_group())

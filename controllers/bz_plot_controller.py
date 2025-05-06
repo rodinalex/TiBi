@@ -5,7 +5,7 @@ from models.data_models import DataModel
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
 import pyqtgraph.opengl as gl
-from resources.colors import CF_red
+from resources.constants import CF_red
 import numpy as np
 
 
