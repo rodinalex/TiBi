@@ -82,6 +82,8 @@ class AppController(QObject):
         # Depending on the dimensionality, update the unit cell spinners in the toolbar
 
         uc_id = self.models["selection"].get("unit_cell")
+        # print("UCID")
+        # print(uc_id)
         if uc_id is not None:
             unit_cell = self.models["unit_cells"][uc_id]
 
