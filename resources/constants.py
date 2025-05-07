@@ -1,3 +1,5 @@
+from src.tibitypes import BasisVector, State, Site, UnitCell
+
 """
 Constants used by the application. These include style options, as well as
 model initialization values.
@@ -18,7 +20,7 @@ default_site_size = 0.1  # Default size of the sphere
 default_site_scaling = 1.5  # Default scaling of the sphere for selected sites
 
 
-# Model initialization values.
+# Model initialization factories.
 def unit_cell_data_init():
     return {
         "unit_cell_name": "",
@@ -72,3 +74,25 @@ def bz_point_lists_init():
         "edge": [],
         "face": [],
     }  # Lists of the high-symmetry points in the BZ, grouped by type
+
+
+def mk_new_unit_cell():
+    name = "New Unit Cell"
+    v1 = BasisVector(1, 0, 0)  # Unit vector along x-axis
+    v2 = BasisVector(0, 1, 0)  # Unit vector along y-axis
+    v3 = BasisVector(0, 0, 1)  # Unit vector along z-axis
+
+    return UnitCell(name, v1, v2, v3)
+
+
+def mk_new_site():
+    name = "New Site"
+    c1 = 0  # Fractional coordinate along first basis vector
+    c2 = 0  # Fractional coordinate along second basis vector
+    c3 = 0  # Fractional coordinate along third basis vector
+    return Site(name, c1, c2, c3)
+
+
+def mk_new_state():
+    name = "New State"
+    return State(name)

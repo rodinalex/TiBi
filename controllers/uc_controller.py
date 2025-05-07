@@ -11,7 +11,13 @@ import random
 import uuid
 
 from models.data_models import DataModel
-from resources.constants import default_site_size, selection_init
+from resources.constants import (
+    default_site_size,
+    mk_new_site,
+    mk_new_state,
+    mk_new_unit_cell,
+    selection_init,
+)
 from src.tibitypes import BasisVector, Site, State, UnitCell
 from views.uc_view import UnitCellView
 
@@ -252,7 +258,7 @@ class UnitCellController(QObject):
             parent = self._find_item_by_id(uc_id)
             item_id = site_id
         else:
-            parent = self.tree_model.invisibleRootItem()
+            parent = self.root_node
             item_id = uc_id
 
         for row in range(parent.rowCount()):
@@ -270,35 +276,22 @@ class UnitCellController(QObject):
             site_id: UUID of the site
             state_id: UUID of the state
         """
+        item = self._find_item_by_id(uc_id, site_id, state_id)
+        # parent = item.parent() or self.root_node
         if state_id is not None:  # Adding/updating a state
-            # Get the parent site
             parent = self._find_item_by_id(uc_id, site_id)
-            # Assign the meta data for the state
             item_type, item_id = "state", state_id
-            # Find the item in the tree
-            item = self._find_item_by_id(uc_id, site_id, state_id)
-            # Get the state object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id].states[state_id]
         elif site_id is not None:  # Adding/updating a site
-            # Get the parent unit cell
             parent = self._find_item_by_id(uc_id)
-            # Assign the meta data for the site
             item_type, item_id = "site", site_id
-            # Find the item in the tree
-            item = self._find_item_by_id(uc_id, site_id)
-            # Get the site object from the unit cell list
             data = self.unit_cells[uc_id].sites[site_id]
         else:  # Adding/updating a unit cell
-            # The parent is the root node
             parent = self.root_node
-            # Assign the meta data for the unit cell
             item_type, item_id = "unit_cell", uc_id
-            # Find the item in the tree
-            item = self._find_item_by_id(uc_id)
-            # Get the unit cell object from the unit cell list
             data = self.unit_cells[uc_id]
 
-        if item:  # If the item exists, update it
+        if item:  # If the item exists, update its name
             item.setText(data.name)
         else:  # Otherwise, create a new item and insert it into the tree
             item = self._create_tree_item(
@@ -338,7 +331,7 @@ class UnitCellController(QObject):
         item = self._find_item_by_id(uc_id, site_id, state_id)
         # If the item is a unit cell, the parent is None, so we
         # default to the invisibleRootItem
-        parent = item.parent() or self.tree_model.invisibleRootItem()
+        parent = item.parent() or self.root_node
         parent.removeRow(item.row())
 
     def _create_tree_item(
@@ -478,13 +471,7 @@ class UnitCellController(QObject):
         After creation, the tree view is updated and the new unit cell is automatically
         selected so the user can immediately edit its properties.
         """
-        name = "New Unit Cell"
-        v1 = BasisVector(1, 0, 0)  # Unit vector along x-axis
-        v2 = BasisVector(0, 1, 0)  # Unit vector along y-axis
-        v3 = BasisVector(0, 0, 1)  # Unit vector along z-axis
-
-        # Create and store the new unit cell
-        new_cell = UnitCell(name, v1, v2, v3)
+        new_cell = mk_new_unit_cell()
         self.unit_cells[new_cell.id] = new_cell
         # Update UI (selective update instead of full refresh)
         self._update_tree_item(new_cell.id)
@@ -497,12 +484,7 @@ class UnitCellController(QObject):
         Creates a site with default name and coordinates (0,0,0), adds it to the
         sites dictionary of the selected unit cell, and selects it in the tree view.
         """
-        # Create a new site with default properties
-        name = "New Site"
-        c1 = 0  # Fractional coordinate along first basis vector
-        c2 = 0  # Fractional coordinate along second basis vector
-        c3 = 0  # Fractional coordinate along third basis vector
-        new_site = Site(name, c1, c2, c3)
+        new_site = mk_new_site()
 
         # Add the site to the selected unit cell
         selected_uc_id = self.selection["unit_cell"]
@@ -528,8 +510,7 @@ class UnitCellController(QObject):
         states dictionary of the selected site, and selects it in the tree view.
         """
         # Create a new state with default properties
-        name = "New State"
-        new_state = State(name)
+        new_state = mk_new_state()
 
         # Add the state to the selected site
         selected_uc_id = self.selection["unit_cell"]
