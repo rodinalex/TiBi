@@ -206,7 +206,7 @@ class UnitCellController(QObject):
         as user data, allowing for easy retrieval during selection events.
 
         Note: For better performance, prefer the more specific update methods:
-        - _update_tree_item() - For adding or updating a single node
+        - _add_tree_item() - For adding or updating a single node
         - _remove_tree_item() - For removing a single node
 
         This full refresh is typically only needed during initialization or
@@ -266,18 +266,16 @@ class UnitCellController(QObject):
             if item.data(Qt.UserRole + 2) == item_id:
                 return item
 
-    def _update_tree_item(self, uc_id, site_id=None, state_id=None):
+    def _add_tree_item(self, uc_id, site_id=None, state_id=None):
         """
-        Update or add a tree item without rebuilding the entire tree.
-        The item to update is determined from the number of id arguments.
+        Add a tree item without rebuilding the entire tree.
+        Select the item after the addition.
 
         Args:
             uc_id: UUID of the unit cell
             site_id: UUID of the site
             state_id: UUID of the state
         """
-        item = self._find_item_by_id(uc_id, site_id, state_id)
-        # parent = item.parent() or self.root_node
         if state_id is not None:  # Adding/updating a state
             parent = self._find_item_by_id(uc_id, site_id)
             item_type, item_id = "state", state_id
@@ -291,13 +289,14 @@ class UnitCellController(QObject):
             item_type, item_id = "unit_cell", uc_id
             data = self.unit_cells[uc_id]
 
-        if item:  # If the item exists, update its name
-            item.setText(data.name)
-        else:  # Otherwise, create a new item and insert it into the tree
-            item = self._create_tree_item(
-                data, item_type=item_type, item_id=item_id
-            )
-            parent.appendRow(item)
+        item = self._create_tree_item(
+            data, item_type=item_type, item_id=item_id
+        )
+        parent.appendRow(item)
+        index = self.tree_model.indexFromItem(item)
+        self.tree_view.selectionModel().setCurrentIndex(
+            index, QItemSelectionModel.ClearAndSelect
+        )
 
     # Programmatically select a tree item
     def _select_item(self, uc_id, site_id=None, state_id=None):
@@ -341,7 +340,7 @@ class UnitCellController(QObject):
         Create a QStandardItem for tree with metadata
 
         Args:
-            item_data: UnitCell, Site, or State object
+            item_data: UnitCell, Site, or State object. Used to get the name
             item_type: item type ("unit_cell", "site", or "state")
             item_id: UUID of the item
         """
@@ -459,8 +458,9 @@ class UnitCellController(QObject):
         """
         Create a new unit cell with default properties and add it to the model.
 
-        Creates a unit cell with orthogonal basis vectors along the x, y, and z axes,
-        adds it to the unit_cells dictionary, and selects it in the tree view.
+        Creates a unit cell with orthogonal basis vectors along
+        the x, y, and z axes, adds it to the unit_cells dictionary,
+        and selects it in the tree view.
 
         The default unit cell has:
         - Name: "New Unit Cell"
@@ -468,21 +468,26 @@ class UnitCellController(QObject):
         - No periodicity (0D system)
         - No sites or states initially
 
-        After creation, the tree view is updated and the new unit cell is automatically
-        selected so the user can immediately edit its properties.
+        After creation, the tree view is updated and the new unit cell is
+        automatically selected so the user can immediately edit its properties.
         """
         new_cell = mk_new_unit_cell()
         self.unit_cells[new_cell.id] = new_cell
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(new_cell.id)
-        self._select_item(new_cell.id)
+
+        self._add_tree_item(new_cell.id)
 
     def _add_site(self):
         """
         Create a new site in the currently selected unit cell.
 
-        Creates a site with default name and coordinates (0,0,0), adds it to the
-        sites dictionary of the selected unit cell, and selects it in the tree view.
+        Creates a site with default name and coordinates (0,0,0), adds it to
+        the sites dictionary of the selected unit cell, and selects it in
+        the tree view.
+
+        The default site has:
+        - Name: "New Site"
+        - Coordinates (0,0,0)
+        - No states initially
         """
         new_site = mk_new_site()
 
@@ -498,16 +503,18 @@ class UnitCellController(QObject):
         )
         current_uc.site_sizes[new_site.id] = default_site_size
 
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(selected_uc_id, new_site.id)
-        self._select_item(selected_uc_id, new_site.id)
+        self._add_tree_item(selected_uc_id, new_site.id)
 
     def _add_state(self):
         """
-        Create a new quantum state in the currently selected site.
+        Create a new state in the currently selected site.
 
         Creates a state with default name, adds it to the
-        states dictionary of the selected site, and selects it in the tree view.
+        states dictionary of the selected site,
+        and selects it in the tree view.
+
+        The default state has:
+        - Name: "New State"
         """
         # Create a new state with default properties
         new_state = mk_new_state()
@@ -519,9 +526,7 @@ class UnitCellController(QObject):
         current_site = current_uc.sites[selected_site_id]
         current_site.states[new_state.id] = new_state
 
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(selected_uc_id, selected_site_id, new_state.id)
-        self._select_item(selected_uc_id, selected_site_id, new_state.id)
+        self._add_tree_item(selected_uc_id, selected_site_id, new_state.id)
 
     def _save_unit_cell(self):
         """
@@ -530,7 +535,8 @@ class UnitCellController(QObject):
         This method is automatically triggered when the unit_cell_data model
         emits an updated signal following a user interaction, ensuring that UI
         changes are immediately reflected in the underlying data model.
-        After saving, the tree view is updated to show any changes (like renamed items).
+        Because the updates in the fields do not change the unit cell name,
+        there is no update required for the tree.
         """
         # Get the currently selected unit cell
         selected_uc_id = self.selection["unit_cell"]
@@ -557,9 +563,6 @@ class UnitCellController(QObject):
         current_uc.v3.z = float(self.unit_cell_data["v3z"])
         current_uc.v3.is_periodic = self.unit_cell_data["v3periodic"]
 
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(selected_uc_id)
-
         # After unit cell object is updated, notify plot controllers
         self.plot_update_requested.emit()
 
@@ -570,7 +573,8 @@ class UnitCellController(QObject):
         This method is automatically triggered when the site_data model
         emits an updated signal following a user interaction, ensuring that UI
         changes are immediately reflected in the underlying data model.
-        After saving, the tree view is updated to show any changes (like renamed items).
+        Because the updates in the fields do not change the site name,
+        there is no update required for the tree.
         """
         # Get the currently selected site
         selected_uc_id = self.selection["unit_cell"]
@@ -584,9 +588,6 @@ class UnitCellController(QObject):
         current_site.c2 = float(self.unit_cell_data["c2"])
         current_site.c3 = float(self.unit_cell_data["c3"])
 
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(selected_uc_id, selected_site_id)
-
         # After site object is updated, notify plot controllers
         self.plot_update_requested.emit()
 
@@ -597,7 +598,8 @@ class UnitCellController(QObject):
         This method is automatically triggered when the site_data model
         emits an updated signal following a user interaction, ensuring that UI
         changes are immediately reflected in the underlying data model.
-        After saving, the tree view is updated to show any changes (like renamed items).
+        Because the updates in the fields do not change the state name,
+        there is no update required for the tree.
         """
         # Get the currently selected state
         selected_uc_id = self.selection["unit_cell"]
@@ -610,25 +612,22 @@ class UnitCellController(QObject):
         # Update state properties
         current_state.name = self.unit_cell_data["state_name"]
 
-        # Update UI (selective update instead of full refresh)
-        self._update_tree_item(
-            selected_uc_id, selected_site_id, selected_state_id
-        )
-
     def _delete_item(self):
         """
         Delete the currently selected item from the model.
 
-        This method handles deletion of unit cells, sites, and states based on the
-        current selection. It updates both the data model and the tree view to reflect
-        the deletion, and ensures that the selection is updated appropriately.
+        This method handles deletion of unit cells, sites, and states based on
+        the current selection. It updates both the data model and
+        the tree view to reflect the deletion, and ensures that
+        the selection is updated appropriately.
 
         The deletion follows the containment hierarchy:
         - Deleting a unit cell also removes all its sites and states
         - Deleting a site also removes all its states
         - Deleting a state only removes that specific state
 
-        After deletion, the parent item is selected (or nothing if a unit cell was deleted).
+        After deletion, the parent item is selected
+        (or nothing if a unit cell was deleted).
         The programmatic selection triggers _on_selection_change function.
         """
         selected_uc_id = self.selection.get("unit_cell", None)
