@@ -295,6 +295,7 @@ class TiBiApplication:
             self.selection,
             self.unit_cell_data,
             self.uc_view,
+            self.undo_stack,
         )
 
         self.hopping_controller = HoppingController(

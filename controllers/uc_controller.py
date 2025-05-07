@@ -5,11 +5,12 @@ from PySide6.QtCore import (
     Qt,
     Signal,
 )
-from PySide6.QtGui import QColor, QStandardItem
+from PySide6.QtGui import QColor, QStandardItem, QUndoStack
 from PySide6.QtWidgets import QColorDialog, QDoubleSpinBox
 import random
 import uuid
 
+from commands.uc_commands import AddUnitCellCommand
 from models.data_models import DataModel
 from resources.constants import (
     default_site_size,
@@ -54,6 +55,7 @@ class UnitCellController(QObject):
         selection: DataModel,
         unit_cell_data: DataModel,
         unit_cell_view: UnitCellView,
+        undo_stack: QUndoStack,
     ):
         """
         Initialize the controller and connect UI signals to handler methods.
@@ -66,6 +68,7 @@ class UnitCellController(QObject):
             the selected unit cell and site
             unit_cell_view: The main view component containing
             tree view and form panels
+            undo_stack: QUndoStack to hold "undo-able" commands
         """
         super().__init__()
         # Store references to UI components and data models
@@ -73,6 +76,7 @@ class UnitCellController(QObject):
         self.selection = selection
         self.unit_cell_data = unit_cell_data
         self.unit_cell_view = unit_cell_view
+        self.undo_stack = undo_stack
 
         # Get the fields from unit_cell_view for convenience
         # For the basis vectors, each reference has three spinboxes
@@ -161,8 +165,11 @@ class UnitCellController(QObject):
 
         # Button signals
         # New UC button
+        # self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
+        #     self._add_unit_cell
+        # )
         self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
-            self._add_unit_cell
+            self._handle_add_unit_cell
         )
         # New Site button
         self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(
@@ -418,7 +425,28 @@ class UnitCellController(QObject):
 
     # Unit Cell/Site/State Modification Functions
 
-    def _add_unit_cell(self):
+    # def _add_unit_cell(self):
+    #     """
+    #     Create a new unit cell with default properties and add it to the model.
+
+    #     Creates a unit cell with orthogonal basis vectors along
+    #     the x, y, and z axes, adds it to the unit_cells dictionary,
+    #     and selects it in the tree view.
+
+    #     The default unit cell has:
+    #     - Name: "New Unit Cell"
+    #     - Three orthogonal unit vectors along the x, y, and z axes
+    #     - No periodicity (0D system)
+    #     - No sites or states initially
+
+    #     After creation, the tree view is updated and the new unit cell is
+    #     automatically selected so the user can immediately edit its properties.
+    #     """
+    #     new_cell = mk_new_unit_cell()
+    #     self.unit_cells[new_cell.id] = new_cell
+
+    #     self._add_tree_item(new_cell.id)
+    def _add_unit_cell(self, new_cell: UnitCell):
         """
         Create a new unit cell with default properties and add it to the model.
 
@@ -435,10 +463,14 @@ class UnitCellController(QObject):
         After creation, the tree view is updated and the new unit cell is
         automatically selected so the user can immediately edit its properties.
         """
-        new_cell = mk_new_unit_cell()
+        # new_cell = mk_new_unit_cell()
         self.unit_cells[new_cell.id] = new_cell
 
         self._add_tree_item(new_cell.id)
+
+    def _handle_add_unit_cell(self):
+        cmd = AddUnitCellCommand(controller=self)
+        self.undo_stack.push(cmd)
 
     def _add_site(self):
         """
