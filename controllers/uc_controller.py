@@ -397,35 +397,6 @@ class UnitCellController(QObject):
                         "state": item_id,
                     }
                 )
-            # Since we are selecting a site or a state, we need to fill
-            # in the site radius and color properties.
-            # Note that the radius and color of the site are updated
-            # upon selection, not upon model change. The reason is that size
-            # and color are not the properties of a site per se, but rather
-            # visualization properties, stored in separate dictionaries.
-            # When a new site is selected, the site model (coordinates)
-            # might be exactly the same as for the previously
-            # selected site. Because the coordinate field update would not be
-            # triggered, the radius and color fields would contain wrong data
-            site_radius = self.unit_cells[
-                self.selection["unit_cell"]
-            ].site_sizes[self.selection["site"]]
-            self.R.setValue(site_radius)
-
-            site_color = self.unit_cells[
-                self.selection["unit_cell"]
-            ].site_colors[self.selection["site"]]
-
-            c = (
-                int(site_color[0] * 255),
-                int(site_color[1] * 255),
-                int(site_color[2] * 255),
-                int(site_color[3] * 255),
-            )  # Color in 0-255 component range
-
-            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-                f"background-color: rgba({c[0]}, {c[1]}, {c[2]}, {c[3]});"
-            )
 
     def _on_item_renamed(self, item: QStandardItem):
         """
@@ -761,6 +732,24 @@ class UnitCellController(QObject):
                         "c3": site.c3,
                     }
                 )
+
+                # Set the site radius field and the color swatch
+                site_radius = self.unit_cells[unit_cell_id].site_sizes[site_id]
+                self.R.setValue(site_radius)
+
+                site_color = self.unit_cells[unit_cell_id].site_colors[site_id]
+
+                c = (
+                    int(site_color[0] * 255),
+                    int(site_color[1] * 255),
+                    int(site_color[2] * 255),
+                    int(site_color[3] * 255),
+                )  # Color in 0-255 component range
+
+                self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                    f"background-color: rgba({c[0]}, {c[1]}, {c[2]}, {c[3]});"
+                )
+
                 # Show the SitePanel
                 self.unit_cell_view.site_stack.setCurrentWidget(
                     self.unit_cell_view.site_panel
@@ -788,7 +777,7 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_stack.setCurrentWidget(
                 self.unit_cell_view.site_info_label
             )
-        # Compine the update dictionaries and use the combination
+        # Combine the update dictionaries and use the combination
         # to update the model
         self.unit_cell_data.update(
             unit_cell_updated_data | site_updated_data | state_updated_data
