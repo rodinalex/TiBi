@@ -40,6 +40,8 @@ def unit_cell_data_init():
         "c1": 0.0,
         "c2": 0.0,
         "c3": 0.0,
+        "R": default_site_size,
+        "site_color": (255, 255, 255, 255),
         "state_name": "",
     }  # Values for the unit cell panel
 

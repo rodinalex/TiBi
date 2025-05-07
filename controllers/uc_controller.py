@@ -420,7 +420,7 @@ class UnitCellController(QObject):
                 int(site_color[0] * 255),
                 int(site_color[1] * 255),
                 int(site_color[2] * 255),
-                int(site_color[3]),
+                int(site_color[3] * 255),
             )  # Color in 0-255 component range
 
             self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
@@ -1010,7 +1010,7 @@ class UnitCellController(QObject):
                 f"background-color: {rgba};"
             )
 
-            # Update the color in the dictionary
+            # Update the color in the dictionary (0-1 scale)
             self.unit_cells[self.selection["unit_cell"]].site_colors[
                 self.selection["site"]
             ] = (
