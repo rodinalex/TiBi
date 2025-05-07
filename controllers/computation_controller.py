@@ -44,7 +44,7 @@ class ComputationController(QObject):
         results are stored in the band_structure model.
         """
 
-        special_points = self.models["bz_path"]
+        special_points = copy.deepcopy(self.models["bz_path"])
         num_points = self.computation_view.bands_panel.n_points_spinbox.value()
 
         # Get the selected unit cell
@@ -53,7 +53,9 @@ class ComputationController(QObject):
 
         # Check if the coupling is Hermitian and only then proceed to calculation
         if not unit_cell.is_hermitian():
-            self.status_updated.emit("Computation halted: the system is non-Hermitian")
+            self.status_updated.emit(
+                "Computation halted: the system is non-Hermitian"
+            )
             return
 
         # Get Hamiltonian function
@@ -73,7 +75,6 @@ class ComputationController(QObject):
             eigenvectors=eigenvectors,
         )
         self.models["band_structures"][uc_id] = band_structure
-
         # Update model
         self.models["active_band_structure"].update(
             {

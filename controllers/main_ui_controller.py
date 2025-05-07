@@ -1,28 +1,39 @@
-import os
 from functools import partial
+import os
+from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtGui import QUndoStack
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 import uuid
-from PySide6.QtCore import QObject, Slot, Signal
-from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 from resources.action_manager import ActionManager
 from src.serialization import serialize_unit_cells, deserialize_unit_cells
+from views.menu_bar_view import MenuBarView
+from views.main_toolbar_view import MainToolbarView
+from views.status_bar_view import StatusBarView
 
 
 class MainUIController(QObject):
     """
     Controller for the main UI components (menu bar, toolbar, status bar).
 
-    This controller connects the UI elements to the application logic and manages
-    the action manager that provides shared actions to the menu bar and toolbar.
+    This controller connects the UI elements to the application logic and
+    manages the action manager that provides shared actions to the menu
+    bar and toolbar.
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
-    project_refresh_requested = (
-        Signal()
-    )  # Request a UI refresh after creating a new project or loading an existing one
+    # Request a UI refresh after creating a new project
+    # or loading an existing one
+    project_refresh_requested = Signal()
 
     def __init__(
-        self, models, main_window, menu_bar_view, toolbar_view, status_bar_view
+        self,
+        models,
+        main_window,
+        menu_bar_view: MenuBarView,
+        toolbar_view: MainToolbarView,
+        status_bar_view: StatusBarView,
+        undo_stack: QUndoStack,
     ):
         """
         Initialize the main UI controller.
@@ -33,6 +44,7 @@ class MainUIController(QObject):
             menu_bar_view: MenuBarView instance
             toolbar_view: MainToolbarView instance
             status_bar_view: StatusBarView instance
+            undo_stack: QUndoStack instance
         """
         super().__init__()
         self.models = models
@@ -40,6 +52,7 @@ class MainUIController(QObject):
         self.menu_bar = menu_bar_view
         self.toolbar = toolbar_view
         self.status_bar = status_bar_view
+        self.undo_stack = undo_stack
 
         # Create the action manager
         self.action_manager = ActionManager(self)
@@ -59,23 +72,15 @@ class MainUIController(QObject):
             "new_project": self._handle_new_project,
             "open_project": self._handle_open_project,
             "import_project": self._handle_import_project,
-            "save_project": partial(self._handle_save_project, use_existing_path=True),
+            "save_project": partial(
+                self._handle_save_project, use_existing_path=True
+            ),
             "save_project_as": partial(
                 self._handle_save_project, use_existing_path=False
             ),
-            # "export": self._handle_export,
-            # "quit": self._handle_quit,
-            # # Edit actions
-            # "preferences": self._handle_preferences,
-            # # View actions
-            # "show_toolbar": self._handle_show_toolbar,
-            # "show_statusbar": self._handle_show_statusbar,
-            # # Computation actions
-            # "compute_bands": self._handle_compute_bands,
-            # "compute_dos": self._handle_compute_dos,
-            # # Help actions
-            # "about": self._handle_about,
-            # "help": self._handle_help,
+            # Undo/Redo actions
+            "undo": self.undo_stack.undo,
+            "redo": self.undo_stack.redo,
             # Unit cell actions
             "wireframe": self._handle_wireframe_toggle,
         }
@@ -90,16 +95,17 @@ class MainUIController(QObject):
         """
         Handle request to create a new project.
 
-        A new project clears the current project, so the user has to respond to a warning.
-        If the user confirms the creation of the project, the unit_cells dictionary is cleared,
-        the project_path is set to None and a request is set to reset all the models to the
-        pristine state.
+        A new project clears the current project, so the user has to
+        respond to a warning. If the user confirms the creation of the project,
+        the unit_cells dictionary is cleared, the project_path is set to None,
+        and a request is set to reset all the models to the pristine state.
         """
         self.update_status("Creating new project...")
         reply = QMessageBox.question(
             self.main_window,
             "Start New Project?",
-            "⚠️  This will clear your current project.\n\nAre you sure you want to continue?",
+            """⚠️  This will clear your current project.\n\n
+            Are you sure you want to continue?""",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -114,9 +120,11 @@ class MainUIController(QObject):
         """
         Handle request to open a project from a JSON file.
 
-        Opening a project clears the current project. The JSON data from the loaded file
-        is deserialized so that the unit_cell dictionary can be filled. The project path is updated
-        and a request is sent out to reset all other models to the pristine state (nothing selected).
+        Opening a project clears the current project.
+        The JSON data from the loaded file is deserialized so that the
+        unit_cell dictionary can be filled. The project path is updated
+        and a request is sent out to reset all other models
+        to the pristine state (nothing selected).
         """
         self.update_status("Opening project...")
 
@@ -139,7 +147,9 @@ class MainUIController(QObject):
                 self.project_refresh_requested.emit()
             except Exception as e:
                 QMessageBox.critical(
-                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                    self.main_window,
+                    "Error",
+                    f"Failed to open file:\n{str(e)}",
                 )
                 self.update_status("Failed to open project.")
 
@@ -148,10 +158,11 @@ class MainUIController(QObject):
         """
         Handle request to import a project.
 
-        Importing a project is similar to loading with the difference being that the
-        imported unit cells are added to the current project rather than replacing them.
-        To avoid UUID clashes (if one imports the same project twice), the newly-imported
-        unit cells have their UUID's regenerated.
+        Importing a project is similar to loading with the difference being
+        that the imported unit cells are added to the current project
+        rather than replacing them.
+        To avoid UUID clashes (if one imports the same project twice),
+        the newly-imported unit cells have their UUID's regenerated.
         """
         self.update_status("Importing project...")
 
@@ -169,7 +180,7 @@ class MainUIController(QObject):
                     json_string = f.read()
                 unit_cells = deserialize_unit_cells(json_string)
 
-                # Go over the newly imported unit cells and regenerate their UUID's
+                # Go over the imported unit cells and regenerate their UUID's
                 new_unit_cells = {}
                 for _, uc in unit_cells.items():
                     new_id = uuid.uuid4()
@@ -181,7 +192,9 @@ class MainUIController(QObject):
                 print(self.models["unit_cells"])
             except Exception as e:
                 QMessageBox.critical(
-                    self.main_window, "Error", f"Failed to open file:\n{str(e)}"
+                    self.main_window,
+                    "Error",
+                    f"Failed to open file:\n{str(e)}",
                 )
                 self.update_status("Failed to open project.")
 
@@ -190,10 +203,10 @@ class MainUIController(QObject):
         """
         Handle request to save the current project.
 
-        Save the current project to a JSON file. If the project already has a path,
-        depending on whether the user clicks on Save or Save As, the project is either
-        saved to that path or the user chooses a new file name. If there is no path,
-        Save acts as Save As.
+        Save the current project to a JSON file. If the project already has
+        a path, depending on whether the user clicks on Save or Save As,
+        the project is either saved to that path or the user chooses a
+        new file name. If there is no path, Save acts as Save As.
         """
         self.update_status("Saving project...")
         json_string = serialize_unit_cells(self.models["unit_cells"])
@@ -230,7 +243,6 @@ class MainUIController(QObject):
         self.wireframe_toggled.emit(is_checked)
 
     # Methods to be called from other controllers
-
     def update_status(self, message):
         """
         Display a message in the status bar.
@@ -239,69 +251,3 @@ class MainUIController(QObject):
             message: Message to display
         """
         self.status_bar.update_status(message)
-
-    # @Slot()
-    # def _handle_export(self):
-    #     """Handle request to export data."""
-    #     self.update_status("Exporting data...")
-    #     # Implementation will be added later
-
-    # @Slot()
-    # def _handle_quit(self):
-    #     """Handle request to quit the application."""
-    #     self.update_status("Quitting application...")
-    #     # Implementation will be added later
-
-    # @Slot()
-    # def _handle_preferences(self):
-    #     """Handle request to open preferences."""
-    #     self.update_status("Opening preferences...")
-    #     # Implementation will be added later
-
-    # @Slot(bool)
-    # def _handle_show_toolbar(self, checked):
-    #     """
-    #     Handle request to show/hide toolbar.
-
-    #     Args:
-    #         checked: Whether the action is checked or not
-    #     """
-    #     self.toolbar.setVisible(checked)
-    #     self.update_status(f"Toolbar {'shown' if checked else 'hidden'}")
-
-    # @Slot(bool)
-    # def _handle_show_statusbar(self, checked):
-    #     """
-    #     Handle request to show/hide status bar.
-
-    #     Args:
-    #         checked: Whether the action is checked or not
-    #     """
-    #     self.status_bar.setVisible(checked)
-    #     # Can't update status if it's hidden
-    #     if checked:
-    #         self.update_status("Status bar shown")
-
-    # @Slot()
-    # def _handle_compute_bands(self):
-    #     """Handle request to compute band structure."""
-    #     self.update_status("Computing bands...")
-    #     # Implementation will be added later
-
-    # @Slot()
-    # def _handle_compute_dos(self):
-    #     """Handle request to compute density of states."""
-    #     self.update_status("Computing density of states...")
-    #     # Implementation will be added later
-
-    # @Slot()
-    # def _handle_about(self):
-    #     """Handle request to show about dialog."""
-    #     self.update_status("About TiBi")
-    #     # Implementation will be added later
-
-    # @Slot()
-    # def _handle_help(self):
-    #     """Handle request to show help."""
-    #     self.update_status("Opening help...")
-    #     # Implementation will be added later

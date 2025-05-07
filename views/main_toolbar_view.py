@@ -1,5 +1,7 @@
 from PySide6.QtWidgets import QToolBar, QWidget, QLabel, QSpinBox, QHBoxLayout
 
+from resources.action_manager import ActionManager
+
 
 class MainToolbarView(QToolBar):
     """
@@ -9,7 +11,7 @@ class MainToolbarView(QToolBar):
     such as creating new unit cells, saving/loading projects, and accessing
     computation options.
 
-    It does not create actions itself, but receives them from an action manager.
+    It does not create actions itself, receiving them from an action manager.
     """
 
     def __init__(self):
@@ -19,7 +21,7 @@ class MainToolbarView(QToolBar):
         # Allow the toolbar to be moved by the user
         self.setMovable(True)
 
-    def set_actions(self, action_manager):
+    def set_actions(self, action_manager: ActionManager):
         """
         Set actions from the action manager to the toolbar.
 
@@ -32,28 +34,13 @@ class MainToolbarView(QToolBar):
         self.addAction(action_manager.file_actions["import_project"])
         self.addAction(action_manager.file_actions["save_project"])
 
-        # # Add separator
-        # self.addSeparator()
+        self.addSeparator()
 
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Export action
-        # self.addAction(action_manager.file_actions["export"])
-
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Compute Bands action
-        # self.addAction(action_manager.computation_actions["compute_bands"])
-
-        # # Add separator
-        # self.addSeparator()
-
-        # # Add Preferences action
-        # self.addAction(action_manager.edit_actions["preferences"])
+        self.addAction(action_manager.undo_redo_actions["undo"])
+        self.addAction(action_manager.undo_redo_actions["redo"])
 
         self.addSeparator()
+
         self.addAction(action_manager.unit_cell_actions["wireframe"])
         # Add the grouped spinboxes
         self.addWidget(self._create_uc_spinbox_group())
@@ -77,7 +64,7 @@ class MainToolbarView(QToolBar):
             spinbox.setRange(1, 10)
             spinbox.setFixedWidth(50)
             spinbox.setToolTip(f"Along v<sub>{ii+1}</sub>")
-            spinbox.setStatusTip(f"Number of unit cells")
+            spinbox.setStatusTip("Number of unit cells")
             spinbox.setEnabled(False)
 
         layout.addWidget(QLabel("n<sub>1</sub>:"))

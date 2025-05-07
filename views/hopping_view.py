@@ -1,36 +1,34 @@
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QStackedWidget,
-    QGridLayout,
-    QSizePolicy,
-    QFrame,
-    QScrollArea,
-    QPushButton,
-    QHBoxLayout,
-    QTableWidget,
-)
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QStackedWidget,
+    QTableWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class HoppingMatrix(QWidget):
     """
-    A grid of buttons representing possible hopping connections between quantum states.
+    A grid of buttons representing possible hopping connections between states.
 
     Each button in the grid represents a possible hopping between two states.
-    The rows represent the destination states and columns represent the source states.
-    Buttons are colored differently based on whether a hopping exists or not.
+    The rows (columns) represent the destination (source) states.
+    Buttons are colored differently based on whether a hopping exists or not,
+    and whether the hopping is Hermitian.
     """
 
     def __init__(self):
         super().__init__()
 
-        # Keep all the grid buttons as we will change their appearance based on the coupling
-        self.buttons = {}
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
 
         # Scrollable Area for Matrix
         self.scroll_area = QScrollArea()
@@ -52,6 +50,14 @@ class HoppingMatrix(QWidget):
 
 
 class HoppingTable(QWidget):
+    """
+    A table containing hoppings between the selected states.
+
+    Each row of the table describes a hopping and contains five columns.
+    The first three columns provide the displacements from the origin site
+    to the destination site in terms of the basis vectors. The last two
+    columns are the real and imaginary parts of the hopping term, respectively.
+    """
 
     def __init__(self):
         super().__init__()
@@ -98,15 +104,16 @@ class HoppingView(QWidget):
 
     This widget combines two main components:
     1. A matrix grid where each button represents a possible hopping connection
-       between two quantum states (rows are destination states, columns are source states)
-    2. A detailed table for editing specific hopping parameters when a connection
+       between two states [rows (columns) are destination (target) states]
+    2. A table for editing specific hopping parameters when a connection
        is selected in the matrix
 
-    The view uses a stacked widget approach to show different panels based on the
-    current selection state (no unit cell, no states, or states selected).
+    The view uses a stacked widget approach to show different panels based on
+    the current selection state (no unit cell, no states, or states selected).
 
     This component follows the MVC pattern and doesn't contain business logic.
-    Instead, it provides UI elements that the controller can connect to and manipulate.
+    Instead, it provides UI elements that the controller can connect to
+    and manipulate.
     """
 
     def __init__(self):
@@ -131,6 +138,7 @@ class HoppingView(QWidget):
         self.panel = QWidget()
         panel_layout = QVBoxLayout(self.panel)
 
+        # A stack that hides the table if no state pair is selected
         self.table_stack = QStackedWidget()
         self.table_stack.addWidget(self.table_info_label)
         self.table_stack.addWidget(self.table_panel)
@@ -138,7 +146,8 @@ class HoppingView(QWidget):
         panel_layout.addWidget(self.matrix_panel, stretch=3)
         panel_layout.addWidget(self.table_stack, stretch=2)
 
-        # A stack that hides the main panel if no unit cell is selected/unit cell has no states
+        # A stack that hides the main panel if no unit cell is selected or
+        # the selected unit cell has no states
         self.panel_stack = QStackedWidget()
         self.panel_stack.addWidget(self.info_label)
         self.panel_stack.addWidget(self.panel)

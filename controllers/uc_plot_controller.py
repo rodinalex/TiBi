@@ -1,14 +1,14 @@
-import uuid
-from PySide6.QtCore import QObject
-from src.tibitypes import UnitCell
-from models.data_models import DataModel
 from itertools import product
-from views.uc_plot_view import UnitCellPlotView
-import pyqtgraph.opengl as gl
-
-from resources.constants import default_site_scaling
-from resources.colors import CF_yellow
 import numpy as np
+from PySide6.QtCore import QObject
+import pyqtgraph.opengl as gl
+from typing import Tuple
+import uuid
+
+from models.data_models import DataModel
+from resources.constants import CF_yellow, default_site_scaling
+from src.tibitypes import UnitCell
+from views.uc_plot_view import UnitCellPlotView
 
 
 class UnitCellPlotController(QObject):
@@ -16,9 +16,9 @@ class UnitCellPlotController(QObject):
     Controller for the unit cell 3D visualization.
 
     This controller manages the 3D visualization of unit cells, handling the
-    rendering of unit cell wireframes, site positions, and periodic repetitions.
-    It observes changes to the selected unit cell and its properties, updating
-    the visualization in response to any modifications.
+    rendering of unit cell wireframes, site positions, and periodic
+    repetitions. It observes changes to the selected unit cell and its
+    properties, updating the visualization in response to any modifications.
 
     The controller provides functionality for:
     1. Visualizing the unit cell as a wireframe parallelepiped
@@ -41,7 +41,8 @@ class UnitCellPlotController(QObject):
 
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected unit cell, site, and state
+            selection: Model tracking the currently selected
+            unit cell, site, and state
             uc_plot_view: The view component for the 3D visualization
         """
         super().__init__()
@@ -50,7 +51,7 @@ class UnitCellPlotController(QObject):
         self.uc_plot_view = uc_plot_view
 
         # Internal controller state
-        self.unit_cell = None
+        self.unit_cell = None  # Unit cell being plotted
         self.uc_plot_items = {}  # Dictionary to store plot items
 
     def update_unit_cell(self, wireframe_shown, n1, n2, n3):
@@ -64,32 +65,49 @@ class UnitCellPlotController(QObject):
         4. Updates the coordinate axes to match the unit cell basis vectors
 
         Args:
-            unit_cell: The UnitCell object to display, or None to clear the view
+            unit_cell: UnitCell object to display, or None to clear the view
+            wireframe_shown: bool denoting whether the primitive vector
+            wireframe is drawn
+            n1: number of unit cell repetitions along the 1st basis vector
+            n2: number of unit cell repetitions along the 2nd basis vector
+            n3: number of unit cell repetitions along the 3d basis vector
         """
         uc_id = self.selection.get("unit_cell")
-        # Clear previous plot items except axes and grid
+        # Clear previous plot items except axes
         for key, item in list(self.uc_plot_items.items()):
             self.uc_plot_view.view.removeItem(item)
             del self.uc_plot_items[key]
 
-        if uc_id == None:
+        if uc_id is None:
             return
-        self.unit_cell = self.unit_cells[uc_id]
 
+        self.unit_cell = self.unit_cells[uc_id]
         self.n1, self.n2, self.n3 = n1, n2, n3
 
         # Collect line vertices
-        line_vertices = []
-        for jj, kk, ll in product(range(self.n1), range(self.n2), range(self.n3)):
-            line_vertices.extend(self._get_unit_cell_edges(jj, kk, ll))
+        unique_edges = (
+            set()
+        )  # Unique edges to avoid duplication from neighboring unit cells
+        # Loop over the unit cell indices
+        for jj, kk, ll in product(
+            range(self.n1), range(self.n2), range(self.n3)
+        ):
+            # List of tuples with vertices defining edges
+            edges = self._get_unit_cell_edges(jj, kk, ll)
+            for edge in edges:
+                unique_edges.add(edge)  # Keep only unique edges
             self._plot_sites(jj, kk, ll)
 
+        # Convert edges to line vertices
+        line_vertices = []
+        for v1, v2 in unique_edges:
+            line_vertices.extend([v1, v2])
         # Create the wireframe using GLLinePlotItem
         unit_cell_edges = gl.GLLinePlotItem(
             pos=line_vertices, color="w", width=1, mode="lines"  # White color
         )
 
-        # Shift the unit cells so that they are centered aroudn the origin
+        # Shift the unit cells so that they are centered around the origin
         shift = (
             -(
                 self.n1 * self.unit_cell.v1.as_array()
@@ -98,19 +116,29 @@ class UnitCellPlotController(QObject):
             )
             / 2
         )
+
         unit_cell_edges.translate(shift[0], shift[1], shift[2])
+
+        # Plot the wireframe if requested
         if wireframe_shown:
             self.uc_plot_view.view.addItem(unit_cell_edges)
             self.uc_plot_items["unit_cell_edges"] = unit_cell_edges
 
     def _plot_sites(self, a1, a2, a3):
         """
-        Plot all sites (atoms) within the unit cell as spheres.
+        Plot all sites (atoms) within the unit cell at
+        a1*v1 + a2*v2 + a3*v3 as spheres.
 
         Each site is represented as a colored sphere positioned according to
         its fractional coordinates within the unit cell. Sites can be selected
-        and will change color when highlighted. Each sphere stores a reference
-        to its corresponding site ID for interaction.
+        and change size when highlighted. Spheres also store the site id
+        to draw the coupling links when pairs of states are selected from
+        the hopping panel.
+
+        Args:
+            a1: integer multiple of v1
+            a2: integer multiple of v2
+            a3: integer multiple of v3
         """
         if not self.unit_cell or not self.unit_cell.sites:
             return
@@ -123,17 +151,21 @@ class UnitCellPlotController(QObject):
         # Plot each site as a sphere
         for site_id, site in self.unit_cell.sites.items():
             # Calculate the position in Cartesian coordinates
-            pos = (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
+            pos = (
+                (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
+            )
             sphere_color = self.unit_cell.site_colors[site_id]
 
             sphere_radius = (
                 self.unit_cell.site_sizes[site_id] * default_site_scaling
-                if site_id == self.selection["site"]
+                if site_id == self.selection.get("site")
                 else self.unit_cell.site_sizes[site_id]
             )
-            # Create a sphere for the site. The color needs to be given in 0 to 1 scale for RGB
+            # Create a sphere for the site.
             sphere = gl.GLMeshItem(
-                meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=sphere_radius),
+                meshdata=gl.MeshData.sphere(
+                    rows=10, cols=10, radius=sphere_radius
+                ),
                 smooth=True,
                 color=(
                     sphere_color[0],
@@ -144,7 +176,8 @@ class UnitCellPlotController(QObject):
                 shader="shaded",
                 glOptions="translucent",
             )
-
+            # Shift the objects so that the illustration is centered
+            # at the origin
             shift = -(self.n1 * v1 + self.n2 * v2 + self.n3 * v3) / 2 + pos
             sphere.translate(shift[0], shift[1], shift[2])
 
@@ -154,13 +187,19 @@ class UnitCellPlotController(QObject):
             self.uc_plot_view.view.addItem(sphere)
             self.uc_plot_items[f"site_{site_id}_{a1}_{a2}_{a3}"] = sphere
 
-    def _get_unit_cell_edges(self, a1, a2, a3):
+    def _get_unit_cell_edges(
+        self, a1, a2, a3
+    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
         """
-        Plot the unit cell as a wireframe parallelepiped.
+        Get the edges of the unit cell parallelepiped.
 
-        Creates a 3D wireframe representation of the unit cell using the three
-        basis vectors to define the shape. The parallelepiped is drawn as a set
-        of 12 lines connecting 8 vertices in 3D space.
+        Args:
+            a1: integer multiple of v1
+            a2: integer multiple of v2
+            a3: integer multiple of v3
+
+        Returns:
+            A list of (V1, V2), where V1 and V2 are vertex coordinate tuples.
         """
         if not self.unit_cell:
             return
@@ -202,33 +241,33 @@ class UnitCellPlotController(QObject):
             ]
         )
         # Convert edges into line segments
-        line_vertices = []
+        vertex_tuples = []
         for edge in edges:
-            line_vertices.append(verts[edge[0]])
-            line_vertices.append(verts[edge[1]])
+            V1 = tuple(verts[edge[0]])
+            V2 = tuple(verts[edge[1]])
+            vertex_tuples.append(tuple(sorted((V1, V2))))
 
-        # Convert to NumPy array
-        line_vertices = np.array(line_vertices)
-
-        return line_vertices
+        return vertex_tuples
 
     def update_hopping_segments(self, pair_selection):
         """
-        Draw segments to indicate hopping connections. When a pair is selected from
-        the hopping matrix, this function draws lines starting from the site hosting the source state
-        inside the unit cell around (0,0,0) to all the sites hosting the target sites.
+        Draw segments to indicate hopping connections.
+        When a pair is selected from the hopping matrix, this function
+        draws lines starting from the site hosting the source state
+        inside the unit cell around (0,0,0) to all the sites hosting
+        the target sites.
 
-        Args: a tuple of (site_name, site_id, state_name, state_id) objects passed from the hopping controller.
+        Args: a tuple of (site_name, site_id, state_name, state_id)
+        objects passed from the hopping controller.
         """
 
         # Clear previous hopping segments
-
         hopping_segments = self.uc_plot_items.get("hopping_segments")
         if hopping_segments is not None:
             self.uc_plot_view.view.removeItem(hopping_segments)
             del self.uc_plot_items["hopping_segments"]
 
-        # s1 and s2 are tuples (site_name, state_name, state_id)
+        # s1 and s2 are tuples (site_name, site_id, state_name, state_id)
         s1, s2 = pair_selection
         hoppings = self.unit_cell.hoppings.get((s1[3], s2[3]))
         if hoppings is None:
@@ -244,27 +283,24 @@ class UnitCellPlotController(QObject):
 
         # Get the location of the target sites in the (0,0,0) unit cell
         target = self.unit_cell.sites[s1[1]]
-        target_pos = (
-            target.c1 * self.unit_cell.v1.as_array()
-            + target.c2 * self.unit_cell.v2.as_array()
-            + target.c3 * self.unit_cell.v3.as_array()
-        )
+        target_pos = target.c1 * v1 + target.c2 * v2 + target.c3 * v3
 
         segments = []
         for (d1, d2, d3), _ in hoppings:
             target = target_pos + d1 * v1 + d2 * v2 + d3 * v3
             segments.append(source_pos)
             segments.append(target)
-        segment_array = np.array(segments, dtype=np.float32)
 
         hopping_segments = gl.GLLinePlotItem(
-            pos=segment_array,
+            pos=segments,
             color=CF_yellow,
             width=5,
             mode="lines",
         )
 
-        shift = (self.n1 % 2) * v1 / 2 + (self.n2 % 2) * v2 / 2 + (self.n3 % 2) * v3 / 2
+        shift = (
+            (self.n1 % 2) * v1 + (self.n2 % 2) * v2 + (self.n3 % 2) * v3
+        ) / 2
 
         hopping_segments.translate(-shift[0], -shift[1], -shift[2])
 

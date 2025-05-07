@@ -51,7 +51,9 @@ class DataModel(UserDict):
         previous = self.get(key)  # Get the existing value if any
         if val != previous:  # Only proceed if there's an actual change
             super().__setitem__(key, val)  # Set the value in the dictionary
-            if not self._updating:  # Only emit if not in the middle of an update
+            if (
+                not self._updating
+            ):  # Only emit if not in the middle of an update
                 self.signals.updated.emit()
 
     def update(self, d):

@@ -1,20 +1,21 @@
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QKeySequence, QShortcut, QStandardItemModel
 from PySide6.QtWidgets import (
+    QButtonGroup,
+    QDoubleSpinBox,
+    QGridLayout,
     QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QRadioButton,
+    QStackedWidget,
+    QStyledItemDelegate,
+    QTreeView,
     QVBoxLayout,
     QWidget,
-    QStackedWidget,
-    QLabel,
-    QButtonGroup,
-    QRadioButton,
-    QPushButton,
-    QDoubleSpinBox,
-    QTreeView,
-    QGridLayout,
-    QStyledItemDelegate,
 )
-from PySide6.QtGui import QStandardItemModel, QKeySequence, QShortcut
-from PySide6.QtCore import Qt, Signal, QEvent
-from resources.colors import CF_vermillion, CF_green, CF_sky
+
+from resources.constants import CF_vermillion, CF_green, CF_sky
 from resources.ui_elements import divider_line
 
 
@@ -23,6 +24,7 @@ class UnitCellPanel(QWidget):
     Form panel for editing unit cell properties.
 
     This panel provides a form interface for editing a unit cell's properties:
+    - System dimensionality
     - Three basis vectors (v1, v2, v3) with x, y, z components
 
     The panel uses a reactive data binding approach, where UI components are
@@ -33,22 +35,22 @@ class UnitCellPanel(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Layout
+        # Main layout
         layout = QVBoxLayout(self)
-        # layout.setContentsMargins(1, 1, 1, 1)
 
-        grid_layout = QGridLayout()  # For basis vector creation
+        # Layout for basis vectors
+        grid_layout = QGridLayout()
 
         panel_header = QLabel("Unit Cell Parameters")
         panel_header.setAlignment(Qt.AlignCenter)
 
-        basis_header = QLabel("Basis Vectors")
-        basis_header.setAlignment(Qt.AlignCenter)
-
         dimensionality_header = QLabel("Dimensionality")
         dimensionality_header.setAlignment(Qt.AlignCenter)
 
-        # Radio buttons
+        basis_header = QLabel("Basis Vectors")
+        basis_header.setAlignment(Qt.AlignCenter)
+
+        # Dimensionality radio buttons
         self.radio0D = QRadioButton("0")
         self.radio1D = QRadioButton("1")
         self.radio2D = QRadioButton("2")
@@ -60,25 +62,28 @@ class UnitCellPanel(QWidget):
         self.radio_group.addButton(self.radio2D, id=2)
         self.radio_group.addButton(self.radio3D, id=3)
 
-        # Add Site and Reduce UC buttons
-        button_layout = QHBoxLayout()
-        self.new_site_btn = QPushButton("+ Site")
-        self.reduce_btn = QPushButton("Reduce")
-        button_layout.addWidget(self.new_site_btn)
-        button_layout.addWidget(self.reduce_btn)
-
         radio_layout = QHBoxLayout()
         radio_layout.addWidget(self.radio0D)
         radio_layout.addWidget(self.radio1D)
         radio_layout.addWidget(self.radio2D)
         radio_layout.addWidget(self.radio3D)
 
+        # Add Site and Reduce UC (LLL algorithm) buttons
+        button_layout = QHBoxLayout()
+        self.new_site_btn = QPushButton("+ Site")
+        self.reduce_btn = QPushButton("Reduce")
+        button_layout.addWidget(self.new_site_btn)
+        button_layout.addWidget(self.reduce_btn)
+
+        # Assemble the panel
+
         layout.addWidget(panel_header)
         layout.addWidget(dimensionality_header)
         layout.addLayout(radio_layout)
         layout.addLayout(grid_layout)
-
         layout.addLayout(button_layout)
+
+        # Populate the basis vector grid
         grid_layout.addWidget(basis_header, 0, 1, 1, 3)
 
         # Function to create a row with (x, y, z) input fields
@@ -93,16 +98,18 @@ class UnitCellPanel(QWidget):
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
 
+            # Vector components are stacked vertically
             grid_layout.addWidget(x, 2, n)
             grid_layout.addWidget(y, 3, n)
             grid_layout.addWidget(z, 4, n)
             return (x, y, z)
 
-        # Create vector input rows
+        # Create vector input columns
         self.v1 = create_vector_column(1)
         self.v2 = create_vector_column(2)
         self.v3 = create_vector_column(3)
 
+        # Vector labels go above the coordinate columns
         v1_label = QLabel("v<sub>1</sub>")
         v1_label.setAlignment(Qt.AlignCenter)
         v2_label = QLabel("v<sub>2</sub>")
@@ -114,15 +121,19 @@ class UnitCellPanel(QWidget):
         grid_layout.addWidget(v2_label, 1, 2)
         grid_layout.addWidget(v3_label, 1, 3)
 
-        # Create a coordinate label row
+        # Create a coordinate label column to the left of coordinate columns
         for ii, (text, color) in enumerate(
             zip(["x", "y", "z"], [CF_vermillion, CF_green, CF_sky]), start=1
         ):
             label = QLabel(text)
             label.setAlignment(Qt.AlignCenter)
-            label.setStyleSheet(
-                f"color: rgba({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)}, {color[3]});"
-            )
+            c = (
+                int(color[0] * 255),
+                int(color[1] * 255),
+                int(color[2] * 255),
+                int(color[3]),
+            )  # Color in 0-255 component range
+            label.setStyleSheet(f"color: rgba({c[0]},{c[1]},{c[2]},{c[3]});")
             grid_layout.addWidget(label, 1 + ii, 0)
 
         grid_layout.setVerticalSpacing(2)
@@ -133,7 +144,8 @@ class SitePanel(QWidget):
     Form panel for editing site properties.
 
     This panel provides a form interface for editing a site's properties:
-    - Name
+    - Radius for the site marker
+    - Color for the site marker
     - Fractional coordinates (c1, c2, c3) within the unit cell
 
     It uses reactive data binding to keep the UI and model in sync.
@@ -141,6 +153,9 @@ class SitePanel(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        # Main layout
+        layout = QVBoxLayout(self)
 
         panel_header = QLabel("Site Parameters")
         panel_header.setAlignment(Qt.AlignCenter)
@@ -188,9 +203,7 @@ class SitePanel(QWidget):
         grid_layout.setVerticalSpacing(2)
 
         self.new_state_btn = QPushButton("+ State")
-        # self.new_state_btn.setFixedSize(60, 30)
-        # Main layout
-        layout = QVBoxLayout(self)
+
         layout.addWidget(panel_header)
         layout.addLayout(appearance_layout)
         layout.addWidget(header)
@@ -200,10 +213,11 @@ class SitePanel(QWidget):
 
 class EnterOnlyDelegate(QStyledItemDelegate):
     """
-    A delegate that requires the user to commit changes to tree item names by pressing "Enter".
-    Clicking away/defocusing resets the tree item name to its pre-edit form. The purpose is to
-    handle the Qt default behavior, where defocusing keeps the new display name in the tree
-    but does not send an updated signal so that the data can be updated internally.
+    A delegate that requires the user to commit changes to tree item names by
+    pressing "Enter". Clicking away/defocusing resets the tree item name to
+    its pre-edit form. The purpose is to handle the Qt default behavior,
+    where defocusing keeps the new display name in the tree but does not send
+    an updated signal so that the data can be updated internally.
     """
 
     def eventFilter(self, editor, event):
@@ -223,7 +237,9 @@ class EnterOnlyDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
-        editor.setProperty("originalText", index.data())  # Store original value
+        editor.setProperty(
+            "originalText", index.data()
+        )  # Store original value
         return editor
 
 
@@ -248,12 +264,12 @@ class TreeViewPanel(QWidget):
     - Keyboard shortcuts for deletion (Del and Backspace)
     - Signal emission on deletion requests
 
-    This panel is designed to work with a controller that will handle the actual
+    This panel is designed to work with a controller that will handle the
     data modifications in response to UI actions.
     """
 
     # Define signals
-    delete = Signal()
+    delete_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -282,27 +298,34 @@ class TreeViewPanel(QWidget):
         button_layout.addWidget(self.new_uc_btn)
         button_layout.addWidget(self.delete_btn)
 
-        # Layout setup
+        # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.tree_view)
         layout.addLayout(button_layout)
 
         # Set up Delete shortcut
         self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
-        self.delete_shortcut.activated.connect(lambda: self.delete.emit())
+        self.delete_shortcut.activated.connect(
+            lambda: self.delete_requested.emit()
+        )
 
         # Add Backspace as an alternative shortcut
-        self.backspace_shortcut = QShortcut(QKeySequence("Backspace"), self.tree_view)
-        self.backspace_shortcut.activated.connect(lambda: self.delete.emit())
+        self.backspace_shortcut = QShortcut(
+            QKeySequence("Backspace"), self.tree_view
+        )
+        self.backspace_shortcut.activated.connect(
+            lambda: self.delete_requested.emit()
+        )
 
 
 class UnitCellView(QWidget):
     """
     Main UI component for managing unit cells, sites, and states.
 
-    This widget combines a tree view of the unit cell hierarchy with dynamically
-    swappable panels for editing properties of the selected tree node. It handles
-    the data models and coordinates interactions between the tree view and detail panels.
+    This widget combines a tree view of the unit cell hierarchy with
+    dynamically swappable panels for editing properties of the selected
+    tree node. It handles the data models and coordinates interactions
+    between the tree view and detail panels.
 
     The UI consists of several main parts:
     1. Tree view panel showing the hierarchy of unit cells, sites, and states
@@ -315,12 +338,14 @@ class UnitCellView(QWidget):
     - Providing controls for user interaction
     - Emitting signals when user actions occur
 
-    However, it doesn't contain business logic - that's handled by the controller,
-    which connects to these signals and interacts with the data models.
+    However, it doesn't contain business logic - that's handled by the
+    controller, which connects to these signals and interacts with
+    the data models.
     """
 
     def __init__(self):
         super().__init__()
+        # Main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(1, 1, 1, 1)
 
@@ -328,7 +353,6 @@ class UnitCellView(QWidget):
         self.unit_cell_panel = UnitCellPanel()
         self.site_panel = SitePanel()
         self.tree_view_panel = TreeViewPanel()
-        # self.button_panel = ButtonPanel()
 
         # Info labels
         self.uc_info_label = QLabel("Add/Select a Unit Cell")
@@ -347,19 +371,18 @@ class UnitCellView(QWidget):
         self.site_stack.addWidget(self.site_panel)
 
         # Create the interface
-
+        # Top panen contains the tree view
         top_panel = QVBoxLayout()
         top_panel.addWidget(self.tree_view_panel, stretch=4)
 
-        # Basis vectors and fractional coordinates
+        # Bottom panel contains the unit cell/state editable fields
         bottom_panel = QVBoxLayout()
-
         bottom_panel.addWidget(self.uc_stack, stretch=2)
         bottom_panel.addWidget(divider_line())
         bottom_panel.addWidget(self.site_stack, stretch=1)
 
         layout.setSpacing(0)
 
-        layout.addLayout(top_panel, stretch=2)
+        layout.addLayout(top_panel)
         layout.addWidget(divider_line())
         layout.addLayout(bottom_panel)

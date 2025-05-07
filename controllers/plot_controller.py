@@ -2,10 +2,10 @@ from PySide6.QtCore import QObject
 from models.data_models import AlwaysNotifyDataModel
 import numpy as np
 
-from views.bands_plot_view import BandStructurePlotView
+from views.plot_view import PlotView
 
 
-class BandStructurePlotController(QObject):
+class PlotController(QObject):
     """
     Controller for the band structure plotting view.
 
@@ -18,7 +18,7 @@ class BandStructurePlotController(QObject):
     def __init__(
         self,
         band_structure: AlwaysNotifyDataModel,
-        band_plot_view: BandStructurePlotView,
+        band_plot_view: PlotView,
     ):
         """
         Initialize the band structure plot controller.
@@ -42,7 +42,6 @@ class BandStructurePlotController(QObject):
         It retrieves the current k-path and band data, transforms them into
         a format suitable for plotting, and updates the matplotlib figure.
         """
-
         k_path = self.band_structure.get("k_path")
         bands = self.band_structure.get("bands")
         special_points = self.band_structure.get("special_points")

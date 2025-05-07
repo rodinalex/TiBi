@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import uuid
-from typing import Tuple, List, Dict, Any
+from typing import Tuple
 import numpy as np
 from sympy.polys.domains import ZZ
 from sympy.polys.matrices import DM
@@ -80,7 +80,9 @@ class Site:
     c1: float  # Fractional coordinate along the first basis vector (0-1)
     c2: float  # Fractional coordinate along the second basis vector (0-1)
     c3: float  # Fractional coordinate along the third basis vector (0-1)
-    states: dict[uuid.UUID, State] = field(default_factory=dict)  # States at this site
+    states: dict[uuid.UUID, State] = field(
+        default_factory=dict
+    )  # States at this site
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
 
@@ -183,7 +185,9 @@ class UnitCell:
         Returns:
             list[np.ndarray]: List of 3D reciprocal vectors (0 to 3 items depending on periodicity)
         """
-        basis_vectors = [v for v in [self.v1, self.v2, self.v3] if v.is_periodic]
+        basis_vectors = [
+            v for v in [self.v1, self.v2, self.v3] if v.is_periodic
+        ]
         num_periodic = len(basis_vectors)
 
         if num_periodic == 0:
@@ -197,8 +201,18 @@ class UnitCell:
         elif num_periodic == 2:
             a1, a2 = [v.as_array() for v in basis_vectors]
             normal = np.cross(a1, a2)
-            G1 = 2 * np.pi * np.cross(normal, a2) / np.dot(a1, np.cross(a2, normal))
-            G2 = 2 * np.pi * np.cross(a1, normal) / np.dot(a2, np.cross(normal, a1))
+            G1 = (
+                2
+                * np.pi
+                * np.cross(normal, a2)
+                / np.dot(a1, np.cross(a2, normal))
+            )
+            G2 = (
+                2
+                * np.pi
+                * np.cross(a1, normal)
+                / np.dot(a2, np.cross(normal, a1))
+            )
             return [G1, G2]
 
         elif num_periodic == 3:
@@ -249,7 +263,9 @@ class UnitCell:
         # Rebuild full list with reduced periodic vectors in original order
         reduced_basis = []
         # Rescale
-        reduced_vectors = [np.array(vec, dtype=float) / scale for vec in reduced]
+        reduced_vectors = [
+            np.array(vec, dtype=float) / scale for vec in reduced
+        ]
 
         jj = 0  # Index for reduced_vectors
         for ii in range(3):
@@ -302,7 +318,9 @@ class UnitCell:
                 - bz_faces (list): List where each element contains coordinates of points
                   defining a BZ boundary (edge in 2D, face in 3D)
         """
-        n_neighbors = 1  # Number of neighboring reciprocal lattice points to consider
+        n_neighbors = (
+            1  # Number of neighboring reciprocal lattice points to consider
+        )
         ranges = range(-n_neighbors, n_neighbors + 1)
 
         reciprocal_vectors = self.reciprocal_vectors()

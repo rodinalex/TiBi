@@ -83,11 +83,15 @@ class HoppingController(QObject):
         self.selection.signals.updated.connect(self._update_unit_cell)
         self.button_clicked.connect(self._update_pair_selection)
 
-        self.hopping_view.table_panel.add_row_btn.clicked.connect(self._add_empty_row)
+        self.hopping_view.table_panel.add_row_btn.clicked.connect(
+            self._add_empty_row
+        )
         self.hopping_view.table_panel.remove_row_btn.clicked.connect(
             self._remove_selected_coupling
         )
-        self.hopping_view.table_panel.save_btn.clicked.connect(self._save_couplings)
+        self.hopping_view.table_panel.save_btn.clicked.connect(
+            self._save_couplings
+        )
         self.hoppings_changed.connect(self._handle_matrix_interaction)
 
     def _update_unit_cell(self):
@@ -109,7 +113,9 @@ class HoppingController(QObject):
         self.hopping_view.table_panel.table_title.setText("")
         # If no unit cell selected, hide the panels
         if uc_id == None:
-            self.hopping_view.panel_stack.setCurrentWidget(self.hopping_view.info_label)
+            self.hopping_view.panel_stack.setCurrentWidget(
+                self.hopping_view.info_label
+            )
 
         else:
             uc = self.unit_cells[uc_id]
@@ -126,7 +132,9 @@ class HoppingController(QObject):
                     self.hopping_view.info_label
                 )
             else:
-                self.hopping_view.panel_stack.setCurrentWidget(self.hopping_view.panel)
+                self.hopping_view.panel_stack.setCurrentWidget(
+                    self.hopping_view.panel
+                )
             self.state_info = new_info
 
         self._refresh_matrix()
@@ -153,7 +161,9 @@ class HoppingController(QObject):
                 btn.setFixedSize(20, 20)
                 btn.setContextMenuPolicy(Qt.CustomContextMenu)
                 btn.customContextMenuRequested.connect(
-                    lambda _, row=ii, col=jj, b=btn: self._add_context_menu(b, row, col)
+                    lambda _, row=ii, col=jj, b=btn: self._add_context_menu(
+                        b, row, col
+                    )
                 )
                 # Apply the default style (no hopping initially)
                 self._apply_button_style(btn, False)
@@ -164,7 +174,9 @@ class HoppingController(QObject):
                 # Show the state and site names.
                 # From second quantization, the hopping goes FROM column INTO row
                 # (columns multiply annihilation operators, rows multiply creation)
-                btn.setToolTip(f"{state2[0]}.{state2[2]} → {state1[0]}.{state1[2]}")
+                btn.setToolTip(
+                    f"{state2[0]}.{state2[2]} → {state1[0]}.{state1[2]}"
+                )
 
                 # Button click handler implementation:
                 # 1. Qt buttons can only connect to argumentless functions
@@ -178,13 +190,17 @@ class HoppingController(QObject):
                     )
                 )
 
-                self.hopping_view.matrix_panel.grid_layout.addWidget(btn, ii, jj)
+                self.hopping_view.matrix_panel.grid_layout.addWidget(
+                    btn, ii, jj
+                )
                 self.buttons[(ii, jj)] = btn
 
             # Update button colors based on existing hoppings
             self._refresh_button_colors()
 
-    def _apply_button_style(self, button: QPushButton, has_hopping, hermitian=False):
+    def _apply_button_style(
+        self, button: QPushButton, has_hopping, hermitian=False
+    ):
         """
         Apply the appropriate style to a button based on whether it has hoppings.
 
@@ -244,7 +260,9 @@ class HoppingController(QObject):
         """
         # Store the UUIDs of the selected states
         self.pair_selection = [s1, s2]
-        self.hopping_view.table_stack.setCurrentWidget(self.hopping_view.table_panel)
+        self.hopping_view.table_stack.setCurrentWidget(
+            self.hopping_view.table_panel
+        )
 
         # Retrieve existing hopping terms between these states, or empty list if none exist
         self.state_coupling = self.hopping_data.get((s1[3], s2[3]), [])
@@ -296,7 +314,9 @@ class HoppingController(QObject):
         box.setButtonSymbols(QSpinBox.NoButtons)
         return box
 
-    def _make_doublespinbox(self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3):
+    def _make_doublespinbox(
+        self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3
+    ):
         box = QDoubleSpinBox()
         box.setRange(minimum, maximum)
         box.setDecimals(decimals)
@@ -332,7 +352,9 @@ class HoppingController(QObject):
         selected_rows = set()
 
         # Get the selection model from the table
-        selection_model = self.hopping_view.table_panel.hopping_table.selectionModel()
+        selection_model = (
+            self.hopping_view.table_panel.hopping_table.selectionModel()
+        )
 
         # Get the selected rows
         selected_indexes = selection_model.selectedRows()
@@ -357,15 +379,27 @@ class HoppingController(QObject):
         """
         new_couplings = {}
         # Extract values from each row in the table
-        for row in range(self.hopping_view.table_panel.hopping_table.rowCount()):
+        for row in range(
+            self.hopping_view.table_panel.hopping_table.rowCount()
+        ):
             # Get displacement vector components (integers)
-            d1 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 0).value()
-            d2 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 1).value()
-            d3 = self.hopping_view.table_panel.hopping_table.cellWidget(row, 2).value()
+            d1 = self.hopping_view.table_panel.hopping_table.cellWidget(
+                row, 0
+            ).value()
+            d2 = self.hopping_view.table_panel.hopping_table.cellWidget(
+                row, 1
+            ).value()
+            d3 = self.hopping_view.table_panel.hopping_table.cellWidget(
+                row, 2
+            ).value()
 
             # Get complex amplitude components (floats)
-            re = self.hopping_view.table_panel.hopping_table.cellWidget(row, 3).value()
-            im = self.hopping_view.table_panel.hopping_table.cellWidget(row, 4).value()
+            re = self.hopping_view.table_panel.hopping_table.cellWidget(
+                row, 3
+            ).value()
+            im = self.hopping_view.table_panel.hopping_table.cellWidget(
+                row, 4
+            ).value()
 
             # Create the complex amplitude
             amplitude = np.complex128(re + im * 1j)
@@ -384,10 +418,12 @@ class HoppingController(QObject):
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
         # Update the data model with the new couplings
-        self.hopping_data[(self.pair_selection[0][3], self.pair_selection[1][3])] = (
-            merged_couplings
+        self.hopping_data[
+            (self.pair_selection[0][3], self.pair_selection[1][3])
+        ] = merged_couplings
+        self.unit_cells[self.selection["unit_cell"]].hoppings = (
+            self.hopping_data
         )
-        self.unit_cells[self.selection["unit_cell"]].hoppings = self.hopping_data
 
         # Refresh the table with the new data
         self.state_coupling = merged_couplings
@@ -414,7 +450,9 @@ class HoppingController(QObject):
 
         # Clear hoppings
         action_clear_hoppings = QAction("Clear hoppings", self)
-        action_clear_hoppings.triggered.connect(lambda: self._delete_coupling(ii, jj))
+        action_clear_hoppings.triggered.connect(
+            lambda: self._delete_coupling(ii, jj)
+        )
         menu.addAction(action_clear_hoppings)
 
         menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
