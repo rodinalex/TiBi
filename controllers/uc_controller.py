@@ -18,7 +18,7 @@ from resources.constants import (
     mk_new_unit_cell,
     selection_init,
 )
-from src.tibitypes import BasisVector, Site, State, UnitCell
+from src.tibitypes import UnitCell
 from views.uc_view import UnitCellView
 
 
@@ -105,7 +105,7 @@ class UnitCellController(QObject):
         # Triggered when the tree selection changed,
         # either manually or programmatically
         self.tree_view.selectionModel().selectionChanged.connect(
-            self._on_selection_changed
+            self._on_tree_selection_changed
         )
         # Triggered when a tree item's name is changed by double clicking on it
         self.tree_model.itemChanged.connect(self._on_item_renamed)
@@ -236,6 +236,26 @@ class UnitCellController(QObject):
                     )
                     site_item.appendRow(state_item)
 
+    def _create_tree_item(
+        self, item_data, item_type, item_id
+    ) -> QStandardItem:
+        """
+        Create a QStandardItem for tree with metadata
+
+        Args:
+            item_data: UnitCell, Site, or State object. Used to get the name
+            item_type: item type ("unit_cell", "site", or "state")
+            item_id: UUID of the item
+        """
+        tree_item = QStandardItem(item_data.name)
+        tree_item.setData(item_type, Qt.UserRole + 1)  # Store the type
+        tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
+
+        # Set other visual properties
+        tree_item.setEditable(True)
+
+        return tree_item
+
     def _find_item_by_id(
         self, uc_id, site_id=None, state_id=None
     ) -> QStandardItem | None:
@@ -298,26 +318,6 @@ class UnitCellController(QObject):
             index, QItemSelectionModel.ClearAndSelect
         )
 
-    # Programmatically select a tree item
-    def _select_item(self, uc_id, site_id=None, state_id=None):
-        """
-        Select a tree item by its ID and type.
-
-        This method programmatically selects an item in the tree view.
-        This selection triggers _on_selection_changed function.
-
-        Args:
-            uc_id: UUID of the unit cell
-            site_id: UUID of the site
-            state_id: UUID of the state
-        """
-        item = self._find_item_by_id(uc_id, site_id, state_id)
-        if item is not None:
-            index = self.tree_model.indexFromItem(item)
-            self.tree_view.selectionModel().setCurrentIndex(
-                index, QItemSelectionModel.ClearAndSelect
-            )
-
     def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Remove an item from the tree. If the item has a parent
@@ -346,27 +346,7 @@ class UnitCellController(QObject):
         # Delete the item
         parent.removeRow(item.row())
 
-    def _create_tree_item(
-        self, item_data, item_type, item_id
-    ) -> QStandardItem:
-        """
-        Create a QStandardItem for tree with metadata
-
-        Args:
-            item_data: UnitCell, Site, or State object. Used to get the name
-            item_type: item type ("unit_cell", "site", or "state")
-            item_id: UUID of the item
-        """
-        tree_item = QStandardItem(item_data.name)
-        tree_item.setData(item_type, Qt.UserRole + 1)  # Store the type
-        tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
-
-        # Set other visual properties
-        tree_item.setEditable(True)
-
-        return tree_item
-
-    def _on_selection_changed(self, selected, deselected):
+    def _on_tree_selection_changed(self, selected, deselected):
         """
         Handle the change of selection in the tree.
 
@@ -667,12 +647,13 @@ class UnitCellController(QObject):
 
     def _reduce_uc_basis(self):
         """
-        Reduce the basis vectors of the selected unit cell using the LLL algorithm.
+        Reduce the basis vectors of the selected unit cell.
 
-        This method applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm
-        to find a more orthogonal set of basis vectors that spans the same lattice.
-        This is useful for finding a 'nicer' representation of the unit cell with
-        basis vectors that are shorter and more orthogonal to each other.
+        This method applies the Lenstra-Lenstra-Lovász (LLL) lattice
+        reduction algorithm to find a more orthogonal set of basis
+        vectors that spans the same lattice.
+        This is useful for finding a 'nicer' representation of the unit cell
+        with basis vectors that are shorter and more orthogonal to each other.
 
         The method only affects the periodic directions of the unit cell. After
         reduction, the UI is updated to reflect the new basis vectors.
@@ -705,17 +686,19 @@ class UnitCellController(QObject):
         """
         Update the UI panels based on the current selection state.
 
-        This method is called whenever the selection changes. It determines which
-        panels should be visible and populates them with data from the selected items.
+        This method is called whenever the selection changes. It determines
+        which panels should be visible and populates them with data from
+        the selected items.
         The panels are shown or hidden using a stacked widget approach.
 
         The method handles all three levels of the hierarchy:
-        - When a unit cell is selected, its properties are shown in the unit cell panel
+        - When a unit cell is selected, its properties are shown in
+        the unit cell panel
         - When a site is selected, its properties are shown in the site panel
-        - When a state is selected, no additional panel is shown as the state is only
-        described by its name
+        - When a state is selected, no additional panel is shown as the state
+        is only described by its name
 
-        Appropriate buttons are also enabled/disabled based on the selection context.
+        Buttons are also enabled/disabled based on the selection context.
         """
         unit_cell_id = self.selection.get("unit_cell", None)
         site_id = self.selection.get("site", None)
@@ -732,14 +715,16 @@ class UnitCellController(QObject):
             # Get the system dimensionality
             dim = uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
             # Set the dimensionality radio button.
-            # Suppress the dim_listener since we are updating the radio button programmatically
+            # Suppress the dim_listener since we are updating the radio
+            # button programmatically
             self._suppress_dim_listener = True
             self.unit_cell_view.unit_cell_panel.radio_group.button(
                 dim
             ).setChecked(True)
             self._suppress_dim_listener = False
 
-            # Get the model fields that are going to be updated from the selected unit cell.
+            # Get the model fields that are going to be updated from the
+            # selected unit cell.
             # Update the empty unit_cell_updated_data dictionary
             unit_cell_updated_data.update(
                 {
@@ -765,7 +750,8 @@ class UnitCellController(QObject):
 
             if site_id:
                 site = uc.sites[site_id]
-                # Get the model fields that are going to be updated from the selected site.
+                # Get the model fields that are going to be updated from
+                # the selected site.
                 # Update the empty site_updated_data dictionary
                 site_updated_data.update(
                     {
@@ -781,7 +767,8 @@ class UnitCellController(QObject):
                 )
                 if state_id:
                     state = site.states[state_id]
-                    # Get the model fields that are going to be updated from the selected state.
+                    # Get the model fields that are going to be updated from
+                    # the selected state.
                     # Update the empty state_updated_data dictionary
                     state_updated_data.update(
                         {
@@ -801,7 +788,8 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_stack.setCurrentWidget(
                 self.unit_cell_view.site_info_label
             )
-        # Compine the update dictionaries and use the combination to update the model
+        # Compine the update dictionaries and use the combination
+        # to update the model
         self.unit_cell_data.update(
             unit_cell_updated_data | site_updated_data | state_updated_data
         )
@@ -812,9 +800,11 @@ class UnitCellController(QObject):
         """
         Handle changes in the dimensionality selection (0D, 1D, 2D, 3D).
 
-        This method is called when the user selects a different dimensionality radio button.
-        It updates the unit cell's periodicity flags and enables/disables appropriate
-        basis vector components based on the selected dimensionality.
+        This method is called when the user selects a different dimensionality
+        radio button.
+        It updates the unit cell's periodicity flags and enables/disables
+        appropriate basis vector components based on
+        the selected dimensionality.
 
         For example:
         - 0D: All directions are non-periodic (isolated system)
@@ -824,19 +814,21 @@ class UnitCellController(QObject):
         """
         btn = self.sender()
         if btn.isChecked():
-            selected_dim = btn.text()
-            if selected_dim == "0":
-                self.v1[0].setEnabled(True)
-                self.v1[1].setEnabled(False)
-                self.v1[2].setEnabled(False)
+            selected_dim = int(btn.text())
 
-                self.v2[0].setEnabled(False)
-                self.v2[1].setEnabled(True)
-                self.v2[2].setEnabled(False)
+            self.v1[0].setEnabled(True)
+            self.v1[1].setEnabled(selected_dim > 1)
+            self.v1[2].setEnabled(selected_dim > 2)
 
-                self.v3[0].setEnabled(False)
-                self.v3[1].setEnabled(False)
-                self.v3[2].setEnabled(True)
+            self.v2[0].setEnabled(selected_dim > 1)
+            self.v2[1].setEnabled(True)
+            self.v2[2].setEnabled(selected_dim > 2)
+
+            self.v3[0].setEnabled(selected_dim > 2)
+            self.v3[1].setEnabled(selected_dim > 2)
+            self.v3[2].setEnabled(True)
+
+            if selected_dim == 0:
 
                 self.unit_cell_data.update(
                     {
@@ -855,18 +847,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "1":
-                self.v1[0].setEnabled(True)
-                self.v1[1].setEnabled(False)
-                self.v1[2].setEnabled(False)
-
-                self.v2[0].setEnabled(False)
-                self.v2[1].setEnabled(True)
-                self.v2[2].setEnabled(False)
-
-                self.v3[0].setEnabled(False)
-                self.v3[1].setEnabled(False)
-                self.v3[2].setEnabled(True)
+            elif selected_dim == 1:
 
                 self.unit_cell_data.update(
                     {
@@ -885,18 +866,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "2":
-                self.v1[0].setEnabled(True)
-                self.v1[1].setEnabled(True)
-                self.v1[2].setEnabled(False)
-
-                self.v2[0].setEnabled(True)
-                self.v2[1].setEnabled(True)
-                self.v2[2].setEnabled(False)
-
-                self.v3[0].setEnabled(False)
-                self.v3[1].setEnabled(False)
-                self.v3[2].setEnabled(True)
+            elif selected_dim == 2:
 
                 self.unit_cell_data.update(
                     {
@@ -915,18 +885,7 @@ class UnitCellController(QObject):
                     }
                 )
 
-            elif selected_dim == "3":
-                self.v1[0].setEnabled(True)
-                self.v1[1].setEnabled(True)
-                self.v1[2].setEnabled(True)
-
-                self.v2[0].setEnabled(True)
-                self.v2[1].setEnabled(True)
-                self.v2[2].setEnabled(True)
-
-                self.v3[0].setEnabled(True)
-                self.v3[1].setEnabled(True)
-                self.v3[2].setEnabled(True)
+            elif selected_dim == 3:
 
                 self.unit_cell_data.update(
                     {
@@ -944,23 +903,23 @@ class UnitCellController(QObject):
                         "v3periodic": True,
                     }
                 )
-            # If the listener is suppressed (when the dimensionality was set programmatically),
-            # do not run the save cycle
+            # If the listener is suppressed (when the dimensionality
+            # was set programmatically), do not run the save cycle
             if self._suppress_dim_listener:
                 return
             self._save_unit_cell()
 
     def _update_unit_cell_data(self, key, value):
         """
-        Update the unit cell data model with new values pertaining to the unit cell.
+        Update the unit cell data model with new values.
 
-        This method is called when the user edits a unit cell property in the unit cell form panel.
-        It updates the reactive data model, which will trigger a signal that causes the
-        _save_unit_cell method to update the actual UnitCell object. This separation
-        allows for validation and coalescing of multiple changes.
+        This method is called when the user edits a unit cell property in the
+        unit cell form panel.
+        It updates the reactive data model, which will trigger a signal that
+        causes the _save_unit_cell method to update the actual UnitCell object.
 
         Args:
-            key: The property name to update (e.g., "v1x", "v2y", "unit_cell_name")
+            key: The property name to update (e.g., "v1x", "v2y")
             value: The new value for the property
         """
         self.unit_cell_data[key] = value
@@ -970,13 +929,13 @@ class UnitCellController(QObject):
         """
         Update the unit cell data model with new values pertaining to the site
 
-        This method is called when the user edits a site property in the unit cell form panel.
-        It updates the reactive data model, which will trigger a signal that causes the
-        _save_site method to update the actual UnitCell object. This separation
-        allows for validation and coalescing of multiple changes.
+        This method is called when the user edits a site property in the
+        site form panel.
+        It updates the reactive data model, which will trigger a signal that
+        causes the _save_site method to update the actual Site object.
 
         Args:
-            key: The property name to update (e.g., "c1", "c2", "site_name")
+            key: The property name to update (e.g., "c1", "c2"
             value: The new value for the property
         """
         self.unit_cell_data[key] = value
@@ -1040,9 +999,17 @@ class UnitCellController(QObject):
         )
         # Update the button color
         if new_color.isValid():
-            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-                f"background-color: rgba({new_color.red()}, {new_color.green()}, {new_color.blue()}, {new_color.alpha()});"
+
+            rgba = (
+                f"rgba({new_color.red()}, "
+                f"{new_color.green()}, "
+                f"{new_color.blue()}, "
+                f"{new_color.alpha()})"
             )
+            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+                f"background-color: {rgba};"
+            )
+
             # Update the color in the dictionary
             self.unit_cells[self.selection["unit_cell"]].site_colors[
                 self.selection["site"]
