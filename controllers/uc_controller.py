@@ -276,15 +276,15 @@ class UnitCellController(QObject):
             site_id: UUID of the site
             state_id: UUID of the state
         """
-        if state_id is not None:  # Adding/updating a state
+        if state_id is not None:  # Adding a state
             parent = self._find_item_by_id(uc_id, site_id)
             item_type, item_id = "state", state_id
             data = self.unit_cells[uc_id].sites[site_id].states[state_id]
-        elif site_id is not None:  # Adding/updating a site
+        elif site_id is not None:  # Adding a site
             parent = self._find_item_by_id(uc_id)
             item_type, item_id = "site", site_id
             data = self.unit_cells[uc_id].sites[site_id]
-        else:  # Adding/updating a unit cell
+        else:  # Adding a unit cell
             parent = self.root_node
             item_type, item_id = "unit_cell", uc_id
             data = self.unit_cells[uc_id]
@@ -320,7 +320,9 @@ class UnitCellController(QObject):
 
     def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
-        Remove an item from the tree.
+        Remove an item from the tree. If the item has a parent
+        (i.e., is not a UnitCell), select the parent. Otherwise,
+        clear the selection
 
         Args:
             uc_id: UUID of the grandparent unit cell
@@ -331,6 +333,17 @@ class UnitCellController(QObject):
         # If the item is a unit cell, the parent is None, so we
         # default to the invisibleRootItem
         parent = item.parent() or self.root_node
+        # If the item has a parent, select it
+        if item.parent():
+            index = self.tree_model.indexFromItem(parent)
+            self.tree_view.selectionModel().setCurrentIndex(
+                index, QItemSelectionModel.ClearAndSelect
+            )
+        # Otherwise, deselect everything (the item is a unit cell)
+        else:
+            self.tree_view.selectionModel().clearSelection()
+            self.tree_view.setCurrentIndex(QModelIndex())
+        # Delete the item
         parent.removeRow(item.row())
 
     def _create_tree_item(
@@ -628,52 +641,29 @@ class UnitCellController(QObject):
 
         After deletion, the parent item is selected
         (or nothing if a unit cell was deleted).
-        The programmatic selection triggers _on_selection_change function.
         """
         selected_uc_id = self.selection.get("unit_cell", None)
         selected_site_id = self.selection.get("site", None)
         selected_state_id = self.selection.get("state", None)
 
-        # Check if there is a selected unit cell
-        if selected_uc_id:
-            # Check if there a selected site
-            if selected_site_id:
-                # Check if there is a selected state
-                if selected_state_id:
-                    # Delete the selected state from the site
-                    del (
-                        self.unit_cells[selected_uc_id]
-                        .sites[selected_site_id]
-                        .states[selected_state_id]
-                    )
-                    # Update UI and select the parent site (selective removal instead of full refresh)
-                    self._remove_tree_item(
-                        selected_uc_id, selected_site_id, selected_state_id
-                    )
-                    self._select_item(selected_uc_id, selected_site_id)
-                else:
-                    # No state selected, therefore remove the site from the unit cell
-                    del self.unit_cells[selected_uc_id].sites[selected_site_id]
-
-                    # Update UI and select the parent unit cell (selective removal instead of full refresh)
-                    self._remove_tree_item(selected_uc_id, selected_site_id)
-                    self._select_item(selected_uc_id)
-
-            else:
-                # No site selected, therefore remove the unit cell from the model
-                del self.unit_cells[selected_uc_id]
-
-                # Update UI (selective removal instead of full refresh)
-                self._remove_tree_item(selected_uc_id)
-
-                # Clear selection explicitly
-                self.unit_cell_view.tree_view_panel.tree_view.selectionModel().clearSelection()
-                self.unit_cell_view.tree_view_panel.tree_view.setCurrentIndex(
-                    QModelIndex()
-                )  # Clear the cursor/visual highlight
-                self.selection.update(
-                    {"unit_cell": None, "site": None, "state": None}
-                )
+        if selected_state_id:
+            # Delete the selected state from the site
+            del (
+                self.unit_cells[selected_uc_id]
+                .sites[selected_site_id]
+                .states[selected_state_id]
+            )
+        elif selected_site_id:
+            # No state selected, therefore remove the site from the unit cell
+            del self.unit_cells[selected_uc_id].sites[selected_site_id]
+        else:
+            # No site selected, therefore remove the unit cell from the model
+            del self.unit_cells[selected_uc_id]
+        # Update UI and select the parent site
+        # (selective removal instead of full refresh)
+        self._remove_tree_item(
+            selected_uc_id, selected_site_id, selected_state_id
+        )
 
     def _reduce_uc_basis(self):
         """
