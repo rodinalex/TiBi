@@ -16,9 +16,7 @@ from commands.uc_commands import (
     DeleteItemCommand,
 )
 from models.data_models import DataModel
-from resources.constants import (
-    selection_init,
-)
+from resources.constants import selection_init
 from src.tibitypes import UnitCell
 from views.uc_view import UnitCellView
 
@@ -116,7 +114,7 @@ class UnitCellController(QObject):
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button
         self.unit_cell_view.tree_view_panel.delete_requested.connect(
-            self._handle_delete_item
+            lambda: self.undo_stack.push(DeleteItemCommand(controller=self))
         )
 
         # Unit Cell basis vector signals.
@@ -166,19 +164,19 @@ class UnitCellController(QObject):
         # Button signals
         # New UC button
         self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
-            self._handle_add_unit_cell
+            lambda: self.undo_stack.push(AddUnitCellCommand(controller=self))
         )
         # New Site button
         self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(
-            self._handle_add_site
+            lambda: self.undo_stack.push(AddSiteCommand(controller=self))
         )
         # New State button
         self.unit_cell_view.site_panel.new_state_btn.clicked.connect(
-            self._handle_add_state
+            lambda: self.undo_stack.push(AddStateCommand(controller=self))
         )
         # Delete button--deletes the highlighted tree item
         self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
-            self._handle_delete_item
+            lambda: self.undo_stack.push(DeleteItemCommand(controller=self))
         )
         # Reduce button--LLL argorithm to obtain the primitive cell
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
@@ -420,21 +418,6 @@ class UnitCellController(QObject):
         self.item_changed.emit()
 
     # Unit Cell/Site/State Modification Functions
-    def _handle_add_unit_cell(self):
-
-        cmd = AddUnitCellCommand(controller=self)
-        self.undo_stack.push(cmd)
-
-    def _handle_add_site(self):
-
-        cmd = AddSiteCommand(controller=self)
-        self.undo_stack.push(cmd)
-
-    def _handle_add_state(self):
-
-        cmd = AddStateCommand(controller=self)
-        self.undo_stack.push(cmd)
-
     def _save_unit_cell(self):
         """
         Save changes from the unit cell data model to the selected unit cell.
@@ -518,10 +501,6 @@ class UnitCellController(QObject):
 
         # Update state properties
         current_state.name = self.unit_cell_data["state_name"]
-
-    def _handle_delete_item(self):
-        cmd = DeleteItemCommand(controller=self)
-        self.undo_stack.push(cmd)
 
     def _reduce_uc_basis(self):
         """
