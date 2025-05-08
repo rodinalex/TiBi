@@ -234,5 +234,7 @@ class AppController(QObject):
             {"k_path": None, "bands": None, "special_points": None}
         )
 
-        self.controllers["uc"].refresh_tree()
+        self.controllers["uc"].tree_view.refresh_tree(
+            self.models["unit_cells"]
+        )
         self._handle_plot_update_requested()

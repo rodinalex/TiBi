@@ -90,14 +90,16 @@ class UnitCellController(QObject):
 
         # Store the tree_view and tree_model as parameters for convenience
         self.tree_view = self.unit_cell_view.tree_view_panel.tree_view
-        self.tree_model = self.unit_cell_view.tree_view_panel.tree_model
+        self.tree_model = (
+            self.unit_cell_view.tree_view_panel.tree_view.tree_model
+        )
 
         # A flag to suppress the change of dimensionality listener.
         # Used when the dimensionality radio buttons are triggered
         # programmatically to avoid unnecessary update cycles.
         self._suppress_dim_listener = False
         # Rebuild the tree view from scratch in the beginning
-        self.refresh_tree()
+        self.tree_view.refresh_tree({})
 
         # Sync UI with data models
         self._update_unit_cell_ui()
@@ -307,7 +309,7 @@ class UnitCellController(QObject):
             item_type, item_id = "site", site_id
             data = self.unit_cells[uc_id].sites[site_id]
         else:  # Adding a unit cell
-            parent = self.root_node
+            parent = self.tree_view.root_node
             item_type, item_id = "unit_cell", uc_id
             data = self.unit_cells[uc_id]
 
@@ -335,7 +337,7 @@ class UnitCellController(QObject):
         if item:
             # If the item is a unit cell, the parent is None, so we
             # default to the invisibleRootItem
-            parent = item.parent() or self.root_node
+            parent = item.parent() or self.tree_view.root_node
             # If the item has a parent, select it
             if item.parent():
                 index = self.tree_model.indexFromItem(parent)

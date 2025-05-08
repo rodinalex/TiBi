@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
-from resources.ui_elements import divider_line
+from resources.ui_elements import divider_line, SystemTree
 
 
 class UnitCellPanel(QWidget):
@@ -275,17 +275,7 @@ class TreeViewPanel(QWidget):
         super().__init__()
 
         # Create and configure tree view
-        self.tree_view = QTreeView()
-        self.tree_view.setHeaderHidden(True)
-        self.tree_view.setSelectionMode(QTreeView.SingleSelection)
-        self.tree_view.setEditTriggers(QTreeView.DoubleClicked)
-
-        # Create model
-        self.tree_model = QStandardItemModel()
-        self.root_node = self.tree_model.invisibleRootItem()
-
-        # Set model to view
-        self.tree_view.setModel(self.tree_model)
+        self.tree_view = SystemTree()
 
         # Set the delegate to save the data only on Enter-press
         delegate = EnterOnlyDelegate(self.tree_view)

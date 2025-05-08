@@ -35,12 +35,14 @@ class AddUnitCellCommand(QUndoCommand):
     # Add the newly-created unit cell to the dictionary and create a tree item
     def redo(self):
         self.controller.unit_cells[self.unit_cell.id] = self.unit_cell
-        self.controller._add_tree_item(self.unit_cell.id)
+        self.controller.tree_view._add_tree_item(
+            self.unit_cell.name, self.unit_cell.id
+        )
 
     # Remove the unit cell from the dictionary and the tree using its id
     def undo(self):
         del self.controller.unit_cells[self.unit_cell.id]
-        self.controller._remove_tree_item(self.unit_cell.id)
+        self.controller.tree_view._remove_tree_item(self.unit_cell.id)
 
 
 class AddSiteCommand(QUndoCommand):
@@ -76,8 +78,9 @@ class AddSiteCommand(QUndoCommand):
             1.0,
         )
         unit_cell.site_sizes[self.site.id] = default_site_size
-
-        self.controller._add_tree_item(self.uc_id, self.site.id)
+        self.controller.tree_view._add_tree_item(
+            self.site.name, self.uc_id, self.site.id
+        )
 
     # Remove the unit cell from the dictionary and the tree using its id
     # Remove the color and size entries
@@ -85,7 +88,7 @@ class AddSiteCommand(QUndoCommand):
         del self.controller.unit_cells[self.uc_id].sites[self.site.id]
         del self.controller.unit_cells[self.uc_id].site_colors[self.site.id]
         del self.controller.unit_cells[self.uc_id].site_sizes[self.site.id]
-        self.controller._remove_tree_item(self.uc_id, self.site.id)
+        self.controller.tree_view._remove_tree_item(self.uc_id, self.site.id)
 
 
 class AddStateCommand(QUndoCommand):
@@ -111,7 +114,9 @@ class AddStateCommand(QUndoCommand):
         unit_cell = self.controller.unit_cells[self.uc_id]
         site = unit_cell.sites[self.site_id]
         site.states[self.state.id] = self.state
-        self.controller._add_tree_item(self.uc_id, self.site_id, self.state.id)
+        self.controller.tree_view._add_tree_item(
+            self.state.name, self.uc_id, self.site_id, self.state.id
+        )
 
     # Remove the site from the dictionary and the tree using its id
     def undo(self):
@@ -120,7 +125,7 @@ class AddStateCommand(QUndoCommand):
             .sites[self.site_id]
             .states[self.state.id]
         )
-        self.controller._remove_tree_item(
+        self.controller.tree_view._remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
 
