@@ -1,4 +1,4 @@
-from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt
+from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QFrame, QTreeView
 import uuid
@@ -17,6 +17,8 @@ def divider_line():
 
 class SystemTree(QTreeView):
 
+    tree_selection_changed = Signal(object)
+
     def __init__(self):
         super().__init__()
         self.setHeaderHidden(True)
@@ -29,6 +31,10 @@ class SystemTree(QTreeView):
 
         # Set model to view
         self.setModel(self.tree_model)
+
+        self.selectionModel().selectionChanged.connect(
+            self._on_tree_selection_changed
+        )
 
     def refresh_tree(self, unit_cells: dict[uuid.UUID, UnitCell]):
         """
@@ -180,56 +186,59 @@ class SystemTree(QTreeView):
             # Delete the item
             parent.removeRow(item.row())
 
-    # def _on_tree_selection_changed(self, selected, deselected):
-    #     """
-    #     Handle the change of selection in the tree.
+    def _on_tree_selection_changed(self, selected, deselected):
+        """
+        Handle the change of selection in the tree.
 
-    #     This method is called when the user selects a node in the tree view or
-    #     the selection occurs programmatically.
-    #     It determines what type of node was selected
-    #     (unit cell, site, or state) and updates the selection model with
-    #     the item's id and, if applicable, its parent's/grandparent's id's.
-    #     The change in the selection dictionary triggers
-    #     the _show_panels function.
+        This method is called when the user selects a node in the tree view or
+        the selection occurs programmatically.
+        It determines what type of node was selected
+        (unit cell, site, or state) and emits a dictionary with
+        the item's id and, if applicable, its parent's/grandparent's id's.
+        The dictionary is then used to update the app's selection model.
 
-    #     Args:
-    #         selected: The newly selected items
-    #         deselected: The previously selected items that are now deselected
-    #     """
-    #     indexes = selected.indexes()
+        Args:
+            selected: The newly selected items
+            deselected: The previously selected items that are now deselected
+        """
+        indexes = selected.indexes()
 
-    #     if not indexes:
-    #         self.selection.update(selection_init())
-    #         return
-    #     # Get the selected item
-    #     index = indexes[0]
-    #     item = self.tree_model.itemFromIndex(index)
+        if not indexes:
+            new_selection = {"unit_cell": None, "site": None, "state": None}
+        else:
+            # Get the selected item
+            index = indexes[0]
+            item = self.tree_model.itemFromIndex(index)
 
-    #     item_type = item.data(Qt.UserRole + 1)
-    #     item_id = item.data(Qt.UserRole + 2)
+            item_type = item.data(Qt.UserRole + 1)
+            item_id = item.data(Qt.UserRole + 2)
 
-    #     if item_type == "unit_cell":  # unit cell selected
-    #         self.selection.update(
-    #             {"unit_cell": item_id, "site": None, "state": None}
-    #         )
-    #     else:  # site or state selected
-    #         parent_item = item.parent()
-    #         parent_id = parent_item.data(Qt.UserRole + 2)
+            if item_type == "unit_cell":  # unit cell selected
+                new_selection = {
+                    "unit_cell": item_id,
+                    "site": None,
+                    "state": None,
+                }
+            else:  # site or state selected
+                parent_item = item.parent()
+                parent_id = parent_item.data(Qt.UserRole + 2)
 
-    #         if item_type == "site":  # site selected
-    #             self.selection.update(
-    #                 {"unit_cell": parent_id, "site": item_id, "state": None}
-    #             )
-    #         else:  # state selected
-    #             grandparent_item = parent_item.parent()
-    #             grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-    #             self.selection.update(
-    #                 {
-    #                     "unit_cell": grandparent_id,
-    #                     "site": parent_id,
-    #                     "state": item_id,
-    #                 }
-    #             )
+                if item_type == "site":  # site selected
+                    new_selection = {
+                        "unit_cell": parent_id,
+                        "site": item_id,
+                        "state": None,
+                    }
+
+                else:  # state selected
+                    grandparent_item = parent_item.parent()
+                    grandparent_id = grandparent_item.data(Qt.UserRole + 2)
+                    new_selection = {
+                        "unit_cell": grandparent_id,
+                        "site": parent_id,
+                        "state": item_id,
+                    }
+        self.tree_selection_changed.emit(new_selection)
 
     # def _on_item_renamed(self, item: QStandardItem):
     #     """

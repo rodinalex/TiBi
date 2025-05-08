@@ -9,6 +9,7 @@ from resources.constants import (
 )
 
 
+# Tree Commands
 class AddUnitCellCommand(QUndoCommand):
     """
     Create a new unit cell with default properties and add it to the model.
@@ -193,7 +194,7 @@ class DeleteItemCommand(QUndoCommand):
             self.item = copy.deepcopy(self.controller.unit_cells[self.uc_id])
             del self.controller.unit_cells[self.uc_id]
 
-        self.controller._remove_tree_item(
+        self.controller.tree_view._remove_tree_item(
             self.uc_id, self.site_id, self.state_id
         )
 
@@ -202,8 +203,8 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell = self.controller.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
-            self.controller._add_tree_item(
-                self.uc_id, self.site_id, self.item.id
+            self.controller.tree_view._add_tree_item(
+                self.item.name, self.uc_id, self.site_id, self.item.id
             )
 
         elif self.site_id:
@@ -216,8 +217,33 @@ class DeleteItemCommand(QUndoCommand):
                 self.site.id
             ] = self.size
 
-            self.controller._add_tree_item(self.uc_id, self.item.id)
+            self.controller.tree_view._add_tree_item(
+                self.item.name, self.uc_id, self.item.id
+            )
 
         elif self.uc_id:
             self.controller.unit_cells[self.item.id] = self.item
-            self.controller._add_tree_item(self.item.id)
+            self.controller.tree_view._add_tree_item(
+                self.item.name, self.item.id
+            )
+
+
+class RenameTreeItemCommand(QUndoCommand):
+    def __init__(self, controller):
+        super().__init__("Rename Tree Item")
+        self.controller = controller
+        self.uc_id = self.controller.selection.get("unit_cell", None)
+        self.site_id = self.controller.selection.get("site", None)
+        self.state_id = self.controller.selection.get("state", None)
+
+    # Determine what item type is being deleted and save its deep copy.
+    # For Sites, also save their color and radius
+    # Delete the item after
+    def redo(self):
+        pass
+
+    def undo(self):
+        pass
+
+
+# Item Properties Commands
