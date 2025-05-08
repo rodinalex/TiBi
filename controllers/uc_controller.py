@@ -7,20 +7,16 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import QColor, QStandardItem, QUndoStack
 from PySide6.QtWidgets import QColorDialog, QDoubleSpinBox
-import random
 import uuid
 
 from commands.uc_commands import (
     AddUnitCellCommand,
     AddSiteCommand,
     AddStateCommand,
+    DeleteItemCommand,
 )
 from models.data_models import DataModel
 from resources.constants import (
-    default_site_size,
-    mk_new_site,
-    mk_new_state,
-    mk_new_unit_cell,
     selection_init,
 )
 from src.tibitypes import UnitCell
@@ -120,11 +116,7 @@ class UnitCellController(QObject):
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button
         self.unit_cell_view.tree_view_panel.delete_requested.connect(
-            lambda: self._delete_item(
-                self.selection.get("unit_cell"),
-                self.selection.get("site"),
-                self.selection.get("state"),
-            )
+            self._handle_delete_item
         )
 
         # Unit Cell basis vector signals.
@@ -186,11 +178,7 @@ class UnitCellController(QObject):
         )
         # Delete button--deletes the highlighted tree item
         self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
-            lambda: self._delete_item(
-                self.selection.get("unit_cell"),
-                self.selection.get("site"),
-                self.selection.get("state"),
-            )
+            self._handle_delete_item
         )
         # Reduce button--LLL argorithm to obtain the primitive cell
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
@@ -433,80 +421,19 @@ class UnitCellController(QObject):
 
     # Unit Cell/Site/State Modification Functions
     def _handle_add_unit_cell(self):
-        """
-        Create a new unit cell with default properties and add it to the model.
 
-        Creates a unit cell with orthogonal basis vectors along
-        the x, y, and z axes, adds it to the unit_cells dictionary,
-        and selects it in the tree view.
-
-        The default unit cell has:
-        - Name: "New Unit Cell"
-        - Three orthogonal unit vectors along the x, y, and z axes
-        - No periodicity (0D system)
-        - No sites or states initially
-
-        After creation, the tree view is updated and the new unit cell is
-        automatically selected so the user can immediately edit its properties.
-        """
         cmd = AddUnitCellCommand(controller=self)
         self.undo_stack.push(cmd)
 
     def _handle_add_site(self):
-        """
-        Create a new site in the currently selected unit cell.
 
-        Creates a site with default name and coordinates (0,0,0), adds it to
-        the sites dictionary of the selected unit cell, and selects it in
-        the tree view.
-
-        The default site has:
-        - Name: "New Site"
-        - Coordinates (0,0,0)
-        - No states initially
-        """
         cmd = AddSiteCommand(controller=self)
         self.undo_stack.push(cmd)
-        # new_site = mk_new_site()
-
-        # # Add the site to the selected unit cell
-        # selected_uc_id = self.selection["unit_cell"]
-        # current_uc = self.unit_cells[selected_uc_id]
-        # current_uc.sites[new_site.id] = new_site
-        # current_uc.site_colors[new_site.id] = (
-        #     random.uniform(0, 1),
-        #     random.uniform(0, 1),
-        #     random.uniform(0, 1),
-        #     1.0,
-        # )
-        # current_uc.site_sizes[new_site.id] = default_site_size
-
-        # self._add_tree_item(selected_uc_id, new_site.id)
 
     def _handle_add_state(self):
-        """
-        Create a new state in the currently selected site.
 
-        Creates a state with default name, adds it to the
-        states dictionary of the selected site,
-        and selects it in the tree view.
-
-        The default state has:
-        - Name: "New State"
-        """
         cmd = AddStateCommand(controller=self)
         self.undo_stack.push(cmd)
-        # # Create a new state with default properties
-        # new_state = mk_new_state()
-
-        # # Add the state to the selected site
-        # selected_uc_id = self.selection["unit_cell"]
-        # selected_site_id = self.selection["site"]
-        # current_uc = self.unit_cells[selected_uc_id]
-        # current_site = current_uc.sites[selected_site_id]
-        # current_site.states[new_state.id] = new_state
-
-        # self._add_tree_item(selected_uc_id, selected_site_id, new_state.id)
 
     def _save_unit_cell(self):
         """
@@ -592,35 +519,9 @@ class UnitCellController(QObject):
         # Update state properties
         current_state.name = self.unit_cell_data["state_name"]
 
-    def _delete_item(self, uc_id, site_id=None, state_id=None):
-        """
-        Delete the currently selected item from the model.
-
-        This method handles deletion of unit cells, sites, and states based on
-        the current selection. It updates both the data model and
-        the tree view to reflect the deletion, and ensures that
-        the selection is updated appropriately.
-
-        The deletion follows the containment hierarchy:
-        - Deleting a unit cell also removes all its sites and states
-        - Deleting a site also removes all its states
-        - Deleting a state only removes that specific state
-
-        After deletion, the parent item is selected
-        (or nothing if a unit cell was deleted).
-        """
-        if state_id:
-            # Delete the selected state from the site
-            del self.unit_cells[uc_id].sites[site_id].states[state_id]
-        elif site_id:
-            # No state selected, therefore remove the site from the unit cell
-            del self.unit_cells[uc_id].sites[site_id]
-        else:
-            # No site selected, therefore remove the unit cell from the model
-            del self.unit_cells[uc_id]
-        # Update UI and select the parent site
-        # (selective removal instead of full refresh)
-        self._remove_tree_item(uc_id, site_id, state_id)
+    def _handle_delete_item(self):
+        cmd = DeleteItemCommand(controller=self)
+        self.undo_stack.push(cmd)
 
     def _reduce_uc_basis(self):
         """
