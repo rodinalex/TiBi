@@ -184,7 +184,7 @@ class DeleteItemCommand(QUndoCommand):
             ]
             del self.controller.unit_cells[self.uc_id].site_sizes[self.site.id]
         # No site selected, therefore remove the unit cell from the model
-        else:
+        elif self.uc_id:
             self.item = copy.deepcopy(self.controller.unit_cells[self.uc_id])
             del self.controller.unit_cells[self.uc_id]
 
@@ -213,6 +213,6 @@ class DeleteItemCommand(QUndoCommand):
 
             self.controller._add_tree_item(self.uc_id, self.item.id)
 
-        else:
+        elif self.uc_id:
             self.controller.unit_cells[self.item.id] = self.item
             self.controller._add_tree_item(self.item.id)

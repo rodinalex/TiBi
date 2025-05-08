@@ -332,21 +332,22 @@ class UnitCellController(QObject):
             state_id: UUID of the state to remove
         """
         item = self._find_item_by_id(uc_id, site_id, state_id)
-        # If the item is a unit cell, the parent is None, so we
-        # default to the invisibleRootItem
-        parent = item.parent() or self.root_node
-        # If the item has a parent, select it
-        if item.parent():
-            index = self.tree_model.indexFromItem(parent)
-            self.tree_view.selectionModel().setCurrentIndex(
-                index, QItemSelectionModel.ClearAndSelect
-            )
-        # Otherwise, deselect everything (the item is a unit cell)
-        else:
-            self.tree_view.selectionModel().clearSelection()
-            self.tree_view.setCurrentIndex(QModelIndex())
-        # Delete the item
-        parent.removeRow(item.row())
+        if item:
+            # If the item is a unit cell, the parent is None, so we
+            # default to the invisibleRootItem
+            parent = item.parent() or self.root_node
+            # If the item has a parent, select it
+            if item.parent():
+                index = self.tree_model.indexFromItem(parent)
+                self.tree_view.selectionModel().setCurrentIndex(
+                    index, QItemSelectionModel.ClearAndSelect
+                )
+            # Otherwise, deselect everything (the item is a unit cell)
+            else:
+                self.tree_view.selectionModel().clearSelection()
+                self.tree_view.setCurrentIndex(QModelIndex())
+            # Delete the item
+            parent.removeRow(item.row())
 
     def _on_tree_selection_changed(self, selected, deselected):
         """
