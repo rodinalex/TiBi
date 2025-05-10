@@ -12,6 +12,7 @@ from commands.uc_commands import (
     AddSiteCommand,
     AddStateCommand,
     DeleteItemCommand,
+    RenameTreeItemCommand,
 )
 from models.data_models import DataModel
 from src.tibitypes import UnitCell
@@ -109,7 +110,12 @@ class UnitCellController(QObject):
             lambda x: self.selection.update(x)
         )
         # Triggered when a tree item's name is changed by double clicking on it
-        self.tree_model.itemChanged.connect(self._on_item_renamed)
+        self.tree_model.itemChanged.connect(
+            lambda x: self.undo_stack.push(
+                RenameTreeItemCommand(controller=self, item=x)
+            )
+        )
+        # self.tree_model.itemChanged.connect(self._on_item_renamed)
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button
         self.unit_cell_view.tree_view_panel.delete_requested.connect(

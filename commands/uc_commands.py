@@ -1,5 +1,6 @@
 import copy
-from PySide6.QtGui import QUndoCommand
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QStandardItem, QUndoCommand
 import random
 from resources.constants import (
     default_site_size,
@@ -229,21 +230,59 @@ class DeleteItemCommand(QUndoCommand):
 
 
 class RenameTreeItemCommand(QUndoCommand):
-    def __init__(self, controller):
+    def __init__(self, controller, item: QStandardItem):
         super().__init__("Rename Tree Item")
         self.controller = controller
-        self.uc_id = self.controller.selection.get("unit_cell", None)
-        self.site_id = self.controller.selection.get("site", None)
-        self.state_id = self.controller.selection.get("state", None)
+        self.item = item
+        """
+        Change the name of the selected item by double-clicking on it in
+        the tree view. Update the data and save it.
+        """
 
     # Determine what item type is being deleted and save its deep copy.
     # For Sites, also save their color and radius
     # Delete the item after
     def redo(self):
-        pass
+        item_type = self.item.data(Qt.UserRole + 1)
+        new_name = self.item.text()
+        if item_type == "unit_cell":
+            self.old_name = self.controller.unit_cell_data["unit_cell_name"]
+            self.controller.unit_cell_data["unit_cell_name"] = new_name
+            self.controller._save_unit_cell()
+        elif item_type == "site":
+            self.old_name = self.controller.unit_cell_data["site_name"]
+            self.controller.unit_cell_data["site_name"] = new_name
+            self.controller._save_site()
+        else:
+            self.old_name = self.controller.unit_cell_data["state_name"]
+            self.controller.unit_cell_data["state_name"] = new_name
+            self.controller._save_state()
+        # pass
 
     def undo(self):
-        pass
+        item_type = self.item.data(Qt.UserRole + 1)
+        if item_type == "unit_cell":
+            self.controller.unit_cell_data["unit_cell_name"] = self.old_name
+            self.controller._save_unit_cell()
+        elif item_type == "site":
+            self.controller.unit_cell_data["site_name"] = self.old_name
+            self.controller._save_site()
+        else:
+            self.controller.unit_cell_data["state_name"] = self.old_name
+            self.controller._save_site()
+
+        # item_type = item.data(Qt.UserRole + 1)
+        # new_name = item.text()
+        # if item_type == "unit_cell":
+        #     self.unit_cell_data["unit_cell_name"] = new_name
+        #     self._save_unit_cell()
+        # elif item_type == "site":
+        #     self.unit_cell_data["site_name"] = new_name
+        #     self._save_site()
+        # else:
+        #     self.unit_cell_data["state_name"] = new_name
+        #     self._save_state()
+        # self.item_changed.emit()
 
 
 # Item Properties Commands

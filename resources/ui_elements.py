@@ -32,6 +32,7 @@ class SystemTree(QTreeView):
         # Set model to view
         self.setModel(self.tree_model)
 
+        # Internal signals
         self.selectionModel().selectionChanged.connect(
             self._on_tree_selection_changed
         )
@@ -239,21 +240,3 @@ class SystemTree(QTreeView):
                         "state": item_id,
                     }
         self.tree_selection_changed.emit(new_selection)
-
-    # def _on_item_renamed(self, item: QStandardItem):
-    #     """
-    #     Change the name of the selected item by double-clicking on it in
-    #     the tree view. Update the data and save it.
-    #     """
-    #     item_type = item.data(Qt.UserRole + 1)
-    #     new_name = item.text()
-    #     if item_type == "unit_cell":
-    #         self.unit_cell_data["unit_cell_name"] = new_name
-    #         self._save_unit_cell()
-    #     elif item_type == "site":
-    #         self.unit_cell_data["site_name"] = new_name
-    #         self._save_site()
-    #     else:
-    #         self.unit_cell_data["state_name"] = new_name
-    #         self._save_state()
-    #     self.item_changed.emit()
