@@ -1,9 +1,5 @@
-from PySide6.QtCore import (
-    QObject,
-    Qt,
-    Signal,
-)
-from PySide6.QtGui import QColor, QStandardItem, QUndoStack
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtGui import QColor, QUndoStack
 from PySide6.QtWidgets import QColorDialog, QDoubleSpinBox
 import uuid
 
@@ -115,7 +111,6 @@ class UnitCellController(QObject):
                 RenameTreeItemCommand(controller=self, item=x)
             )
         )
-        # self.tree_model.itemChanged.connect(self._on_item_renamed)
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button
         self.unit_cell_view.tree_view_panel.delete_requested.connect(
@@ -199,25 +194,6 @@ class UnitCellController(QObject):
         # When model changes, update UI. If the model changes
         # programmatically, the updates fill out the relevant fields
         self.unit_cell_data.signals.updated.connect(self._update_unit_cell_ui)
-
-    # Tree Navigation Functions
-    def _on_item_renamed(self, item: QStandardItem):
-        """
-        Change the name of the selected item by double-clicking on it in
-        the tree view. Update the data and save it.
-        """
-        item_type = item.data(Qt.UserRole + 1)
-        new_name = item.text()
-        if item_type == "unit_cell":
-            self.unit_cell_data["unit_cell_name"] = new_name
-            self._save_unit_cell()
-        elif item_type == "site":
-            self.unit_cell_data["site_name"] = new_name
-            self._save_site()
-        else:
-            self.unit_cell_data["state_name"] = new_name
-            self._save_state()
-        self.item_changed.emit()
 
     # Unit Cell/Site/State Modification Functions
     def _save_unit_cell(self):
