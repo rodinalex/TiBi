@@ -1,6 +1,7 @@
 import copy
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QUndoCommand
+from PySide6.QtWidgets import QDoubleSpinBox
 import random
 from resources.constants import (
     default_site_size,
@@ -230,11 +231,11 @@ class DeleteItemCommand(QUndoCommand):
 
 
 class RenameTreeItemCommand(QUndoCommand):
-    # TODO: ADD A SIGNAL TO NOTIFY HOPPING CONTROLLER ABOUT THE NAME CHANGE!!!
     def __init__(self, controller, item: QStandardItem):
         super().__init__("Rename Tree Item")
         self.controller = controller
-        self.item = item
+        self.item_type = item.data(Qt.UserRole + 1)
+        self.new_name = item.text()
 
         self.uc_id = self.controller.selection.get("unit_cell", None)
         self.site_id = self.controller.selection.get("site", None)
@@ -246,18 +247,23 @@ class RenameTreeItemCommand(QUndoCommand):
         """
 
     def redo(self):
-        item_type = self.item.data(Qt.UserRole + 1)
-        new_name = self.item.text()
-        if item_type == "unit_cell":
+        item = self.controller.tree_view._find_item_by_id(
+            self.uc_id, self.site_id, self.state_id
+        )
+        if self.item_type == "unit_cell":
             self.old_name = self.controller.unit_cells[self.uc_id].name
-            self.controller.unit_cells[self.uc_id].name = new_name
-        elif item_type == "site":
+            self.controller.unit_cells[self.uc_id].name = self.new_name
+            item.setText(self.new_name)
+
+        elif self.item_type == "site":
             self.old_name = (
                 self.controller.unit_cells[self.uc_id].sites[self.site_id].name
             )
             self.controller.unit_cells[self.uc_id].sites[
                 self.site_id
-            ].name = new_name
+            ].name = self.new_name
+            item.setText(self.new_name)
+
         else:
             self.old_name = (
                 self.controller.unit_cells[self.uc_id]
@@ -267,22 +273,87 @@ class RenameTreeItemCommand(QUndoCommand):
             )
             self.controller.unit_cells[self.uc_id].sites[self.site_id].states[
                 self.state_id
-            ].name = new_name
+            ].name = self.new_name
+            item.setText(self.new_name)
+
         self.controller.item_changed.emit()
 
     def undo(self):
-        item_type = self.item.data(Qt.UserRole + 1)
-        if item_type == "unit_cell":
+        item = self.controller.tree_view._find_item_by_id(
+            self.uc_id, self.site_id, self.state_id
+        )
+        if self.item_type == "unit_cell":
             self.controller.unit_cells[self.uc_id].name = self.old_name
-        elif item_type == "site":
+            item.setText(self.old_name)
+
+        elif self.item_type == "site":
             self.controller.unit_cells[self.uc_id].sites[
                 self.site_id
             ].name = self.old_name
+            item.setText(self.old_name)
+
         else:
             self.controller.unit_cells[self.uc_id].sites[self.site_id].states[
                 self.state_id
             ].name = self.old_name
+            item.setText(self.old_name)
         self.controller.item_changed.emit()
+
+
+class UpdateUnitCellParameterCommand(QUndoCommand):
+    def __init__(self, controller, param, value):
+        super().__init__("Update Parameter")
+        self.controller = controller
+        self.param = param
+        self.new_value = value
+
+        self.uc_id = self.controller.selection.get("unit_cell", None)
+        self.site_id = self.controller.selection.get("site", None)
+        self.state_id = self.controller.selection.get("state", None)
+
+    # Determine what item type is being deleted and save its deep copy.
+    # For Sites, also save their color and radius
+    # Delete the item after
+    def redo(self):
+        pass
+
+    def unto(self):
+        pass
+
+
+class UpdateSiteParameterCommand(QUndoCommand):
+    def __init__(self, controller, param, spinbox: QDoubleSpinBox):
+        super().__init__("Update Parameter")
+        self.controller = controller
+        self.param = param
+        self.spinbox = spinbox
+        self.new_value = self.spinbox.value()
+
+        self.uc_id = self.controller.selection.get("unit_cell", None)
+        self.site_id = self.controller.selection.get("site", None)
+
+    # Determine what item type is being deleted and save its deep copy.
+    # For Sites, also save their color and radius
+    # Delete the item after
+    def redo(self):
+        self.old_value = getattr(
+            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.param,
+        )
+        setattr(
+            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.param,
+            self.new_value,
+        )
+        self.spinbox.setValue(self.new_value)
+
+    def undo(self):
+        setattr(
+            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.param,
+            self.old_value,
+        )
+        self.spinbox.setValue(self.old_value)
 
 
 # Item Properties Commands

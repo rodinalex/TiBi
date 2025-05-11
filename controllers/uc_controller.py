@@ -9,6 +9,7 @@ from commands.uc_commands import (
     AddStateCommand,
     DeleteItemCommand,
     RenameTreeItemCommand,
+    UpdateSiteParameterCommand,
 )
 from models.data_models import DataModel
 from src.tibitypes import UnitCell
@@ -82,7 +83,9 @@ class UnitCellController(QObject):
         self.c2 = self.unit_cell_view.site_panel.c2
         self.c3 = self.unit_cell_view.site_panel.c3
 
-        # Store the tree_view and tree_model as parameters for convenience
+        # Store the tree_view_panel, tree_view and tree_model as
+        # parameters for convenience
+        self.tree_view_panel = self.unit_cell_view.tree_view_panel
         self.tree_view = self.unit_cell_view.tree_view_panel.tree_view
         self.tree_model = (
             self.unit_cell_view.tree_view_panel.tree_view.tree_model
@@ -106,9 +109,11 @@ class UnitCellController(QObject):
             lambda x: self.selection.update(x)
         )
         # Triggered when a tree item's name is changed by double clicking on it
-        self.tree_model.itemChanged.connect(
+        self.tree_view_panel.delegate.name_edit_finished.connect(
             lambda x: self.undo_stack.push(
-                RenameTreeItemCommand(controller=self, item=x)
+                RenameTreeItemCommand(
+                    controller=self, item=self.tree_model.itemFromIndex(x)
+                )
             )
         )
         # Triggered when the user presses Del or Backspace while
@@ -152,13 +157,25 @@ class UnitCellController(QObject):
 
         # Site fractional coordinates
         self.c1.editingFinished.connect(
-            lambda: self._update_site_data("c1", self.c1.value())
+            lambda: self.undo_stack.push(
+                UpdateSiteParameterCommand(
+                    controller=self, param="c1", spinbox=self.c1
+                )
+            )
         )
         self.c2.editingFinished.connect(
-            lambda: self._update_site_data("c2", self.c2.value())
+            lambda: self.undo_stack.push(
+                UpdateSiteParameterCommand(
+                    controller=self, param="c2", spinbox=self.c2
+                )
+            )
         )
         self.c3.editingFinished.connect(
-            lambda: self._update_site_data("c3", self.c3.value())
+            lambda: self.undo_stack.push(
+                UpdateSiteParameterCommand(
+                    controller=self, param="c3", spinbox=self.c3
+                )
+            )
         )
 
         # Button signals
@@ -577,22 +594,6 @@ class UnitCellController(QObject):
         """
         self.unit_cell_data[key] = value
         self._save_unit_cell()
-
-    def _update_site_data(self, key, value):
-        """
-        Update the unit cell data model with new values pertaining to the site
-
-        This method is called when the user edits a site property in the
-        site form panel.
-        It updates the reactive data model, which will trigger a signal that
-        causes the _save_site method to update the actual Site object.
-
-        Args:
-            key: The property name to update (e.g., "c1", "c2"
-            value: The new value for the property
-        """
-        self.unit_cell_data[key] = value
-        self._save_site()
 
     def _update_unit_cell_ui(self):
         """

@@ -1,5 +1,5 @@
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QKeySequence, QShortcut, QStandardItemModel
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QButtonGroup,
     QDoubleSpinBox,
@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QStackedWidget,
     QStyledItemDelegate,
-    QTreeView,
     QVBoxLayout,
     QWidget,
 )
@@ -220,9 +219,23 @@ class EnterOnlyDelegate(QStyledItemDelegate):
     an updated signal so that the data can be updated internally.
     """
 
+    name_edit_finished = Signal(object)  # Emits QModelIndex
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._editing_index = None
+
+    def createEditor(self, parent, option, index):
+        editor = super().createEditor(parent, option, index)
+        editor.setProperty(
+            "originalText", index.data()
+        )  # Save the original name
+        self._editing_index = index
+        return editor
+
     def eventFilter(self, editor, event):
         if event.type() == QEvent.FocusOut:
-            # Cancel editing on focus out
+            # Restore original text on focus loss (cancel edit)
             editor.blockSignals(True)
             editor.setText(editor.property("originalText"))
             editor.blockSignals(False)
@@ -230,17 +243,15 @@ class EnterOnlyDelegate(QStyledItemDelegate):
             return True
 
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            # Accept editing on Enter
-            return super().eventFilter(editor, event)
+            # User manually pressed Enter — accept the edit
+            self.commitData.emit(editor)
+            self.closeEditor.emit(editor, QStyledItemDelegate.NoHint)
+            if self._editing_index is not None:
+                self.name_edit_finished.emit(self._editing_index)
+                self._editing_index = None
+            return True
 
         return super().eventFilter(editor, event)
-
-    def createEditor(self, parent, option, index):
-        editor = super().createEditor(parent, option, index)
-        editor.setProperty(
-            "originalText", index.data()
-        )  # Store original value
-        return editor
 
 
 class TreeViewPanel(QWidget):
@@ -278,8 +289,8 @@ class TreeViewPanel(QWidget):
         self.tree_view = SystemTree()
 
         # Set the delegate to save the data only on Enter-press
-        delegate = EnterOnlyDelegate(self.tree_view)
-        self.tree_view.setItemDelegate(delegate)
+        self.delegate = EnterOnlyDelegate(self.tree_view)
+        self.tree_view.setItemDelegate(self.delegate)
 
         button_layout = QHBoxLayout()
         self.new_uc_btn = QPushButton("+ UC")
