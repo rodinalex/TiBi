@@ -14,7 +14,7 @@ class BasisVector:
     Represents a basis vector in 3D space for a crystalline unit cell.
 
     A unit cell is defined by three basis vectors that form a parallelepiped.
-    The is_periodic flag indicates whether the crystal repeats along this direction.
+    The is_periodic flag marks whether the crystal repeats along the direction.
     A non-periodic direction represents a finite dimension of the system.
 
     Attributes:
@@ -62,10 +62,10 @@ class Site:
     """
     Represents a physical site (like an atom) within a unit cell.
 
-    Sites are positioned using fractional coordinates relative to the unit cell's
-    basis vectors. Each site can contain multiple quantum states (orbitals).
-    The position is specified using fractional coordinates within the unit cell,
-    where each coordinate ranges from 0 to 1.
+    Sites are positioned using fractional coordinates relative to the unit
+    cell's basis vectors. Each site can contain multiple quantum states.
+    The position is specified using fractional coordinates within
+    the unit cell, where each coordinate ranges from 0 to 1.
 
     Attributes:
         name: Name of the site (e.g., atom name like "C", "Fe", etc.)
@@ -80,6 +80,8 @@ class Site:
     c1: float  # Fractional coordinate along the first basis vector (0-1)
     c2: float  # Fractional coordinate along the second basis vector (0-1)
     c3: float  # Fractional coordinate along the third basis vector (0-1)
+    R: float  # Radius used for plotting
+    color: Tuple[float, float, float, float]  # Site's color used in plotting
     states: dict[uuid.UUID, State] = field(
         default_factory=dict
     )  # States at this site
@@ -89,18 +91,22 @@ class Site:
 @dataclass
 class UnitCell:
     """
-    Represents a crystalline unit cell with sites, states, and hopping parameters.
+    Represents a crystalline unit cell with sites, states, and hopping
+    parameters.
 
     The unit cell is defined by three basis vectors and contains sites (atoms).
-    Each site can have multiple states (orbitals). Hopping terms define how electrons
-    can move between states, both within the unit cell and between periodic images.
+    Each site can have multiple states (orbitals). Hopping terms define how
+    electrons can move between states, both within the unit cell and between
+    periodic images.
 
     The hopping dictionary has a complex structure:
     - Keys are pairs of state UUIDs (destination_state_id, source_state_id)
     - Values are lists of (displacement, amplitude) pairs where:
-      - displacement is a tuple of three integers (n1,n2,n3) indicating which periodic
-        image of the unit cell is involved (0,0,0 means within the same unit cell)
-      - amplitude is a complex number representing the hopping strength and phase
+      - displacement is a tuple of three integers (n1,n2,n3) indicating which
+        periodic image of the unit cell is involved
+        (0,0,0 means within the same unit cell)
+      - amplitude is a complex number representing the hopping strength
+        and phase
 
     Attributes:
         name: Name of the unit cell
@@ -125,23 +131,18 @@ class UnitCell:
             Tuple[Tuple[int, int, int], np.complex128]
         ],  # [(displacement, amplitude), ...]
     ] = field(default_factory=dict)
-    site_colors: dict[uuid.UUID, Tuple[float, float, float, float]] = field(
-        default_factory=dict
-    )  # Site colors to be used for plotting
-    site_sizes: dict[uuid.UUID, float] = field(
-        default_factory=dict
-    )  # Radii of the site spheres to be used for plotting
     id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
 
     def volume(self) -> float:
         """
         Compute the volume of the unit cell using the scalar triple product.
 
-        Calculates the volume of the parallelepiped defined by the three basis vectors
-        using the formula V = a1·(a2×a3), where a1, a2, and a3 are the basis vectors.
+        Calculates the volume of the cell defined by the three basis vectors
+        using the formula V = a1·(a2×a3), where a1, a2, and a3 are the vectors.
 
         Returns:
-            float: Volume of the unit cell in cubic Angstroms (or whatever units the basis vectors use)
+            float: Volume of the unit cell in cubic Angstroms
+                (or whatever units the basis vectors use)
         """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
@@ -150,8 +151,9 @@ class UnitCell:
         """
         Check whether the Hamiltonian is Hermitian.
 
-        For each key (destination_state_id, source_state_id) in the hoppings dictionary, check
-        if there is a key (source_state_id, destination_state_id). If so, check that the entries
+        For each key (destination_state_id, source_state_id) in the
+        hoppings dictionary, check if there is a key
+        (source_state_id, destination_state_id). If so, check that the entries
         are related by Hermitian conjugation.
         """
         hermitian = True
@@ -176,14 +178,16 @@ class UnitCell:
         """
         Compute the reciprocal lattice vectors for the periodic directions.
 
-        Calculates the reciprocal lattice vectors corresponding to the periodic directions
-        in the unit cell. The number of reciprocal vectors depends on the number of
-        periodic dimensions (0-3). The reciprocal vectors satisfy the orthogonality
-        condition: G_i · a_j = 2π δ_ij, where G_i are reciprocal vectors and a_j are
-        real-space basis vectors.
+        Calculates the reciprocal lattice vectors corresponding to the
+        periodic directions in the unit cell.
+        The number of reciprocal vectors depends on the number of
+        periodic dimensions (0-3). The reciprocal vectors satisfy
+        the orthogonality condition: G_i · a_j = 2π δ_ij,
+        where G_i are reciprocal vectors and a_j are real-space basis vectors.
 
         Returns:
-            list[np.ndarray]: List of 3D reciprocal vectors (0 to 3 items depending on periodicity)
+            list[np.ndarray]: List of 3D reciprocal vectors
+            (0 to 3 items depending on periodicity)
         """
         basis_vectors = [
             v for v in [self.v1, self.v2, self.v3] if v.is_periodic

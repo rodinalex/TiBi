@@ -2,9 +2,7 @@ import copy
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QUndoCommand
 from PySide6.QtWidgets import QDoubleSpinBox
-import random
 from resources.constants import (
-    default_site_size,
     mk_new_unit_cell,
     mk_new_site,
     mk_new_state,
@@ -74,13 +72,6 @@ class AddSiteCommand(QUndoCommand):
     def redo(self):
         unit_cell = self.controller.unit_cells[self.uc_id]
         unit_cell.sites[self.site.id] = self.site
-        unit_cell.site_colors[self.site.id] = (
-            random.uniform(0, 1),
-            random.uniform(0, 1),
-            random.uniform(0, 1),
-            1.0,
-        )
-        unit_cell.site_sizes[self.site.id] = default_site_size
         self.controller.tree_view._add_tree_item(
             self.site.name, self.uc_id, self.site.id
         )
@@ -89,8 +80,6 @@ class AddSiteCommand(QUndoCommand):
     # Remove the color and size entries
     def undo(self):
         del self.controller.unit_cells[self.uc_id].sites[self.site.id]
-        del self.controller.unit_cells[self.uc_id].site_colors[self.site.id]
-        del self.controller.unit_cells[self.uc_id].site_sizes[self.site.id]
         self.controller.tree_view._remove_tree_item(self.uc_id, self.site.id)
 
 
@@ -179,18 +168,8 @@ class DeleteItemCommand(QUndoCommand):
             self.item = copy.deepcopy(
                 self.controller.unit_cells[self.uc_id].sites[self.site_id]
             )
-            self.color = self.controller.unit_cells[self.uc_id].site_colors[
-                self.site.id
-            ]
-            self.size = self.controller.unit_cells[self.uc_id].site_sizes[
-                self.site.id
-            ]
 
             del self.controller.unit_cells[self.uc_id].sites[self.site_id]
-            del self.controller.unit_cells[self.uc_id].site_colors[
-                self.site.id
-            ]
-            del self.controller.unit_cells[self.uc_id].site_sizes[self.site.id]
         # No site selected, therefore remove the unit cell from the model
         elif self.uc_id:
             self.item = copy.deepcopy(self.controller.unit_cells[self.uc_id])
@@ -212,12 +191,6 @@ class DeleteItemCommand(QUndoCommand):
         elif self.site_id:
             unit_cell = self.controller.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
-            self.controller.unit_cells[self.uc_id].site_colors[
-                self.site.id
-            ] = self.color
-            self.controller.unit_cells[self.uc_id].site_sizes[
-                self.site.id
-            ] = self.size
 
             self.controller.tree_view._add_tree_item(
                 self.item.name, self.uc_id, self.item.id
@@ -301,29 +274,109 @@ class RenameTreeItemCommand(QUndoCommand):
 
 
 class UpdateUnitCellParameterCommand(QUndoCommand):
-    def __init__(self, controller, param, value):
-        super().__init__("Update Parameter")
+    def __init__(
+        self, controller, vector, coordinate, spinbox: QDoubleSpinBox
+    ):
+        super().__init__("Update Unit Cell Parameter")
         self.controller = controller
-        self.param = param
-        self.new_value = value
+        self.vector = vector
+        self.coordinate = coordinate
+        self.spinbox = spinbox
+        self.new_value = self.spinbox.value()
 
         self.uc_id = self.controller.selection.get("unit_cell", None)
-        self.site_id = self.controller.selection.get("site", None)
-        self.state_id = self.controller.selection.get("state", None)
 
-    # Determine what item type is being deleted and save its deep copy.
-    # For Sites, also save their color and radius
-    # Delete the item after
+        self.old_value = getattr(
+            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            self.coordinate,
+        )
+
     def redo(self):
-        pass
+        setattr(
+            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            self.coordinate,
+            self.new_value,
+        )
+        self.spinbox.setValue(self.new_value)
 
-    def unto(self):
-        pass
+    def undo(self):
+        setattr(
+            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            self.coordinate,
+            self.old_value,
+        )
+        self.spinbox.setValue(self.old_value)
+
+
+class ReduceBasisCommand(QUndoCommand):
+    """
+    Reduce the basis vectors of the selected unit cell.
+
+    This method applies the Lenstra-Lenstra-Lovász (LLL) lattice
+    reduction algorithm to find a more orthogonal set of basis
+    vectors that spans the same lattice.
+    This is useful for finding a 'nicer' representation of the unit cell
+    with basis vectors that are shorter and more orthogonal to each other.
+
+    The method only affects the periodic directions of the unit cell. After
+    reduction, the UI is updated to reflect the new basis vectors.
+    """
+
+    def __init__(self, controller):
+        super().__init__("Update Site Parameter")
+        self.controller = controller
+        self.uc_id = self.controller.selection.get("unit_cell", None)
+
+        if self.uc_id:
+            uc = self.controller.unit_cells[self.uc_id]
+            self.old_basis = [uc.v1, uc.v2, uc.v3]
+            self.new_basis = uc.reduced_basis()
+
+    def redo(self):
+        if self.uc_id:
+            uc = self.controller.unit_cells[self.uc_id]
+            uc.v1 = self.new_basis[0]
+            uc.v2 = self.new_basis[1]
+            uc.v3 = self.new_basis[2]
+
+            self.controller.v1[0].setValue(uc.v1.x)
+            self.controller.v1[1].setValue(uc.v1.y)
+            self.controller.v1[2].setValue(uc.v1.z)
+
+            self.controller.v2[0].setValue(uc.v2.x)
+            self.controller.v2[1].setValue(uc.v2.y)
+            self.controller.v2[2].setValue(uc.v2.z)
+
+            self.controller.v3[0].setValue(uc.v3.x)
+            self.controller.v3[1].setValue(uc.v3.y)
+            self.controller.v3[2].setValue(uc.v3.z)
+
+    def undo(self):
+        if self.uc_id:
+            uc = self.controller.unit_cells[self.uc_id]
+            uc.v1 = self.old_basis[0]
+            uc.v2 = self.old_basis[1]
+            uc.v3 = self.old_basis[2]
+
+            self.controller.v1[0].setValue(uc.v1.x)
+            self.controller.v1[1].setValue(uc.v1.y)
+            self.controller.v1[2].setValue(uc.v1.z)
+
+            self.controller.v2[0].setValue(uc.v2.x)
+            self.controller.v2[1].setValue(uc.v2.y)
+            self.controller.v2[2].setValue(uc.v2.z)
+
+            self.controller.v3[0].setValue(uc.v3.x)
+            self.controller.v3[1].setValue(uc.v3.y)
+            self.controller.v3[2].setValue(uc.v3.z)
+
+
+# class ChangeDimensionalityCommand(QUndoCommand):
 
 
 class UpdateSiteParameterCommand(QUndoCommand):
     def __init__(self, controller, param, spinbox: QDoubleSpinBox):
-        super().__init__("Update Parameter")
+        super().__init__("Update Site Parameter")
         self.controller = controller
         self.param = param
         self.spinbox = spinbox
@@ -332,14 +385,12 @@ class UpdateSiteParameterCommand(QUndoCommand):
         self.uc_id = self.controller.selection.get("unit_cell", None)
         self.site_id = self.controller.selection.get("site", None)
 
-    # Determine what item type is being deleted and save its deep copy.
-    # For Sites, also save their color and radius
-    # Delete the item after
-    def redo(self):
         self.old_value = getattr(
             self.controller.unit_cells[self.uc_id].sites[self.site_id],
             self.param,
         )
+
+    def redo(self):
         setattr(
             self.controller.unit_cells[self.uc_id].sites[self.site_id],
             self.param,
@@ -356,4 +407,55 @@ class UpdateSiteParameterCommand(QUndoCommand):
         self.spinbox.setValue(self.old_value)
 
 
-# Item Properties Commands
+# class ChangeSiteColorCommand(QUndoCommand):
+#     """
+#     Use a color dialog to choose a color for the selected site to be used
+#     in the UC plot.
+#     """
+
+#     def __init__(self, controller):
+#         super().__init__("Update Site Parameter")
+#         self.controller = controller
+#         self.uc_id = self.controller.selection.get("unit_cell", None)
+#         self.site_id = self.controller.selection.get("site", None)
+#         self.old_color = (
+#             self.controller.unit_cells[self.uc_id].sites[self.site_id].color
+#         )
+
+#     # Open the color dialog with the current color selected
+#     start_color = QColor(
+#         int(old_color[0] * 255),
+#         int(old_color[1] * 255),
+#         int(old_color[2] * 255),
+#         int(old_color[3] * 255),
+#     )
+#     new_color = QColorDialog.getColor(
+#         initial=start_color,
+#         options=QColorDialog.ShowAlphaChannel,
+#     )
+#     # Update the button color
+#     if new_color.isValid():
+
+#         rgba = (
+#             f"rgba({new_color.red()}, "
+#             f"{new_color.green()}, "
+#             f"{new_color.blue()}, "
+#             f"{new_color.alpha()})"
+#         )
+#         self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+#             f"background-color: {rgba};"
+#         )
+
+#         # Update the color in the dictionary (0-1 scale)
+#         self.unit_cells[self.selection["unit_cell"]].site_colors[
+#             self.selection["site"]
+#         ] = (
+#             new_color.redF(),
+#             new_color.greenF(),
+#             new_color.blueF(),
+#             new_color.alphaF(),
+#         )
+#         self.plot_update_requested.emit()
+
+
+# # Item Properties Commands

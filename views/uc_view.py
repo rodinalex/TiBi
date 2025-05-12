@@ -2,7 +2,6 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -15,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
-from resources.ui_elements import divider_line, SystemTree
+from resources.ui_elements import divider_line, EnterKeySpinBox, SystemTree
 
 
 class UnitCellPanel(QWidget):
@@ -87,12 +86,12 @@ class UnitCellPanel(QWidget):
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_column(n):
-            x = QDoubleSpinBox()
-            y = QDoubleSpinBox()
-            z = QDoubleSpinBox()
+            x = EnterKeySpinBox()
+            y = EnterKeySpinBox()
+            z = EnterKeySpinBox()
 
             for coord in [x, y, z]:
-                coord.setButtonSymbols(QDoubleSpinBox.NoButtons)
+                coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
@@ -163,15 +162,15 @@ class SitePanel(QWidget):
         header.setAlignment(Qt.AlignCenter)
 
         # Coordinate and radius fields
-        self.R = QDoubleSpinBox()
-        self.c1 = QDoubleSpinBox()
-        self.c2 = QDoubleSpinBox()
-        self.c3 = QDoubleSpinBox()
+        self.R = EnterKeySpinBox()
+        self.c1 = EnterKeySpinBox()
+        self.c2 = EnterKeySpinBox()
+        self.c3 = EnterKeySpinBox()
 
         for c in [self.R, self.c1, self.c2, self.c3]:
             c.setRange(0.0, 1.0)
             c.setDecimals(3)
-            c.setButtonSymbols(QDoubleSpinBox.NoButtons)
+            c.setButtonSymbols(EnterKeySpinBox.NoButtons)
 
         # Color picker button
         self.color_picker_btn = QPushButton()

@@ -1,6 +1,6 @@
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QFrame, QTreeView
+from PySide6.QtWidgets import QDoubleSpinBox, QFrame, QTreeView
 import uuid
 
 from src.tibitypes import UnitCell
@@ -13,6 +13,36 @@ def divider_line():
     line.setFixedHeight(2)
     line.setStyleSheet("color: #888888;")
     return line
+
+
+class EnterKeySpinBox(QDoubleSpinBox):
+    editingConfirmed = Signal()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_value = self.value()
+
+    def focusInEvent(self, event):
+        self._original_value = self.value()
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        # Revert to original value on focus out
+        self.blockSignals(True)
+        self.setValue(self._original_value)
+        self.blockSignals(False)
+        super().focusOutEvent(event)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
+            self._original_value = self.value()
+            self.editingConfirmed.emit()
+        elif event.key() == Qt.Key_Escape:
+            self.blockSignals(True)
+            self.setValue(self._original_value)
+            self.blockSignals(False)
+        else:
+            super().keyPressEvent(event)
 
 
 class SystemTree(QTreeView):

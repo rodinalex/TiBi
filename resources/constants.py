@@ -1,3 +1,4 @@
+import random
 from src.tibitypes import BasisVector, State, Site, UnitCell
 
 """
@@ -90,7 +91,14 @@ def mk_new_site():
     c1 = 0  # Fractional coordinate along first basis vector
     c2 = 0  # Fractional coordinate along second basis vector
     c3 = 0  # Fractional coordinate along third basis vector
-    return Site(name, c1, c2, c3)
+    R = default_site_size
+    color = (
+        random.uniform(0, 1),
+        random.uniform(0, 1),
+        random.uniform(0, 1),
+        1.0,
+    )
+    return Site(name, c1, c2, c3, R, color)
 
 
 def mk_new_state():
