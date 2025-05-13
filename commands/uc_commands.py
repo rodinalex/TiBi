@@ -7,6 +7,10 @@ from resources.constants import (
     mk_new_site,
     mk_new_state,
 )
+import uuid
+
+from resources.ui_elements import SystemTree
+from src.tibitypes import BasisVector, UnitCell
 
 
 # Tree Commands
@@ -28,22 +32,30 @@ class AddUnitCellCommand(QUndoCommand):
     automatically selected so the user can immediately edit its properties.
     """
 
-    def __init__(self, controller):
+    def __init__(
+        self, unit_cells: dict[uuid.UUID, UnitCell], tree_view: SystemTree
+    ):
+        """
+        Initialize the command.
+
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            tree_view: UI object containing the tree view
+        """
         super().__init__("Add Unit Cell")
-        self.controller = controller
+        self.unit_cells = unit_cells
+        self.tree_view = tree_view
         self.unit_cell = mk_new_unit_cell()
 
     # Add the newly-created unit cell to the dictionary and create a tree item
     def redo(self):
-        self.controller.unit_cells[self.unit_cell.id] = self.unit_cell
-        self.controller.tree_view._add_tree_item(
-            self.unit_cell.name, self.unit_cell.id
-        )
+        self.unit_cells[self.unit_cell.id] = self.unit_cell
+        self.tree_view._add_tree_item(self.unit_cell.name, self.unit_cell.id)
 
     # Remove the unit cell from the dictionary and the tree using its id
     def undo(self):
-        del self.controller.unit_cells[self.unit_cell.id]
-        self.controller.tree_view._remove_tree_item(self.unit_cell.id)
+        del self.unit_cells[self.unit_cell.id]
+        self.tree_view._remove_tree_item(self.unit_cell.id)
 
 
 class AddSiteCommand(QUndoCommand):
@@ -61,26 +73,39 @@ class AddSiteCommand(QUndoCommand):
     - Random color
     """
 
-    def __init__(self, controller):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        tree_view: SystemTree,
+    ):
+        """
+        Initialize the command.
+
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Dictionary containing the current selection
+            tree_view: UI object containing the tree view
+        """
         super().__init__("Add Site")
-        self.controller = controller
-        self.uc_id = self.controller.selection["unit_cell"]
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.tree_view = tree_view
+        self.uc_id = self.selection["unit_cell"]
         self.site = mk_new_site()
 
     # Add the newly-created site to the dictionary and create a tree item
     # Add entries to the size and colors dictionaries for the site
     def redo(self):
-        unit_cell = self.controller.unit_cells[self.uc_id]
+        unit_cell = self.unit_cells[self.uc_id]
         unit_cell.sites[self.site.id] = self.site
-        self.controller.tree_view._add_tree_item(
-            self.site.name, self.uc_id, self.site.id
-        )
+        self.tree_view._add_tree_item(self.site.name, self.uc_id, self.site.id)
 
     # Remove the unit cell from the dictionary and the tree using its id
     # Remove the color and size entries
     def undo(self):
-        del self.controller.unit_cells[self.uc_id].sites[self.site.id]
-        self.controller.tree_view._remove_tree_item(self.uc_id, self.site.id)
+        del self.unit_cells[self.uc_id].sites[self.site.id]
+        self.tree_view._remove_tree_item(self.uc_id, self.site.id)
 
 
 class AddStateCommand(QUndoCommand):
@@ -94,30 +119,45 @@ class AddStateCommand(QUndoCommand):
     - Name: "New State"
     """
 
-    def __init__(self, controller):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        tree_view: SystemTree,
+    ):
+        """
+        Initialize the command.
+
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Dictionary containing the current selection
+            tree_view: UI object containing the tree view
+        """
         super().__init__("Add State")
-        self.controller = controller
-        self.uc_id = self.controller.selection["unit_cell"]
-        self.site_id = self.controller.selection["site"]
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.tree_view = tree_view
+        self.uc_id = self.selection["unit_cell"]
+        self.site_id = self.selection["site"]
         self.state = mk_new_state()
 
     # Add the newly-created state to the dictionary and create a tree item
     def redo(self):
-        unit_cell = self.controller.unit_cells[self.uc_id]
+        unit_cell = self.unit_cells[self.uc_id]
         site = unit_cell.sites[self.site_id]
         site.states[self.state.id] = self.state
-        self.controller.tree_view._add_tree_item(
+        self.tree_view._add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
 
     # Remove the site from the dictionary and the tree using its id
     def undo(self):
         del (
-            self.controller.unit_cells[self.uc_id]
+            self.unit_cells[self.uc_id]
             .sites[self.site_id]
             .states[self.state.id]
         )
-        self.controller.tree_view._remove_tree_item(
+        self.tree_view._remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
 
@@ -140,12 +180,28 @@ class DeleteItemCommand(QUndoCommand):
     (or nothing if a unit cell was deleted).
     """
 
-    def __init__(self, controller):
-        super().__init__("Add State")
-        self.controller = controller
-        self.uc_id = self.controller.selection.get("unit_cell", None)
-        self.site_id = self.controller.selection.get("site", None)
-        self.state_id = self.controller.selection.get("state", None)
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        tree_view: SystemTree,
+    ):
+        """
+        Initialize the command.
+
+        Args:
+            unit_cells: Dictionary mapping UUIDs to UnitCell objects
+            selection: Dictionary containing the current selection
+            tree_view: UI object containing the tree view
+        """
+        super().__init__("Delete Item")
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.tree_view = tree_view
+
+        self.uc_id = self.selection.get("unit_cell", None)
+        self.site_id = self.selection.get("site", None)
+        self.state_id = self.selection.get("state", None)
 
     # Determine what item type is being deleted and save its deep copy.
     # For Sites, also save their color and radius
@@ -153,54 +209,52 @@ class DeleteItemCommand(QUndoCommand):
     def redo(self):
         if self.state_id:
             self.item = copy.deepcopy(
-                self.controller.unit_cells[self.uc_id]
+                self.unit_cells[self.uc_id]
                 .sites[self.site_id]
                 .states[self.state_id]
             )
             # Delete the selected state from the site
             del (
-                self.controller.unit_cells[self.uc_id]
+                self.unit_cells[self.uc_id]
                 .sites[self.site_id]
                 .states[self.state_id]
             )
         # No state selected, therefore remove the site from the unit cell
         elif self.site_id:
             self.item = copy.deepcopy(
-                self.controller.unit_cells[self.uc_id].sites[self.site_id]
+                self.unit_cells[self.uc_id].sites[self.site_id]
             )
 
-            del self.controller.unit_cells[self.uc_id].sites[self.site_id]
+            del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
         elif self.uc_id:
-            self.item = copy.deepcopy(self.controller.unit_cells[self.uc_id])
-            del self.controller.unit_cells[self.uc_id]
+            self.item = copy.deepcopy(self.unit_cells[self.uc_id])
+            del self.unit_cells[self.uc_id]
 
-        self.controller.tree_view._remove_tree_item(
+        self.tree_view._remove_tree_item(
             self.uc_id, self.site_id, self.state_id
         )
 
     def undo(self):
         if self.state_id:
-            unit_cell = self.controller.unit_cells[self.uc_id]
+            unit_cell = self.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
-            self.controller.tree_view._add_tree_item(
+            self.tree_view._add_tree_item(
                 self.item.name, self.uc_id, self.site_id, self.item.id
             )
 
         elif self.site_id:
-            unit_cell = self.controller.unit_cells[self.uc_id]
+            unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
 
-            self.controller.tree_view._add_tree_item(
+            self.tree_view._add_tree_item(
                 self.item.name, self.uc_id, self.item.id
             )
 
         elif self.uc_id:
-            self.controller.unit_cells[self.item.id] = self.item
-            self.controller.tree_view._add_tree_item(
-                self.item.name, self.item.id
-            )
+            self.unit_cells[self.item.id] = self.item
+            self.tree_view._add_tree_item(self.item.name, self.item.id)
 
 
 class RenameTreeItemCommand(QUndoCommand):
@@ -371,7 +425,124 @@ class ReduceBasisCommand(QUndoCommand):
             self.controller.v3[2].setValue(uc.v3.z)
 
 
-# class ChangeDimensionalityCommand(QUndoCommand):
+class ChangeDimensionalityCommand(QUndoCommand):
+    """
+    Handle changes in the dimensionality selection (0D, 1D, 2D, 3D).
+
+    This method is called when the user selects a different dimensionality
+    radio button.
+    It updates the unit cell's periodicity flags and enables/disables
+    appropriate basis vector components based on
+    the selected dimensionality.
+
+    For example:
+    - 0D: All directions are non-periodic (isolated system)
+    - 1D: First direction is periodic, others are not
+    - 2D: First and second directions are periodic, third is not
+    - 3D: All directions are periodic (fully periodic crystal)
+    """
+
+    def __init__(self, controller, dim):
+        super().__init__("Change dimensionality")
+        self.controller = controller
+        self.new_dim = dim
+
+        self.uc_id = self.controller.selection.get("unit_cell", None)
+        uc = self.controller.unit_cells[self.uc_id]
+        self.old_v1 = uc.v1
+        self.old_v2 = uc.v2
+        self.old_v3 = uc.v3
+        self.old_dim = (
+            uc.v1.is_periodic + uc.v2.is_periodic + uc.v3.is_periodic
+        )
+
+        if dim == 0:
+            self.new_v1 = BasisVector(1, 0, 0, False)
+            self.new_v2 = BasisVector(0, 1, 0, False)
+            self.new_v3 = BasisVector(0, 0, 1, False)
+
+        elif dim == 1:
+            self.new_v1 = BasisVector(self.old_v1.x, 0, 0, True)
+            self.new_v2 = BasisVector(0, self.old_v2.y, 0, False)
+            self.new_v3 = BasisVector(0, 0, self.old_v3.z, False)
+
+        elif dim == 2:
+            self.new_v1 = BasisVector(self.old_v1.x, self.old_v1.y, 0, True)
+            self.new_v2 = BasisVector(self.old_v2.x, self.old_v2.y, 0, True)
+            self.new_v3 = BasisVector(0, 0, self.old_v3.z, False)
+
+        else:
+            self.new_v1 = BasisVector(
+                self.old_v1.x, self.old_v1.y, self.old_v1.z, True
+            )
+            self.new_v2 = BasisVector(
+                self.old_v2.x, self.old_v2.y, self.old_v2.z, True
+            )
+            self.new_v3 = BasisVector(
+                self.old_v3.x, self.old_v3.y, self.old_v3.z, True
+            )
+
+    def redo(self):
+
+        self.controller.v1[0].setEnabled(True)
+        self.controller.v1[1].setEnabled(self.new_dim > 1)
+        self.controller.v1[2].setEnabled(self.new_dim > 2)
+
+        self.controller.v2[0].setEnabled(self.new_dim > 1)
+        self.controller.v2[1].setEnabled(True)
+        self.controller.v2[2].setEnabled(self.new_dim > 2)
+
+        self.controller.v3[0].setEnabled(self.new_dim > 2)
+        self.controller.v3[1].setEnabled(self.new_dim > 2)
+        self.controller.v3[2].setEnabled(True)
+
+        uc = self.controller.unit_cells[self.uc_id]
+        uc.v1 = self.new_v1
+        uc.v2 = self.new_v2
+        uc.v3 = self.new_v3
+
+        self.controller.v1[0].setValue(uc.v1.x)
+        self.controller.v1[1].setValue(uc.v1.y)
+        self.controller.v1[2].setValue(uc.v1.z)
+
+        self.controller.v2[0].setValue(uc.v2.x)
+        self.controller.v2[1].setValue(uc.v2.y)
+        self.controller.v2[2].setValue(uc.v2.z)
+
+        self.controller.v3[0].setValue(uc.v3.x)
+        self.controller.v3[1].setValue(uc.v3.y)
+        self.controller.v3[2].setValue(uc.v3.z)
+
+    def undo(self):
+
+        self.controller.v1[0].setEnabled(True)
+        self.controller.v1[1].setEnabled(self.old_dim > 1)
+        self.controller.v1[2].setEnabled(self.old_dim > 2)
+
+        self.controller.v2[0].setEnabled(self.old_dim > 1)
+        self.controller.v2[1].setEnabled(True)
+        self.controller.v2[2].setEnabled(self.old_dim > 2)
+
+        self.controller.v3[0].setEnabled(self.old_dim > 2)
+        self.controller.v3[1].setEnabled(self.old_dim > 2)
+        self.controller.v3[2].setEnabled(True)
+
+        uc = self.controller.unit_cells[self.uc_id]
+        uc.v1 = self.old_v1
+        uc.v2 = self.old_v2
+        uc.v3 = self.old_v3
+
+        self.controller.v1[0].setValue(uc.v1.x)
+        self.controller.v1[1].setValue(uc.v1.y)
+        self.controller.v1[2].setValue(uc.v1.z)
+
+        self.controller.v2[0].setValue(uc.v2.x)
+        self.controller.v2[1].setValue(uc.v2.y)
+        self.controller.v2[2].setValue(uc.v2.z)
+
+        self.controller.v3[0].setValue(uc.v3.x)
+        self.controller.v3[1].setValue(uc.v3.y)
+        self.controller.v3[2].setValue(uc.v3.z)
 
 
 class UpdateSiteParameterCommand(QUndoCommand):
