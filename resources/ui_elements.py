@@ -121,8 +121,7 @@ class SystemTree(QTreeView):
             item_id: UUID of the item
         """
         tree_item = QStandardItem(item_name)
-        tree_item.setData(item_type, Qt.UserRole + 1)  # Store the type
-        tree_item.setData(item_id, Qt.UserRole + 2)  # Store the ID
+        tree_item.setData(item_id, Qt.UserRole)  # Store the ID
 
         # Set other visual properties
         tree_item.setEditable(True)
@@ -156,7 +155,7 @@ class SystemTree(QTreeView):
 
         for row in range(parent.rowCount()):
             item = parent.child(row)
-            if item.data(Qt.UserRole + 2) == item_id:
+            if item.data(Qt.UserRole) == item_id:
                 return item
 
     def _add_tree_item(self, name, uc_id, site_id=None, state_id=None):
@@ -241,32 +240,33 @@ class SystemTree(QTreeView):
             index = indexes[0]
             item = self.tree_model.itemFromIndex(index)
 
-            item_type = item.data(Qt.UserRole + 1)
-            item_id = item.data(Qt.UserRole + 2)
+            item_id = item.data(Qt.UserRole)
 
-            if item_type == "unit_cell":  # unit cell selected
+            if item.parent() is None:  # unit cell selected
                 new_selection = {
                     "unit_cell": item_id,
                     "site": None,
                     "state": None,
                 }
-            else:  # site or state selected
+            elif item.parent().parent() is None:  # site selected
                 parent_item = item.parent()
-                parent_id = parent_item.data(Qt.UserRole + 2)
+                parent_id = parent_item.data(Qt.UserRole)
 
-                if item_type == "site":  # site selected
-                    new_selection = {
-                        "unit_cell": parent_id,
-                        "site": item_id,
-                        "state": None,
-                    }
+                new_selection = {
+                    "unit_cell": parent_id,
+                    "site": item_id,
+                    "state": None,
+                }
+            else:  # state selected
+                parent_item = item.parent()
+                parent_id = parent_item.data(Qt.UserRole)
+                grandparent_item = parent_item.parent()
+                grandparent_id = grandparent_item.data(Qt.UserRole)
 
-                else:  # state selected
-                    grandparent_item = parent_item.parent()
-                    grandparent_id = grandparent_item.data(Qt.UserRole + 2)
-                    new_selection = {
-                        "unit_cell": grandparent_id,
-                        "site": parent_id,
-                        "state": item_id,
-                    }
+                new_selection = {
+                    "unit_cell": grandparent_id,
+                    "site": parent_id,
+                    "state": item_id,
+                }
+
         self.tree_selection_changed.emit(new_selection)
