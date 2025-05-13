@@ -1,6 +1,6 @@
 import copy
 from PySide6.QtCore import QItemSelectionModel, Signal
-from PySide6.QtGui import QStandardItem, QUndoCommand
+from PySide6.QtGui import QColor, QStandardItem, QUndoCommand
 from PySide6.QtWidgets import QDoubleSpinBox, QRadioButton
 from resources.constants import (
     mk_new_unit_cell,
@@ -11,6 +11,7 @@ import uuid
 
 from resources.ui_elements import EnterKeySpinBox, SystemTree
 from src.tibitypes import BasisVector, UnitCell
+from views.uc_view import UnitCellView
 
 
 # Tree Commands
@@ -583,55 +584,65 @@ class UpdateSiteParameterCommand(QUndoCommand):
         self.spinbox.setValue(self.old_value)
 
 
-# class ChangeSiteColorCommand(QUndoCommand):
-#     """
-#     Use a color dialog to choose a color for the selected site to be used
-#     in the UC plot.
-#     """
+class ChangeSiteColorCommand(QUndoCommand):
+    """
+    Use a color dialog to choose a color for the selected site to be used
+    in the UC plot.
+    """
 
-#     def __init__(self, controller):
-#         super().__init__("Update Site Parameter")
-#         self.controller = controller
-#         self.uc_id = self.controller.selection.get("unit_cell", None)
-#         self.site_id = self.controller.selection.get("site", None)
-#         self.old_color = (
-#             self.controller.unit_cells[self.uc_id].sites[self.site_id].color
-#         )
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        new_color: QColor,
+        old_color: QColor,
+        unit_cell_view: UnitCellView,
+    ):
+        super().__init__("Update Site Parameter")
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.new_color = new_color
+        self.old_color = old_color
+        self.unit_cell_view = unit_cell_view
 
-#     # Open the color dialog with the current color selected
-#     start_color = QColor(
-#         int(old_color[0] * 255),
-#         int(old_color[1] * 255),
-#         int(old_color[2] * 255),
-#         int(old_color[3] * 255),
-#     )
-#     new_color = QColorDialog.getColor(
-#         initial=start_color,
-#         options=QColorDialog.ShowAlphaChannel,
-#     )
-#     # Update the button color
-#     if new_color.isValid():
+    def redo(self):
+        rgba = (
+            f"rgba({self.new_color.red()}, "
+            f"{self.new_color.green()}, "
+            f"{self.new_color.blue()}, "
+            f"{self.new_color.alpha()})"
+        )
+        self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+            f"background-color: {rgba};"
+        )
 
-#         rgba = (
-#             f"rgba({new_color.red()}, "
-#             f"{new_color.green()}, "
-#             f"{new_color.blue()}, "
-#             f"{new_color.alpha()})"
-#         )
-#         self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-#             f"background-color: {rgba};"
-#         )
+        # Update the color in the dictionary (0-1 scale)
+        self.unit_cells[self.selection["unit_cell"]].sites[
+            self.selection["site"]
+        ].color = (
+            self.new_color.redF(),
+            self.new_color.greenF(),
+            self.new_color.blueF(),
+            self.new_color.alphaF(),
+        )
 
-#         # Update the color in the dictionary (0-1 scale)
-#         self.unit_cells[self.selection["unit_cell"]].site_colors[
-#             self.selection["site"]
-#         ] = (
-#             new_color.redF(),
-#             new_color.greenF(),
-#             new_color.blueF(),
-#             new_color.alphaF(),
-#         )
-#         self.plot_update_requested.emit()
+    def undo(self):
+        rgba = (
+            f"rgba({self.old_color.red()}, "
+            f"{self.old_color.green()}, "
+            f"{self.old_color.blue()}, "
+            f"{self.old_color.alpha()})"
+        )
+        self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
+            f"background-color: {rgba};"
+        )
 
-
-# # Item Properties Commands
+        # Update the color in the dictionary (0-1 scale)
+        self.unit_cells[self.selection["unit_cell"]].sites[
+            self.selection["site"]
+        ].color = (
+            self.old_color.redF(),
+            self.old_color.greenF(),
+            self.old_color.blueF(),
+            self.old_color.alphaF(),
+        )

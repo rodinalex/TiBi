@@ -8,6 +8,7 @@ from commands.uc_commands import (
     AddSiteCommand,
     AddStateCommand,
     ChangeDimensionalityCommand,
+    ChangeSiteColorCommand,
     DeleteItemCommand,
     ReduceBasisCommand,
     RenameTreeItemCommand,
@@ -261,8 +262,6 @@ class UnitCellController(QObject):
             self._pick_site_color
         )
 
-    # Unit Cell/Site/State Modification Functions
-
     def _show_panels(self):
         """
         Update the UI panels based on the current selection state.
@@ -363,9 +362,12 @@ class UnitCellController(QObject):
         in the UC plot. The color is saved in the dictionary of colors. Next,
         a UC plot update is requested.
         """
-        old_color = self.unit_cells[self.selection["unit_cell"]].site_colors[
-            self.selection["site"]
-        ]
+        old_color = (
+            self.unit_cells[self.selection["unit_cell"]]
+            .sites[self.selection["site"]]
+            .color
+        )
+
         # Open the color dialog with the current color selected
         start_color = QColor(
             int(old_color[0] * 255),
@@ -377,26 +379,15 @@ class UnitCellController(QObject):
             initial=start_color,
             options=QColorDialog.ShowAlphaChannel,
         )
+
         # Update the button color
         if new_color.isValid():
-
-            rgba = (
-                f"rgba({new_color.red()}, "
-                f"{new_color.green()}, "
-                f"{new_color.blue()}, "
-                f"{new_color.alpha()})"
+            self.undo_stack.push(
+                ChangeSiteColorCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    new_color=new_color,
+                    old_color=start_color,
+                    unit_cell_view=self.unit_cell_view,
+                )
             )
-            self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-                f"background-color: {rgba};"
-            )
-
-            # Update the color in the dictionary (0-1 scale)
-            self.unit_cells[self.selection["unit_cell"]].site_colors[
-                self.selection["site"]
-            ] = (
-                new_color.redF(),
-                new_color.greenF(),
-                new_color.blueF(),
-                new_color.alphaF(),
-            )
-            self.plot_update_requested.emit()
