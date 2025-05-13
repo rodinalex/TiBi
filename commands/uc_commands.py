@@ -1,7 +1,7 @@
 import copy
 from PySide6.QtCore import QItemSelectionModel, Signal
 from PySide6.QtGui import QStandardItem, QUndoCommand
-from PySide6.QtWidgets import QDoubleSpinBox
+from PySide6.QtWidgets import QDoubleSpinBox, QRadioButton
 from resources.constants import (
     mk_new_unit_cell,
     mk_new_site,
@@ -9,7 +9,7 @@ from resources.constants import (
 )
 import uuid
 
-from resources.ui_elements import SystemTree
+from resources.ui_elements import EnterKeySpinBox, SystemTree
 from src.tibitypes import BasisVector, UnitCell
 
 
@@ -432,13 +432,27 @@ class ChangeDimensionalityCommand(QUndoCommand):
     - 3D: All directions are periodic (fully periodic crystal)
     """
 
-    def __init__(self, controller, dim):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        v1: list[EnterKeySpinBox],
+        v2: list[EnterKeySpinBox],
+        v3: list[EnterKeySpinBox],
+        dim: int,
+        buttons: list[QRadioButton],
+    ):
         super().__init__("Change dimensionality")
-        self.controller = controller
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.v1 = v1  # Spinboxes for the first basis vector
+        self.v2 = v2  # Spinboxes for the second basis vector
+        self.v3 = v3  # Spinboxes for the third basis vector
         self.new_dim = dim
+        self.buttons = buttons
 
-        self.uc_id = self.controller.selection.get("unit_cell", None)
-        uc = self.controller.unit_cells[self.uc_id]
+        self.uc_id = self.selection.get("unit_cell", None)
+        uc = self.unit_cells[self.uc_id]
         self.old_v1 = uc.v1
         self.old_v2 = uc.v2
         self.old_v3 = uc.v3
@@ -474,65 +488,58 @@ class ChangeDimensionalityCommand(QUndoCommand):
 
     def redo(self):
 
-        self.controller.v1[0].setEnabled(True)
-        self.controller.v1[1].setEnabled(self.new_dim > 1)
-        self.controller.v1[2].setEnabled(self.new_dim > 2)
+        self._set_vector_enables(self.new_dim)
 
-        self.controller.v2[0].setEnabled(self.new_dim > 1)
-        self.controller.v2[1].setEnabled(True)
-        self.controller.v2[2].setEnabled(self.new_dim > 2)
-
-        self.controller.v3[0].setEnabled(self.new_dim > 2)
-        self.controller.v3[1].setEnabled(self.new_dim > 2)
-        self.controller.v3[2].setEnabled(True)
-
-        uc = self.controller.unit_cells[self.uc_id]
+        uc = self.unit_cells[self.uc_id]
         uc.v1 = self.new_v1
         uc.v2 = self.new_v2
         uc.v3 = self.new_v3
 
-        self.controller.v1[0].setValue(uc.v1.x)
-        self.controller.v1[1].setValue(uc.v1.y)
-        self.controller.v1[2].setValue(uc.v1.z)
+        self._copy_vector_components(self.v1, uc.v1)
+        self._copy_vector_components(self.v2, uc.v2)
+        self._copy_vector_components(self.v3, uc.v3)
 
-        self.controller.v2[0].setValue(uc.v2.x)
-        self.controller.v2[1].setValue(uc.v2.y)
-        self.controller.v2[2].setValue(uc.v2.z)
-
-        self.controller.v3[0].setValue(uc.v3.x)
-        self.controller.v3[1].setValue(uc.v3.y)
-        self.controller.v3[2].setValue(uc.v3.z)
+        self._set_checked_button(self.new_dim)
 
     def undo(self):
 
-        self.controller.v1[0].setEnabled(True)
-        self.controller.v1[1].setEnabled(self.old_dim > 1)
-        self.controller.v1[2].setEnabled(self.old_dim > 2)
+        self._set_vector_enables(self.old_dim)
 
-        self.controller.v2[0].setEnabled(self.old_dim > 1)
-        self.controller.v2[1].setEnabled(True)
-        self.controller.v2[2].setEnabled(self.old_dim > 2)
-
-        self.controller.v3[0].setEnabled(self.old_dim > 2)
-        self.controller.v3[1].setEnabled(self.old_dim > 2)
-        self.controller.v3[2].setEnabled(True)
-
-        uc = self.controller.unit_cells[self.uc_id]
+        uc = self.unit_cells[self.uc_id]
         uc.v1 = self.old_v1
         uc.v2 = self.old_v2
         uc.v3 = self.old_v3
 
-        self.controller.v1[0].setValue(uc.v1.x)
-        self.controller.v1[1].setValue(uc.v1.y)
-        self.controller.v1[2].setValue(uc.v1.z)
+        self._copy_vector_components(self.v1, uc.v1)
+        self._copy_vector_components(self.v2, uc.v2)
+        self._copy_vector_components(self.v3, uc.v3)
 
-        self.controller.v2[0].setValue(uc.v2.x)
-        self.controller.v2[1].setValue(uc.v2.y)
-        self.controller.v2[2].setValue(uc.v2.z)
+        self._set_checked_button(self.old_dim)
 
-        self.controller.v3[0].setValue(uc.v3.x)
-        self.controller.v3[1].setValue(uc.v3.y)
-        self.controller.v3[2].setValue(uc.v3.z)
+    def _set_vector_enables(self, dim):
+        self.v1[0].setEnabled(True)
+        self.v1[1].setEnabled(dim > 1)
+        self.v1[2].setEnabled(dim > 2)
+
+        self.v2[0].setEnabled(dim > 1)
+        self.v2[1].setEnabled(True)
+        self.v2[2].setEnabled(dim > 2)
+
+        self.v3[0].setEnabled(dim > 2)
+        self.v3[1].setEnabled(dim > 2)
+        self.v3[2].setEnabled(True)
+
+    def _set_checked_button(self, dim):
+        for btn in self.buttons:
+            btn.blockSignals(True)
+        self.buttons[dim].setChecked(True)
+        for btn in self.buttons:
+            btn.blockSignals(False)
+
+    def _copy_vector_components(self, spinboxes, vector):
+        spinboxes[0].setValue(vector.x)
+        spinboxes[1].setValue(vector.y)
+        spinboxes[2].setValue(vector.z)
 
 
 class UpdateSiteParameterCommand(QUndoCommand):

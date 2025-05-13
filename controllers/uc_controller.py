@@ -153,26 +153,30 @@ class UnitCellController(QObject):
         connect_vector_fields("v3", self.v3)
 
         # Dimensionality radio buttons
-        self.unit_cell_view.unit_cell_panel.radio0D.toggled.connect(
-            lambda: self.undo_stack.push(
-                ChangeDimensionalityCommand(controller=self, dim=0)
+        self.radio_buttons = [
+            self.unit_cell_view.unit_cell_panel.radio0D,
+            self.unit_cell_view.unit_cell_panel.radio1D,
+            self.unit_cell_view.unit_cell_panel.radio2D,
+            self.unit_cell_view.unit_cell_panel.radio3D,
+        ]
+        for dim, radio in enumerate(self.radio_buttons):
+            radio.toggled.connect(
+                lambda checked, d=dim: (
+                    self.undo_stack.push(
+                        ChangeDimensionalityCommand(
+                            unit_cells=self.unit_cells,
+                            selection=self.selection,
+                            v1=self.v1,
+                            v2=self.v2,
+                            v3=self.v3,
+                            dim=d,
+                            buttons=self.radio_buttons,
+                        )
+                    )
+                    if checked
+                    else None
+                )
             )
-        )
-        self.unit_cell_view.unit_cell_panel.radio1D.toggled.connect(
-            lambda: self.undo_stack.push(
-                ChangeDimensionalityCommand(controller=self, dim=1)
-            )
-        )
-        self.unit_cell_view.unit_cell_panel.radio2D.toggled.connect(
-            lambda: self.undo_stack.push(
-                ChangeDimensionalityCommand(controller=self, dim=2)
-            )
-        )
-        self.unit_cell_view.unit_cell_panel.radio3D.toggled.connect(
-            lambda: self.undo_stack.push(
-                ChangeDimensionalityCommand(controller=self, dim=3)
-            )
-        )
 
         # Site panel signals.
         # Site fractional coordinates
