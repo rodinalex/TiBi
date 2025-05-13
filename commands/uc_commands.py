@@ -1,5 +1,5 @@
 import copy
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QItemSelectionModel, Signal
 from PySide6.QtGui import QStandardItem, QUndoCommand
 from PySide6.QtWidgets import QDoubleSpinBox
 from resources.constants import (
@@ -197,18 +197,8 @@ class DeleteItemCommand(QUndoCommand):
         self.site_id = self.selection.get("site", None)
         self.state_id = self.selection.get("state", None)
 
-    # Determine what item type is being deleted and save its deep copy.
-    # For Sites, also save their color and radius
-    # Delete the item after
-    def redo(self):
         if self.state_id:
             self.item = copy.deepcopy(
-                self.unit_cells[self.uc_id]
-                .sites[self.site_id]
-                .states[self.state_id]
-            )
-            # Delete the selected state from the site
-            del (
                 self.unit_cells[self.uc_id]
                 .sites[self.site_id]
                 .states[self.state_id]
@@ -219,10 +209,24 @@ class DeleteItemCommand(QUndoCommand):
                 self.unit_cells[self.uc_id].sites[self.site_id]
             )
 
-            del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
         elif self.uc_id:
             self.item = copy.deepcopy(self.unit_cells[self.uc_id])
+
+    # Delete the item
+    def redo(self):
+        if self.state_id:
+            # Delete the selected state from the site
+            del (
+                self.unit_cells[self.uc_id]
+                .sites[self.site_id]
+                .states[self.state_id]
+            )
+        # No state selected, therefore remove the site from the unit cell
+        elif self.site_id:
+            del self.unit_cells[self.uc_id].sites[self.site_id]
+        # No site selected, therefore remove the unit cell from the model
+        elif self.uc_id:
             del self.unit_cells[self.uc_id]
 
         self.tree_view.remove_tree_item(
@@ -230,25 +234,25 @@ class DeleteItemCommand(QUndoCommand):
         )
 
     def undo(self):
+        # Reinsert the item into the model
         if self.state_id:
             unit_cell = self.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
-            self.tree_view.add_tree_item(
-                self.item.name, self.uc_id, self.site_id, self.item.id
-            )
 
         elif self.site_id:
             unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
 
-            self.tree_view.add_tree_item(
-                self.item.name, self.uc_id, self.item.id
-            )
-
         elif self.uc_id:
             self.unit_cells[self.item.id] = self.item
-            self.tree_view.add_tree_item(self.item.name, self.item.id)
+
+        # Refresh the tree and select the item
+        self.tree_view.refresh_tree(self.unit_cells)
+        index = self.tree_view.find_item_by_id(self.item.id).index()
+        self.tree_view.selectionModel().setCurrentIndex(
+            index, QItemSelectionModel.ClearAndSelect
+        )
 
 
 class RenameTreeItemCommand(QUndoCommand):
@@ -309,25 +313,31 @@ class RenameTreeItemCommand(QUndoCommand):
 
 class UpdateUnitCellParameterCommand(QUndoCommand):
     def __init__(
-        self, controller, vector, coordinate, spinbox: QDoubleSpinBox
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        vector: str,
+        coordinate: str,
+        spinbox: QDoubleSpinBox,
     ):
         super().__init__("Update Unit Cell Parameter")
-        self.controller = controller
+        self.unit_cells = unit_cells
+        self.selection = selection
         self.vector = vector
         self.coordinate = coordinate
         self.spinbox = spinbox
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.controller.selection.get("unit_cell", None)
+        self.uc_id = self.selection.get("unit_cell", None)
 
         self.old_value = getattr(
-            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
         )
 
     def redo(self):
         setattr(
-            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
             self.new_value,
         )
@@ -335,7 +345,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
 
     def undo(self):
         setattr(
-            getattr(self.controller.unit_cells[self.uc_id], self.vector),
+            getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
             self.old_value,
         )
@@ -526,24 +536,31 @@ class ChangeDimensionalityCommand(QUndoCommand):
 
 
 class UpdateSiteParameterCommand(QUndoCommand):
-    def __init__(self, controller, param, spinbox: QDoubleSpinBox):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        param: str,
+        spinbox: QDoubleSpinBox,
+    ):
         super().__init__("Update Site Parameter")
-        self.controller = controller
+        self.unit_cells = unit_cells
+        self.selection = selection
         self.param = param
         self.spinbox = spinbox
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.controller.selection.get("unit_cell", None)
-        self.site_id = self.controller.selection.get("site", None)
+        self.uc_id = self.selection.get("unit_cell", None)
+        self.site_id = self.selection.get("site", None)
 
         self.old_value = getattr(
-            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.unit_cells[self.uc_id].sites[self.site_id],
             self.param,
         )
 
     def redo(self):
         setattr(
-            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.unit_cells[self.uc_id].sites[self.site_id],
             self.param,
             self.new_value,
         )
@@ -551,7 +568,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
 
     def undo(self):
         setattr(
-            self.controller.unit_cells[self.uc_id].sites[self.site_id],
+            self.unit_cells[self.uc_id].sites[self.site_id],
             self.param,
             self.old_value,
         )

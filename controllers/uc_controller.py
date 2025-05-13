@@ -139,7 +139,8 @@ class UnitCellController(QObject):
                 spinboxes[ii].editingConfirmed.connect(
                     lambda ii=ii, axis=axis: self.undo_stack.push(
                         UpdateUnitCellParameterCommand(
-                            controller=self,
+                            unit_cells=self.unit_cells,
+                            selection=self.selection,
                             vector=vector_name,
                             coordinate=axis,
                             spinbox=spinboxes[ii],
@@ -175,31 +176,27 @@ class UnitCellController(QObject):
 
         # Site panel signals.
         # Site fractional coordinates
-        self.c1.editingConfirmed.connect(
-            lambda: self.undo_stack.push(
-                UpdateSiteParameterCommand(
-                    controller=self, param="c1", spinbox=self.c1
+        for param in ["c1", "c2", "c3"]:
+            spinbox: EnterKeySpinBox = getattr(self, param)
+            spinbox.editingConfirmed.connect(
+                lambda p=param, s=spinbox: self.undo_stack.push(
+                    UpdateSiteParameterCommand(
+                        unit_cells=self.unit_cells,
+                        selection=self.selection,
+                        param=p,
+                        spinbox=s,
+                    )
                 )
             )
-        )
-        self.c2.editingConfirmed.connect(
-            lambda: self.undo_stack.push(
-                UpdateSiteParameterCommand(
-                    controller=self, param="c2", spinbox=self.c2
-                )
-            )
-        )
-        self.c3.editingConfirmed.connect(
-            lambda: self.undo_stack.push(
-                UpdateSiteParameterCommand(
-                    controller=self, param="c3", spinbox=self.c3
-                )
-            )
-        )
+
+        # Site radius
         self.R.editingConfirmed.connect(
             lambda: self.undo_stack.push(
                 UpdateSiteParameterCommand(
-                    controller=self, param="R", spinbox=self.R
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    param="R",
+                    spinbox=self.R,
                 )
             )
         )
