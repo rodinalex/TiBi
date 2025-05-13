@@ -88,13 +88,11 @@ class UnitCellController(QObject):
         # Store the tree_view_panel, tree_view and tree_model as
         # parameters for convenience
         self.tree_view_panel = self.unit_cell_view.tree_view_panel
-        self.tree_view = self.unit_cell_view.tree_view_panel.tree_view
-        self.tree_model = (
-            self.unit_cell_view.tree_view_panel.tree_view.tree_model
-        )
+        self.tree_view = self.tree_view_panel.tree_view
+        self.tree_model = self.tree_view.tree_model
 
         # Rebuild the tree view from scratch in the beginning
-        self.tree_view.refresh_tree({})
+        self.tree_view.refresh_tree(self.unit_cells)
 
         # SIGNALS
         # Selection change. Triggered by the change of the selection model
@@ -112,7 +110,11 @@ class UnitCellController(QObject):
         self.tree_view_panel.delegate.name_edit_finished.connect(
             lambda x: self.undo_stack.push(
                 RenameTreeItemCommand(
-                    controller=self, item=self.tree_model.itemFromIndex(x)
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                    signal=self.item_changed,
+                    item=self.tree_model.itemFromIndex(x),
                 )
             )
         )

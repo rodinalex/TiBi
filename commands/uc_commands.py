@@ -1,5 +1,5 @@
 import copy
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QStandardItem, QUndoCommand
 from PySide6.QtWidgets import QDoubleSpinBox
 from resources.constants import (
@@ -27,9 +27,6 @@ class AddUnitCellCommand(QUndoCommand):
     - Three orthogonal unit vectors along the x, y, and z axes
     - No periodicity (0D system)
     - No sites or states initially
-
-    After creation, the tree view is updated and the new unit cell is
-    automatically selected so the user can immediately edit its properties.
     """
 
     def __init__(
@@ -50,12 +47,12 @@ class AddUnitCellCommand(QUndoCommand):
     # Add the newly-created unit cell to the dictionary and create a tree item
     def redo(self):
         self.unit_cells[self.unit_cell.id] = self.unit_cell
-        self.tree_view._add_tree_item(self.unit_cell.name, self.unit_cell.id)
+        self.tree_view.add_tree_item(self.unit_cell.name, self.unit_cell.id)
 
     # Remove the unit cell from the dictionary and the tree using its id
     def undo(self):
         del self.unit_cells[self.unit_cell.id]
-        self.tree_view._remove_tree_item(self.unit_cell.id)
+        self.tree_view.remove_tree_item(self.unit_cell.id)
 
 
 class AddSiteCommand(QUndoCommand):
@@ -99,13 +96,13 @@ class AddSiteCommand(QUndoCommand):
     def redo(self):
         unit_cell = self.unit_cells[self.uc_id]
         unit_cell.sites[self.site.id] = self.site
-        self.tree_view._add_tree_item(self.site.name, self.uc_id, self.site.id)
+        self.tree_view.add_tree_item(self.site.name, self.uc_id, self.site.id)
 
     # Remove the unit cell from the dictionary and the tree using its id
     # Remove the color and size entries
     def undo(self):
         del self.unit_cells[self.uc_id].sites[self.site.id]
-        self.tree_view._remove_tree_item(self.uc_id, self.site.id)
+        self.tree_view.remove_tree_item(self.uc_id, self.site.id)
 
 
 class AddStateCommand(QUndoCommand):
@@ -146,7 +143,7 @@ class AddStateCommand(QUndoCommand):
         unit_cell = self.unit_cells[self.uc_id]
         site = unit_cell.sites[self.site_id]
         site.states[self.state.id] = self.state
-        self.tree_view._add_tree_item(
+        self.tree_view.add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
 
@@ -157,7 +154,7 @@ class AddStateCommand(QUndoCommand):
             .sites[self.site_id]
             .states[self.state.id]
         )
-        self.tree_view._remove_tree_item(
+        self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
 
@@ -175,9 +172,6 @@ class DeleteItemCommand(QUndoCommand):
     - Deleting a unit cell also removes all its sites and states
     - Deleting a site also removes all its states
     - Deleting a state only removes that specific state
-
-    After deletion, the parent item is selected
-    (or nothing if a unit cell was deleted).
     """
 
     def __init__(
@@ -231,7 +225,7 @@ class DeleteItemCommand(QUndoCommand):
             self.item = copy.deepcopy(self.unit_cells[self.uc_id])
             del self.unit_cells[self.uc_id]
 
-        self.tree_view._remove_tree_item(
+        self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state_id
         )
 
@@ -240,7 +234,7 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell = self.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
-            self.tree_view._add_tree_item(
+            self.tree_view.add_tree_item(
                 self.item.name, self.uc_id, self.site_id, self.item.id
             )
 
@@ -248,83 +242,69 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
 
-            self.tree_view._add_tree_item(
+            self.tree_view.add_tree_item(
                 self.item.name, self.uc_id, self.item.id
             )
 
         elif self.uc_id:
             self.unit_cells[self.item.id] = self.item
-            self.tree_view._add_tree_item(self.item.name, self.item.id)
+            self.tree_view.add_tree_item(self.item.name, self.item.id)
 
 
 class RenameTreeItemCommand(QUndoCommand):
-    def __init__(self, controller, item: QStandardItem):
+    """
+    Change the name of the selected item by double-clicking on it in
+    the tree view. Update the data and save it.
+    """
+
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        tree_view: SystemTree,
+        signal: Signal,
+        item: QStandardItem,
+    ):
         super().__init__("Rename Tree Item")
-        self.controller = controller
-        self.item_type = item.data(Qt.UserRole + 1)
+
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.tree_view = tree_view
+        self.item_changed = signal
         self.new_name = item.text()
 
-        self.uc_id = self.controller.selection.get("unit_cell", None)
-        self.site_id = self.controller.selection.get("site", None)
-        self.state_id = self.controller.selection.get("state", None)
+        self.uc_id = self.selection.get("unit_cell", None)
+        self.site_id = self.selection.get("site", None)
+        self.state_id = self.selection.get("state", None)
 
-        """
-        Change the name of the selected item by double-clicking on it in
-        the tree view. Update the data and save it.
-        """
-
-    def redo(self):
-        item = self.controller.tree_view._find_item_by_id(
-            self.uc_id, self.site_id, self.state_id
-        )
-        if self.item_type == "unit_cell":
-            self.old_name = self.controller.unit_cells[self.uc_id].name
-            self.controller.unit_cells[self.uc_id].name = self.new_name
-            item.setText(self.new_name)
-
-        elif self.item_type == "site":
+        # Get the old name
+        if self.state_id:
             self.old_name = (
-                self.controller.unit_cells[self.uc_id].sites[self.site_id].name
-            )
-            self.controller.unit_cells[self.uc_id].sites[
-                self.site_id
-            ].name = self.new_name
-            item.setText(self.new_name)
-
-        else:
-            self.old_name = (
-                self.controller.unit_cells[self.uc_id]
+                self.unit_cells[self.uc_id]
                 .sites[self.site_id]
                 .states[self.state_id]
                 .name
             )
-            self.controller.unit_cells[self.uc_id].sites[self.site_id].states[
-                self.state_id
-            ].name = self.new_name
-            item.setText(self.new_name)
+        elif self.site_id:
+            self.old_name = (
+                self.unit_cells[self.uc_id].sites[self.site_id].name
+            )
+        else:
+            self.old_name = self.unit_cells[self.uc_id].name
 
-        self.controller.item_changed.emit()
-
-    def undo(self):
-        item = self.controller.tree_view._find_item_by_id(
+    def redo(self):
+        item = self.tree_view.find_item_by_id(
             self.uc_id, self.site_id, self.state_id
         )
-        if self.item_type == "unit_cell":
-            self.controller.unit_cells[self.uc_id].name = self.old_name
-            item.setText(self.old_name)
+        item.setText(self.new_name)
+        self.item_changed.emit()
 
-        elif self.item_type == "site":
-            self.controller.unit_cells[self.uc_id].sites[
-                self.site_id
-            ].name = self.old_name
-            item.setText(self.old_name)
-
-        else:
-            self.controller.unit_cells[self.uc_id].sites[self.site_id].states[
-                self.state_id
-            ].name = self.old_name
-            item.setText(self.old_name)
-        self.controller.item_changed.emit()
+    def undo(self):
+        item = self.tree_view.find_item_by_id(
+            self.uc_id, self.site_id, self.state_id
+        )
+        item.setText(self.old_name)
+        self.item_changed.emit()
 
 
 class UpdateUnitCellParameterCommand(QUndoCommand):

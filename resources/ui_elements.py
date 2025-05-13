@@ -79,8 +79,8 @@ class SystemTree(QTreeView):
         as user data, allowing for easy retrieval during selection events.
 
         Note: For better performance, prefer the more specific update methods:
-        - _add_tree_item() - For adding or updating a single node
-        - _remove_tree_item() - For removing a single node
+        - add_tree_item() - For adding or updating a single node
+        - remove_tree_item() - For removing a single node
 
         This full refresh is typically only needed during initialization or
         when multiple components of the tree need to be updated simultaneously.
@@ -128,7 +128,7 @@ class SystemTree(QTreeView):
 
         return tree_item
 
-    def _find_item_by_id(
+    def find_item_by_id(
         self, uc_id, site_id=None, state_id=None
     ) -> QStandardItem | None:
         """
@@ -144,10 +144,10 @@ class SystemTree(QTreeView):
             The QStandardItem if found, None otherwise
         """
         if state_id is not None:
-            parent = self._find_item_by_id(uc_id, site_id)
+            parent = self.find_item_by_id(uc_id, site_id)
             item_id = state_id
         elif site_id is not None:
-            parent = self._find_item_by_id(uc_id)
+            parent = self.find_item_by_id(uc_id)
             item_id = site_id
         else:
             parent = self.root_node
@@ -158,7 +158,7 @@ class SystemTree(QTreeView):
             if item.data(Qt.UserRole) == item_id:
                 return item
 
-    def _add_tree_item(self, name, uc_id, site_id=None, state_id=None):
+    def add_tree_item(self, name, uc_id, site_id=None, state_id=None):
         """
         Add a tree item without rebuilding the entire tree.
         Select the item after the addition.
@@ -169,10 +169,10 @@ class SystemTree(QTreeView):
             state_id: UUID of the state
         """
         if state_id is not None:  # Adding a state
-            parent = self._find_item_by_id(uc_id, site_id)
+            parent = self.find_item_by_id(uc_id, site_id)
             item_type, item_id = "state", state_id
         elif site_id is not None:  # Adding a site
-            parent = self._find_item_by_id(uc_id)
+            parent = self.find_item_by_id(uc_id)
             item_type, item_id = "site", site_id
         else:  # Adding a unit cell
             parent = self.root_node
@@ -187,7 +187,7 @@ class SystemTree(QTreeView):
             index, QItemSelectionModel.ClearAndSelect
         )
 
-    def _remove_tree_item(self, uc_id, site_id=None, state_id=None):
+    def remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
         Remove an item from the tree. If the item has a parent
         (i.e., is not a UnitCell), select the parent. Otherwise,
@@ -198,7 +198,7 @@ class SystemTree(QTreeView):
             site_id: UUID of the parent site
             state_id: UUID of the state to remove
         """
-        item = self._find_item_by_id(uc_id, site_id, state_id)
+        item = self.find_item_by_id(uc_id, site_id, state_id)
         if item:
             # If the item is a unit cell, the parent is None, so we
             # default to the invisibleRootItem
