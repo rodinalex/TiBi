@@ -366,53 +366,54 @@ class ReduceBasisCommand(QUndoCommand):
     reduction, the UI is updated to reflect the new basis vectors.
     """
 
-    def __init__(self, controller):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        v1: list[EnterKeySpinBox],
+        v2: list[EnterKeySpinBox],
+        v3: list[EnterKeySpinBox],
+    ):
         super().__init__("Update Site Parameter")
-        self.controller = controller
-        self.uc_id = self.controller.selection.get("unit_cell", None)
+        self.unit_cells = unit_cells
+        self.selection = selection
+        self.v1 = v1  # Spinboxes for the first basis vector
+        self.v2 = v2  # Spinboxes for the second basis vector
+        self.v3 = v3  # Spinboxes for the third basis vector
+
+        self.uc_id = self.selection.get("unit_cell", None)
 
         if self.uc_id:
-            uc = self.controller.unit_cells[self.uc_id]
+            uc = self.unit_cells[self.uc_id]
             self.old_basis = [uc.v1, uc.v2, uc.v3]
             self.new_basis = uc.reduced_basis()
 
     def redo(self):
         if self.uc_id:
-            uc = self.controller.unit_cells[self.uc_id]
+            uc = self.unit_cells[self.uc_id]
             uc.v1 = self.new_basis[0]
             uc.v2 = self.new_basis[1]
             uc.v3 = self.new_basis[2]
 
-            self.controller.v1[0].setValue(uc.v1.x)
-            self.controller.v1[1].setValue(uc.v1.y)
-            self.controller.v1[2].setValue(uc.v1.z)
-
-            self.controller.v2[0].setValue(uc.v2.x)
-            self.controller.v2[1].setValue(uc.v2.y)
-            self.controller.v2[2].setValue(uc.v2.z)
-
-            self.controller.v3[0].setValue(uc.v3.x)
-            self.controller.v3[1].setValue(uc.v3.y)
-            self.controller.v3[2].setValue(uc.v3.z)
+            self._copy_vector_components(self.v1, uc.v1)
+            self._copy_vector_components(self.v2, uc.v2)
+            self._copy_vector_components(self.v3, uc.v3)
 
     def undo(self):
         if self.uc_id:
-            uc = self.controller.unit_cells[self.uc_id]
+            uc = self.unit_cells[self.uc_id]
             uc.v1 = self.old_basis[0]
             uc.v2 = self.old_basis[1]
             uc.v3 = self.old_basis[2]
 
-            self.controller.v1[0].setValue(uc.v1.x)
-            self.controller.v1[1].setValue(uc.v1.y)
-            self.controller.v1[2].setValue(uc.v1.z)
+            self._copy_vector_components(self.v1, uc.v1)
+            self._copy_vector_components(self.v2, uc.v2)
+            self._copy_vector_components(self.v3, uc.v3)
 
-            self.controller.v2[0].setValue(uc.v2.x)
-            self.controller.v2[1].setValue(uc.v2.y)
-            self.controller.v2[2].setValue(uc.v2.z)
-
-            self.controller.v3[0].setValue(uc.v3.x)
-            self.controller.v3[1].setValue(uc.v3.y)
-            self.controller.v3[2].setValue(uc.v3.z)
+    def _copy_vector_components(self, spinboxes, vector):
+        spinboxes[0].setValue(vector.x)
+        spinboxes[1].setValue(vector.y)
+        spinboxes[2].setValue(vector.z)
 
 
 class ChangeDimensionalityCommand(QUndoCommand):

@@ -246,7 +246,15 @@ class UnitCellController(QObject):
         )
         # Reduce button--LLL argorithm to obtain the primitive cell
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
-            lambda: self.undo_stack.push(ReduceBasisCommand(controller=self))
+            lambda: self.undo_stack.push(
+                ReduceBasisCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    v1=self.v1,
+                    v2=self.v2,
+                    v3=self.v3,
+                )
+            )
         )
         # Opens a color picker to change the color of the selected site
         self.unit_cell_view.site_panel.color_picker_btn.clicked.connect(
