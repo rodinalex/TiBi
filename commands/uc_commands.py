@@ -320,6 +320,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         vector: str,
         coordinate: str,
         spinbox: QDoubleSpinBox,
+        signal: Signal,
     ):
         super().__init__("Update Unit Cell Parameter")
         self.unit_cells = unit_cells
@@ -327,6 +328,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         self.vector = vector
         self.coordinate = coordinate
         self.spinbox = spinbox
+        self.signal = signal
         self.new_value = self.spinbox.value()
 
         self.uc_id = self.selection.get("unit_cell", None)
@@ -343,6 +345,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.new_value,
         )
         self.spinbox.setValue(self.new_value)
+        self.signal.emit()
 
     def undo(self):
         setattr(
@@ -351,6 +354,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
+        self.signal.emit()
 
 
 class ReduceBasisCommand(QUndoCommand):
@@ -372,11 +376,13 @@ class ReduceBasisCommand(QUndoCommand):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: dict[str, uuid.UUID],
         unit_cell_view: UnitCellView,
+        signal: Signal,
     ):
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
         self.unit_cell_view = unit_cell_view
+        self.signal = signal
 
         self.uc_id = self.selection.get("unit_cell", None)
 
@@ -395,6 +401,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
+            self.signal.emit()
 
     def undo(self):
         if self.uc_id:
@@ -406,6 +413,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
+            self.signal.emit()
 
 
 class ChangeDimensionalityCommand(QUndoCommand):
@@ -430,6 +438,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: dict[str, uuid.UUID],
         unit_cell_view: UnitCellView,
+        signal: Signal,
         dim: int,
         buttons: list[QRadioButton],
     ):
@@ -437,6 +446,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.unit_cells = unit_cells
         self.selection = selection
         self.unit_cell_view = unit_cell_view
+        self.signal = signal
         self.new_dim = dim
         self.buttons = buttons
 
@@ -489,6 +499,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.new_dim)
+        self.signal.emit()
 
     def undo(self):
 
@@ -504,6 +515,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.old_dim)
+        self.signal.emit()
 
     def _set_vector_enables(self, dim):
         self.unit_cell_view.unit_cell_panel.v1[0].setEnabled(True)
@@ -533,12 +545,14 @@ class UpdateSiteParameterCommand(QUndoCommand):
         selection: dict[str, uuid.UUID],
         param: str,
         spinbox: QDoubleSpinBox,
+        signal: Signal,
     ):
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
         self.param = param
         self.spinbox = spinbox
+        self.signal = signal
         self.new_value = self.spinbox.value()
 
         self.uc_id = self.selection.get("unit_cell", None)
@@ -556,6 +570,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
             self.new_value,
         )
         self.spinbox.setValue(self.new_value)
+        self.signal.emit()
 
     def undo(self):
         setattr(
@@ -564,6 +579,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
+        self.signal.emit()
 
 
 class ChangeSiteColorCommand(QUndoCommand):
@@ -579,6 +595,7 @@ class ChangeSiteColorCommand(QUndoCommand):
         new_color: QColor,
         old_color: QColor,
         unit_cell_view: UnitCellView,
+        signal: Signal,
     ):
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
@@ -586,12 +603,15 @@ class ChangeSiteColorCommand(QUndoCommand):
         self.new_color = new_color
         self.old_color = old_color
         self.unit_cell_view = unit_cell_view
+        self.signal = signal
 
     def redo(self):
         self._set_color(self.new_color)
+        self.signal.emit()
 
     def undo(self):
         self._set_color(self.old_color)
+        self.signal.emit()
 
     def _set_color(self, color):
         rgba = (

@@ -139,6 +139,7 @@ class UnitCellController(QObject):
                             vector=vector_name,
                             coordinate=axis,
                             spinbox=spinboxes[ii],
+                            signal=self.plot_update_requested,
                         )
                     )
                 )
@@ -162,6 +163,7 @@ class UnitCellController(QObject):
                             unit_cells=self.unit_cells,
                             selection=self.selection,
                             unit_cell_view=self.unit_cell_view,
+                            signal=self.plot_update_requested,
                             dim=d,
                             buttons=self.radio_buttons,
                         )
@@ -182,6 +184,7 @@ class UnitCellController(QObject):
                         selection=self.selection,
                         param=p,
                         spinbox=s,
+                        signal=self.plot_update_requested,
                     )
                 )
             )
@@ -194,6 +197,7 @@ class UnitCellController(QObject):
                     selection=self.selection,
                     param="R",
                     spinbox=self.R,
+                    signal=self.plot_update_requested,
                 )
             )
         )
@@ -244,6 +248,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     unit_cell_view=self.unit_cell_view,
+                    signal=self.plot_update_requested,
                 )
             )
         )
@@ -372,5 +377,6 @@ class UnitCellController(QObject):
                     new_color=new_color,
                     old_color=start_color,
                     unit_cell_view=self.unit_cell_view,
+                    signal=self.plot_update_requested,
                 )
             )
