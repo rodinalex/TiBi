@@ -9,7 +9,7 @@ from resources.constants import (
 )
 import uuid
 
-from resources.ui_elements import EnterKeySpinBox, SystemTree
+from resources.ui_elements import SystemTree
 from src.tibitypes import BasisVector, UnitCell
 from views.uc_view import UnitCellView
 
@@ -371,16 +371,12 @@ class ReduceBasisCommand(QUndoCommand):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: dict[str, uuid.UUID],
-        v1: list[EnterKeySpinBox],
-        v2: list[EnterKeySpinBox],
-        v3: list[EnterKeySpinBox],
+        unit_cell_view: UnitCellView,
     ):
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
-        self.v1 = v1  # Spinboxes for the first basis vector
-        self.v2 = v2  # Spinboxes for the second basis vector
-        self.v3 = v3  # Spinboxes for the third basis vector
+        self.unit_cell_view = unit_cell_view
 
         self.uc_id = self.selection.get("unit_cell", None)
 
@@ -396,9 +392,9 @@ class ReduceBasisCommand(QUndoCommand):
             uc.v2 = self.new_basis[1]
             uc.v3 = self.new_basis[2]
 
-            self._copy_vector_components(self.v1, uc.v1)
-            self._copy_vector_components(self.v2, uc.v2)
-            self._copy_vector_components(self.v3, uc.v3)
+            self.unit_cell_view.unit_cell_panel.set_basis_vectors(
+                uc.v1, uc.v2, uc.v3
+            )
 
     def undo(self):
         if self.uc_id:
@@ -407,14 +403,9 @@ class ReduceBasisCommand(QUndoCommand):
             uc.v2 = self.old_basis[1]
             uc.v3 = self.old_basis[2]
 
-            self._copy_vector_components(self.v1, uc.v1)
-            self._copy_vector_components(self.v2, uc.v2)
-            self._copy_vector_components(self.v3, uc.v3)
-
-    def _copy_vector_components(self, spinboxes, vector):
-        spinboxes[0].setValue(vector.x)
-        spinboxes[1].setValue(vector.y)
-        spinboxes[2].setValue(vector.z)
+            self.unit_cell_view.unit_cell_panel.set_basis_vectors(
+                uc.v1, uc.v2, uc.v3
+            )
 
 
 class ChangeDimensionalityCommand(QUndoCommand):
@@ -438,18 +429,14 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: dict[str, uuid.UUID],
-        v1: list[EnterKeySpinBox],
-        v2: list[EnterKeySpinBox],
-        v3: list[EnterKeySpinBox],
+        unit_cell_view: UnitCellView,
         dim: int,
         buttons: list[QRadioButton],
     ):
         super().__init__("Change dimensionality")
         self.unit_cells = unit_cells
         self.selection = selection
-        self.v1 = v1  # Spinboxes for the first basis vector
-        self.v2 = v2  # Spinboxes for the second basis vector
-        self.v3 = v3  # Spinboxes for the third basis vector
+        self.unit_cell_view = unit_cell_view
         self.new_dim = dim
         self.buttons = buttons
 
@@ -497,9 +484,9 @@ class ChangeDimensionalityCommand(QUndoCommand):
         uc.v2 = self.new_v2
         uc.v3 = self.new_v3
 
-        self._copy_vector_components(self.v1, uc.v1)
-        self._copy_vector_components(self.v2, uc.v2)
-        self._copy_vector_components(self.v3, uc.v3)
+        self.unit_cell_view.unit_cell_panel.set_basis_vectors(
+            uc.v1, uc.v2, uc.v3
+        )
 
         self._set_checked_button(self.new_dim)
 
@@ -512,24 +499,24 @@ class ChangeDimensionalityCommand(QUndoCommand):
         uc.v2 = self.old_v2
         uc.v3 = self.old_v3
 
-        self._copy_vector_components(self.v1, uc.v1)
-        self._copy_vector_components(self.v2, uc.v2)
-        self._copy_vector_components(self.v3, uc.v3)
+        self.unit_cell_view.unit_cell_panel.set_basis_vectors(
+            uc.v1, uc.v2, uc.v3
+        )
 
         self._set_checked_button(self.old_dim)
 
     def _set_vector_enables(self, dim):
-        self.v1[0].setEnabled(True)
-        self.v1[1].setEnabled(dim > 1)
-        self.v1[2].setEnabled(dim > 2)
+        self.unit_cell_view.unit_cell_panel.v1[0].setEnabled(True)
+        self.unit_cell_view.unit_cell_panel.v1[1].setEnabled(dim > 1)
+        self.unit_cell_view.unit_cell_panel.v1[2].setEnabled(dim > 2)
 
-        self.v2[0].setEnabled(dim > 1)
-        self.v2[1].setEnabled(True)
-        self.v2[2].setEnabled(dim > 2)
+        self.unit_cell_view.unit_cell_panel.v2[0].setEnabled(dim > 1)
+        self.unit_cell_view.unit_cell_panel.v2[1].setEnabled(True)
+        self.unit_cell_view.unit_cell_panel.v2[2].setEnabled(dim > 2)
 
-        self.v3[0].setEnabled(dim > 2)
-        self.v3[1].setEnabled(dim > 2)
-        self.v3[2].setEnabled(True)
+        self.unit_cell_view.unit_cell_panel.v3[0].setEnabled(dim > 2)
+        self.unit_cell_view.unit_cell_panel.v3[1].setEnabled(dim > 2)
+        self.unit_cell_view.unit_cell_panel.v3[2].setEnabled(True)
 
     def _set_checked_button(self, dim):
         for btn in self.buttons:
@@ -537,11 +524,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.buttons[dim].setChecked(True)
         for btn in self.buttons:
             btn.blockSignals(False)
-
-    def _copy_vector_components(self, spinboxes, vector):
-        spinboxes[0].setValue(vector.x)
-        spinboxes[1].setValue(vector.y)
-        spinboxes[2].setValue(vector.z)
 
 
 class UpdateSiteParameterCommand(QUndoCommand):
@@ -606,32 +588,17 @@ class ChangeSiteColorCommand(QUndoCommand):
         self.unit_cell_view = unit_cell_view
 
     def redo(self):
-        rgba = (
-            f"rgba({self.new_color.red()}, "
-            f"{self.new_color.green()}, "
-            f"{self.new_color.blue()}, "
-            f"{self.new_color.alpha()})"
-        )
-        self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
-            f"background-color: {rgba};"
-        )
-
-        # Update the color in the dictionary (0-1 scale)
-        self.unit_cells[self.selection["unit_cell"]].sites[
-            self.selection["site"]
-        ].color = (
-            self.new_color.redF(),
-            self.new_color.greenF(),
-            self.new_color.blueF(),
-            self.new_color.alphaF(),
-        )
+        self._set_color(self.new_color)
 
     def undo(self):
+        self._set_color(self.old_color)
+
+    def _set_color(self, color):
         rgba = (
-            f"rgba({self.old_color.red()}, "
-            f"{self.old_color.green()}, "
-            f"{self.old_color.blue()}, "
-            f"{self.old_color.alpha()})"
+            f"rgba({color.red()}, "
+            f"{color.green()}, "
+            f"{color.blue()}, "
+            f"{color.alpha()})"
         )
         self.unit_cell_view.site_panel.color_picker_btn.setStyleSheet(
             f"background-color: {rgba};"
@@ -641,8 +608,8 @@ class ChangeSiteColorCommand(QUndoCommand):
         self.unit_cells[self.selection["unit_cell"]].sites[
             self.selection["site"]
         ].color = (
-            self.old_color.redF(),
-            self.old_color.greenF(),
-            self.old_color.blueF(),
-            self.old_color.alphaF(),
+            color.redF(),
+            color.greenF(),
+            color.blueF(),
+            color.alphaF(),
         )

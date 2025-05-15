@@ -154,12 +154,12 @@ class UnitCellPlotController(QObject):
             pos = (
                 (a1 + site.c1) * v1 + (a2 + site.c2) * v2 + (a3 + site.c3) * v3
             )
-            sphere_color = self.unit_cell.site_colors[site_id]
+            sphere_color = self.unit_cell.sites[site_id].color
 
             sphere_radius = (
-                self.unit_cell.site_sizes[site_id] * default_site_scaling
+                self.unit_cell.sites[site_id].R * default_site_scaling
                 if site_id == self.selection.get("site")
-                else self.unit_cell.site_sizes[site_id]
+                else self.unit_cell.sites[site_id].R
             )
             # Create a sphere for the site.
             sphere = gl.GLMeshItem(

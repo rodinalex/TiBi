@@ -75,15 +75,15 @@ class MainWindow(QMainWindow):
         Initialize the main window with views for different components.
 
         Args:
-            uc: Unit cell editor view
-            hopping: Hopping parameter editor view
-            uc_plot: Unit cell 3D visualization view
-            bz_plot: Brillouin zone 3D visualization view
-            plot: 2D plot view
-            computation: Multi-tab view used to set up calculations
-            menu_bar: Menu bar view
-            toolbar: Main toolbar view
-            status_bar: Status bar view
+            uc (UnitCellView): Unit cell editor view
+            hopping (HoppingView): Hopping parameter editor view
+            uc_plot (UnitCellPlotView): Unit cell 3D visualization view
+            bz_plot (BrillouinonePlotView): Brillouin zone 3D visualization view
+            plot (PlotView): 2D plot view
+            computation (ComputationView): Multi-tab view used to set up calculations
+            menu_bar (MenuBarView): Menu bar view
+            toolbar (MainToolbarView): Main toolbar view
+            status_bar (StatusBarView): Status bar view
         """
         super().__init__()
         self.setWindowTitle("TiBi")

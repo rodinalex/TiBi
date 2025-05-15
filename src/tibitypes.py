@@ -11,30 +11,39 @@ import itertools
 @dataclass
 class BasisVector:
     """
-    Represents a basis vector in 3D space for a crystalline unit cell.
+    A basis vector in 3D space for a crystalline unit cell.
 
-    A unit cell is defined by three basis vectors that form a parallelepiped.
-    The is_periodic flag marks whether the crystal repeats along the direction.
-    A non-periodic direction represents a finite dimension of the system.
+    Attributes
+    ----------
+    x : float
+        x-component in Cartesian coordinates
+    y : float
+        y-component in Cartesian coordinates
+    z : float
+        z-component in Cartesian coordinates
+    is_periodic : bool
+        Flag denoting whether the crystal repeats in this direction
 
-    Attributes:
-        x: x-component in Cartesian coordinates
-        y: y-component in Cartesian coordinates
-        z: z-component in Cartesian coordinates
-        is_periodic: Whether the crystal repeats in this direction
+    Methods
+    -------
+    as_array()
+       Convert the `BasisVector` to a NumPy array with 3 elements.
+
     """
 
-    x: float  # x-component in Cartesian coordinates
-    y: float  # y-component in Cartesian coordinates
-    z: float  # z-component in Cartesian coordinates
-    is_periodic: bool = False  # Whether the crystal repeats in this direction
+    x: float
+    y: float
+    z: float
+    is_periodic: bool = False
 
     def as_array(self) -> np.ndarray:
         """
-        Convert the basis vector to a NumPy array.
+        Convert the `BasisVector` to a NumPy array.
 
-        Returns:
-            numpy.ndarray: 3D vector as a NumPy array [x, y, z]
+        Returns
+        -------
+            NDArray
+                3D vector as a NumPy array [x, y, z]
         """
         return np.array([self.x, self.y, self.z])
 
@@ -42,119 +51,149 @@ class BasisVector:
 @dataclass
 class State:
     """
-    Represents a quantum state (like an orbital) within a site.
+    A quantum state within a `Site`.
 
-    Each state has a name and belongs to a specific site in the unit cell.
-    States are the fundamental entities between which hopping can occur.
-    They represent electronic quantum states like atomic orbitals or bands.
+    Each `State` has a `name` and belongs to a `Site` in the `UnitCell`.
+    `State`s are the fundamental entities between which hopping can occur.
 
-    Attributes:
-        name: Name of the state (e.g., "s", "px", "py", etc.)
-        id: Unique identifier for the state (UUID)
+    Attributes
+    ----------
+        name : str
+            Name of the `State` (e.g., "s", "px", "py", etc.)
+        id : UUID
+            Unique identifier for the `State`
     """
 
-    name: str  # Name of the state (e.g., "s", "px", "py", etc.)
-    id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
+    name: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
 class Site:
     """
-    Represents a physical site (like an atom) within a unit cell.
+    A physical site (like an atom) within a `UnitCell`.
 
-    Sites are positioned using fractional coordinates relative to the unit
-    cell's basis vectors. Each site can contain multiple quantum states.
+    `Site`s are positioned using fractional coordinates relative to
+    the `UnitCell`'s basis vectors. Each `Site` can contain multiple `State`s.
     The position is specified using fractional coordinates within
-    the unit cell, where each coordinate ranges from 0 to 1.
+    the `UnitCell`, where each coordinate ranges from 0 to 1.
 
-    Attributes:
-        name: Name of the site (e.g., atom name like "C", "Fe", etc.)
-        c1: Fractional coordinate along the first basis vector (0-1)
-        c2: Fractional coordinate along the second basis vector (0-1)
-        c3: Fractional coordinate along the third basis vector (0-1)
-        states: Dictionary mapping state UUIDs to State objects
-        id: Unique identifier for the site (UUID)
+    Attributes
+    ----------
+
+        name : str
+            Name of the `Site` (e.g., atom name like "C", "Fe", etc.)
+        c1, c2, c3 : float
+            Fractional coordinates along the `BasisVector`s, ranging (0-1)
+        R : float
+            `Site` radius used for plotting
+        color : Tuple[float, float, float, float]
+            `Site` color used for plotting
+        states : dict[UUID, State]
+            Dictionary mapping state UUIDs to `State` objects
+        id : UUID
+            Unique identifier for the `Site`
     """
 
-    name: str  # Name of the site (e.g., atom name like "C", "Fe", etc.)
-    c1: float  # Fractional coordinate along the first basis vector (0-1)
-    c2: float  # Fractional coordinate along the second basis vector (0-1)
-    c3: float  # Fractional coordinate along the third basis vector (0-1)
-    R: float  # Radius used for plotting
-    color: Tuple[float, float, float, float]  # Site's color used in plotting
-    states: dict[uuid.UUID, State] = field(
-        default_factory=dict
-    )  # States at this site
-    id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
+    name: str
+    c1: float
+    c2: float
+    c3: float
+    R: float
+    color: Tuple[float, float, float, float]
+    states: dict[uuid.UUID, State] = field(default_factory=dict)
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
 class UnitCell:
     """
-    Represents a crystalline unit cell with sites, states, and hopping
-    parameters.
+    A crystalline unit cell with sites, states, and hopping parameters.
 
-    The unit cell is defined by three basis vectors and contains sites (atoms).
-    Each site can have multiple states (orbitals). Hopping terms define how
-    electrons can move between states, both within the unit cell and between
-    periodic images.
+    The `UnitCell` is defined by three`BasisVector`s and contains `Site`s.
 
-    The hopping dictionary has a complex structure:
-    - Keys are pairs of state UUIDs (destination_state_id, source_state_id)
-    - Values are lists of (displacement, amplitude) pairs where:
-      - displacement is a tuple of three integers (n1,n2,n3) indicating which
-        periodic image of the unit cell is involved
-        (0,0,0 means within the same unit cell)
-      - amplitude is a complex number representing the hopping strength
-        and phase
+    Attributes
+    ----------
 
-    Attributes:
-        name: Name of the unit cell
-        v1: First basis vector
-        v2: Second basis vector
-        v3: Third basis vector
-        sites: Dictionary mapping site UUIDs to Site objects
-        hoppings: Dictionary of hopping terms between states
-        id: Unique identifier for the unit cell (UUID)
+        name : str
+            Name of the unit cell
+        v1, v2, v3 : BasisVector
+            Basis vectors
+        sites : dict[UUID, Site]
+            Dictionary mapping site UUIDs to `Site` objects
+        hoppings : dict[Tuple[UUID, UUID], list[Tuple[Tuple[int, int, int], np.complex128]]]
+            Dictionary of hopping terms between states.
+            Keys are pairs of state UUIDs (destination_state_id,
+            source_state_id).
+            Values are lists of (displacement, amplitude) pairs where:
+            - displacement is a tuple of three integers (n1,n2,n3) indicating
+            which periodic image of the unit cell is involved
+            (0,0,0 means within the same unit cell)
+            - amplitude is a complex number representing the hopping strength
+            and phase
+        id : UUID
+            Unique identifier for the `UnitCell`
+
+    Methods
+    -------
+
+        volume()
+            Compute the volume of the `UnitCell` using the scalar triple
+            product.
+        is_hermitian()
+            Check whether the hoppings are Hermitian.
+        reciprocal_vectors()
+            Compute the reciprocal lattice vectors for the periodic directions.
+        reduced_basis()
+            Return a reduced set of periodic `BasisVector`s using LLL
+            algorithm.
+        get_states()
+            Extract all `State`s from a `UnitCell` along with their identifying
+            information.
+        get_BZ()
+            Compute the Brillouin zone vertices and faces.
+        get_hamiltonian_function()
+            Generate a function that computes the Hamiltonian matrix
+            for a given k-point.
     """
 
-    name: str  # Name of the unit cell
-    v1: BasisVector  # First basis vector
-    v2: BasisVector  # Second basis vector
-    v3: BasisVector  # Third basis vector
-    sites: dict[uuid.UUID, Site] = field(
-        default_factory=dict
-    )  # Sites in this unit cell
+    name: str
+    v1: BasisVector
+    v2: BasisVector
+    v3: BasisVector
+    sites: dict[uuid.UUID, Site] = field(default_factory=dict)
     hoppings: dict[
-        Tuple[uuid.UUID, uuid.UUID],  # (destination_state_id, source_state_id)
-        list[
-            Tuple[Tuple[int, int, int], np.complex128]
-        ],  # [(displacement, amplitude), ...]
+        Tuple[uuid.UUID, uuid.UUID],
+        list[Tuple[Tuple[int, int, int], np.complex128]],
     ] = field(default_factory=dict)
-    id: uuid.UUID = field(default_factory=uuid.uuid4)  # Unique identifier
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def volume(self) -> float:
         """
-        Compute the volume of the unit cell using the scalar triple product.
+        Compute the volume of the `UnitCell` using the scalar triple product.
 
-        Calculates the volume of the cell defined by the three basis vectors
-        using the formula V = a1·(a2×a3), where a1, a2, and a3 are the vectors.
+        Returns
+        -------
 
-        Returns:
-            float: Volume of the unit cell in cubic Angstroms
-                (or whatever units the basis vectors use)
+            float
+                Volume of the unit cell in arbitrary units
         """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
 
     def is_hermitian(self) -> bool:
         """
-        Check whether the Hamiltonian is Hermitian.
+        Check whether the hoppings are Hermitian.
 
         For each key (destination_state_id, source_state_id) in the
         hoppings dictionary, check if there is a key
         (source_state_id, destination_state_id). If so, check that the entries
         are related by Hermitian conjugation.
+
+        Returns
+        -------
+            bool
+                `True` if Hermitian; `False` if not.
         """
         hermitian = True
 
@@ -179,15 +218,15 @@ class UnitCell:
         Compute the reciprocal lattice vectors for the periodic directions.
 
         Calculates the reciprocal lattice vectors corresponding to the
-        periodic directions in the unit cell.
+        periodic directions in the `UnitCell`.
         The number of reciprocal vectors depends on the number of
-        periodic dimensions (0-3). The reciprocal vectors satisfy
-        the orthogonality condition: G_i · a_j = 2π δ_ij,
-        where G_i are reciprocal vectors and a_j are real-space basis vectors.
+        periodic dimensions (0-3).
 
-        Returns:
-            list[np.ndarray]: List of 3D reciprocal vectors
-            (0 to 3 items depending on periodicity)
+        Returns
+        -------
+            list[NDArray]
+                List of 3D reciprocal vectors (0 to 3 items depending on
+                periodicity)
         """
         basis_vectors = [
             v for v in [self.v1, self.v2, self.v3] if v.is_periodic
@@ -232,21 +271,26 @@ class UnitCell:
 
     def reduced_basis(self, scale: float = 1e6) -> list[BasisVector]:
         """
-        Return a reduced set of periodic basis vectors using LLL algorithm.
+        Return a reduced set of periodic `BasisVector`s using LLL algorithm.
 
-        Applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm to find
-        a more orthogonal set of basis vectors that spans the same lattice. This is
-        useful for finding a "nicer" representation of the unit cell, with basis vectors
-        that are shorter and more orthogonal to each other.
+        Applies the Lenstra-Lenstra-Lovász (LLL) lattice reduction algorithm
+        to find a more orthogonal set of basis vectors that spans the same
+        lattice.
 
-        Only the periodic vectors are reduced. Non-periodic vectors are left unchanged.
+        Only the periodic `BasisVector`s are reduced.
+        Non-periodic vectors are left unchanged.
 
-        Args:
-            scale: A float to scale the vectors for integer reduction (default: 1e6)
-                  Used because the LLL algorithm works with integer matrices.
+        Parameters
+        ----------
 
-        Returns:
-            list[BasisVector]: A list of BasisVector objects representing the reduced basis
+            scale : float = 1e6
+                A float to scale the vectors for integer reduction.
+                Used because the LLL algorithm works with integer matrices.
+
+        Returns
+        -------
+            list[BasisVector]
+                A list of BasisVector objects representing the reduced basis
         """
         vs = [self.v1, self.v2, self.v3]
         # Determine which vectors are periodic
@@ -258,7 +302,8 @@ class UnitCell:
             if periodic_flags[ii]
         ]
 
-        # If there are fewer than 2 periodic vectors, LLL reduction isn't meaningful
+        # If there are fewer than 2 periodic vectors,
+        # LLL reduction isn't meaningful
         if len(periodic_vectors) < 2:
             return vs  # Return unchanged
 
@@ -283,17 +328,19 @@ class UnitCell:
 
     def get_states(self):
         """
-        Extract all states from a unit cell along with their identifying information.
+        Extract all `State`s and their information from a `UnitCell` .
 
-        This is a helper function used by UI components to get a flattened list of all
-        states in the unit cell, regardless of which site they belong to. It makes it
-        easier to display states in UI components like dropdown menus or lists.
+        This is a helper function used by UI components to get a flattened
+        list of all states in the unit cell, regardless of which site they
+        belong to. It makes it easier to display states in UI components
+        like dropdown menus or lists.
 
-        Returns:
-            tuple: A tuple containing:
-                - states (list): List of State objects
-                - state_info (list): List of tuples (site_name, site_id, state_name, state_id)
-                  that provides context for each state (which site it belongs to)
+        Returns
+        -------
+            Tuple[list[State], list[Tuple[str, UUID, str, UUID]]]
+                A tuple containing a list of `State` objects and a list of
+                tuples (site_name, site_id, state_name, state_id)
+                providing context for each state (which site it belongs to).
         """
         states = []
         state_info = []
@@ -316,11 +363,12 @@ class UnitCell:
         For 2D, bz_faces contains the edges of the 2D BZ polygon.
         For 3D, bz_faces contains the polygonal faces of the 3D BZ polyhedron.
 
-        Returns:
-            tuple: A tuple containing:
-                - bz_vertices (numpy.ndarray): Array of Brillouin zone vertex coordinates
-                - bz_faces (list): List where each element contains coordinates of points
-                  defining a BZ boundary (edge in 2D, face in 3D)
+        Returns
+        -------
+            Tuple[NDArray[NDArray], NDArray[NDArray[NDArray]]]
+                The first element of the tuple gives the BZ vertex coordinates.
+                The second element gives a list of faces, where each face is
+                defined by vertex points. In 2D, the "faces" are edges.
         """
         n_neighbors = (
             1  # Number of neighboring reciprocal lattice points to consider
@@ -364,56 +412,58 @@ class UnitCell:
             vor = Voronoi(all_points)
 
             # Start by getting the vertices of the Brillouin zone
-            # The first Brillouin zone is the Voronoi cell around the origin (index 0)
+            # The first Brillouin zone is the Voronoi cell around
+            # the origin (index 0)
             origin_region = vor.point_region[
                 0
-            ]  # Tells which Voronoi cell corresponds to the point at the origin
+            ]  # Tells which Voronoi cell corresponds to origin point
             vertex_indices = vor.regions[
                 origin_region
-            ]  # Tells which vertices defining Voronoi cell bound the relevant region
+            ]  # Tells which vertices defining Voronoi cell bound the region
 
             # Extract vertices
             bz_vertices = vor.vertices[
                 vertex_indices
-            ]  # Get the actual coordinates of the vertices of the points bounding the region
+            ]  # Get the coordinates of the vertices
 
-            # Next, get a list of lists that defines the faces of the Brillouin zone
+            # Next, get a list of lists that defines the faces of the BZ
             bz_faces = []
-            # bz_faces = np.array([])
             # ridge_points is a list of tuples corresponding to
-            # pairs of elements of all_points that are separated by a Voronoi boundary
+            # pairs of elements of all_points that are separated by
+            # a Voronoi boundary
             for num, p in enumerate(vor.ridge_points):
                 # If one of the elements in the pair is the origin (index 0),
                 # this ridge separates the BZ from its neighbors
                 if p[0] == 0 or p[1] == 0:
-                    # ridge_vertices[num] contains the indices of the vertices bounding the ridge
+                    # ridge_vertices[num] contains the indices of the vertices
+                    # bounding the ridge
                     ridge_vertices = vor.ridge_vertices[num]
-                    # finally, get the coordinates of the ridge vertices from their indices
+                    # finally, get the coordinates of the ridge vertices from
+                    # their indices
                     face = vor.vertices[ridge_vertices]
                     bz_faces.append(face)
-
+            # bz_faces = np.array(bz_faces)
         return bz_vertices, bz_faces
 
     def get_hamiltonian_function(self):
         """
-        Generate a function that computes the Hamiltonian matrix for a given k-point.
+        Generate a function that computes the Hamiltonian matrix.
 
-        This method creates a closure that precomputes all k-independent data needed for
-        the Hamiltonian, and returns a function that efficiently builds the Hamiltonian
-        matrix for any k-point in the Brillouin zone.
+        This method creates a closure that precomputes all k-independent
+        data needed for the Hamiltonian, and returns a function that builds
+        the Hamiltonian matrix for any k-point in the Brillouin zone.
 
-        The returned function implements Bloch's theorem by transforming the real-space
-        Hamiltonian (with hopping terms potentially spanning multiple unit cells) into
-        k-space. This allows band structure calculations along arbitrary paths in k-space.
+        The dimension of the k-point must match the number of periodic
+        dimensions in the unit cell (1D, 2D, or 3D).
 
-        The dimension of the k-point must match the number of periodic dimensions in
-        the unit cell (1D, 2D, or 3D).
-
-        Returns:
-            function: A function that takes k-points (numpy array) and returns a
-                     complex Hamiltonian matrix (numpy array of shape [n_states, n_states])
+        Returns
+        -------
+            function
+                A function that takes k-points (numpy array) and returns a
+                complex Hamiltonian matrix.
         """
-        # Get the list of all states in the unit cell for determining the Hamiltonian size
+        # Get the list of all states in the unit cell for
+        # determining the Hamiltonian size
         states, state_info = self.get_states()
 
         # Get the reciprocal lattice vectors
@@ -421,7 +471,8 @@ class UnitCell:
         num_periodic = len(reciprocal_vectors)
 
         # Create a mapping from state IDs to indices in the Hamiltonian matrix
-        # state_id identifies the state, idx is its index in the Hamiltonian matrix (to keep track of rows/columns)
+        # state_id identifies the state, idx is its index in the Hamiltonian
+        # matrix (to keep track of rows/columns)
         state_to_idx = {
             state_id: idx for idx, (_, _, _, state_id) in enumerate(state_info)
         }
@@ -438,24 +489,28 @@ class UnitCell:
             """
             Compute the Hamiltonian matrix for a given k-point.
 
-            This function constructs the Hamiltonian matrix in k-space according to the
-            tight-binding model defined by the unit cell and its hopping parameters.
-            The matrix elements include phase factors exp(-i k·R) for hoppings between
-            different unit cells, as required by Bloch's theorem.
+            This function constructs the Hamiltonian matrix in k-space
+            according to the tight-binding model defined by the `UnitCell`
+            and its hopping parameters.
+            The matrix elements include phase factors exp(-i k·R) for hoppings
+            between different unit cells, as required by Bloch's theorem.
 
-            Args:
-                k: k-point vector in the basis of reciprocal lattice vectors
-                   If the system has n periodic directions, k should be an n-dimensional vector
+            Parameters
+            ----------
+                k : NDArray[float]
+                    k-point vector in the basis of reciprocal lattice vectors
+                    If the system has n periodic directions, k should be an
+                    n-dimensional vector
 
-            Returns:
-                numpy.ndarray: Complex Hamiltonian matrix of size (n_states, n_states)
-                              The eigenvalues of this matrix give the energy bands at k
+            Returns
+            -------
+                NDArray
+                    Complex Hamiltonian matrix of size (n_states, n_states)
             """
-            # Validate the k-point dimension matches the number of periodic directions
+            # Validate the k-point dimension matches the number of
+            # periodic directions
             if len(k) != num_periodic:
-                raise ValueError(
-                    f"k-point dimension ({len(k)}) does not match number of periodic directions ({num_periodic})"
-                )
+                raise ValueError("Momentum does not match system periodicity")
 
             # Initialize the Hamiltonian matrix with zeros
             H = np.zeros((n_states, n_states), dtype=np.complex128)
@@ -469,7 +524,8 @@ class UnitCell:
                     d1, d2, d3 = displacement
 
                     # Calculate the real-space displacement vector
-                    # This is the sum of the periodic vectors scaled by the displacement
+                    # This is the sum of the periodic vectors scaled by
+                    # the displacement
                     R = d1 * v1 + d2 * v2 + d3 * v3
 
                     # Apply Bloch phase factor: exp(-i k·R)
@@ -491,11 +547,19 @@ class BandStructure:
     """
     An object containing a system's band structure.
 
-    Attributes:
-        path: a list of point coordinates along which the bands are calculated
-        special_points: a list of high-symmetry point coordinates used to construct the path
-        eigenvalues: a list of arrays, where each array contains eivenvalues corresponding to each point on the path
-        eigenvectors: a list of 2D arrays, where each array the eigenvectors corresponding to each point on the path
+    Attributes
+    ----------
+
+        path : list[NDArray]
+            A list of point coordinates along which the bands are calculated.
+        special_points : list[NDArray]
+            A list of high-symmetry point coordinates used for the path.
+        eigenvalues : list[NDArray]
+            A list of arrays, where each array contains eivenvalues
+            corresponding to each point on the path.
+        eigenvectors : list[NDArray]
+            A list of 2D arrays, where each array contains the eigenvectors
+            corresponding to each point on the path.
     """
 
     path: list[np.ndarray]

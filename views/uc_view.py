@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
 from resources.ui_elements import divider_line, EnterKeySpinBox, SystemTree
+from src.tibitypes import BasisVector
 
 
 class UnitCellPanel(QWidget):
@@ -135,6 +136,22 @@ class UnitCellPanel(QWidget):
             grid_layout.addWidget(label, 1 + ii, 0)
 
         grid_layout.setVerticalSpacing(2)
+
+    def set_basis_vectors(
+        self, v1: BasisVector, v2: BasisVector, v3: BasisVector
+    ) -> None:
+        """
+        Set the basis vectors in the UI.
+
+        Args:
+            v1 (BasisVector): Basis vector 1.
+            v2 (BasisVector): Basis vector 2.
+            v3 (BasisVector): Basis vector 3.
+        """
+        for ii, coord in enumerate("xyz"):
+            self.v1[ii].setValue(getattr(v1, coord))
+            self.v2[ii].setValue(getattr(v2, coord))
+            self.v3[ii].setValue(getattr(v3, coord))
 
 
 class SitePanel(QWidget):

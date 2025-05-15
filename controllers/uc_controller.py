@@ -26,20 +26,16 @@ class UnitCellController(QObject):
     Controller managing interactions between the UI and unit cell data model.
 
     This controller connects UI signals from the form panels and tree view to
-    appropriate actions that modify the underlying data models.
+    appropriate commands that modify the underlying data models.
     It handles all CRUD (create, read, update, delete) operations for
     the hierarchy of unit cells, sites, and states.
-
-    The controller follows the MVC (Model-View-Controller) pattern:
-    - Models: The unit_cells dictionary and the form panel models
-    - Views: The tree view and form panels
-    - Controller: This class, which updates models in response to UI events
-
-    After data model changes, the controller updates the tree view and
-    reselects the appropriate node to maintain UI state consistency.
     """
 
-    plot_update_requested = Signal()
+    plot_update_requested = (
+        Signal()
+    )  # A signal requesting a plot update. The signal is listened to by
+    # the app_controller, forwarding the request to the appropriate
+    # plotting controllers
     item_changed = (
         Signal()
     )  # A signal emitted when the user changes the item by interacting
@@ -59,10 +55,8 @@ class UnitCellController(QObject):
 
         Args:
             unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: DataModel tracking the currently selected
-            unit cell, site, and state
-            unit_cell_view: The main view component containing
-            tree view and form panels
+            selection: DataModel tracking the current selection
+            unit_cell_view: The main view component
             undo_stack: QUndoStack to hold "undo-able" commands
         """
         super().__init__()
@@ -167,9 +161,7 @@ class UnitCellController(QObject):
                         ChangeDimensionalityCommand(
                             unit_cells=self.unit_cells,
                             selection=self.selection,
-                            v1=self.v1,
-                            v2=self.v2,
-                            v3=self.v3,
+                            unit_cell_view=self.unit_cell_view,
                             dim=d,
                             buttons=self.radio_buttons,
                         )
@@ -251,9 +243,7 @@ class UnitCellController(QObject):
                 ReduceBasisCommand(
                     unit_cells=self.unit_cells,
                     selection=self.selection,
-                    v1=self.v1,
-                    v2=self.v2,
-                    v3=self.v3,
+                    unit_cell_view=self.unit_cell_view,
                 )
             )
         )
@@ -298,17 +288,9 @@ class UnitCellController(QObject):
             ).setChecked(True)
 
             # Set the basis vector fields
-            self.v1[0].setValue(uc.v1.x)
-            self.v1[1].setValue(uc.v1.y)
-            self.v1[2].setValue(uc.v1.z)
-
-            self.v2[0].setValue(uc.v2.x)
-            self.v2[1].setValue(uc.v2.y)
-            self.v2[2].setValue(uc.v2.z)
-
-            self.v3[0].setValue(uc.v3.x)
-            self.v3[1].setValue(uc.v3.y)
-            self.v3[2].setValue(uc.v3.z)
+            self.unit_cell_view.unit_cell_panel.set_basis_vectors(
+                uc.v1, uc.v2, uc.v3
+            )
 
             # Show the UnitCellPanel
             self.unit_cell_view.uc_stack.setCurrentWidget(
@@ -355,6 +337,7 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_stack.setCurrentWidget(
                 self.unit_cell_view.site_info_label
             )
+        self.plot_update_requested.emit()
 
     def _pick_site_color(self):
         """
