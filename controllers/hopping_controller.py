@@ -1,16 +1,17 @@
-import uuid
+import numpy as np
 from PySide6.QtCore import QObject, Qt, Signal, QPoint
-from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QMenu
 from PySide6.QtGui import QAction
-from src.tibitypes import UnitCell
+from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QMenu
+import uuid
+
 from models.data_models import DataModel
-from views.hopping_view import HoppingView
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,
     BUTTON_STYLE_NONHERMITIAN,
 )
-import numpy as np
+from src.tibitypes import UnitCell
+from views.hopping_view import HoppingView
 
 
 class HoppingController(QObject):
@@ -29,14 +30,54 @@ class HoppingController(QObject):
     The controller maintains the connection between the visual representation
     and the underlying data model, ensuring that changes in the UI are properly
     reflected in the unit cell's hopping parameters.
+
+    Attributes
+    ----------
+        unit_cells : dict[UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            Model tracking the current selection
+        hopping_view : HoppingView
+            The main view component
+        state_info : list[tuple]
+            List of tuples containing state information \
+                (site_name, site_id, state_name, state_id)\
+                for each `State` in the `UnitCell`
+        pair_selection : list[tuple]
+            2-element list of tuples containing the selected state pair
+        state_coupling : list[Tuple[int, int, int], np.complex128]
+            List of couplings for the selected state pair
+        hopping_data : DataModel(Tuple[uuid, uuid],\
+              list[Tuple[int, int, int], np.complex128])
+            Data model containing the hopping parameters for the `UnitCell`
+
+    Methods
+    -------
+        update_unit_cell()
+            Updates the hopping data model with the `UnitCell`'s hoppings
+
+    Signals
+    -------
+        btn_clicked
+            Emitted when a button is clicked, carrying the source \
+                and destination state info
+        hoppings_changed
+            Emitted when couplings are modified from right-clicking\
+                on the button grid
+        hopping_segments_requested
+            Emitted when the coupling table is updated, triggering an\
+                  update of hopping segments
     """
 
-    # Signal emitted when a button is clicked, carrying the source and destination state info
-    # Params: (destination_state_info, source_state_info) [in accordance with UnitCell type]
-    # where each is (site_name, state_name, state_id)
-    button_clicked = Signal(object, object)
+    # Signal emitted when a button is clicked, carrying the source and
+    # destination state info
+    # Params: (destination_state_info, source_state_info)
+    # [in accordance with UnitCell type] where each is
+    # (site_name, state_name, state_id)
+    btn_clicked = Signal(object, object)
 
-    # Signal emitted when couplings are modified from right-clicking on the button grid.
+    # Signal emitted when couplings are modified from
+    # right-clicking on the button grid.
     # The signal triggers a table and matrix update
     hoppings_changed = Signal()
 
@@ -53,10 +94,15 @@ class HoppingController(QObject):
         """
         Initialize the hopping controller.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected unit cell, site, and state
-            hopping_view: The view component for displaying and editing hopping parameters
+        Parameters
+        ----------
+
+            unit_cells : dict[UUID, UnitCell]
+                Dictionary mapping UUIDs to UnitCell objects
+            selection : DataModel
+                Model tracking the current selection
+            hopping_view : HoppingView
+                The main view component
         """
         super().__init__()
         self.unit_cells = unit_cells
@@ -64,24 +110,17 @@ class HoppingController(QObject):
         self.hopping_view = hopping_view
 
         # Internal controller state
-        self.state_info = (
-            []
-        )  # Tuples of (site_name, site_id, state_name, state_id) for the states in the selected unit cell
+        self.state_info = []
         self.pair_selection = [
             None,
             None,
-        ]  # Selected pair of states in the hopping matrix.
-        self.state_coupling = (
-            []
-        )  # List of couplings list[Tuple[int, int, int], np.complex128]
-        self.hopping_data = (
-            DataModel()
-        )  # A dictionary of hoppings for the selected unit cell.
-        # The keys are Tuple[uuid, uuid] and the values are list[Tuple[int, int, int], np.complex128]
+        ]
+        self.state_coupling = []
+        self.hopping_data = DataModel()
 
         # Connect Signals
-        self.selection.signals.updated.connect(self._update_unit_cell)
-        self.button_clicked.connect(self._update_pair_selection)
+        self.selection.signals.updated.connect(self.update_unit_cell)
+        self.btn_clicked.connect(self._update_pair_selection)
 
         self.hopping_view.table_panel.add_row_btn.clicked.connect(
             self._add_empty_row
@@ -94,7 +133,7 @@ class HoppingController(QObject):
         )
         self.hoppings_changed.connect(self._handle_matrix_interaction)
 
-    def _update_unit_cell(self):
+    def update_unit_cell(self):
         """
         Called when the selection changes in the tree view.
         Updates the hopping data model with the selected unit cell's hoppings.
@@ -112,7 +151,7 @@ class HoppingController(QObject):
         self.state_coupling = []
         self.hopping_view.table_panel.table_title.setText("")
         # If no unit cell selected, hide the panels
-        if uc_id == None:
+        if uc_id is None:
             self.hopping_view.panel_stack.setCurrentWidget(
                 self.hopping_view.info_label
             )
@@ -141,8 +180,10 @@ class HoppingController(QObject):
 
     def _refresh_matrix(self):
         """
-        Refreshes the entire matrix grid by removing all existing buttons and recreating them.
-        Updates button colors based on whether hoppings exist between states.
+        Refresh the matrix grid.
+
+        Button colors are updated based on whether hoppings
+        exist between states.
         """
         # Clear existing widgets in grid layout
         while self.hopping_view.matrix_panel.grid_layout.count():
@@ -172,21 +213,18 @@ class HoppingController(QObject):
                 state1 = self.state_info[ii]
                 state2 = self.state_info[jj]
                 # Show the state and site names.
-                # From second quantization, the hopping goes FROM column INTO row
-                # (columns multiply annihilation operators, rows multiply creation)
+                # From second quantization, the hopping goes FROM column INTO
+                # row (columns multiply annihilation operators,
+                # rows multiply creation)
                 btn.setToolTip(
                     f"{state2[0]}.{state2[2]} → {state1[0]}.{state1[2]}"
                 )
 
                 # Button click handler implementation:
-                # 1. Qt buttons can only connect to argumentless functions
-                # 2. We use a lambda with default arguments to capture the current ii,jj values
-                # 3. When button is clicked, the lambda emits a signal with the source and destination states
-                # 4. This approach avoids the "closure capture" problem with lambda in loops
                 btn.clicked.connect(
-                    lambda checked=False, row=ii, col=jj: self.button_clicked.emit(
-                        self.state_info[row],
-                        self.state_info[col],  # Format (TO_state, FROM_state)
+                    lambda checked=False, r=ii, c=jj: self.btn_clicked.emit(
+                        self.state_info[r],
+                        self.state_info[c],  # Format (TO_state, FROM_state)
                     )
                 )
 
@@ -202,12 +240,17 @@ class HoppingController(QObject):
         self, button: QPushButton, has_hopping, hermitian=False
     ):
         """
-        Apply the appropriate style to a button based on whether it has hoppings.
+        Apply the appropriate style to a button based on its hoppings.
 
-        Args:
-            button: The QPushButton to style
-            has_hopping: Boolean indicating whether the button represents a connection with hoppings
-            hermitian: Boolean indicating whether the coupling is Hermitian
+        Parameters
+        ----------
+
+            button : QPushButton
+                The button to style
+            has_hopping : bool
+                Indicator whether the button marks a connection with hoppings
+            hermitian : bool
+                Boolean indicating whether the coupling is Hermitian
         """
         if not has_hopping:
             style = BUTTON_STYLE_DEFAULT
@@ -221,14 +264,7 @@ class HoppingController(QObject):
 
     def _refresh_button_colors(self):
         """
-        Updates button colors based on whether hoppings exist between states.
-
-        Iterates through all buttons in the grid and applies the appropriate style
-        based on whether there are any hopping terms defined for the corresponding
-        state pair.
-
-        The pair is also checked against its transpose element to determine whether
-        the couplings are Hermitian.
+        Update button colors based on whether hoppings exist between states.
         """
         if not self.buttons:
             return
@@ -254,9 +290,12 @@ class HoppingController(QObject):
         Called when a button is clicked in the hopping matrix.
         Updates the table to display hopping terms between the selected states.
 
-        Args:
-            s1: Tuple of (site_name, site_id, state_name, state_id) for the destination state (row)
-            s2: Tuple of (site_name, site_id, state_name, state_id) for the source state (column)
+        Parameters
+        ----------
+            s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
+                Information Tuple for the destination `State` (row)
+            s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
+                Information Tuple for the source `State` (column)
         """
         # Store the UUIDs of the selected states
         self.pair_selection = [s1, s2]
@@ -264,10 +303,11 @@ class HoppingController(QObject):
             self.hopping_view.table_panel
         )
 
-        # Retrieve existing hopping terms between these states, or empty list if none exist
+        # Retrieve existing hopping terms between these states
         self.state_coupling = self.hopping_data.get((s1[3], s2[3]), [])
 
-        # Update the table title to show the selected states (source → destination)
+        # Update the table title to show the selected states
+        # (source → destination)
         self.hopping_view.table_panel.table_title.setText(
             f"{s2[0]}.{s2[2]} → {s1[0]}.{s1[2]}"
         )
@@ -363,19 +403,22 @@ class HoppingController(QObject):
         for index in selected_indexes:
             selected_rows.add(index.row())
 
-        # Remove the rows from the table in reverse order to avoid shifting issues
+        # Remove the rows from the table in reverse order to avoid
+        # shifting issues
         for row in sorted(selected_rows, reverse=True):
             self.hopping_view.table_panel.hopping_table.removeRow(row)
 
     def _save_couplings(self):
         """
-        Extracts data from the hopping table and saves it to the unit cell model.
+        Extract data from the hopping table and save it to the unit cell model.
 
-        Reads all rows from the table, converting cell values to the appropriate types:
+        Read all rows from the table, converting cell values to the
+        appropriate types:
         - First 3 columns (d₁,d₂,d₃) to integers (displacement vector)
         - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
 
-        If the same triplet (d₁,d₂,d₃) appears more than once, the amplitudes are summed
+        If the same triplet (d₁,d₂,d₃) appears more than once,
+        the amplitudes are summed
         """
         new_couplings = {}
         # Extract values from each row in the table
@@ -406,7 +449,8 @@ class HoppingController(QObject):
 
             # Create a tuple for the displacement vector (d₁, d₂, d₃)
             triplet = (d1, d2, d3)
-            # If the triplet already exists, merge amplitudes by adding the new amplitude
+            # If the triplet already exists, merge amplitudes by adding
+            # the new amplitude
             if triplet in new_couplings:
                 new_couplings[triplet] += amplitude
             else:
