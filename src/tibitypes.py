@@ -121,7 +121,8 @@ class UnitCell:
             Basis vectors
         sites : dict[UUID, Site]
             Dictionary mapping site UUIDs to `Site` objects
-        hoppings : dict[Tuple[UUID, UUID], list[Tuple[Tuple[int, int, int], np.complex128]]]
+        hoppings : dict[Tuple[UUID, UUID], \
+            list[Tuple[Tuple[int, int, int], np.complex128]]]
             Dictionary of hopping terms between states.
             Keys are pairs of state UUIDs (destination_state_id,
             source_state_id).

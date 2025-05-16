@@ -7,6 +7,8 @@ from src.tibitypes import UnitCell
 
 
 def divider_line():
+    """
+    Create a horizontal line to be used as a divider in the UI."""
     line = QFrame()
     line.setFrameShape(QFrame.HLine)
     line.setFrameShadow(QFrame.Sunken)
@@ -16,6 +18,10 @@ def divider_line():
 
 
 class EnterKeySpinBox(QDoubleSpinBox):
+    """
+    Custom `QDoubleSpinBox` that emits a signal when the Enter key is pressed.
+    """
+
     editingConfirmed = Signal()
 
     def __init__(self, *args, **kwargs):
@@ -46,6 +52,8 @@ class EnterKeySpinBox(QDoubleSpinBox):
 
 
 class SystemTree(QTreeView):
+    """
+    Custom tree view for displaying unit cells, sites, and states."""
 
     tree_selection_changed = Signal(object)
 
@@ -75,15 +83,18 @@ class SystemTree(QTreeView):
         current state of the unit_cells dictionary. It creates a hierarchical
         structure with three levels: unit cells, sites, and states.
 
-        Each node in the tree stores the corresponding object, type, and UUID
-        as user data, allowing for easy retrieval during selection events.
-
         Note: For better performance, prefer the more specific update methods:
-        - add_tree_item() - For adding or updating a single node
-        - remove_tree_item() - For removing a single node
+        - `add_tree_item()` - For adding or updating a single node
+        - `remove_tree_item()` - For removing a single node
 
         This full refresh is typically only needed during initialization or
         when multiple components of the tree need to be updated simultaneously.
+
+        Parameters
+        ----------
+            unit_cells : dict[uuid.UUID, UnitCell]
+                Dictionary of `UnitCells`s to be displayed in the tree.
+                The keys are UUIDs and the values are `UnitCell` objects.
         """
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
@@ -111,11 +122,18 @@ class SystemTree(QTreeView):
         self, item_name: str, item_id: uuid.UUID
     ) -> QStandardItem:
         """
-        Create a QStandardItem for tree with metadata
+        Create a `QStandardItem` for tree.
 
-        Args:
-            item_name: name of the item
-            item_id: UUID of the item
+        Parameters
+        ----------
+            item_name : str
+                Name of the item.
+            item_id : UUID
+                id of the item.
+        Returns
+        -------
+            QStandardItem
+                The new tree item.
         """
         tree_item = QStandardItem(item_name)
         tree_item.setData(item_id, Qt.UserRole)  # Store the ID
@@ -129,16 +147,21 @@ class SystemTree(QTreeView):
         self, uc_id, site_id=None, state_id=None
     ) -> QStandardItem | None:
         """
-        Find a tree item by its ID and type.
+        Find a tree item by its ID.
 
-        Args:
-            item_id: UUID of the item to find
-            item_type: Type of the item ("unit_cell", "site", or "state")
-            parent_id: UUID of the parent item (for site or state)
-            grandparent_id: UUID of the grandparent item (for state)
+        Parameters
+        ----------
+            uc_id : UUID
+                id of the `UnitCell`
+            site_id : UUID, optional
+                id of the `Site`
+            state_id : UUID, optional
+                id of the `State`
 
-        Returns:
-            The QStandardItem if found, None otherwise
+        Returns
+        -------
+            QStandardItem | None
+                The required item if found, `None` otherwise.
         """
         if state_id is not None:
             parent = self.find_item_by_id(uc_id, site_id)
@@ -157,13 +180,17 @@ class SystemTree(QTreeView):
 
     def add_tree_item(self, name, uc_id, site_id=None, state_id=None):
         """
-        Add a tree item without rebuilding the entire tree.
-        Select the item after the addition.
+        Add and select a tree item without rebuilding the entire tree.
 
-        Args:
-            uc_id: UUID of the unit cell
-            site_id: UUID of the site
-            state_id: UUID of the state
+        Parameters
+        ----------
+
+            uc_id : UUID
+                id of the `UnitCell`
+            site_id : UUID, optional
+                id of the `Site`
+            state_id : UUID, optional
+                id of the `State`
         """
         if state_id is not None:  # Adding a state
             parent = self.find_item_by_id(uc_id, site_id)
@@ -184,14 +211,21 @@ class SystemTree(QTreeView):
 
     def remove_tree_item(self, uc_id, site_id=None, state_id=None):
         """
-        Remove an item from the tree. If the item has a parent
-        (i.e., is not a UnitCell), select the parent. Otherwise,
+        Remove an item from the tree.
+
+        If the item has a parent
+        (i.e., is not a `UnitCell`), select the parent. Otherwise,
         clear the selection
 
-        Args:
-            uc_id: UUID of the grandparent unit cell
-            site_id: UUID of the parent site
-            state_id: UUID of the state to remove
+        Parameters
+        ----------
+
+            uc_id : UUID
+                id of the `UnitCell`
+            site_id : UUID, optional
+                id of the `Site`
+            state_id : UUID, optional
+                id of the `State`
         """
         item = self.find_item_by_id(uc_id, site_id, state_id)
         if item:
@@ -211,7 +245,7 @@ class SystemTree(QTreeView):
             # Delete the item
             parent.removeRow(item.row())
 
-    def _on_tree_selection_changed(self, selected, deselected):
+    def _on_tree_selection_changed(self, selected: QStandardItem, deselected):
         """
         Handle the change of selection in the tree.
 
@@ -222,9 +256,12 @@ class SystemTree(QTreeView):
         the item's id and, if applicable, its parent's/grandparent's id's.
         The dictionary is then used to update the app's selection model.
 
-        Args:
-            selected: The newly selected items
-            deselected: The previously selected items that are now deselected
+        Parameters
+        ----------
+            selected : QStandardItem
+                The newly selected item
+            deselected : QStandardItem
+                The previously selected items that are now deselected
         """
         indexes = selected.indexes()
 
