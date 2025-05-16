@@ -301,6 +301,18 @@ class RenameTreeItemCommand(QUndoCommand):
         item = self.tree_view.find_item_by_id(
             self.uc_id, self.site_id, self.state_id
         )
+        if self.state_id:
+            self.unit_cells[self.uc_id].sites[self.site_id].states[
+                self.state_id
+            ].name = self.new_name
+
+        elif self.site_id:
+            self.unit_cells[self.uc_id].sites[
+                self.site_id
+            ].name = self.new_name
+        else:
+            self.unit_cells[self.uc_id].name = self.new_name
+
         item.setText(self.new_name)
         self.item_changed.emit()
 
@@ -308,6 +320,18 @@ class RenameTreeItemCommand(QUndoCommand):
         item = self.tree_view.find_item_by_id(
             self.uc_id, self.site_id, self.state_id
         )
+        if self.state_id:
+            self.unit_cells[self.uc_id].sites[self.site_id].states[
+                self.state_id
+            ].name = self.old_name
+
+        elif self.site_id:
+            self.unit_cells[self.uc_id].sites[
+                self.site_id
+            ].name = self.old_name
+        else:
+            self.unit_cells[self.uc_id].name = self.old_name
+
         item.setText(self.old_name)
         self.item_changed.emit()
 
