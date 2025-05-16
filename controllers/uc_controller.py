@@ -275,7 +275,6 @@ class UnitCellController(QObject):
 
         Buttons are also enabled/disabled based on the selection context.
         """
-
         unit_cell_id = self.selection.get("unit_cell", None)
         site_id = self.selection.get("site", None)
 
@@ -288,9 +287,26 @@ class UnitCellController(QObject):
             # Set the dimensionality radio button.
             # Suppress the dim_listener since we are updating the radio
             # button programmatically
+            for btn in self.radio_buttons:
+                btn.blockSignals(True)
             self.unit_cell_view.unit_cell_panel.radio_group.button(
                 dim
             ).setChecked(True)
+
+            self.unit_cell_view.unit_cell_panel.v1[0].setEnabled(True)
+            self.unit_cell_view.unit_cell_panel.v1[1].setEnabled(dim > 1)
+            self.unit_cell_view.unit_cell_panel.v1[2].setEnabled(dim > 2)
+
+            self.unit_cell_view.unit_cell_panel.v2[0].setEnabled(dim > 1)
+            self.unit_cell_view.unit_cell_panel.v2[1].setEnabled(True)
+            self.unit_cell_view.unit_cell_panel.v2[2].setEnabled(dim > 2)
+
+            self.unit_cell_view.unit_cell_panel.v3[0].setEnabled(dim > 2)
+            self.unit_cell_view.unit_cell_panel.v3[1].setEnabled(dim > 2)
+            self.unit_cell_view.unit_cell_panel.v3[2].setEnabled(True)
+
+            for btn in self.radio_buttons:
+                btn.blockSignals(False)
 
             # Set the basis vector fields
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(

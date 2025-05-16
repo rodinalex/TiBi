@@ -486,7 +486,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
             )
 
     def redo(self):
-
         self._set_vector_enables(self.new_dim)
 
         uc = self.unit_cells[self.uc_id]
