@@ -29,6 +29,36 @@ class UnitCellController(QObject):
     appropriate commands that modify the underlying data models.
     It handles all CRUD (create, read, update, delete) operations for
     the hierarchy of unit cells, sites, and states.
+
+
+    Attributes
+    ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            `DataModel` tracking the current selection
+        unit_cell_view : UnitCellView
+            The main view component
+        undo_stack : QUndoStack
+            `QUndoStack` to hold "undo-able" commands
+        v1, v2, v3 : list[EnterKeySpinBox]
+            Lists of spinboxes for basis vector components
+        R, c1, c2, c3 : EnterKeySpinBox
+            Spinboxes for site properties
+        tree_view_panel :TreeViewPanel
+            The tree view panel component
+        tree_view : SystemTree
+            The tree view component
+        tree_model : QStandardItemModel
+            The model backing the tree view
+    Signals
+    -------
+        plot_update_requested : Signal
+            Signal requesting a plot update
+        item_changed : Signal
+            Signal emitted when a tree item is changed.
+            Necessary to make sure that the hopping matrix
+            has the correct item names
     """
 
     plot_update_requested = (
@@ -53,11 +83,16 @@ class UnitCellController(QObject):
         """
         Initialize the controller and connect UI signals to handler methods.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: DataModel tracking the current selection
-            unit_cell_view: The main view component
-            undo_stack: QUndoStack to hold "undo-able" commands
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            `DataModel` tracking the current selection
+        unit_cell_view : UnitCellView
+            The main view component
+        undo_stack : QUndoStack
+            `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
         # Store references to UI components and data models
@@ -362,9 +397,10 @@ class UnitCellController(QObject):
 
     def _pick_site_color(self):
         """
-        Use a color dialog to choose a color for the selected site to be used
-        in the UC plot. The color is saved in the dictionary of colors. Next,
-        a UC plot update is requested.
+        Open a color dialog to select a color for the selected site.
+
+        After the color is picked, a command is issued to create an
+        undoable change.
         """
         old_color = (
             self.unit_cells[self.selection["unit_cell"]]
