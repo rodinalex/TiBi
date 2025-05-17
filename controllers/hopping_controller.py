@@ -1,9 +1,10 @@
 import numpy as np
-from PySide6.QtCore import QObject, Qt, Signal, QPoint
+from PySide6.QtCore import QObject, Qt, QPoint, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QPushButton, QSpinBox, QDoubleSpinBox, QMenu
+from PySide6.QtWidgets import QDoubleSpinBox, QMenu, QPushButton, QSpinBox
 import uuid
 
+from commands.hopping_commands import SaveHoppingsCommand
 from models.data_models import DataModel
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
