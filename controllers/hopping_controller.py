@@ -1,6 +1,6 @@
 import numpy as np
 from PySide6.QtCore import QObject, Qt, QPoint, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QUndoStack
 from PySide6.QtWidgets import QDoubleSpinBox, QMenu, QPushButton, QSpinBox
 import uuid
 
@@ -40,6 +40,8 @@ class HoppingController(QObject):
             Model tracking the current selection
         hopping_view : HoppingView
             The main view component
+        undo_stack : QUndoStack
+            `QUndoStack` to hold "undo-able" commands
         state_info : list[tuple]
             List of tuples containing state information \
                 (site_name, site_id, state_name, state_id)\
@@ -48,9 +50,9 @@ class HoppingController(QObject):
             2-element list of tuples containing the selected state pair
         state_coupling : list[Tuple[int, int, int], np.complex128]
             List of couplings for the selected state pair
-        hopping_data : DataModel(Tuple[uuid, uuid],\
-              list[Tuple[int, int, int], np.complex128])
-            Data model containing the hopping parameters for the `UnitCell`
+        hoppings : dict[Tuple[uuid, uuid],\
+              list[Tuple[int, int, int], np.complex128]]
+            Dictionary containing the hopping parameters for the `UnitCell`
 
     Methods
     -------
@@ -67,7 +69,10 @@ class HoppingController(QObject):
                 on the button grid
         hopping_segments_requested
             Emitted when the coupling table is updated, triggering an\
-                  update of hopping segments
+                update of hopping segments
+        hopping_view_update_requested
+            Emitted after saving the hoppings to update the table and\
+            the matrix
     """
 
     # Signal emitted when a button is clicked, carrying the source and
@@ -86,11 +91,15 @@ class HoppingController(QObject):
     # an update of hopping segments in the unit cell plot
     hopping_segments_requested = Signal()
 
+    # Signal requesting a redrawing of the hopping matrix and table
+    hopping_view_update_requested = Signal()
+
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
         hopping_view: HoppingView,
+        undo_stack: QUndoStack,
     ):
         """
         Initialize the hopping controller.
@@ -104,11 +113,14 @@ class HoppingController(QObject):
                 Model tracking the current selection
             hopping_view : HoppingView
                 The main view component
+            undo_stack : QUndoStack
+                `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
         self.hopping_view = hopping_view
+        self.undo_stack = undo_stack
 
         # Internal controller state
         self.state_info = []
@@ -117,7 +129,7 @@ class HoppingController(QObject):
             None,
         ]
         self.state_coupling = []
-        self.hopping_data = DataModel()
+        self.hoppings = {}
 
         # Connect Signals
         self.selection.signals.updated.connect(self.update_unit_cell)
@@ -140,8 +152,8 @@ class HoppingController(QObject):
         Updates the hopping data model with the selected unit cell's hoppings.
         """
         uc_id = self.selection.get("unit_cell")
-        self.hopping_data = DataModel()
-        self.state_info = []
+        self.hoppings.clear()
+        self.state_info.clear()
         self.pair_selection[0] = None
         self.pair_selection[1] = None
         self.hopping_view.table_stack.setCurrentWidget(
@@ -149,7 +161,7 @@ class HoppingController(QObject):
         )  # Hide the table until a pair is selected
 
         # Clear the table since no state pair is selected yet
-        self.state_coupling = []
+        self.state_coupling.clear()
         self.hopping_view.table_panel.table_title.setText("")
         # If no unit cell selected, hide the panels
         if uc_id is None:
@@ -164,8 +176,7 @@ class HoppingController(QObject):
             _, new_info = uc.get_states()
 
             # Use the states and the info to construct the hopping matrix grid
-            # Extract the hopping data
-            self.hopping_data = DataModel(uc.hoppings)
+            self.hoppings = uc.hoppings
             # If there are no states in the unit cell, hide the panels
             if new_info == []:
                 self.hopping_view.panel_stack.setCurrentWidget(
@@ -275,8 +286,8 @@ class HoppingController(QObject):
             ii, jj = pos
             s1 = self.state_info[ii][3]  # Destination state ID
             s2 = self.state_info[jj][3]  # Source state ID
-            hop = set(self.hopping_data.get((s1, s2), []))
-            hop_herm = set(self.hopping_data.get((s2, s1), []))
+            hop = set(self.hoppings.get((s1, s2), []))
+            hop_herm = set(self.hoppings.get((s2, s1), []))
             has_hopping = bool(hop)
 
             hop_neg_conj = set(
@@ -305,7 +316,7 @@ class HoppingController(QObject):
         )
 
         # Retrieve existing hopping terms between these states
-        self.state_coupling = self.hopping_data.get((s1[3], s2[3]), [])
+        self.state_coupling = self.hoppings.get((s1[3], s2[3]), [])
 
         # Update the table title to show the selected states
         # (source → destination)
@@ -463,12 +474,22 @@ class HoppingController(QObject):
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
         # Update the data model with the new couplings
-        self.hopping_data[
+
+        # self.undo_stack.push(
+        #     SaveHoppingsCommand(
+        #         unit_cells=self.unit_cells,
+        #         selection=self.selection,
+        #         pair_selection=self.pair_selection,
+        #         new_hoppings=merged_couplings,
+        #         hoppings=self.state_coupling,
+        #         signal=self.hopping_view_update_requested,
+        #     )
+        # )
+
+        self.hoppings[
             (self.pair_selection[0][3], self.pair_selection[1][3])
         ] = merged_couplings
-        self.unit_cells[self.selection["unit_cell"]].hoppings = (
-            self.hopping_data
-        )
+        self.unit_cells[self.selection["unit_cell"]].hoppings = self.hoppings
 
         # Refresh the table with the new data
         self.state_coupling = merged_couplings
@@ -505,20 +526,20 @@ class HoppingController(QObject):
     def _create_hermitian_partner(self, ii, jj):
         s1 = self.state_info[ii][3]  # Destination
         s2 = self.state_info[jj][3]  # Source
-        hop = self.hopping_data.get((s1, s2), [])
+        hop = self.hoppings.get((s1, s2), [])
         hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
-        self.hopping_data[(s2, s1)] = hop_herm
+        self.hoppings[(s2, s1)] = hop_herm
         self.hoppings_changed.emit()
 
     def _delete_coupling(self, ii, jj):
         s1 = self.state_info[ii][3]  # Destination
         s2 = self.state_info[jj][3]  # Source
-        self.hopping_data.pop((s1, s2), None)
+        self.hoppings.pop((s1, s2), None)
         self.hoppings_changed.emit()
 
     def _handle_matrix_interaction(self):
         self._refresh_button_colors()
-        updated_couplings = self.hopping_data.get(
+        updated_couplings = self.hoppings.get(
             (self.pair_selection[0][3], self.pair_selection[1][3]), []
         )
         self.state_coupling = updated_couplings

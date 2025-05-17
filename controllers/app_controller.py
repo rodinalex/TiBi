@@ -192,7 +192,7 @@ class AppController(QObject):
         This function is necessary to make sure that the label names in the
         hopping matrix and hopping table accurately reflect the item names.
         """
-        self.controllers["hopping"]._update_unit_cell()
+        self.controllers["hopping"].update_unit_cell()
 
     def _handle_project_refresh_requested(self):
         """

@@ -297,6 +297,7 @@ class TiBiApplication:
             self.unit_cells,
             self.selection,
             self.hopping_view,
+            self.undo_stack,
         )
 
         self.uc_plot_controller = UnitCellPlotController(
