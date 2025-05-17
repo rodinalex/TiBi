@@ -48,8 +48,6 @@ class HoppingController(QObject):
                 for each `State` in the `UnitCell`
         pair_selection : list[tuple]
             2-element list of tuples containing the selected state pair
-        state_coupling : list[Tuple[int, int, int], np.complex128]
-            List of couplings for the selected state pair
         hoppings : dict[Tuple[uuid, uuid],\
               list[Tuple[int, int, int], np.complex128]]
             Dictionary containing the hopping parameters for the `UnitCell`
@@ -128,7 +126,6 @@ class HoppingController(QObject):
             None,
             None,
         ]
-        self.state_coupling = []
         self.hoppings = {}
 
         # Connect Signals
@@ -161,7 +158,6 @@ class HoppingController(QObject):
         )  # Hide the table until a pair is selected
 
         # Clear the table since no state pair is selected yet
-        self.state_coupling.clear()
         self.hopping_view.table_panel.table_title.setText("")
         # If no unit cell selected, hide the panels
         if uc_id is None:
@@ -316,7 +312,6 @@ class HoppingController(QObject):
         )
 
         # Retrieve existing hopping terms between these states
-        self.state_coupling = self.hoppings.get((s1[3], s2[3]), [])
 
         # Update the table title to show the selected states
         # (source → destination)
@@ -331,7 +326,9 @@ class HoppingController(QObject):
             0
         )  # Clear existing data
 
-        for (d1, d2, d3), amplitude in self.state_coupling:
+        for (d1, d2, d3), amplitude in self.hoppings.get(
+            (self.pair_selection[0][3], self.pair_selection[1][3]), []
+        ):
             row_index = self.hopping_view.table_panel.hopping_table.rowCount()
             self.hopping_view.table_panel.hopping_table.insertRow(row_index)
 
@@ -437,24 +434,12 @@ class HoppingController(QObject):
         for row in range(
             self.hopping_view.table_panel.hopping_table.rowCount()
         ):
-            # Get displacement vector components (integers)
-            d1 = self.hopping_view.table_panel.hopping_table.cellWidget(
-                row, 0
-            ).value()
-            d2 = self.hopping_view.table_panel.hopping_table.cellWidget(
-                row, 1
-            ).value()
-            d3 = self.hopping_view.table_panel.hopping_table.cellWidget(
-                row, 2
-            ).value()
-
-            # Get complex amplitude components (floats)
-            re = self.hopping_view.table_panel.hopping_table.cellWidget(
-                row, 3
-            ).value()
-            im = self.hopping_view.table_panel.hopping_table.cellWidget(
-                row, 4
-            ).value()
+            d1, d2, d3, re, im = [
+                self.hopping_view.table_panel.hopping_table.cellWidget(
+                    row, n
+                ).value()
+                for n in range(5)
+            ]
 
             # Create the complex amplitude
             amplitude = np.complex128(re + im * 1j)
@@ -490,9 +475,6 @@ class HoppingController(QObject):
             (self.pair_selection[0][3], self.pair_selection[1][3])
         ] = merged_couplings
         self.unit_cells[self.selection["unit_cell"]].hoppings = self.hoppings
-
-        # Refresh the table with the new data
-        self.state_coupling = merged_couplings
 
         # Update the matrix and the table to show the new coupling state
         self._refresh_matrix()
@@ -539,10 +521,9 @@ class HoppingController(QObject):
 
     def _handle_matrix_interaction(self):
         self._refresh_button_colors()
-        updated_couplings = self.hoppings.get(
-            (self.pair_selection[0][3], self.pair_selection[1][3]), []
-        )
-        self.state_coupling = updated_couplings
+        # updated_couplings = self.hoppings.get(
+        #     (self.pair_selection[0][3], self.pair_selection[1][3]), []
+        # )
 
         self._refresh_matrix()
         self._refresh_table()
