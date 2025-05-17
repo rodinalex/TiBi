@@ -149,16 +149,12 @@ class HoppingController(QObject):
         Updates the hopping data model with the selected unit cell's hoppings.
         """
         uc_id = self.selection.get("unit_cell")
-        self.hoppings.clear()
-        self.state_info.clear()
         self.pair_selection[0] = None
         self.pair_selection[1] = None
         self.hopping_view.table_stack.setCurrentWidget(
             self.hopping_view.table_info_label
         )  # Hide the table until a pair is selected
 
-        # Clear the table since no state pair is selected yet
-        self.hopping_view.table_panel.table_title.setText("")
         # If no unit cell selected, hide the panels
         if uc_id is None:
             self.hopping_view.panel_stack.setCurrentWidget(
@@ -311,8 +307,6 @@ class HoppingController(QObject):
             self.hopping_view.table_panel
         )
 
-        # Retrieve existing hopping terms between these states
-
         # Update the table title to show the selected states
         # (source → destination)
         self.hopping_view.table_panel.table_title.setText(
@@ -460,21 +454,9 @@ class HoppingController(QObject):
         ]
         # Update the data model with the new couplings
 
-        # self.undo_stack.push(
-        #     SaveHoppingsCommand(
-        #         unit_cells=self.unit_cells,
-        #         selection=self.selection,
-        #         pair_selection=self.pair_selection,
-        #         new_hoppings=merged_couplings,
-        #         hoppings=self.state_coupling,
-        #         signal=self.hopping_view_update_requested,
-        #     )
-        # )
-
         self.hoppings[
             (self.pair_selection[0][3], self.pair_selection[1][3])
         ] = merged_couplings
-        self.unit_cells[self.selection["unit_cell"]].hoppings = self.hoppings
 
         # Update the matrix and the table to show the new coupling state
         self._refresh_matrix()
@@ -521,9 +503,6 @@ class HoppingController(QObject):
 
     def _handle_matrix_interaction(self):
         self._refresh_button_colors()
-        # updated_couplings = self.hoppings.get(
-        #     (self.pair_selection[0][3], self.pair_selection[1][3]), []
-        # )
 
         self._refresh_matrix()
         self._refresh_table()
