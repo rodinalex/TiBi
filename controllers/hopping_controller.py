@@ -510,10 +510,16 @@ class HoppingController(QObject):
         The coupling is identified by the state IDs of the source and
         destination states.
         """
-        s1 = self.state_info[ii][3]  # Destination
-        s2 = self.state_info[jj][3]  # Source
-        self.hoppings.pop((s1, s2), None)
-        self.hoppings_changed.emit()
+
+        self.undo_stack.push(
+            SaveHoppingsCommand(
+                unit_cells=self.unit_cells,
+                selection=self.selection,
+                pair_selection=self.pair_selection,
+                new_hoppings=[],
+                signal=self.hoppings_changed,
+            )
+        )
 
     def _handle_hoppings_changed(self):
         """
