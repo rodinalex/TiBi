@@ -133,7 +133,7 @@ class HoppingController(QObject):
         self.hopping_view.table_panel.save_btn.clicked.connect(
             self._save_couplings
         )
-        self.hoppings_changed.connect(self._handle_matrix_interaction)
+        self.hoppings_changed.connect(self._handle_hoppings_changed)
 
     def update_unit_cell(self):
         """
@@ -282,8 +282,7 @@ class HoppingController(QObject):
 
     def _update_pair_selection(self, s1, s2):
         """
-        Called when a button is clicked in the hopping matrix.
-        Updates the table to display hopping terms between the selected states.
+        Update the table to display hopping terms between the selected states.
 
         Parameters
         ----------
@@ -443,7 +442,7 @@ class HoppingController(QObject):
             ((d1, d2, d3), amplitude)
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
-        # Update the data model with the new couplings
+        # Update the data model with the new couplings and emit the signal
         self.undo_stack.push(
             SaveHoppingsCommand(
                 unit_cells=self.unit_cells,
@@ -454,11 +453,9 @@ class HoppingController(QObject):
             )
         )
 
-        # # Update the matrix and the table to show the new coupling state
-        # self._refresh_matrix()
-        # self._refresh_table()
-
     def _add_context_menu(self, button, ii, jj):
+        """
+        Create a context menu for the button to manage hoppings."""
         menu = QMenu()
         # Send hopping data to the transpose element
         action_send_hoppings = QAction("Set transpose element", self)
@@ -484,21 +481,42 @@ class HoppingController(QObject):
         menu.exec_(button.mapToGlobal(QPoint(0, button.height())))
 
     def _create_hermitian_partner(self, ii, jj):
-        s1 = self.state_info[ii][3]  # Destination
-        s2 = self.state_info[jj][3]  # Source
-        hop = self.hoppings.get((s1, s2), [])
+        """
+        Create a Hermitian partner for the selected hopping.
+
+        The Hermitian partner is created by negating the displacement vector
+        and taking the complex conjugate of the amplitude.
+        """
+        s1 = self.state_info[ii]  # Destination
+        s2 = self.state_info[jj]  # Source
+        hop = self.hoppings.get((s1[3], s2[3]), [])
         hop_herm = [((-d1, -d2, -d3), np.conj(x)) for ((d1, d2, d3), x) in hop]
-        self.hoppings[(s2, s1)] = hop_herm
-        self.hoppings_changed.emit()
+        self.pair_selection = [s2, s1]
+
+        self.undo_stack.push(
+            SaveHoppingsCommand(
+                unit_cells=self.unit_cells,
+                selection=self.selection,
+                pair_selection=self.pair_selection,
+                new_hoppings=hop_herm,
+                signal=self.hoppings_changed,
+            )
+        )
 
     def _delete_coupling(self, ii, jj):
+        """
+        Delete the coupling between two states.
+
+        The coupling is identified by the state IDs of the source and
+        destination states.
+        """
         s1 = self.state_info[ii][3]  # Destination
         s2 = self.state_info[jj][3]  # Source
         self.hoppings.pop((s1, s2), None)
         self.hoppings_changed.emit()
 
-    def _handle_matrix_interaction(self):
-        # self._refresh_button_colors()
-
+    def _handle_hoppings_changed(self):
+        """
+        Redraw the matrix and table when hoppings are modified."""
         self._refresh_matrix()
         self._refresh_table()

@@ -43,13 +43,11 @@ class SaveHoppingsCommand(QUndoCommand):
         self.s2 = pair_selection[1]
 
         self.new_hoppings = new_hoppings
-        # self.new_hoppings = copy.deepcopy(new_hoppings)
         self.old_hoppings = copy.deepcopy(
             self.unit_cells[self.uc_id].hoppings.get(
                 (self.s1[3], self.s2[3]), []
             )
         )
-        print(self.old_hoppings)
         self.signal = signal
 
     def redo(self):
@@ -63,7 +61,9 @@ class SaveHoppingsCommand(QUndoCommand):
         )
         # Insert the hoppings into the unit cell model
         if self.new_hoppings == []:
-            del self.unit_cells[self.uc_id].hoppings[(self.s1[3], self.s2[3])]
+            self.unit_cells[self.uc_id].hoppings.pop(
+                (self.s1[3], self.s2[3]), None
+            )
         else:
             self.unit_cells[self.uc_id].hoppings[
                 (self.s1[3], self.s2[3])
@@ -85,7 +85,9 @@ class SaveHoppingsCommand(QUndoCommand):
         )
         # Insert the hoppings into the unit cell model
         if self.old_hoppings == []:
-            del self.unit_cells[self.uc_id].hoppings[(self.s1[3], self.s2[3])]
+            self.unit_cells[self.uc_id].hoppings.pop(
+                (self.s1[3], self.s2[3]), None
+            )
         else:
             self.unit_cells[self.uc_id].hoppings[
                 (self.s1[3], self.s2[3])
