@@ -108,6 +108,25 @@ class ActionManager(QObject):
             self.undo_redo_actions["redo"].setEnabled
         )
 
+    #     self.undo_stack.undoTextChanged.connect(self.update_undo_tooltip)
+    #     self.undo_stack.redoTextChanged.connect(self.update_redo_tooltip)
+
+    # def update_undo_tooltip(self):
+    #     if self.undo_stack.canUndo():
+    #         self.undo_redo_actions["undo"].setStatusTip(
+    #             f"Undo {self.undo_stack.undoText()}"
+    #         )
+    #     else:
+    #         self.undo_redo_actions["undo"].setStatusTip("Nothing to undo")
+
+    # def update_redo_tooltip(self):
+    #     if self.undo_stack.canRedo():
+    #         self.undo_redo_actions["redo"].setStatusTip(
+    #             f"Redo {self.undo_stack.redoText()}"
+    #         )
+    #     else:
+    #         self.undo_redo_actions["redo"].setStatusTip("Nothing to redo")
+
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
         # Toggle wireframe action
