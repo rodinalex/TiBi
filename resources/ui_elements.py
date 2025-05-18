@@ -178,6 +178,28 @@ class SystemTree(QTreeView):
             if item.data(Qt.UserRole) == item_id:
                 return item
 
+    def _select_item_by_id(self, uc_id, site_id=None, state_id=None) -> None:
+        """
+        Select a tree item programmatically by its ID.
+
+        Parameters
+        ----------
+            uc_id : UUID
+                id of the `UnitCell`
+            site_id : UUID, optional
+                id of the `Site`
+            state_id : UUID, optional
+                id of the `State`
+        """
+        item = self.find_item_by_id(uc_id, site_id, state_id)
+        if item:
+            index = self.tree_model.indexFromItem(item)
+            # self.selectionModel().blockSignals(True)
+            self.selectionModel().setCurrentIndex(
+                index, QItemSelectionModel.ClearAndSelect
+            )
+            # self.selectionModel.blockSignals(False)
+
     def add_tree_item(self, name, uc_id, site_id=None, state_id=None):
         """
         Add and select a tree item without rebuilding the entire tree.

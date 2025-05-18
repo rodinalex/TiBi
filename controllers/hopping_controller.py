@@ -309,7 +309,6 @@ class HoppingController(QObject):
         self.hopping_view.table_panel.hopping_table.setRowCount(
             0
         )  # Clear existing data
-
         for (d1, d2, d3), amplitude in self.hoppings.get(
             (self.pair_selection[0][3], self.pair_selection[1][3]), []
         ):

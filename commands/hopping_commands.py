@@ -12,8 +12,34 @@ class SaveHoppingsCommand(QUndoCommand):
     """
     Save the hoppings between two states.
 
-    Update the hoppings in the main model, as well as the local
-    controller model
+    Update the entry in the `hoppings` dictionary of the selected unit
+    for the selected pair of states.
+
+    Attributes
+    ----------
+
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Reference to the dictionary mapping UUIDs to UnitCell objects
+    selection : dict[str, uuid.UUID]
+        Reference to the dictionary containing the current selection
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site_id : uuid.UUID
+        UUID of the selected `Site` when the command was issued
+    state_id : uuid.UUID
+        UUID of the selected `State` when the command was issued
+    pair_selection : list[Tuple[str, uuid.UUID, str, uuid.UUID]]
+        Reference to the list of selected `State`s
+    s1, s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
+        Information tuples for the selected `State`s, containing
+        (site name, site UUID, state name, state UUID) when the
+        command was issued
+    new_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
+        List of new hoppings to be added to the `hoppings` dictionary
+    old_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
+        List of old hoppings to be removed from the `hoppings` dictionary
+    signal : Signal
+        Signal to be emitted when the command is executed
     """
 
     def __init__(
@@ -25,11 +51,22 @@ class SaveHoppingsCommand(QUndoCommand):
         signal: Signal,
     ):
         """
-        Initialize the command.
+        Initialize the SaveHoppingsCommand.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            tree_view: UI object containing the tree view
+        Parameters
+        ----------
+
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Reference to the dictionary mapping UUIDs to UnitCell objects
+        selection : dict[str, uuid.UUID]
+            Reference to the dictionary containing the current selection
+        pair_selection : list[Tuple[str, uuid.UUID, str, uuid.UUID]]
+            Reference to the list of selected `State`s
+            command was issued
+        new_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
+            List of new hoppings to be added to the `hoppings` dictionary
+        signal : Signal
+            Signal to be emitted when the command is executed
         """
         super().__init__("Add Unit Cell")
         self.unit_cells = unit_cells
@@ -39,6 +76,7 @@ class SaveHoppingsCommand(QUndoCommand):
         self.state_id = self.selection["state"]
 
         # Selected state UUIDs
+        self.pair_selection = pair_selection
         self.s1 = pair_selection[0]
         self.s2 = pair_selection[1]
 
@@ -69,7 +107,8 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.new_hoppings
         # Update Pair Selection
-        self.pair_selection = [self.s1, self.s2]
+        self.pair_selection[0] = self.s1
+        self.pair_selection[1] = self.s2
 
         # Emit the signal
         self.signal.emit()
@@ -94,6 +133,8 @@ class SaveHoppingsCommand(QUndoCommand):
             ] = self.old_hoppings
 
         # Update Pair Selection
-        self.pair_selection = [self.s1, self.s2]
+        self.pair_selection[0] = self.s1
+        self.pair_selection[1] = self.s2
+
         # Emit the signal
         self.signal.emit()

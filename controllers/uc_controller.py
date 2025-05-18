@@ -393,6 +393,13 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_stack.setCurrentWidget(
                 self.unit_cell_view.site_info_label
             )
+
+        # self.tree_view_panel.tree_view._select_item_by_id(
+        #     self.selection.get("unit_cell"),
+        #     self.selection.get("site"),
+        #     self.selection.get("state"),
+        # )
+
         self.plot_update_requested.emit()
 
     def _pick_site_color(self):
