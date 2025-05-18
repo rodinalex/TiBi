@@ -63,14 +63,10 @@ class HoppingController(QObject):
             Emitted when a button is clicked, carrying the source \
                 and destination state info
         hoppings_changed
-            Emitted when couplings are modified from right-clicking\
-                on the button grid
+            Emitted when couplings are modified
         hopping_segments_requested
             Emitted when the coupling table is updated, triggering an\
                 update of hopping segments
-        hopping_view_update_requested
-            Emitted after saving the hoppings to update the table and\
-            the matrix
     """
 
     # Signal emitted when a button is clicked, carrying the source and
@@ -80,17 +76,13 @@ class HoppingController(QObject):
     # (site_name, state_name, state_id)
     btn_clicked = Signal(object, object)
 
-    # Signal emitted when couplings are modified from
-    # right-clicking on the button grid.
+    # Signal emitted when couplings are modified
     # The signal triggers a table and matrix update
     hoppings_changed = Signal()
 
     # Signal emitted when the coupling table is updated. The signal triggers
     # an update of hopping segments in the unit cell plot
     hopping_segments_requested = Signal()
-
-    # Signal requesting a redrawing of the hopping matrix and table
-    hopping_view_update_requested = Signal()
 
     def __init__(
         self,
@@ -145,8 +137,7 @@ class HoppingController(QObject):
 
     def update_unit_cell(self):
         """
-        Called when the selection changes in the tree view.
-        Updates the hopping data model with the selected unit cell's hoppings.
+        Update the hopping data model with the selected unit cell's hoppings.
         """
         uc_id = self.selection.get("unit_cell")
         self.pair_selection[0] = None
@@ -453,14 +444,19 @@ class HoppingController(QObject):
             for (d1, d2, d3), amplitude in new_couplings.items()
         ]
         # Update the data model with the new couplings
+        self.undo_stack.push(
+            SaveHoppingsCommand(
+                unit_cells=self.unit_cells,
+                selection=self.selection,
+                pair_selection=self.pair_selection,
+                new_hoppings=merged_couplings,
+                signal=self.hoppings_changed,
+            )
+        )
 
-        self.hoppings[
-            (self.pair_selection[0][3], self.pair_selection[1][3])
-        ] = merged_couplings
-
-        # Update the matrix and the table to show the new coupling state
-        self._refresh_matrix()
-        self._refresh_table()
+        # # Update the matrix and the table to show the new coupling state
+        # self._refresh_matrix()
+        # self._refresh_table()
 
     def _add_context_menu(self, button, ii, jj):
         menu = QMenu()
@@ -502,7 +498,7 @@ class HoppingController(QObject):
         self.hoppings_changed.emit()
 
     def _handle_matrix_interaction(self):
-        self._refresh_button_colors()
+        # self._refresh_button_colors()
 
         self._refresh_matrix()
         self._refresh_table()
