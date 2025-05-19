@@ -155,29 +155,29 @@ class AppController(QObject):
                 "wireframe"
             ].isChecked()
         )
-        band_structure = self.models["band_structures"].get(uc_id)
-        self.models["bz_path"].clear()
+        # band_structure = self.models["band_structures"].get(uc_id)
+        # self.models["bz_path"].clear()
 
-        if band_structure is not None:
-            self.models["active_band_structure"].update(
-                {
-                    "k_path": copy.deepcopy(band_structure.path),
-                    "bands": copy.deepcopy(
-                        np.array(band_structure.eigenvalues)
-                    ),
-                    "special_points": copy.deepcopy(
-                        band_structure.special_points
-                    ),
-                }
-            )
+        # if band_structure is not None:
+        #     self.models["active_band_structure"].update(
+        #         {
+        #             "k_path": copy.deepcopy(band_structure.path),
+        #             "bands": copy.deepcopy(
+        #                 np.array(band_structure.eigenvalues)
+        #             ),
+        #             "special_points": copy.deepcopy(
+        #                 band_structure.special_points
+        #             ),
+        #         }
+        #     )
 
-            self.models["bz_path"].extend(
-                copy.deepcopy(band_structure.special_points)
-            )
-        else:
-            self.models["active_band_structure"].update(
-                {"k_path": None, "bands": None, "special_points": None}
-            )
+        #     self.models["bz_path"].extend(
+        #         copy.deepcopy(band_structure.special_points)
+        #     )
+        # else:
+        #     self.models["active_band_structure"].update(
+        #         {"k_path": None, "bands": None, "special_points": None}
+        #     )
 
         self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
         self.bz_plot_controller.update_brillouin_zone()

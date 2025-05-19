@@ -37,13 +37,10 @@ from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 
 # Custom Dictionaries
-from models.data_models import DataModel, AlwaysNotifyDataModel
+from models.data_models import DataModel
 
 # Constants
-from resources.constants import (
-    selection_init,
-    active_band_structure_init,
-)
+from resources.constants import selection_init
 
 
 class MainWindow(QMainWindow):
@@ -230,20 +227,12 @@ class TiBiApplication:
         self.project_path = None
         self.unit_cells = {}
         self.selection = DataModel(selection_init())
-        self.bz_path = []
-        self.active_band_structure = AlwaysNotifyDataModel(
-            active_band_structure_init()
-        )
-        self.band_structures = AlwaysNotifyDataModel()
 
         # Store the models in a dictionary
         self.models = {
             "project_path": self.project_path,
             "unit_cells": self.unit_cells,
             "selection": self.selection,
-            "bz_path": self.bz_path,
-            "active_band_structure": self.active_band_structure,
-            "band_structures": self.band_structures,
         }
 
         # Initialize views
@@ -309,14 +298,11 @@ class TiBiApplication:
         self.bz_plot_controller = BrillouinZonePlotController(
             self.unit_cells,
             self.selection,
-            self.bz_path,
             self.bz_plot_view,
             self.computation_view,
         )
 
-        self.plot_controller = PlotController(
-            self.active_band_structure, self.plot_view
-        )
+        self.plot_controller = PlotController(self.plot_view)
 
         self.computation_controller = ComputationController(
             self.models, self.computation_view
