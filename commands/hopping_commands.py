@@ -72,7 +72,7 @@ class SaveHoppingsCommand(QUndoCommand):
             carries the information about the selected `UnitCell`, `Site`,
             `State`, and the selected pair of `State`s.
         """
-        super().__init__("Add Unit Cell")
+        super().__init__("Modify Hoppings")
         self.unit_cells = unit_cells
         self.selection = selection
         self.uc_id = self.selection["unit_cell"]

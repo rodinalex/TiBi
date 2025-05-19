@@ -28,17 +28,29 @@ class AddUnitCellCommand(QUndoCommand):
     - Three orthogonal unit vectors along the x, y, and z axes
     - No periodicity (0D system)
     - No sites or states initially
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    tree_view : SystemTree
+        UI object containing the tree view
+    unit_cell : UnitCell
+        Newly created `UnitCell`
     """
 
     def __init__(
         self, unit_cells: dict[uuid.UUID, UnitCell], tree_view: SystemTree
     ):
         """
-        Initialize the command.
+        Initialize the AddUnitCellCommand.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            tree_view: UI object containing the tree view
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        tree_view : SystemTree
+            UI object containing the tree view
         """
         super().__init__("Add Unit Cell")
         self.unit_cells = unit_cells
@@ -69,6 +81,19 @@ class AddSiteCommand(QUndoCommand):
     - No states initially
     - Default radius
     - Random color
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    tree_view : SystemTree
+        UI object containing the tree view
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site : Site
+        Newly created `Site`
     """
 
     def __init__(
@@ -78,12 +103,16 @@ class AddSiteCommand(QUndoCommand):
         tree_view: SystemTree,
     ):
         """
-        Initialize the command.
+        Initialize the AddSiteCommand.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Dictionary containing the current selection
-            tree_view: UI object containing the tree view
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        tree_view : SystemTree
+            UI object containing the tree view
         """
         super().__init__("Add Site")
         self.unit_cells = unit_cells
@@ -115,6 +144,21 @@ class AddStateCommand(QUndoCommand):
 
     The default state has:
     - Name: "New State"
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    tree_view : SystemTree
+        UI object containing the tree view
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site_id : uuid.UUID
+        UUID of the selected `Site` when the command was issued
+    state : State
+        Newly created `State`
     """
 
     def __init__(
@@ -124,12 +168,16 @@ class AddStateCommand(QUndoCommand):
         tree_view: SystemTree,
     ):
         """
-        Initialize the command.
+        Initialize the AddStateCommand.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Dictionary containing the current selection
-            tree_view: UI object containing the tree view
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        tree_view : SystemTree
+            UI object containing the tree view
         """
         super().__init__("Add State")
         self.unit_cells = unit_cells
@@ -164,15 +212,30 @@ class DeleteItemCommand(QUndoCommand):
     """
     Delete the currently selected item from the model.
 
-    This command handles deletion of unit cells, sites, and states based on
-    the current selection. It updates both the data model and
+    This command handles deletion of `UnitCell`s, `Site`s, and `State`s
+    based on the current selection. It updates both the data model and
     the tree view to reflect the deletion, and ensures that
     the selection is updated appropriately.
 
     The deletion follows the containment hierarchy:
-    - Deleting a unit cell also removes all its sites and states
-    - Deleting a site also removes all its states
-    - Deleting a state only removes that specific state
+    - Deleting a `UnitCell` also removes all its `Site`s and `State`s
+    - Deleting a `Site` also removes all its `State`s
+    - Deleting a `State` only removes that specific `State`
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    tree_view : SystemTree
+        UI object containing the tree view
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site_id : uuid.UUID
+        UUID of the selected `Site` when the command was issued
+    state_id : uuid.UUID
+        UUID of the selected `State` when the command was issued
     """
 
     def __init__(
@@ -182,12 +245,16 @@ class DeleteItemCommand(QUndoCommand):
         tree_view: SystemTree,
     ):
         """
-        Initialize the command.
+        Initialize the DeleteItemCommand.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Dictionary containing the current selection
-            tree_view: UI object containing the tree view
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+                Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        tree_view : SystemTree
+            UI object containing the tree view
         """
         super().__init__("Delete Item")
         self.unit_cells = unit_cells
@@ -198,6 +265,7 @@ class DeleteItemCommand(QUndoCommand):
         self.site_id = self.selection.get("site", None)
         self.state_id = self.selection.get("state", None)
 
+        # Save the item to be deleted for undo
         if self.state_id:
             self.item = copy.deepcopy(
                 self.unit_cells[self.uc_id]
@@ -258,8 +326,32 @@ class DeleteItemCommand(QUndoCommand):
 
 class RenameTreeItemCommand(QUndoCommand):
     """
-    Change the name of the selected item by double-clicking on it in
-    the tree view. Update the data and save it.
+    Change the name of a tree item in the unit cells model.
+
+    The name is changed by double-clicking on an item in the tree view.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    tree_view : SystemTree
+        UI object containing the tree view
+    signal : Signal
+        Signal to be emitted when the command is executed
+    item : QStandardItem
+        The item in the tree view that was changed
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site_id : uuid.UUID
+        UUID of the selected `Site` when the command was issued
+    state_id : uuid.UUID
+        UUID of the selected `State` when the command was issued
+    old_name : str
+        The old name of the item before the change
+    new_name : str
+        The new name of the item after the change
     """
 
     def __init__(
@@ -270,6 +362,22 @@ class RenameTreeItemCommand(QUndoCommand):
         signal: Signal,
         item: QStandardItem,
     ):
+        """
+        Initialize the RenameTreeItemCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        tree_view : SystemTree
+            UI object containing the tree view
+        signal : Signal
+            Signal to be emitted when the command is executed
+        item : QStandardItem
+            The item in the tree view that was changed
+        """
         super().__init__("Rename Tree Item")
 
         self.unit_cells = unit_cells
@@ -337,6 +445,35 @@ class RenameTreeItemCommand(QUndoCommand):
 
 
 class UpdateUnitCellParameterCommand(QUndoCommand):
+    """
+    Update a parameter of the selected `UnitCell`.
+
+    This command is used to update the basis vectors of the unit cell
+    when the user types in the spinbox.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    vector : str
+        The vector to be updated (v1, v2, or v3)
+    coordinate : str
+        The coordinate to be updated (x, y, or z)
+    spinbox : QDoubleSpinBox
+        The spinbox widget used to input the new value
+    signal : Signal
+        Signal to be emitted when the command is executed,
+        requesting a plot update
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    old_value : float
+        The old value of the parameter before the change
+    new_value : float
+        The new value of the parameter after the change
+    """
+
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
@@ -346,6 +483,25 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         spinbox: QDoubleSpinBox,
         signal: Signal,
     ):
+        """
+        Initialize the UpdateUnitCellParameterCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        vector : str
+            The vector to be updated (v1, v2, or v3)
+        coordinate : str
+            The coordinate to be updated (x, y, or z)
+        spinbox : QDoubleSpinBox
+            The spinbox widget used to input the new value
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        """
         super().__init__("Update Unit Cell Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -393,6 +549,24 @@ class ReduceBasisCommand(QUndoCommand):
 
     The method only affects the periodic directions of the unit cell. After
     reduction, the UI is updated to reflect the new basis vectors.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    unit_cell_view : UnitCellView
+        UI object containing the unit cell view
+    signal : Signal
+        Signal to be emitted when the command is executed,
+        requesting a plot update
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    old_basis : list[BasisVector]
+        The old basis vectors of the unit cell before reduction
+    new_basis : list[BasisVector]
+        The new basis vectors of the unit cell after reduction
     """
 
     def __init__(
@@ -402,7 +576,22 @@ class ReduceBasisCommand(QUndoCommand):
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
-        super().__init__("Update Site Parameter")
+        """
+        Initialize the ReduceBasisCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        unit_cell_view : UnitCellView
+            UI object containing the unit cell view
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        """
+        super().__init__("Reduce Basis")
         self.unit_cells = unit_cells
         self.selection = selection
         self.unit_cell_view = unit_cell_view
@@ -442,7 +631,7 @@ class ReduceBasisCommand(QUndoCommand):
 
 class ChangeDimensionalityCommand(QUndoCommand):
     """
-    Handle changes in the dimensionality selection (0D, 1D, 2D, 3D).
+    Change the dimensionality of the selected `UnitCell` (0D, 1D, 2D, 3D).
 
     This method is called when the user selects a different dimensionality
     radio button.
@@ -455,6 +644,39 @@ class ChangeDimensionalityCommand(QUndoCommand):
     - 1D: First direction is periodic, others are not
     - 2D: First and second directions are periodic, third is not
     - 3D: All directions are periodic (fully periodic crystal)
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    unit_cell_view : UnitCellView
+        UI object containing the unit cell view
+    signal : Signal
+        Signal to be emitted when the command is executed,
+        requesting a plot update
+    dim : int
+        The new dimensionality of the unit cell (0, 1, 2, or 3)
+    buttons : list[QRadioButton]
+        List of radio buttons corresponding to the dimensionality
+        options in the UI
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    old_v1 : BasisVector
+        The old basis vector 1 of the unit cell before the change
+    old_v2 : BasisVector
+        The old basis vector 2 of the unit cell before the change
+    old_v3 : BasisVector
+        The old basis vector 3 of the unit cell before the change
+    old_dim : int
+        The old dimensionality of the unit cell before the change
+    new_v1 : BasisVector
+        The new basis vector 1 of the unit cell after the change
+    new_v2 : BasisVector
+        The new basis vector 2 of the unit cell after the change
+    new_v3 : BasisVector
+        The new basis vector 3 of the unit cell after the change
     """
 
     def __init__(
@@ -541,6 +763,17 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.signal.emit()
 
     def _set_vector_enables(self, dim):
+        """
+        Enable or disable the basis vector components.
+
+        The enabling/disabling is based on the
+        dimensionality of the unit cell.
+
+        Parameters
+        ----------
+        dim : int
+            The new dimensionality of the unit cell (0, 1, 2, or 3)
+        """
         self.unit_cell_view.unit_cell_panel.v1[0].setEnabled(True)
         self.unit_cell_view.unit_cell_panel.v1[1].setEnabled(dim > 1)
         self.unit_cell_view.unit_cell_panel.v1[2].setEnabled(dim > 2)
@@ -554,6 +787,18 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.unit_cell_view.unit_cell_panel.v3[2].setEnabled(True)
 
     def _set_checked_button(self, dim):
+        """
+        Set the radio button corresponding to the dimensionality.
+
+        The radio button is checked and all others are unchecked.
+        This is done by blocking signals to avoid triggering
+        the button's clicked signal when setting the checked state.
+
+        Parameters
+        ----------
+        dim : int
+            The new dimensionality of the unit cell (0, 1, 2, or 3)
+        """
         for btn in self.buttons:
             btn.blockSignals(True)
         self.buttons[dim].setChecked(True)
@@ -562,6 +807,35 @@ class ChangeDimensionalityCommand(QUndoCommand):
 
 
 class UpdateSiteParameterCommand(QUndoCommand):
+    """
+    Update a parameter of the selected `Site`.
+
+    This command is used to update the basis vectors of the site
+    when the user types in the spinbox.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    param : str
+        The parameter to be updated (radius, color, etc.)
+    spinbox : QDoubleSpinBox
+        The spinbox widget used to input the new value
+    signal : Signal
+        Signal to be emitted when the command is executed,
+        requesting a plot update
+    uc_id : uuid.UUID
+        UUID of the selected `UnitCell` when the command was issued
+    site_id : uuid.UUID
+        UUID of the selected `Site` when the command was issued
+    old_value : float
+        The old value of the parameter before the change
+    new_value : float
+        The new value of the parameter after the change
+    """
+
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
@@ -570,6 +844,23 @@ class UpdateSiteParameterCommand(QUndoCommand):
         spinbox: QDoubleSpinBox,
         signal: Signal,
     ):
+        """
+        Initialize the UpdateSiteParameterCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        param : str
+            The parameter to be updated (radius, color, etc.)
+        spinbox : QDoubleSpinBox
+            The spinbox widget used to input the new value
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        """
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -607,8 +898,23 @@ class UpdateSiteParameterCommand(QUndoCommand):
 
 class ChangeSiteColorCommand(QUndoCommand):
     """
-    Use a color dialog to choose a color for the selected site to be used
-    in the UC plot.
+    Change the color of the selected `Site`.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to `UnitCell` objects
+    selection : dict[str, uuid.UUID]
+        Dictionary containing the current selection
+    new_color : QColor
+        The new color to be set for the site
+    old_color : QColor
+        The old color of the site before the change
+    unit_cell_view : UnitCellView
+        UI object containing the unit cell view
+    signal : Signal
+        Signal to be emitted when the command is executed,
+        requesting a plot update
     """
 
     def __init__(
@@ -620,7 +926,26 @@ class ChangeSiteColorCommand(QUndoCommand):
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
-        super().__init__("Update Site Parameter")
+        """
+        Initialize the ChangeSiteColorCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        new_color : QColor
+            The new color to be set for the site
+        old_color : QColor
+            The old color of the site before the change
+        unit_cell_view : UnitCellView
+            UI object containing the unit cell view
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        """
+        super().__init__("Change Site Color")
         self.unit_cells = unit_cells
         self.selection = selection
         self.new_color = new_color
