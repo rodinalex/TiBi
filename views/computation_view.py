@@ -158,28 +158,10 @@ class TopologyView(QWidget):
 
 
 class ComputationView(QWidget):
-    """
-    A 3D visualization panel for Brillouin Zone using PyQtGraph's OpenGL support.
-
-    Displays a Brillouin zone as a wireframe with vertices shown as small spheres.
-    The visualization supports rotation and zooming. The coordinate system shows
-    the reciprocal space axes.
-
-    This view provides UI components for selecting points in the Brillouin zone
-    and creating a path for band structure calculations. The actual logic for
-    handling selections and path construction is implemented in the
-    BrillouinZonePlotController.
-    """
+    """ """
 
     def __init__(self):
-        """
-        Initialize the Brillouin zone plot view.
-
-        Sets up the 3D visualization area and control panels for selecting
-        points in the Brillouin zone and creating paths. The buttons are
-        initially disabled and will be enabled by the controller based on
-        the dimensionality of the selected unit cell.
-        """
+        """ """
         super().__init__()
 
         # Create a layout for the TabView itself

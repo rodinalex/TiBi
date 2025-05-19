@@ -28,6 +28,19 @@ class UnitCellPlotController(QObject):
 
     The visualization updates reactively when the unit cell data changes
     or when the user adjusts the number of periodic repetitions via spinners.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : DataModel
+        Model tracking the currently selected unit cell, site, and state
+    uc_plot_view : UnitCellPlotView
+        The view component for the 3D visualization
+    unit_cell : UnitCell
+        The unit cell currently being visualized
+    uc_plot_items : dict
+        Dictionary to store plot items
     """
 
     def __init__(
@@ -39,11 +52,14 @@ class UnitCellPlotController(QObject):
         """
         Initialize the unit cell plot controller.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected
-            unit cell, site, and state
-            uc_plot_view: The view component for the 3D visualization
+        Parameters
+        ----------
+        unit_cells: dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection: DataModel
+            Model tracking the currently selected unit cell, site, and state
+        uc_plot_view: UnitCellPlotView
+            The view component for the 3D visualization
         """
         super().__init__()
         self.unit_cells = unit_cells
@@ -64,13 +80,12 @@ class UnitCellPlotController(QObject):
         3. Creates new visualization elements for the unit cell and its sites
         4. Updates the coordinate axes to match the unit cell basis vectors
 
-        Args:
-            unit_cell: UnitCell object to display, or None to clear the view
-            wireframe_shown: bool denoting whether the primitive vector
-            wireframe is drawn
-            n1: number of unit cell repetitions along the 1st basis vector
-            n2: number of unit cell repetitions along the 2nd basis vector
-            n3: number of unit cell repetitions along the 3d basis vector
+        Parameters
+        ----------
+        wireframe_shown: bool
+            Denotes whether the primitive vector wireframe is drawn
+        n1, n2, n3: int
+            Number of repetitions along the corresponding basis vector
         """
         uc_id = self.selection.get("unit_cell")
         # Clear previous plot items except axes
@@ -126,8 +141,7 @@ class UnitCellPlotController(QObject):
 
     def _plot_sites(self, a1, a2, a3):
         """
-        Plot all sites (atoms) within the unit cell at
-        a1*v1 + a2*v2 + a3*v3 as spheres.
+        Plot all `Site`s within the `UnitCell` at a1*v1 + a2*v2 + a3*v3.
 
         Each site is represented as a colored sphere positioned according to
         its fractional coordinates within the unit cell. Sites can be selected
@@ -135,10 +149,10 @@ class UnitCellPlotController(QObject):
         to draw the coupling links when pairs of states are selected from
         the hopping panel.
 
-        Args:
-            a1: integer multiple of v1
-            a2: integer multiple of v2
-            a3: integer multiple of v3
+        Parameters
+        ----------
+        a1, a2, a3 : int
+            Integer multiples of the unit cell basis vectors v1, v2, and v3.
         """
         if not self.unit_cell or not self.unit_cell.sites:
             return
@@ -193,13 +207,17 @@ class UnitCellPlotController(QObject):
         """
         Get the edges of the unit cell parallelepiped.
 
-        Args:
-            a1: integer multiple of v1
-            a2: integer multiple of v2
-            a3: integer multiple of v3
+        Parameters
+        ----------
+        a1, a2, a3 : int
+            Integer multiples of the unit cell basis vectors v1, v2, and v3.
 
-        Returns:
-            A list of (V1, V2), where V1 and V2 are vertex coordinate tuples.
+        Returns
+        -------
+        list[Tuple[Tuple[float, float, float], Tuple[float, float, float]]]
+            A list of edges in the unit cell parallelepiped.
+            Each edge is represented as a tuple of two vertices.
+            Each vertex is a tuple of three floats (x, y, z).
         """
         if not self.unit_cell:
             return
@@ -252,13 +270,19 @@ class UnitCellPlotController(QObject):
     def update_hopping_segments(self, pair_selection):
         """
         Draw segments to indicate hopping connections.
+
         When a pair is selected from the hopping matrix, this function
         draws lines starting from the site hosting the source state
         inside the unit cell around (0,0,0) to all the sites hosting
         the target sites.
 
-        Args: a tuple of (site_name, site_id, state_name, state_id)
-        objects passed from the hopping controller.
+        Parameters
+        ----------
+        pair_selection : tuple
+            A tuple of (site_name, site_id, state_name, state_id)
+            representing the selected pair of states.
+            The first element is the source state and the second
+            element is the target state.
         """
 
         # Clear previous hopping segments
