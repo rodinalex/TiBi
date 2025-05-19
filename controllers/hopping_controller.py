@@ -63,10 +63,14 @@ class HoppingController(QObject):
             Emitted when a button is clicked, carrying the source \
                 and destination state info
         hoppings_changed
-            Emitted when couplings are modified
+            Emitted by the command when couplings are modified
         hopping_segments_requested
             Emitted when the coupling table is updated, triggering an\
-                update of hopping segments
+                update of hopping segments. The signal carries the\
+                information about the selection.
+        selection_requested
+            Emitted when the selection change in the tree is required,\
+                carrying the unit cell, site, and state IDs
     """
 
     # Signal emitted when a button is clicked, carrying the source and
@@ -140,8 +144,13 @@ class HoppingController(QObject):
     def update_unit_cell(self):
         """
         Update the hopping data model with the selected unit cell's hoppings.
+
+        This method is called when the selection changes in the tree view.
+        It retrieves the currently selected unit cell and its hoppings,
+        refreshing the matrix.
         """
         uc_id = self.selection.get("unit_cell")
+        # Deselect the previous states
         self.pair_selection[0] = None
         self.pair_selection[1] = None
         self.hopping_view.table_stack.setCurrentWidget(
@@ -191,7 +200,7 @@ class HoppingController(QObject):
         # Configure grid layout to center the content
         self.hopping_view.matrix_panel.grid_layout.setAlignment(Qt.AlignCenter)
 
-        # --- Create the button grid ---
+        # Create the button grid
         self.buttons = {}
         for ii in range(len(self.state_info)):
             for jj in range(len(self.state_info)):
@@ -241,7 +250,6 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-
             button : QPushButton
                 The button to style
             has_hopping : bool
@@ -342,6 +350,7 @@ class HoppingController(QObject):
         self.hopping_segments_requested.emit()
 
     def _make_spinbox(self, value=0, minimum=-99, maximum=99):
+        """Auxiliary function to create a spinbox for hopping displacement"""
         box = QSpinBox()
         box.setRange(minimum, maximum)
         box.setValue(value)
@@ -351,6 +360,9 @@ class HoppingController(QObject):
     def _make_doublespinbox(
         self, value=0.0, minimum=-1e6, maximum=1e6, decimals=3
     ):
+        """
+        Auxiliary function to create a double spinbox for hopping amplitude
+        """
         box = QDoubleSpinBox()
         box.setRange(minimum, maximum)
         box.setDecimals(decimals)
@@ -412,7 +424,8 @@ class HoppingController(QObject):
         - Last 2 columns (Re(t), Im(t)) to floats (complex amplitude)
 
         If the same triplet (d₁,d₂,d₃) appears more than once,
-        the amplitudes are summed
+        the amplitudes are summed. The data is then passed to the
+        `SaveHoppingsCommand` to update the unit cell model.
         """
         new_couplings = {}
         # Extract values from each row in the table
@@ -456,7 +469,17 @@ class HoppingController(QObject):
 
     def _add_context_menu(self, button, ii, jj):
         """
-        Create a context menu for the button to manage hoppings."""
+        Create a context menu for the button to manage hoppings.
+
+        Parameters
+        ----------
+            button : QPushButton
+                The button that was right-clicked
+            ii : int
+                Row index of the button in the matrix
+            jj : int
+                Column index of the button in the matrix
+        """
         menu = QMenu()
         # Send hopping data to the transpose element
         action_send_hoppings = QAction("Set transpose element", self)
@@ -487,6 +510,13 @@ class HoppingController(QObject):
 
         The Hermitian partner is created by negating the displacement vector
         and taking the complex conjugate of the amplitude.
+
+        Parameters
+        ----------
+            ii : int
+                Index of the destination state in the matrix
+            jj : int
+                Index of the source state in the matrix
         """
         s1 = self.state_info[ii]  # Destination
         s2 = self.state_info[jj]  # Source
@@ -508,9 +538,17 @@ class HoppingController(QObject):
         """
         Delete the coupling between two states.
 
-        The coupling is identified by the state IDs of the source and
-        destination states.
+        Parameters
+        ----------
+            ii : int
+                Index of the destination state in the matrix (row index)
+            jj : int
+                Index of the source state in the matrix (column index)
         """
+        s1 = self.state_info[ii]  # Destination
+        s2 = self.state_info[jj]  # Source
+
+        self._update_pair_selection(s1, s2)
 
         self.undo_stack.push(
             SaveHoppingsCommand(
@@ -524,7 +562,26 @@ class HoppingController(QObject):
 
     def _handle_hoppings_changed(self, uc_id, site_id, state_id, s1, s2):
         """
-        Redraw the matrix and table when hoppings are modified."""
+        Redraw the matrix and table when hoppings are modified.
+
+        If the selection at the point of the hopping change is different
+        from the current one, emit a signal to update the selection in
+        the tree. Otherwise, refresh the matrix. Additionally, select
+        the pair of states and update the table.
+
+        Parameters
+        ----------
+            uc_id : uuid.UUID
+                UUID of the unit cell
+            site_id : uuid.UUID
+                UUID of the site
+            state_id : uuid.UUID
+                UUID of the state
+            s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
+                Information Tuple for the destination `State` (row)
+            s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
+                Information Tuple for the source `State` (column)
+        """
 
         if (
             self.selection["unit_cell"] != uc_id

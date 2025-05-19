@@ -39,7 +39,9 @@ class SaveHoppingsCommand(QUndoCommand):
     old_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
         List of old hoppings to be removed from the `hoppings` dictionary
     signal : Signal
-        Signal to be emitted when the command is executed
+        Signal to be emitted when the command is executed. The signal
+        carries the information about the selected `UnitCell`, `Site`,
+        `State`, and the selected pair of `State`s.
     """
 
     def __init__(
@@ -66,7 +68,9 @@ class SaveHoppingsCommand(QUndoCommand):
         new_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
             List of new hoppings to be added to the `hoppings` dictionary
         signal : Signal
-            Signal to be emitted when the command is executed
+            Signal to be emitted when the command is executed. The signal
+            carries the information about the selected `UnitCell`, `Site`,
+            `State`, and the selected pair of `State`s.
         """
         super().__init__("Add Unit Cell")
         self.unit_cells = unit_cells
@@ -99,7 +103,7 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.new_hoppings
 
-        # Emit the signal to select the appropriate tree item
+        # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
         )
@@ -115,7 +119,7 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.old_hoppings
 
-        # Emit the signal to select the appropriate tree item
+        # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
         )
