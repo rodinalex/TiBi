@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QDoubleSpinBox, QFrame, QTreeView
@@ -46,8 +47,10 @@ class EnterKeySpinBox(QDoubleSpinBox):
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Enter, Qt.Key_Return):
-            self._original_value = self.value()
-            self.editingConfirmed.emit()
+            # Emit signal only if the value has changed
+            if not np.isclose(self.value(), self._original_value):
+                self._original_value = self.value()
+                self.editingConfirmed.emit()
         elif event.key() == Qt.Key_Escape:
             self.blockSignals(True)
             self.setValue(self._original_value)

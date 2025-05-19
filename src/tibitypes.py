@@ -145,9 +145,9 @@ class UnitCell:
             Name of the unit cell
         v1, v2, v3 : BasisVector
             Basis vectors
-        sites : dict[UUID, Site]
+        sites : dict[uuid.UUID, Site]
             Dictionary mapping site UUIDs to `Site` objects
-        hoppings : dict[Tuple[UUID, UUID], \
+        hoppings : dict[Tuple[uuid.UUID, uuid.UUID], \
             list[Tuple[Tuple[int, int, int], np.complex128]]]
             Dictionary of hopping terms between states.
             Keys are pairs of state UUIDs (destination_state_id,
@@ -160,7 +160,7 @@ class UnitCell:
             and phase
         bandstructure : BandStructure
             Band structure object for the `UnitCell`
-        id : UUID
+        id : uuid.UUID
             Unique identifier for the `UnitCell`
 
     Methods
