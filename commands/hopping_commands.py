@@ -89,14 +89,6 @@ class SaveHoppingsCommand(QUndoCommand):
         self.signal = signal
 
     def redo(self):
-        # Select the appropriate item
-        self.selection.update(
-            {
-                "unit_cell": self.uc_id,
-                "site": self.site_id,
-                "state": self.state_id,
-            }
-        )
         # Insert the hoppings into the unit cell model
         if self.new_hoppings == []:
             self.unit_cells[self.uc_id].hoppings.pop(
@@ -106,22 +98,13 @@ class SaveHoppingsCommand(QUndoCommand):
             self.unit_cells[self.uc_id].hoppings[
                 (self.s1[3], self.s2[3])
             ] = self.new_hoppings
-        # Update Pair Selection
-        self.pair_selection[0] = self.s1
-        self.pair_selection[1] = self.s2
 
-        # Emit the signal
-        self.signal.emit()
+        # Emit the signal to select the appropriate tree item
+        self.signal.emit(
+            self.uc_id, self.site_id, self.state_id, self.s1, self.s2
+        )
 
     def undo(self):
-        # Select the appropriate item
-        self.selection.update(
-            {
-                "unit_cell": self.uc_id,
-                "site": self.site_id,
-                "state": self.state_id,
-            }
-        )
         # Insert the hoppings into the unit cell model
         if self.old_hoppings == []:
             self.unit_cells[self.uc_id].hoppings.pop(
@@ -132,9 +115,7 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.old_hoppings
 
-        # Update Pair Selection
-        self.pair_selection[0] = self.s1
-        self.pair_selection[1] = self.s2
-
-        # Emit the signal
-        self.signal.emit()
+        # Emit the signal to select the appropriate tree item
+        self.signal.emit(
+            self.uc_id, self.site_id, self.state_id, self.s1, self.s2
+        )

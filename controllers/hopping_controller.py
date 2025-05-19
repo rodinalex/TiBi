@@ -78,11 +78,13 @@ class HoppingController(QObject):
 
     # Signal emitted when couplings are modified
     # The signal triggers a table and matrix update
-    hoppings_changed = Signal()
+    hoppings_changed = Signal(object, object, object, object, object)
 
     # Signal emitted when the coupling table is updated. The signal triggers
     # an update of hopping segments in the unit cell plot
     hopping_segments_requested = Signal()
+
+    selection_requested = Signal(object, object, object)
 
     def __init__(
         self,
@@ -498,7 +500,7 @@ class HoppingController(QObject):
                 selection=self.selection,
                 pair_selection=self.pair_selection,
                 new_hoppings=hop_herm,
-                signal=self.hoppings_changed,
+                signal=self.selection_requested,
             )
         )
 
@@ -516,12 +518,22 @@ class HoppingController(QObject):
                 selection=self.selection,
                 pair_selection=self.pair_selection,
                 new_hoppings=[],
-                signal=self.hoppings_changed,
+                signal=self.selection_requested,
             )
         )
 
-    def _handle_hoppings_changed(self):
+    def _handle_hoppings_changed(self, uc_id, site_id, state_id, s1, s2):
         """
         Redraw the matrix and table when hoppings are modified."""
-        self._refresh_matrix()
-        self._refresh_table()
+
+        if (
+            self.selection["unit_cell"] != uc_id
+            or self.selection["site"] != site_id
+            or self.selection["state"] != state_id
+        ):
+            self.selection_requested.emit(uc_id, site_id, state_id)
+        else:
+            self._refresh_matrix()
+
+        # Update Pair Selection
+        self._update_pair_selection(s1, s2)

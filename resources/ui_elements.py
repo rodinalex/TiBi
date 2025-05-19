@@ -194,11 +194,9 @@ class SystemTree(QTreeView):
         item = self.find_item_by_id(uc_id, site_id, state_id)
         if item:
             index = self.tree_model.indexFromItem(item)
-            # self.selectionModel().blockSignals(True)
             self.selectionModel().setCurrentIndex(
                 index, QItemSelectionModel.ClearAndSelect
             )
-            # self.selectionModel.blockSignals(False)
 
     def add_tree_item(self, name, uc_id, site_id=None, state_id=None):
         """

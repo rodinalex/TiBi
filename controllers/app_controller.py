@@ -27,6 +27,17 @@ class AppController(QObject):
 
         # Connect signals
 
+        # When an item in the tree view is renamed, refresh the hopping matrix
+        # and table to reflect the correct names
+        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
+
+        # Handle the programmatic selection of an item in the tree
+        # due to undo/redo in the hopping controller
+        self.controllers["hopping"].selection_requested.connect(
+            self._handle_selection_requested
+        )
+        ############
+
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
         )
@@ -34,8 +45,6 @@ class AppController(QObject):
         self.controllers["hopping"].hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
-
-        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
         self.controllers["computation"].status_updated.connect(
             self._relay_status
@@ -238,3 +247,8 @@ class AppController(QObject):
             self.models["unit_cells"]
         )
         self._handle_plot_update_requested()
+
+    def _handle_selection_requested(self, uc_id, site_id, state_id):
+        self.controllers["uc"].tree_view._select_item_by_id(
+            uc_id, site_id, state_id
+        )
