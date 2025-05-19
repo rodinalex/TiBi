@@ -1,8 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
 import pyqtgraph.opengl as gl
-import uuid
 from PySide6.QtCore import QObject
+import uuid
 
 from models.data_models import DataModel
 from resources.constants import (
@@ -28,6 +28,30 @@ class BrillouinZonePlotController(QObject):
     The controller also handles the visualization of k-paths
     (sequences of k-points in reciprocal space) used for band structure
     calculations.
+
+    Attributes
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : DataModel
+        Model tracking the currently selected unit cell, site, and state
+    bz_path : list[NDArray]
+        A list of high-symmetry points in the BZ
+    bz_plot_view : BrillouinZonePlotView
+        The view component for displaying the Brillouin zone
+    computation_view : ComputationView
+        The view component that contains controls for creating
+        a path in the BZ
+    unit_cell : UnitCell
+        The currently selected unit cell
+    bz_plot_items : dict
+        Dictionary to store plot items
+    dim : int
+        Dimensionality of the Brillouin zone
+    bz_point_selection : dict
+        Indices of the selected high-symmetry points in the BZ
+    bz_point_lists : dict
+        Lists of high-symmetry points, grouped by type
     """
 
     def __init__(
@@ -41,14 +65,19 @@ class BrillouinZonePlotController(QObject):
         """
         Initialize the Brillouin zone plot controller.
 
-        Args:
-            unit_cells: Dictionary mapping UUIDs to UnitCell objects
-            selection: Model tracking the currently selected
-            unit cell, site, and state
-            bz_path: A list of high-symmetry points in the BZ
-            bz_plot_view: The view component for displaying the Brillouin zone
-            computational_view: The view component that contains controls
-            for creating a path in the BZ.
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            Model tracking the currently selected unit cell, site, and state
+        bz_path : list[NDArray]
+            A list of high-symmetry points in the BZ
+        bz_plot_view : BrillouinZonePlotView
+            The view component for displaying the Brillouin zone
+        computation_view : ComputationView
+            The view component that contains controls for creating
+            a path in the BZ
         """
         super().__init__()
 
@@ -229,7 +258,7 @@ class BrillouinZonePlotController(QObject):
             self.bz_point_lists["edge"] = np.array(edge_midpoints)
             self.bz_point_lists["face"] = np.array(self.bz_point_lists["face"])
 
-        # Plot the BZ vertices as points
+        # Plot the BZ points as spheres
         # Add Gamma point at origin
         sphere = self._make_point()
 
@@ -308,11 +337,15 @@ class BrillouinZonePlotController(QObject):
         """
         Ensure points have 3D coordinates by padding with zeros if needed.
 
-        Args:
-            points: Array of points with coordinates
+        Parameters
+        ----------
+            points
+                Array of point coordinates
 
-        Returns:
-            Array of points with 3D coordinates
+        Returns
+        -------
+            NDArray
+                Array of points with 3D coordinates
         """
         pad_width = 3 - self.dim
         if pad_width > 0:
@@ -329,10 +362,13 @@ class BrillouinZonePlotController(QObject):
         It updates the visual highlighting to show which point is currently
         selected, and maintains the selection state.
 
-        Args:
-            step: Direction to move in the selection
+        Parameters
+        ----------
+        step : int
+            Direction to move in the selection
             (+1 for next, -1 for previous)
-            typ: Type of point to select ('vertex', 'edge', or 'face')
+        typ : str
+            Type of point to select ('vertex', 'edge', or 'face')
         """
         # Guard against empty vertex list
         if len(self.bz_point_lists[typ]) == 0:
