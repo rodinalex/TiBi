@@ -1,3 +1,7 @@
+from numpy.typing import NDArray
+from PySide6.QtGui import QUndoCommand
+
+
 # Tree Commands
 class AddBZPointCommand(QUndoCommand):
     """
@@ -23,9 +27,7 @@ class AddBZPointCommand(QUndoCommand):
         Newly created `UnitCell`
     """
 
-    def __init__(
-        self, unit_cells: dict[uuid.UUID, UnitCell], tree_view: SystemTree
-    ):
+    def __init__(self, bz_path: list[NDArray], point: SystemTree):
         """
         Initialize the AddUnitCellCommand.
 
@@ -36,10 +38,9 @@ class AddBZPointCommand(QUndoCommand):
         tree_view : SystemTree
             UI object containing the tree view
         """
-        super().__init__("Add Unit Cell")
-        self.unit_cells = unit_cells
-        self.tree_view = tree_view
-        self.unit_cell = mk_new_unit_cell()
+        super().__init__("Add BZ Path Point")
+        self.bz_path = bz_path
+        self.point = point
 
     # Add the newly-created unit cell to the dictionary and create a tree item
     def redo(self):
