@@ -9,6 +9,32 @@ import itertools
 
 
 @dataclass
+class BandStructure:
+    """
+    An object containing a system's band structure.
+
+    Attributes
+    ----------
+
+        path : list[NDArray]
+            A list of point coordinates along which the bands are calculated.
+        special_points : list[NDArray]
+            A list of high-symmetry point coordinates used for the path.
+        eigenvalues : list[NDArray]
+            A list of arrays, where each array contains eivenvalues
+            corresponding to each point on the path.
+        eigenvectors : list[NDArray]
+            A list of 2D arrays, where each array contains the eigenvectors
+            corresponding to each point on the path.
+    """
+
+    path: list[np.ndarray] = field(default_factory=list)
+    special_points: list[np.ndarray] = field(default_factory=list)
+    eigenvalues: list[np.ndarray] = field(default_factory=list)
+    eigenvectors: list[np.ndarray] = field(default_factory=list)
+
+
+@dataclass
 class BasisVector:
     """
     A basis vector in 3D space for a crystalline unit cell.
@@ -132,6 +158,8 @@ class UnitCell:
             (0,0,0 means within the same unit cell)
             - amplitude is a complex number representing the hopping strength
             and phase
+        bandstructure : BandStructure
+            Band structure object for the `UnitCell`
         id : UUID
             Unique identifier for the `UnitCell`
 
@@ -167,6 +195,7 @@ class UnitCell:
         Tuple[uuid.UUID, uuid.UUID],
         list[Tuple[Tuple[int, int, int], np.complex128]],
     ] = field(default_factory=dict)
+    bandstructure: BandStructure = field(default_factory=BandStructure)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def volume(self) -> float:
@@ -541,29 +570,3 @@ class UnitCell:
             return H
 
         return hamiltonian
-
-
-@dataclass
-class BandStructure:
-    """
-    An object containing a system's band structure.
-
-    Attributes
-    ----------
-
-        path : list[NDArray]
-            A list of point coordinates along which the bands are calculated.
-        special_points : list[NDArray]
-            A list of high-symmetry point coordinates used for the path.
-        eigenvalues : list[NDArray]
-            A list of arrays, where each array contains eivenvalues
-            corresponding to each point on the path.
-        eigenvectors : list[NDArray]
-            A list of 2D arrays, where each array contains the eigenvectors
-            corresponding to each point on the path.
-    """
-
-    path: list[np.ndarray]
-    special_points: list[np.ndarray] = field(default_factory=list)
-    eigenvalues: list[np.ndarray] = field(default_factory=list)
-    eigenvectors: list[np.ndarray] = field(default_factory=list)
