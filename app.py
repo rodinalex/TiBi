@@ -41,7 +41,6 @@ from models.data_models import DataModel, AlwaysNotifyDataModel
 
 # Constants
 from resources.constants import (
-    unit_cell_data_init,
     selection_init,
     active_band_structure_init,
 )
@@ -76,15 +75,15 @@ class MainWindow(QMainWindow):
         Initialize the main window with views for different components.
 
         Args:
-            uc: Unit cell editor view
-            hopping: Hopping parameter editor view
-            uc_plot: Unit cell 3D visualization view
-            bz_plot: Brillouin zone 3D visualization view
-            plot: 2D plot view
-            computation: Multi-tab view used to set up calculations
-            menu_bar: Menu bar view
-            toolbar: Main toolbar view
-            status_bar: Status bar view
+            uc (UnitCellView): Unit cell editor view
+            hopping (HoppingView): Hopping parameter editor view
+            uc_plot (UnitCellPlotView): Unit cell 3D visualization view
+            bz_plot (BrillouinonePlotView): Brillouin zone 3D visualization view
+            plot (PlotView): 2D plot view
+            computation (ComputationView): Multi-tab view used to set up calculations
+            menu_bar (MenuBarView): Menu bar view
+            toolbar (MainToolbarView): Main toolbar view
+            status_bar (StatusBarView): Status bar view
         """
         super().__init__()
         self.setWindowTitle("TiBi")
@@ -185,7 +184,6 @@ class TiBiApplication:
         - project_path: the file to which the dictionary containing the unit
         cell objects is saved
         - unit_cells: a UUID to UnitCell dictionary
-        - unit_cell_data: a dictionary with data used in the creation/editing
         of unit cells and sites.
         - selection: a dictionary with UUID's of the selected
         unit cells/sites/states
@@ -231,7 +229,6 @@ class TiBiApplication:
         # Initialize global models
         self.project_path = None
         self.unit_cells = {}
-        self.unit_cell_data = DataModel(unit_cell_data_init())
         self.selection = DataModel(selection_init())
         self.bz_path = []
         self.active_band_structure = AlwaysNotifyDataModel(
@@ -243,7 +240,6 @@ class TiBiApplication:
         self.models = {
             "project_path": self.project_path,
             "unit_cells": self.unit_cells,
-            "unit_cell_data": self.unit_cell_data,
             "selection": self.selection,
             "bz_path": self.bz_path,
             "active_band_structure": self.active_band_structure,
@@ -293,14 +289,15 @@ class TiBiApplication:
         self.uc_controller = UnitCellController(
             self.unit_cells,
             self.selection,
-            self.unit_cell_data,
             self.uc_view,
+            self.undo_stack,
         )
 
         self.hopping_controller = HoppingController(
             self.unit_cells,
             self.selection,
             self.hopping_view,
+            self.undo_stack,
         )
 
         self.uc_plot_controller = UnitCellPlotController(

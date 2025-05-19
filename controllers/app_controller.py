@@ -27,6 +27,17 @@ class AppController(QObject):
 
         # Connect signals
 
+        # When an item in the tree view is renamed, refresh the hopping matrix
+        # and table to reflect the correct names
+        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
+
+        # Handle the programmatic selection of an item in the tree
+        # due to undo/redo in the hopping controller
+        self.controllers["hopping"].selection_requested.connect(
+            self._handle_selection_requested
+        )
+        ############
+
         self.controllers["uc"].plot_update_requested.connect(
             self._handle_plot_update_requested
         )
@@ -34,8 +45,6 @@ class AppController(QObject):
         self.controllers["hopping"].hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
-
-        self.controllers["uc"].item_changed.connect(self._handle_item_changed)
 
         self.controllers["computation"].status_updated.connect(
             self._relay_status
@@ -82,6 +91,8 @@ class AppController(QObject):
         # Depending on the dimensionality, update the unit cell spinners in the toolbar
 
         uc_id = self.models["selection"].get("unit_cell")
+        # print("UCID")
+        # print(uc_id)
         if uc_id is not None:
             unit_cell = self.models["unit_cells"][uc_id]
 
@@ -190,7 +201,7 @@ class AppController(QObject):
         This function is necessary to make sure that the label names in the
         hopping matrix and hopping table accurately reflect the item names.
         """
-        self.controllers["hopping"]._update_unit_cell()
+        self.controllers["hopping"].update_unit_cell()
 
     def _handle_project_refresh_requested(self):
         """
@@ -232,5 +243,12 @@ class AppController(QObject):
             {"k_path": None, "bands": None, "special_points": None}
         )
 
-        self.controllers["uc"].refresh_tree()
+        self.controllers["uc"].tree_view.refresh_tree(
+            self.models["unit_cells"]
+        )
         self._handle_plot_update_requested()
+
+    def _handle_selection_requested(self, uc_id, site_id, state_id):
+        self.controllers["uc"].tree_view._select_item_by_id(
+            uc_id, site_id, state_id
+        )

@@ -1,3 +1,4 @@
+import random
 from src.tibitypes import BasisVector, State, Site, UnitCell
 
 """
@@ -21,30 +22,15 @@ default_site_scaling = 1.5  # Default scaling of the sphere for selected sites
 
 
 # Model initialization factories.
-def unit_cell_data_init():
-    return {
-        "unit_cell_name": "",
-        "v1x": 1.0,
-        "v1y": 0.0,
-        "v1z": 0.0,
-        "v2x": 0.0,
-        "v2y": 1.0,
-        "v2z": 0.0,
-        "v3x": 0.0,
-        "v3y": 0.0,
-        "v3z": 1.0,
-        "v1periodic": False,
-        "v2periodic": False,
-        "v3periodic": False,
-        "site_name": "",
-        "c1": 0.0,
-        "c2": 0.0,
-        "c3": 0.0,
-        "state_name": "",
-    }  # Values for the unit cell panel
-
-
 def selection_init():
+    """
+    Initialize the selection model with default values.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the initial values for the selection model.
+    """
     return {
         "unit_cell": None,
         "site": None,
@@ -77,6 +63,14 @@ def bz_point_lists_init():
 
 
 def mk_new_unit_cell():
+    """
+    Create a new unit cell with default values.
+
+    Returns
+    -------
+    UnitCell
+        A new `UnitCell` object with default values.
+    """
     name = "New Unit Cell"
     v1 = BasisVector(1, 0, 0)  # Unit vector along x-axis
     v2 = BasisVector(0, 1, 0)  # Unit vector along y-axis
@@ -86,13 +80,36 @@ def mk_new_unit_cell():
 
 
 def mk_new_site():
+    """
+    Create a new site with default values.
+
+    Returns
+    -------
+    Site
+        A new `Site` object with default values.
+    """
     name = "New Site"
     c1 = 0  # Fractional coordinate along first basis vector
     c2 = 0  # Fractional coordinate along second basis vector
     c3 = 0  # Fractional coordinate along third basis vector
-    return Site(name, c1, c2, c3)
+    R = default_site_size
+    color = (
+        random.uniform(0, 1),
+        random.uniform(0, 1),
+        random.uniform(0, 1),
+        1.0,
+    )
+    return Site(name, c1, c2, c3, R, color)
 
 
 def mk_new_state():
+    """
+    Create a new state with default values.
+
+    Returns
+    -------
+    State
+        A new `State` object with default values.
+    """
     name = "New State"
     return State(name)

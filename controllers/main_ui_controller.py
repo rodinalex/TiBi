@@ -55,7 +55,9 @@ class MainUIController(QObject):
         self.undo_stack = undo_stack
 
         # Create the action manager
-        self.action_manager = ActionManager(self)
+        self.action_manager = ActionManager(
+            undo_stack=self.undo_stack, parent=self
+        )
 
         # Set up action handlers
         self._connect_action_handlers()

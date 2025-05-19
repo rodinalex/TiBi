@@ -13,6 +13,12 @@
 
 ## Functionality
 - Threads/workers
+- Undo/Redo. List of undoable tasks
+  - Add UnitCell, Site, State
+  - Remove UnitCell, Site, State
+  - Rename UnitCell, Site, State
+  - Modify UnitCell, Site
+  - Remove hoppings
 
 ## Tasks
 - Dedicate the right panel to calculations:

@@ -1,7 +1,7 @@
 import os
 
 from PySide6.QtCore import QObject
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QIcon, QUndoStack
 
 basedir = os.path.dirname(__file__)
 
@@ -18,7 +18,7 @@ class ActionManager(QObject):
     creating and maintaining a collection of related objects.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, undo_stack: QUndoStack, parent=None):
         """
         Initialize the action manager with groups of actions.
 
@@ -27,7 +27,7 @@ class ActionManager(QObject):
             app controller)
         """
         super().__init__(parent)
-
+        self.undo_stack = undo_stack
         # Initialize action dictionaries for different categories
         self.file_actions: dict[str, QAction] = {}
         self.undo_redo_actions: dict[str, QAction] = {}
@@ -96,17 +96,36 @@ class ActionManager(QObject):
         )
         self.undo_redo_actions["redo"].setStatusTip("Redo")
 
-        # # Optional: Disable/enable based on stack state
-        # self.undo_redo_actions["undo"].setEnabled(self.undo_stack.canUndo())
-        # self.undo_redo_actions["redo"].setEnabled(self.undo_stack.canRedo())
+        # Disable/enable based on stack state
+        self.undo_redo_actions["undo"].setEnabled(self.undo_stack.canUndo())
+        self.undo_redo_actions["redo"].setEnabled(self.undo_stack.canRedo())
 
-        # # Keep them updated as the stack changes
-        # self.undo_stack.canUndoChanged.connect(
-        #     self.undo_redo_actions["undo"].setEnabled
-        # )
-        # self.undo_stack.canRedoChanged.connect(
-        #     self.undo_redo_actions["redo"].setEnabled
-        # )
+        # Keep them updated as the stack changes
+        self.undo_stack.canUndoChanged.connect(
+            self.undo_redo_actions["undo"].setEnabled
+        )
+        self.undo_stack.canRedoChanged.connect(
+            self.undo_redo_actions["redo"].setEnabled
+        )
+
+    #     self.undo_stack.undoTextChanged.connect(self.update_undo_tooltip)
+    #     self.undo_stack.redoTextChanged.connect(self.update_redo_tooltip)
+
+    # def update_undo_tooltip(self):
+    #     if self.undo_stack.canUndo():
+    #         self.undo_redo_actions["undo"].setStatusTip(
+    #             f"Undo {self.undo_stack.undoText()}"
+    #         )
+    #     else:
+    #         self.undo_redo_actions["undo"].setStatusTip("Nothing to undo")
+
+    # def update_redo_tooltip(self):
+    #     if self.undo_stack.canRedo():
+    #         self.undo_redo_actions["redo"].setStatusTip(
+    #             f"Redo {self.undo_stack.redoText()}"
+    #         )
+    #     else:
+    #         self.undo_redo_actions["redo"].setStatusTip("Nothing to redo")
 
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""

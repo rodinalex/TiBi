@@ -1,8 +1,7 @@
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QKeySequence, QShortcut, QStandardItemModel
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -10,13 +9,13 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QStackedWidget,
     QStyledItemDelegate,
-    QTreeView,
     QVBoxLayout,
     QWidget,
 )
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
-from resources.ui_elements import divider_line
+from resources.ui_elements import divider_line, EnterKeySpinBox, SystemTree
+from src.tibitypes import BasisVector
 
 
 class UnitCellPanel(QWidget):
@@ -88,12 +87,12 @@ class UnitCellPanel(QWidget):
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_column(n):
-            x = QDoubleSpinBox()
-            y = QDoubleSpinBox()
-            z = QDoubleSpinBox()
+            x = EnterKeySpinBox()
+            y = EnterKeySpinBox()
+            z = EnterKeySpinBox()
 
             for coord in [x, y, z]:
-                coord.setButtonSymbols(QDoubleSpinBox.NoButtons)
+                coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
                 coord.setFixedWidth(40)
                 coord.setDecimals(3)
@@ -138,6 +137,22 @@ class UnitCellPanel(QWidget):
 
         grid_layout.setVerticalSpacing(2)
 
+    def set_basis_vectors(
+        self, v1: BasisVector, v2: BasisVector, v3: BasisVector
+    ) -> None:
+        """
+        Set the basis vectors in the UI.
+
+        Args:
+            v1 (BasisVector): Basis vector 1.
+            v2 (BasisVector): Basis vector 2.
+            v3 (BasisVector): Basis vector 3.
+        """
+        for ii, coord in enumerate("xyz"):
+            self.v1[ii].setValue(getattr(v1, coord))
+            self.v2[ii].setValue(getattr(v2, coord))
+            self.v3[ii].setValue(getattr(v3, coord))
+
 
 class SitePanel(QWidget):
     """
@@ -164,15 +179,15 @@ class SitePanel(QWidget):
         header.setAlignment(Qt.AlignCenter)
 
         # Coordinate and radius fields
-        self.R = QDoubleSpinBox()
-        self.c1 = QDoubleSpinBox()
-        self.c2 = QDoubleSpinBox()
-        self.c3 = QDoubleSpinBox()
+        self.R = EnterKeySpinBox()
+        self.c1 = EnterKeySpinBox()
+        self.c2 = EnterKeySpinBox()
+        self.c3 = EnterKeySpinBox()
 
         for c in [self.R, self.c1, self.c2, self.c3]:
             c.setRange(0.0, 1.0)
             c.setDecimals(3)
-            c.setButtonSymbols(QDoubleSpinBox.NoButtons)
+            c.setButtonSymbols(EnterKeySpinBox.NoButtons)
 
         # Color picker button
         self.color_picker_btn = QPushButton()
@@ -220,9 +235,23 @@ class EnterOnlyDelegate(QStyledItemDelegate):
     an updated signal so that the data can be updated internally.
     """
 
+    name_edit_finished = Signal(object)  # Emits QModelIndex
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._editing_index = None
+
+    def createEditor(self, parent, option, index):
+        editor = super().createEditor(parent, option, index)
+        editor.setProperty(
+            "originalText", index.data()
+        )  # Save the original name
+        self._editing_index = index
+        return editor
+
     def eventFilter(self, editor, event):
         if event.type() == QEvent.FocusOut:
-            # Cancel editing on focus out
+            # Restore original text on focus loss (cancel edit)
             editor.blockSignals(True)
             editor.setText(editor.property("originalText"))
             editor.blockSignals(False)
@@ -230,17 +259,15 @@ class EnterOnlyDelegate(QStyledItemDelegate):
             return True
 
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            # Accept editing on Enter
-            return super().eventFilter(editor, event)
+            # User manually pressed Enter — accept the edit
+            self.commitData.emit(editor)
+            self.closeEditor.emit(editor, QStyledItemDelegate.NoHint)
+            if self._editing_index is not None:
+                self.name_edit_finished.emit(self._editing_index)
+                self._editing_index = None
+            return True
 
         return super().eventFilter(editor, event)
-
-    def createEditor(self, parent, option, index):
-        editor = super().createEditor(parent, option, index)
-        editor.setProperty(
-            "originalText", index.data()
-        )  # Store original value
-        return editor
 
 
 class TreeViewPanel(QWidget):
@@ -275,21 +302,11 @@ class TreeViewPanel(QWidget):
         super().__init__()
 
         # Create and configure tree view
-        self.tree_view = QTreeView()
-        self.tree_view.setHeaderHidden(True)
-        self.tree_view.setSelectionMode(QTreeView.SingleSelection)
-        self.tree_view.setEditTriggers(QTreeView.DoubleClicked)
-
-        # Create model
-        self.tree_model = QStandardItemModel()
-        self.root_node = self.tree_model.invisibleRootItem()
-
-        # Set model to view
-        self.tree_view.setModel(self.tree_model)
+        self.tree_view = SystemTree()
 
         # Set the delegate to save the data only on Enter-press
-        delegate = EnterOnlyDelegate(self.tree_view)
-        self.tree_view.setItemDelegate(delegate)
+        self.delegate = EnterOnlyDelegate(self.tree_view)
+        self.tree_view.setItemDelegate(self.delegate)
 
         button_layout = QHBoxLayout()
         self.new_uc_btn = QPushButton("+ UC")
