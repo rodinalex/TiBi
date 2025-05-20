@@ -451,10 +451,14 @@ class HoppingController(QObject):
             else:
                 new_couplings[triplet] = amplitude
 
-        # Convert the dictionary to the expected format of the list of tuples
+        # Convert the dictionary to the expected format of the list of tuples.
+        # Remove any entries with non-finite or zero amplitudes
         merged_couplings = [
             ((d1, d2, d3), amplitude)
             for (d1, d2, d3), amplitude in new_couplings.items()
+            if np.isfinite(amplitude.real)
+            and np.isfinite(amplitude.imag)
+            and not np.isclose(amplitude, 0)
         ]
         # Update the data model with the new couplings and emit the signal
         self.undo_stack.push(
