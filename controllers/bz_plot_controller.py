@@ -5,7 +5,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QUndoStack
 import uuid
 
-from commands.bz_commands import AddBZPointCommand
+from commands.bz_commands import AddBZPointCommand, RemoveBZPointCommand
 from models.data_models import DataModel
 from resources.constants import (
     CF_red,
@@ -420,12 +420,10 @@ class BrillouinZonePlotController(QObject):
         Points can be the origin (Gamma), vertices, edge midpoints, or
         face centers depending on the dimensionality of the BZ.
 
-        After adding a point, the path visualization is updated and the
-        relevant UI controls are enabled/disabled based on the new path state.
-
-        Args:
-            point: The type of point to add
-            ("gamma", "vertex", "edge", or "face")
+        Parameters
+        ----------
+            point : str
+                The type of point to add ("gamma", "vertex", "edge", or "face")
         """
 
         if point == "gamma":
@@ -449,30 +447,17 @@ class BrillouinZonePlotController(QObject):
                 signal=self.bz_path_updated,
             )
         )
-        # Update the path visualization
-        # self._update_path_visualization()
 
     def _remove_last_point(self):
         """Remove the last point added to the path."""
-        if self.unit_cell.bandstructure.special_points:
-            # Remove the last point
-            self.unit_cell.bandstructure.special_points.pop()
 
-            # Update path visualization
-            self._update_path_visualization()
-
-            # Disable button if path is now empty
-            if not self.unit_cell.bandstructure.special_points:
-                self.computation_view.bands_panel.remove_last_btn.setEnabled(
-                    False
-                )
-                self.computation_view.bands_panel.clear_path_btn.setEnabled(
-                    False
-                )
-            # Enable the compute bands button if we have at least 2 points
-            self.computation_view.bands_panel.compute_bands_btn.setEnabled(
-                len(self.unit_cell.bandstructure.special_points) > 1
+        self.undo_stack.push(
+            RemoveBZPointCommand(
+                unit_cell=self.unit_cell,
+                computation_view=self.computation_view,
+                signal=self.bz_path_updated,
             )
+        )
 
     def _clear_path(self):
         """Remove all points from the path."""
