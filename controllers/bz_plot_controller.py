@@ -7,7 +7,7 @@ import uuid
 
 from commands.bz_commands import (
     AddBZPointCommand,
-    ClearBZPointCommand,
+    ClearBZPathCommand,
     RemoveBZPointCommand,
 )
 from models.data_models import DataModel
@@ -466,7 +466,7 @@ class BrillouinZonePlotController(QObject):
     def _clear_path(self):
         """Remove all points from the path."""
         self.undo_stack.push(
-            ClearBZPointCommand(
+            ClearBZPathCommand(
                 unit_cell=self.unit_cell,
                 computation_view=self.computation_view,
                 signal=self.bz_path_updated,

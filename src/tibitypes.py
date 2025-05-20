@@ -26,12 +26,59 @@ class BandStructure:
         eigenvectors : list[NDArray]
             A list of 2D arrays, where each array contains the eigenvectors
             corresponding to each point on the path.
+
+    Methods
+    -------
+        clear()
+            Reset the band structure to the initial state.
+        reset_bands()
+            Reset the band structure by clearing the path, eigenvalues, and
+            eigenvectors.
+        add_point(point: NDArray)
+            Add a point to the special points path. Reset all other fields.
+        remove_point()
+            Remove the last point from the special points path. Reset all other
+            fields.
     """
 
     path: list[np.ndarray] = field(default_factory=list)
     special_points: list[np.ndarray] = field(default_factory=list)
     eigenvalues: list[np.ndarray] = field(default_factory=list)
     eigenvectors: list[np.ndarray] = field(default_factory=list)
+
+    def clear(self):
+        """Reset the band structure to the initial state."""
+        self.special_points.clear()
+        self.reset_bands()
+
+    def reset_bands(self):
+        """
+        Reset the band structure by clearing the path, eigenvalues, and
+        eigenvectors.
+        """
+        self.path.clear()
+        self.eigenvalues.clear()
+        self.eigenvectors.clear()
+
+    def add_point(self, point: np.ndarray):
+        """
+        Add a point to the special points path. Reset all other fields.
+
+        Parameters
+        ----------
+            point : NDArray
+                The point to be added to the special points path.
+        """
+        self.reset_bands()
+        self.special_points.append(point)
+
+    def remove_point(self):
+        """
+        Remove the last point from the special points path. Reset all other
+        fields.
+        """
+        self.reset_bands()
+        self.special_points.pop(-1)
 
 
 @dataclass
