@@ -67,6 +67,8 @@ class SaveHoppingsCommand(QUndoCommand):
             command was issued
         new_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
             List of new hoppings to be added to the `hoppings` dictionary
+        bandstructure : BandStructure
+            The band structure of the unit cell before the change
         signal : Signal
             Signal to be emitted when the command is executed. The signal
             carries the information about the selected `UnitCell`, `Site`,
@@ -91,6 +93,8 @@ class SaveHoppingsCommand(QUndoCommand):
             )
         )
         self.signal = signal
+
+        self.bandstructure = self.unit_cells[self.uc_id].bandstructure
 
     def redo(self):
         # Insert the hoppings into the unit cell model
