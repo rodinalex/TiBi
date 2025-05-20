@@ -1,5 +1,4 @@
 import os
-
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QIcon, QUndoStack
 
@@ -14,13 +13,14 @@ class ActionManager(QObject):
     actions, allowing them to be shared between menu bars, toolbars,
     context menus, and keyboard shortcuts.
 
-    It follows the manager pattern where a single class is responsible for
-    creating and maintaining a collection of related objects.
+    Attributes
+    ----------
     """
 
     def __init__(self, undo_stack: QUndoStack, parent=None):
         """
         Initialize the action manager with groups of actions.
+
 
         Args:
             parent: Parent QObject (typically the main window or
