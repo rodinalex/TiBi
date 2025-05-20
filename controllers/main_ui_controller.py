@@ -19,6 +19,12 @@ class MainUIController(QObject):
     This controller connects the UI elements to the application logic and
     manages the action manager that provides shared actions to the menu
     bar and toolbar.
+
+    Attributes
+    ----------
+
+    Signals
+    -------
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
