@@ -1,4 +1,3 @@
-import sys
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import (
@@ -9,6 +8,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+import sys
+import uuid
 
 # View Panels
 from views.bz_plot_view import BrillouinZonePlotView
@@ -41,6 +42,9 @@ from models.data_models import DataModel
 
 # Constants
 from resources.constants import selection_init
+
+# Types
+from src.tibitypes import UnitCell
 
 
 class MainWindow(QMainWindow):
@@ -225,7 +229,7 @@ class TiBiApplication:
 
         # Initialize global models
         self.project_path = None
-        self.unit_cells = {}
+        self.unit_cells: dict[uuid.UUID, UnitCell] = {}
         self.selection = DataModel(selection_init())
 
         # Store the models in a dictionary

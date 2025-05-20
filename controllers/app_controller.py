@@ -1,5 +1,3 @@
-import copy
-import numpy as np
 from PySide6.QtCore import QObject
 import uuid
 
@@ -7,6 +5,7 @@ from controllers.bz_plot_controller import BrillouinZonePlotController
 from controllers.computation_controller import ComputationController
 from controllers.hopping_controller import HoppingController
 from controllers.main_ui_controller import MainUIController
+from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 from src.tibitypes import UnitCell
@@ -56,6 +55,7 @@ class AppController(QObject):
             "hopping"
         ]
         self.main_ui_controller: MainUIController = self.controllers["main_ui"]
+        self.plot_controller: PlotController = self.controllers["plot"]
         self.uc_controller: UnitCellController = self.controllers["uc"]
         self.uc_plot_controller: UnitCellPlotController = self.controllers[
             "uc_plot"
@@ -86,9 +86,11 @@ class AppController(QObject):
         self.hopping_controller.hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
-
+        # Computation controller
         self.computation_controller.status_updated.connect(self._relay_status)
-
+        self.computation_controller.band_computation_completed.connect(
+            self._handle_plot_update_requested
+        )
         # Toolbar signals
 
         self.main_ui_controller.project_refresh_requested.connect(
@@ -136,6 +138,7 @@ class AppController(QObject):
             self.main_ui_controller.toolbar.n3_spinbox.setEnabled(
                 unit_cell.v3.is_periodic
             )
+            self.plot_controller.plot_band_structure(unit_cell.bandstructure)
 
         else:
             self.main_ui_controller.toolbar.n1_spinbox.setEnabled(False)
@@ -157,27 +160,6 @@ class AppController(QObject):
         )
         # band_structure = self.models["band_structures"].get(uc_id)
         # self.models["bz_path"].clear()
-
-        # if band_structure is not None:
-        #     self.models["active_band_structure"].update(
-        #         {
-        #             "k_path": copy.deepcopy(band_structure.path),
-        #             "bands": copy.deepcopy(
-        #                 np.array(band_structure.eigenvalues)
-        #             ),
-        #             "special_points": copy.deepcopy(
-        #                 band_structure.special_points
-        #             ),
-        #         }
-        #     )
-
-        #     self.models["bz_path"].extend(
-        #         copy.deepcopy(band_structure.special_points)
-        #     )
-        # else:
-        #     self.models["active_band_structure"].update(
-        #         {"k_path": None, "bands": None, "special_points": None}
-        #     )
 
         self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
         self.bz_plot_controller.update_brillouin_zone()

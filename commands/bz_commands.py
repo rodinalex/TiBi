@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 from numpy.typing import NDArray
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QUndoCommand
@@ -18,7 +19,7 @@ class AddBZPointCommand(QUndoCommand):
     ----------
     unit_cell : UnitCell
         `UnitCell` to which the point will be addeed
-    point : NDArray
+    point : NDArray[np.float64]
         The point to be added
     bandstructure : BandStructure
         `BandStructure` prior to the point addition
@@ -31,7 +32,7 @@ class AddBZPointCommand(QUndoCommand):
     def __init__(
         self,
         unit_cell: UnitCell,
-        point: NDArray,
+        point: NDArray[np.float64],
         computation_view: ComputationView,
         signal: Signal,
     ):
@@ -42,7 +43,7 @@ class AddBZPointCommand(QUndoCommand):
         ----------
         unit_cell : UnitCell
             `UnitCell` to which the point will be addeed
-        point : NDArray
+        point : NDArray[np.float64]
             The point to be added
         computation_view : ComputationView
             UI object containing the computation view

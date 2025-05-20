@@ -414,7 +414,7 @@ class BrillouinZonePlotController(QObject):
             self.bz_plot_view.selected_point_color
         )
 
-    def _add_point(self, point):
+    def _add_point(self, point: str):
         """
         Add a selected point to the Brillouin zone path.
 
@@ -431,15 +431,15 @@ class BrillouinZonePlotController(QObject):
         """
 
         if point == "gamma":
-            point_coord = np.array([0] * self.dim)
+            point_coord: NDArray[np.float64] = np.array([0.0] * self.dim)
         else:
             if (
                 self.bz_point_selection[point] is not None
                 and self.bz_point_lists[point] is not None
             ):
-                point_coord = self.bz_point_lists[point][
-                    self.bz_point_selection[point]
-                ]
+                point_coord: NDArray[np.float64] = np.array(
+                    self.bz_point_lists[point][self.bz_point_selection[point]]
+                )
             else:
                 print("No point selected")
                 return
