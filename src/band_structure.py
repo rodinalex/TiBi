@@ -44,7 +44,7 @@ def interpolate_k_path(points: list[NDArray[np.float64]], n_total: int):
     # Add the final high-symmetry point
     k_path.append(points[-1])
 
-    return np.array(k_path)
+    return k_path
 
 
 def diagonalize_hamitonian(hamiltonian, points):

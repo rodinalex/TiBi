@@ -547,7 +547,7 @@ class HoppingController(QObject):
                 selection=self.selection,
                 pair_selection=self.pair_selection,
                 new_hoppings=hop_herm,
-                signal=self.selection_requested,
+                signal=self.hoppings_changed,
             )
         )
 
@@ -573,7 +573,7 @@ class HoppingController(QObject):
                 selection=self.selection,
                 pair_selection=self.pair_selection,
                 new_hoppings=[],
-                signal=self.selection_requested,
+                signal=self.hoppings_changed,
             )
         )
 
