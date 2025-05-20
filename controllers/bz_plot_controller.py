@@ -1,9 +1,11 @@
 import numpy as np
 from numpy.typing import NDArray
 import pyqtgraph.opengl as gl
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtGui import QUndoStack
 import uuid
 
+from commands.bz_commands import AddBZPointCommand
 from models.data_models import DataModel
 from resources.constants import (
     CF_red,
@@ -40,6 +42,8 @@ class BrillouinZonePlotController(QObject):
     computation_view : ComputationView
         The view component that contains controls for creating
         a path in the BZ
+    undo_stack : QUndoStack
+        `QUndoStack` to hold "undo-able" commands
     unit_cell : UnitCell
         The currently selected unit cell
     bz_plot_items : dict
@@ -50,7 +54,16 @@ class BrillouinZonePlotController(QObject):
         Indices of the selected high-symmetry points in the BZ
     bz_point_lists : dict
         Lists of high-symmetry points, grouped by type
+
+    Signals
+    -------
+    bz_path_updated : Signal
+        Emitted when the BZ special points path is updated
+        by adding or removing points. Triggers a redraw of
+        the path in the plot.
     """
+
+    bz_path_updated = Signal()
 
     def __init__(
         self,
@@ -58,6 +71,7 @@ class BrillouinZonePlotController(QObject):
         selection: DataModel,
         bz_plot_view: BrillouinZonePlotView,
         computation_view: ComputationView,
+        undo_stack: QUndoStack,
     ):
         """
         Initialize the Brillouin zone plot controller.
@@ -73,6 +87,8 @@ class BrillouinZonePlotController(QObject):
         computation_view : ComputationView
             The view component that contains controls for creating
             a path in the BZ
+        undo_stack : QUndoStack
+            `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
 
@@ -80,6 +96,7 @@ class BrillouinZonePlotController(QObject):
         self.selection = selection
         self.bz_plot_view = bz_plot_view
         self.computation_view = computation_view
+        self.undo_stack = undo_stack
 
         # Internal controller state
         self.unit_cell = None
@@ -89,6 +106,8 @@ class BrillouinZonePlotController(QObject):
         self.bz_point_selection = bz_point_selection_init()
         # Lists of high-symmetry points, grouped by type
         self.bz_point_lists = bz_point_lists_init()
+
+        self.bz_path_updated.connect(self._update_path_visualization)
 
         # Signals from the ComputationView used for selecting/picking
         # high-symmetry points in the BZ
@@ -410,31 +429,28 @@ class BrillouinZonePlotController(QObject):
         """
 
         if point == "gamma":
-            self.unit_cell.bandstructure.special_points.append(
-                np.array([0] * self.dim)
-            )
+            point_coord = np.array([0] * self.dim)
         else:
             if (
                 self.bz_point_selection[point] is not None
                 and self.bz_point_lists[point] is not None
             ):
-                self.unit_cell.bandstructure.special_points.append(
-                    self.bz_point_lists[point][self.bz_point_selection[point]]
-                )
+                point_coord = self.bz_point_lists[point][
+                    self.bz_point_selection[point]
+                ]
             else:
                 print("No point selected")
                 return
-        # Enable the "remove last" and "clear path" buttons
-        # now that we have points
-        self.computation_view.bands_panel.remove_last_btn.setEnabled(True)
-        self.computation_view.bands_panel.clear_path_btn.setEnabled(True)
-        # Enable the compute bands button if we have at least 2 points
-        self.computation_view.bands_panel.compute_bands_btn.setEnabled(
-            len(self.unit_cell.bandstructure.special_points) > 1
+        self.undo_stack.push(
+            AddBZPointCommand(
+                unit_cell=self.unit_cell,
+                point=point_coord,
+                computation_view=self.computation_view,
+                signal=self.bz_path_updated,
+            )
         )
-
         # Update the path visualization
-        self._update_path_visualization()
+        # self._update_path_visualization()
 
     def _remove_last_point(self):
         """Remove the last point added to the path."""

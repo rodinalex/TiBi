@@ -300,6 +300,7 @@ class TiBiApplication:
             self.selection,
             self.bz_plot_view,
             self.computation_view,
+            self.undo_stack,
         )
 
         self.plot_controller = PlotController(self.plot_view)
