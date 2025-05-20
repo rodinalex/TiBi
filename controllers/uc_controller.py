@@ -51,11 +51,12 @@ class UnitCellController(QObject):
             The tree view component
         tree_model : QStandardItemModel
             The model backing the tree view
+
     Signals
     -------
-        plot_update_requested : Signal
+        plot_update_requested
             Signal requesting a plot update
-        item_changed : Signal
+        item_changed
             Signal emitted when a tree item is changed.
             Necessary to make sure that the hopping matrix
             has the correct item names

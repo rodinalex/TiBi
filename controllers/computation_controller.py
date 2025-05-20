@@ -1,36 +1,51 @@
 from PySide6.QtCore import QObject, Signal
-from src.band_structure import band_compute, interpolate_k_path
+import uuid
+
+from src.band_structure import diagonalize_hamitonian, interpolate_k_path
+from src.tibitypes import UnitCell
 from views.computation_view import ComputationView
-from src.tibitypes import BandStructure
-import numpy as np
-import copy
 
 
 class ComputationController(QObject):
     """
     Controller responsible for physics calculations within the application.
 
-    This controller handles the computational aspects of the application, such as
-    band structure calculations, and updates the corresponding data models with the results.
-    It isolates the calculation logic from both the UI and the data storage, following
-    the MVC pattern.
+    Attributes
+    ----------
+    models : dict
+        Dictionary containing the system models
+    computation_view : ComputationView
+        UI object containing the computation view
+
+
+    Signals
+    -------
+    status_updated
+        Signal emitted to update the status of the computation
+    band_computation_completed
+        Signal notifying that the data can be plotted
     """
 
     status_updated = Signal(str)
+    band_computation_completed = Signal()
 
     def __init__(self, models, computation_view: ComputationView):
         """
         Initialize the computation controller.
 
-        Args:
-            models: System models. All are provided for computational convenience
-            band_structure: Data model that will store calculation results
+        Parameters
+        ----------
+        models : dict
+            Dictionary containing the system models
+        computation_view : ComputationView
+            UI object containing the computation view
         """
         super().__init__()
         self.models = models
         self.computation_view = computation_view
 
-        # Connect the signales
+        self.unit_cells: dict[uuid.UUID, UnitCell] = models["unit_cells"]
+        # Connect the signals
         self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
             self._compute_bands
         )
@@ -39,47 +54,38 @@ class ComputationController(QObject):
         """
         Calculate the electronic band structure along a specified k-path.
 
-        This method performs a tight-binding calculation of electronic bands
-        by diagonalizing the Hamiltonian at each k-point along the path. The
-        results are stored in the band_structure model.
+        The path is defined by the special points in the Brillouin zone.
         """
-
-        special_points = copy.deepcopy(self.models["bz_path"])
-        num_points = self.computation_view.bands_panel.n_points_spinbox.value()
 
         # Get the selected unit cell
         uc_id = self.models["selection"]["unit_cell"]
-        unit_cell = self.models["unit_cells"][uc_id]
+        unit_cell = self.unit_cells[uc_id]
 
-        # Check if the coupling is Hermitian and only then proceed to calculation
+        # Check if the coupling is Hermitian and only then calculate
         if not unit_cell.is_hermitian():
             self.status_updated.emit(
                 "Computation halted: the system is non-Hermitian"
             )
             return
 
+        num_points = self.computation_view.bands_panel.n_points_spinbox.value()
+
         # Get Hamiltonian function
         hamiltonian_func = unit_cell.get_hamiltonian_function()
 
         # Perform calculation
-        k_path = interpolate_k_path(special_points, num_points)
+        k_path = interpolate_k_path(
+            unit_cell.bandstructure.special_points, num_points
+        )
         self.status_updated.emit("Computing the bands")
 
-        eigenvalues, eigenvectors = band_compute(hamiltonian_func, k_path)
+        eigenvalues, eigenvectors = diagonalize_hamitonian(
+            hamiltonian_func, k_path
+        )
         self.status_updated.emit("Bands computation complete")
 
-        band_structure = BandStructure(
-            path=k_path,
-            special_points=special_points,
-            eigenvalues=eigenvalues,
-            eigenvectors=eigenvectors,
-        )
-        self.models["band_structures"][uc_id] = band_structure
-        # Update model
-        self.models["active_band_structure"].update(
-            {
-                "k_path": copy.deepcopy(k_path),
-                "bands": copy.deepcopy(np.array(eigenvalues)),
-                "special_points": copy.deepcopy(special_points),
-            }
-        )
+        # Update the band structure
+        unit_cell.bandstructure.eigenvalues = eigenvalues
+        unit_cell.bandstructure.eigenvectors = eigenvectors
+        unit_cell.bandstructure.path = k_path
+        self.band_computation_completed.emit()

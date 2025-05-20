@@ -1,20 +1,25 @@
 import numpy as np
+from numpy.typing import NDArray
 
 
-def interpolate_k_path(points, n_total):
+def interpolate_k_path(points: list[NDArray[np.float64]], n_total: int):
     """
-    Interpolate a path through k-space with points distributed by segment length.
+    Interpolate a path through k-space special points.
 
-    This function takes a list of special k-points (like high-symmetry points
-    in the Brillouin zone) and creates a path with points distributed along
+    The path has the special points distributed along
     segments proportionally to their lengths in reciprocal space.
 
-    Args:
-        points: List or array of k-points defining the path
-        n_total: Total number of points to distribute along the entire path
+    Parameters
+    ----------
+        points : list[NDArray[np.float64]]
+            List or array of k-points defining the path
+        n_total : int
+            Total number of points to distribute along the entire path
 
-    Returns:
-        numpy.ndarray: Array of interpolated k-points along the path
+    Returns
+    -------
+        NDArray[NDArray[np.float64]]
+            Array of interpolated k-points along the path
     """
     points = np.array(points)
     # Get the distances between consecutive points
@@ -42,32 +47,32 @@ def interpolate_k_path(points, n_total):
     return np.array(k_path)
 
 
-def band_compute(hamiltonian, k_path):
+def diagonalize_hamitonian(hamiltonian, points):
     """
-    Compute electronic band structure along a k-path.
+    Compute electronic for the collection of points.
 
-    This function calculates the energy eigenvalues of the Hamiltonian
-    at each k-point along the provided path. The Hamiltonian should be
-    a function that takes a k-point and returns a matrix.
+    Parameters
+    ----------
+        hamiltonian
+            Function that generates a Hamiltonian matrix for a given k-point
+        points : NDArray[NDArray[np.float64]]
+            Array of k-points along which to calculate bands
 
-    Args:
-        hamiltonian: Function that generates a Hamiltonian matrix for a given k-point
-        k_path: Array of k-points along which to calculate bands
-
-    Returns:
-        numpy.ndarray: Array of shape (n_kpoints, n_bands) containing the energy
-                       eigenvalues at each k-point
+    Returns
+    -------
+        eigenvalues : list[NDArray[np.float64]]
+            Array of shape (n_kpoints, n_bands) containing the energy
+            eigenvalues at each k-point
+        eigenvectors : list[NDArray[np.float64]]
+            Array of shape (n_kpoints, n_bands, n_bands) containing the
+            eigenvectors at each k-point
     """
     eigenvalues = []
     eigenvectors = []
 
-    for k in k_path:
+    for k in points:
         H = hamiltonian(k)
         solution = np.linalg.eigh(H)
         eigenvalues.append(solution[0])
         eigenvectors.append(solution[1])
-        # eigenvalues = np.linalg.eigh(H)[0]  # Only eigenvalues
-        # bands.append(eigenvalues)
-
-    # bands = np.array(bands)
     return eigenvalues, eigenvectors

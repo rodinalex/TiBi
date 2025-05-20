@@ -2,6 +2,7 @@ import numpy as np
 from PySide6.QtCore import QObject, Qt, QPoint, Signal
 from PySide6.QtGui import QAction, QUndoStack
 from PySide6.QtWidgets import QDoubleSpinBox, QMenu, QPushButton, QSpinBox
+from typing import Tuple
 import uuid
 
 from commands.hopping_commands import SaveHoppingsCommand
@@ -427,7 +428,7 @@ class HoppingController(QObject):
         the amplitudes are summed. The data is then passed to the
         `SaveHoppingsCommand` to update the unit cell model.
         """
-        new_couplings = {}
+        new_couplings: dict[Tuple[int, int, int], np.complex128] = {}
         # Extract values from each row in the table
         for row in range(
             self.hopping_view.table_panel.hopping_table.rowCount()
@@ -451,11 +452,27 @@ class HoppingController(QObject):
             else:
                 new_couplings[triplet] = amplitude
 
-        # Convert the dictionary to the expected format of the list of tuples
+        # Convert the dictionary to the expected format of the list of tuples.
+        # Remove any entries with non-finite or zero amplitudes
         merged_couplings = [
             ((d1, d2, d3), amplitude)
             for (d1, d2, d3), amplitude in new_couplings.items()
+            if np.isfinite(amplitude.real)
+            and np.isfinite(amplitude.imag)
+            and not np.isclose(amplitude, 0)
         ]
+        # Only update the model if the hoppings have changed
+        if set(merged_couplings) == set(
+            self.unit_cells[self.selection["unit_cell"]].hoppings.get(
+                (self.pair_selection[0][3], self.pair_selection[1][3]), []
+            )
+        ):
+            # No changes detected, just refresh the table in case the user
+            # rearranged the rows without actually changing the data or
+            # added rows with zero amplitude
+            self._refresh_table()
+            return
+
         # Update the data model with the new couplings and emit the signal
         self.undo_stack.push(
             SaveHoppingsCommand(

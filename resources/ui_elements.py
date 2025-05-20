@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QDoubleSpinBox, QFrame, QTreeView
@@ -8,7 +9,12 @@ from src.tibitypes import UnitCell
 
 def divider_line():
     """
-    Create a horizontal line to be used as a divider in the UI."""
+    Create a horizontal line to be used as a divider in the UI.
+
+    Returns
+    -------
+        QFrame
+            A horizontal line with a sunken shadow effect."""
     line = QFrame()
     line.setFrameShape(QFrame.HLine)
     line.setFrameShadow(QFrame.Sunken)
@@ -41,8 +47,10 @@ class EnterKeySpinBox(QDoubleSpinBox):
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Enter, Qt.Key_Return):
-            self._original_value = self.value()
-            self.editingConfirmed.emit()
+            # Emit signal only if the value has changed
+            if not np.isclose(self.value(), self._original_value):
+                self._original_value = self.value()
+                self.editingConfirmed.emit()
         elif event.key() == Qt.Key_Escape:
             self.blockSignals(True)
             self.setValue(self._original_value)
@@ -53,7 +61,29 @@ class EnterKeySpinBox(QDoubleSpinBox):
 
 class SystemTree(QTreeView):
     """
-    Custom tree view for displaying unit cells, sites, and states."""
+    Custom `QTreeViewtree`for displaying `UnitCell`s, `Site`s, and `State`s.
+
+    This tree view is designed to show a hierarchical structure of `UnitCell`s,
+    `Site`s, and `State`s. It allows for easy navigation and selection of these
+    elements. The tree is built using a `QStandardItemModel`, and each item
+    in the tree is represented by a `QStandardItem`. The tree supports
+    single selection mode and can be edited by double-clicking on an item.
+    The tree view emits a signal when the selection changes, providing
+    information about the selected `UnitCell`, `Site`, and `State`.
+
+    Attributes
+    ----------
+        tree_model : QStandardItemModel
+            The model used to populate the tree view.
+        root_node : QStandardItem
+            The root item of the tree model, representing the tree's top level.
+
+    Signals
+    --------
+        tree_selection_changed : Signal
+            Emitted when the selection in the tree changes. The signal carries
+            a dictionary with the selected `UnitCell`, `Site`, and `State` IDs.
+    """
 
     tree_selection_changed = Signal(object)
 

@@ -236,6 +236,8 @@ class DeleteItemCommand(QUndoCommand):
         UUID of the selected `Site` when the command was issued
     state_id : uuid.UUID
         UUID of the selected `State` when the command was issued
+    bandstructure : BandStructure
+        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -282,9 +284,31 @@ class DeleteItemCommand(QUndoCommand):
         elif self.uc_id:
             self.item = copy.deepcopy(self.unit_cells[self.uc_id])
 
+        self.bandstructure = copy.deepcopy(
+            self.unit_cells[self.uc_id].bandstructure
+        )
+
     # Delete the item
     def redo(self):
         if self.state_id:
+            # Get the hoppings involving the states, remove them
+            # from the hopping dictionary and store them to be used
+            # in the undo method
+            self.removed_hoppings = {}
+            kept_hoppings = {}
+            for k, v in self.unit_cells[self.uc_id].hoppings.items():
+                if self.state_id in k:
+                    self.removed_hoppings[k] = v
+                else:
+                    kept_hoppings[k] = v
+            self.unit_cells[self.uc_id].hoppings = kept_hoppings
+            # If some of the hoppings were removed, reset the band structure
+            if self.removed_hoppings:
+                self.unit_cells[self.uc_id].bandstructure.reset_bands()
+            else:
+                self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
+                    self.bandstructure
+                )
             # Delete the selected state from the site
             del (
                 self.unit_cells[self.uc_id]
@@ -293,6 +317,26 @@ class DeleteItemCommand(QUndoCommand):
             )
         # No state selected, therefore remove the site from the unit cell
         elif self.site_id:
+            self.bandstructure = self.unit_cells[self.uc_id].bandstructure
+            self.removed_hoppings = {}
+            kept_hoppings = {}
+            for state in (
+                self.unit_cells[self.uc_id].sites[self.site_id].states.values()
+            ):
+                for k, v in self.unit_cells[self.uc_id].hoppings.items():
+                    if state.id in k:
+                        self.removed_hoppings[k] = v
+                    else:
+                        kept_hoppings[k] = v
+            self.unit_cells[self.uc_id].hoppings = kept_hoppings
+            # If some of the hoppings were removed, reset the band structure
+            if self.removed_hoppings:
+                self.unit_cells[self.uc_id].bandstructure.reset_bands()
+            else:
+                self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
+                    self.bandstructure
+                )
+            # Delete the selected site from the unit cell
             del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
         elif self.uc_id:
@@ -308,10 +352,14 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell = self.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
+            unit_cell.hoppings.update(self.removed_hoppings)
+            unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
 
         elif self.site_id:
             unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
+            unit_cell.hoppings.update(self.removed_hoppings)
+            unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
 
         elif self.uc_id:
             self.unit_cells[self.item.id] = self.item
@@ -472,6 +520,8 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         The old value of the parameter before the change
     new_value : float
         The new value of the parameter after the change
+    bandstructure : BandStructure
+        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -517,6 +567,9 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
         )
+        self.bandstructure = copy.deepcopy(
+            self.unit_cells[self.uc_id].bandstructure
+        )
 
     def redo(self):
         setattr(
@@ -525,6 +578,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.new_value,
         )
         self.spinbox.setValue(self.new_value)
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def undo(self):
@@ -534,6 +588,9 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
+        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
+            self.bandstructure
+        )
         self.signal.emit()
 
 
@@ -567,6 +624,8 @@ class ReduceBasisCommand(QUndoCommand):
         The old basis vectors of the unit cell before reduction
     new_basis : list[BasisVector]
         The new basis vectors of the unit cell after reduction
+    bandstructure : BandStructure
+        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -603,6 +662,9 @@ class ReduceBasisCommand(QUndoCommand):
             uc = self.unit_cells[self.uc_id]
             self.old_basis = [uc.v1, uc.v2, uc.v3]
             self.new_basis = uc.reduced_basis()
+            self.bandstructure = copy.deepcopy(
+                self.unit_cells[self.uc_id].bandstructure
+            )
 
     def redo(self):
         if self.uc_id:
@@ -614,6 +676,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
+            self.unit_cells[self.uc_id].bandstructure.clear()
             self.signal.emit()
 
     def undo(self):
@@ -625,6 +688,9 @@ class ReduceBasisCommand(QUndoCommand):
 
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
+            )
+            self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
+                self.bandstructure
             )
             self.signal.emit()
 
@@ -677,6 +743,8 @@ class ChangeDimensionalityCommand(QUndoCommand):
         The new basis vector 2 of the unit cell after the change
     new_v3 : BasisVector
         The new basis vector 3 of the unit cell after the change
+    bandstructure : BandStructure
+        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -730,6 +798,9 @@ class ChangeDimensionalityCommand(QUndoCommand):
             self.new_v3 = BasisVector(
                 self.old_v3.x, self.old_v3.y, self.old_v3.z, True
             )
+        self.bandstructure = copy.deepcopy(
+            self.unit_cells[self.uc_id].bandstructure
+        )
 
     def redo(self):
         self._set_vector_enables(self.new_dim)
@@ -744,6 +815,8 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.new_dim)
+        self.unit_cells[self.uc_id].bandstructure.clear()
+
         self.signal.emit()
 
     def undo(self):
@@ -760,6 +833,10 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.old_dim)
+        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
+            self.bandstructure
+        )
+
         self.signal.emit()
 
     def _set_vector_enables(self, dim):

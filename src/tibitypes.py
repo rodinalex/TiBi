@@ -9,6 +9,79 @@ import itertools
 
 
 @dataclass
+class BandStructure:
+    """
+    An object containing a system's band structure.
+
+    Attributes
+    ----------
+
+        path : list[NDArray]
+            A list of point coordinates along which the bands are calculated.
+        special_points : list[NDArray]
+            A list of high-symmetry point coordinates used for the path.
+        eigenvalues : list[NDArray]
+            A list of arrays, where each array contains eivenvalues
+            corresponding to each point on the path.
+        eigenvectors : list[NDArray]
+            A list of 2D arrays, where each array contains the eigenvectors
+            corresponding to each point on the path.
+
+    Methods
+    -------
+        clear()
+            Reset the band structure to the initial state.
+        reset_bands()
+            Reset the band structure by clearing the path, eigenvalues, and
+            eigenvectors.
+        add_point(point: NDArray)
+            Add a point to the special points path. Reset all other fields.
+        remove_point()
+            Remove the last point from the special points path. Reset all other
+            fields.
+    """
+
+    path: list[np.ndarray] = field(default_factory=list)
+    special_points: list[np.ndarray] = field(default_factory=list)
+    eigenvalues: list[np.ndarray] = field(default_factory=list)
+    eigenvectors: list[np.ndarray] = field(default_factory=list)
+
+    def clear(self):
+        """Reset the band structure to the initial state."""
+        self.special_points.clear()
+        self.reset_bands()
+
+    def reset_bands(self):
+        """
+        Reset the band structure by clearing the path, eigenvalues, and
+        eigenvectors.
+        """
+        self.path.clear()
+        self.eigenvalues.clear()
+        self.eigenvectors.clear()
+
+    def add_point(self, point: np.ndarray):
+        """
+        Add a point to the special points path. Reset all other fields.
+
+        Parameters
+        ----------
+            point : NDArray
+                The point to be added to the special points path.
+        """
+        self.reset_bands()
+        self.special_points.append(point)
+
+    def remove_point(self):
+        """
+        Remove the last point from the special points path. Reset all other
+        fields.
+        """
+        self.reset_bands()
+        self.special_points.pop(-1)
+
+
+@dataclass
 class BasisVector:
     """
     A basis vector in 3D space for a crystalline unit cell.
@@ -119,9 +192,9 @@ class UnitCell:
             Name of the unit cell
         v1, v2, v3 : BasisVector
             Basis vectors
-        sites : dict[UUID, Site]
+        sites : dict[uuid.UUID, Site]
             Dictionary mapping site UUIDs to `Site` objects
-        hoppings : dict[Tuple[UUID, UUID], \
+        hoppings : dict[Tuple[uuid.UUID, uuid.UUID], \
             list[Tuple[Tuple[int, int, int], np.complex128]]]
             Dictionary of hopping terms between states.
             Keys are pairs of state UUIDs (destination_state_id,
@@ -132,7 +205,9 @@ class UnitCell:
             (0,0,0 means within the same unit cell)
             - amplitude is a complex number representing the hopping strength
             and phase
-        id : UUID
+        bandstructure : BandStructure
+            Band structure object for the `UnitCell`
+        id : uuid.UUID
             Unique identifier for the `UnitCell`
 
     Methods
@@ -167,6 +242,7 @@ class UnitCell:
         Tuple[uuid.UUID, uuid.UUID],
         list[Tuple[Tuple[int, int, int], np.complex128]],
     ] = field(default_factory=dict)
+    bandstructure: BandStructure = field(default_factory=BandStructure)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def volume(self) -> float:
@@ -541,29 +617,3 @@ class UnitCell:
             return H
 
         return hamiltonian
-
-
-@dataclass
-class BandStructure:
-    """
-    An object containing a system's band structure.
-
-    Attributes
-    ----------
-
-        path : list[NDArray]
-            A list of point coordinates along which the bands are calculated.
-        special_points : list[NDArray]
-            A list of high-symmetry point coordinates used for the path.
-        eigenvalues : list[NDArray]
-            A list of arrays, where each array contains eivenvalues
-            corresponding to each point on the path.
-        eigenvectors : list[NDArray]
-            A list of 2D arrays, where each array contains the eigenvectors
-            corresponding to each point on the path.
-    """
-
-    path: list[np.ndarray]
-    special_points: list[np.ndarray] = field(default_factory=list)
-    eigenvalues: list[np.ndarray] = field(default_factory=list)
-    eigenvectors: list[np.ndarray] = field(default_factory=list)

@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject
-from models.data_models import AlwaysNotifyDataModel
 import numpy as np
 
+from src.tibitypes import BandStructure
 from views.plot_view import PlotView
 
 
@@ -13,70 +13,72 @@ class PlotController(QObject):
     It observes the band structure data model and updates the plot view
     whenever the data changes. The plotting logic is contained here,
     keeping the view focused solely on UI elements.
+
+    Attributes
+    ----------
+    plot_view : PlotView
+        2D plot for displaying computed results.
     """
 
     def __init__(
         self,
-        band_structure: AlwaysNotifyDataModel,
-        band_plot_view: PlotView,
+        plot_view: PlotView,
     ):
         """
         Initialize the band structure plot controller.
 
-        Args:
-            band_structure: Data model containing band structure calculation results
-            band_plot_view: View that displays the band structure plot
+        Parameters
+        ----------
+        plot_view : PlotView
+            2D plot for displaying computed results.
         """
         super().__init__()
-        self.band_structure = band_structure
-        self.band_plot_view = band_plot_view
+        self.plot_view = plot_view
 
-        # Connect to model updates
-        self.band_structure.signals.updated.connect(self._update_plot)
-
-    def _update_plot(self):
+    def plot_band_structure(self, bandstructure: BandStructure):
         """
-        Update the band structure plot with current data.
+        Plot the band structure.
 
-        This method is called whenever the band structure data model changes.
-        It retrieves the current k-path and band data, transforms them into
-        a format suitable for plotting, and updates the matplotlib figure.
+        Parameters
+        ----------
+        bandstructure : BandStructure
+            The band structure data to be plotted.
         """
-        k_path = self.band_structure.get("k_path")
-        bands = self.band_structure.get("bands")
-        special_points = self.band_structure.get("special_points")
 
-        self.band_plot_view.ax.clear()
+        self.plot_view.ax.clear()
         # Set labels and grid
-        self.band_plot_view.ax.set_xlabel("k-vector")
-        self.band_plot_view.ax.set_ylabel("Energy")
-        self.band_plot_view.ax.set_xticks([])  # <-- hide x-axis ticks
-        self.band_plot_view.ax.grid(True, axis="y")  # <-- grid only on y-axis
+        self.plot_view.ax.set_xlabel("k-vector")
+        self.plot_view.ax.set_ylabel("Energy")
+        self.plot_view.ax.set_xticks([])  # hide x-axis ticks
+        self.plot_view.ax.grid(True, axis="y")  # grid only on y-axis
 
-        if k_path is not None and bands is not None:
+        path = np.array(bandstructure.path)
+        bands = np.array(bandstructure.eigenvalues)
+        special_points = np.array(bandstructure.special_points)
+        if len(path) > 0 and len(bands) > 0:
             # Get the positions along the path reflecting the point spacing
-            step = np.linalg.norm(np.diff(k_path, axis=0), axis=1)
+            step = np.linalg.norm(np.diff(path, axis=0), axis=1)
             pos = np.hstack((0, np.cumsum(step)))
 
             pos = pos / pos[-1]  # Normalize the path length to 1
 
             # Repeat the same for special points
-            # step_special_points = np.linalg.norm(
-            #     np.diff(special_points, axis=0), axis=1
-            # )
-            # pos_special_points = np.hstack((0, np.cumsum(step_special_points)))
-            # pos_special_points = pos_special_points / pos_special_points[-1]
+            step_special_points = np.linalg.norm(
+                np.diff(special_points, axis=0), axis=1
+            )
+            pos_special_points = np.hstack((0, np.cumsum(step_special_points)))
+            pos_special_points = pos_special_points / pos_special_points[-1]
             # Plot the bands
             for band_idx in range(bands.shape[1]):
-                self.band_plot_view.ax.plot(pos, bands[:, band_idx], "b-")
+                self.plot_view.ax.plot(pos, bands[:, band_idx], "b-")
 
             # Plot vertical lines at special points
-            # for x in pos_special_points:
-            #     self.band_plot_view.ax.axvline(
-            #         x=x, color="gray", linestyle="--", linewidth=0.8
-            #     )
+            for x in pos_special_points:
+                self.plot_view.ax.axvline(
+                    x=x, color="gray", linestyle="--", linewidth=0.8
+                )
         # Draw the canvas
-        self.band_plot_view.canvas.draw()
+        self.plot_view.canvas.draw()
 
 
 # Future enhancement: Add special point labels and vertical lines
@@ -96,4 +98,5 @@ class PlotController(QObject):
 # # Set x-ticks at special points with labels
 # self.ax.set_xticks(special_distances)
 # if len(self.special_point_labels) >= len(special_distances):
-#     self.ax.set_xticklabels(self.special_point_labels[: len(special_distances)])
+#     self.ax.set_xticklabels(self.special_point_labels[:
+#  len(special_distances)])
