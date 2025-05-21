@@ -51,7 +51,6 @@ class PlotController(QObject):
         self.plot_view.ax.set_ylabel("Energy")
         self.plot_view.ax.set_xticks([])  # hide x-axis ticks
         self.plot_view.ax.grid(True, axis="y")  # grid only on y-axis
-
         path = np.array(bandstructure.path)
         bands = np.array(bandstructure.eigenvalues)
         special_points = np.array(bandstructure.special_points)

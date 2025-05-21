@@ -33,7 +33,7 @@
 ## Bugs
 
 - Make sure that we cannot add the same BZ point multiple times
-
+- When calculating the band structure, the site pair remains selected, but the bonds go away
 
 🔧 Core Functionalities You Already Have (and are spot-on):
 Band structure with high-symmetry path + projections (like orbital or atomic character).

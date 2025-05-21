@@ -33,33 +33,33 @@ class UnitCellController(QObject):
 
     Attributes
     ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            `DataModel` tracking the current selection
-        unit_cell_view : UnitCellView
-            The main view component
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        v1, v2, v3 : list[EnterKeySpinBox]
-            Lists of spinboxes for basis vector components
-        R, c1, c2, c3 : EnterKeySpinBox
-            Spinboxes for site properties
-        tree_view_panel :TreeViewPanel
-            The tree view panel component
-        tree_view : SystemTree
-            The tree view component
-        tree_model : QStandardItemModel
-            The model backing the tree view
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : DataModel
+        `DataModel` tracking the current selection
+    unit_cell_view : UnitCellView
+        The main view component
+    undo_stack : QUndoStack
+        `QUndoStack` to hold "undo-able" commands
+    v1, v2, v3 : list[EnterKeySpinBox]
+        Lists of spinboxes for basis vector components
+    R, c1, c2, c3 : EnterKeySpinBox
+        Spinboxes for site properties
+    tree_view_panel :TreeViewPanel
+        The tree view panel component
+    tree_view : SystemTree
+        The tree view component
+    tree_model : QStandardItemModel
+        The model backing the tree view
 
     Signals
     -------
-        plot_update_requested
-            Signal requesting a plot update
-        item_changed
-            Signal emitted when a tree item is changed.
-            Necessary to make sure that the hopping matrix
-            has the correct item names
+    plot_update_requested
+        Signal requesting a plot update
+    item_changed
+        Signal emitted when a tree item is changed.
+        Necessary to make sure that the hopping matrix
+        has the correct item names
     """
 
     plot_update_requested = (

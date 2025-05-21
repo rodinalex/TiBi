@@ -220,7 +220,6 @@ class MainUIController(QObject):
 
                 self.models["unit_cells"].update(new_unit_cells)
                 self.project_refresh_requested.emit()
-                print(self.models["unit_cells"])
             except Exception as e:
                 QMessageBox.critical(
                     self.main_window,
@@ -246,6 +245,7 @@ class MainUIController(QObject):
         else:
             file_path = None
 
+        # If there is no path, open a dialog for the user to pick it
         if not file_path:
             # Open a save file dialog
             file_path, _ = QFileDialog.getSaveFileName(

@@ -164,8 +164,8 @@ class ActionManager(QObject):
 
         Parameters
         ----------
-            handlers
-                Dictionary mapping action names to handler functions
+        handlers
+            Dictionary mapping action names to handler functions
         """
         # Connect file actions
         for action_name, action in self.file_actions.items():

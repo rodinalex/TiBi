@@ -15,30 +15,29 @@ class BandStructure:
 
     Attributes
     ----------
-
-        path : list[NDArray]
-            A list of point coordinates along which the bands are calculated.
-        special_points : list[NDArray]
-            A list of high-symmetry point coordinates used for the path.
-        eigenvalues : list[NDArray]
-            A list of arrays, where each array contains eivenvalues
-            corresponding to each point on the path.
-        eigenvectors : list[NDArray]
-            A list of 2D arrays, where each array contains the eigenvectors
-            corresponding to each point on the path.
+    path : list[NDArray]
+        A list of point coordinates along which the bands are calculated.
+    special_points : list[NDArray]
+        A list of high-symmetry point coordinates used for the path.
+    eigenvalues : list[NDArray]
+        A list of arrays, where each array contains eivenvalues
+        corresponding to each point on the path.
+    eigenvectors : list[NDArray]
+        A list of 2D arrays, where each array contains the eigenvectors
+        corresponding to each point on the path.
 
     Methods
     -------
-        clear()
-            Reset the band structure to the initial state.
-        reset_bands()
-            Reset the band structure by clearing the path, eigenvalues, and
-            eigenvectors.
-        add_point(point: NDArray)
-            Add a point to the special points path. Reset all other fields.
-        remove_point()
-            Remove the last point from the special points path. Reset all other
-            fields.
+    clear()
+        Reset the band structure to the initial state.
+    reset_bands()
+        Reset the band structure by clearing the path, eigenvalues, and
+        eigenvectors.
+    add_point(point: NDArray)
+        Add a point to the special points path. Reset all other fields.
+    remove_point()
+        Remove the last point from the special points path. Reset all other
+        fields.
     """
 
     path: list[np.ndarray] = field(default_factory=list)
@@ -66,8 +65,8 @@ class BandStructure:
 
         Parameters
         ----------
-            point : NDArray
-                The point to be added to the special points path.
+        point : NDArray
+            The point to be added to the special points path.
         """
         self.reset_bands()
         self.special_points.append(point)
@@ -115,8 +114,8 @@ class BasisVector:
 
         Returns
         -------
-            NDArray
-                3D vector as a NumPy array [x, y, z]
+        NDArray
+            3D vector as a NumPy array [x, y, z]
         """
         return np.array([self.x, self.y, self.z])
 
@@ -131,10 +130,10 @@ class State:
 
     Attributes
     ----------
-        name : str
-            Name of the `State` (e.g., "s", "px", "py", etc.)
-        id : UUID
-            Unique identifier for the `State`
+    name : str
+        Name of the `State` (e.g., "s", "px", "py", etc.)
+    id : UUID
+        Unique identifier for the `State`
     """
 
     name: str
@@ -153,19 +152,18 @@ class Site:
 
     Attributes
     ----------
-
-        name : str
-            Name of the `Site` (e.g., atom name like "C", "Fe", etc.)
-        c1, c2, c3 : float
-            Fractional coordinates along the `BasisVector`s, ranging (0-1)
-        R : float
-            `Site` radius used for plotting
-        color : Tuple[float, float, float, float]
-            `Site` color used for plotting
-        states : dict[UUID, State]
-            Dictionary mapping state UUIDs to `State` objects
-        id : UUID
-            Unique identifier for the `Site`
+    name : str
+        Name of the `Site` (e.g., atom name like "C", "Fe", etc.)
+    c1, c2, c3 : float
+        Fractional coordinates along the `BasisVector`s, ranging (0-1)
+    R : float
+        `Site` radius used for plotting
+    color : Tuple[float, float, float, float]
+        `Site` color used for plotting
+    states : dict[uuid.UUID, State]
+        Dictionary mapping state UUIDs to `State` objects
+    id : uuid.UUID
+        Unique identifier for the `Site`
     """
 
     name: str
@@ -187,50 +185,48 @@ class UnitCell:
 
     Attributes
     ----------
-
-        name : str
-            Name of the unit cell
-        v1, v2, v3 : BasisVector
-            Basis vectors
-        sites : dict[uuid.UUID, Site]
-            Dictionary mapping site UUIDs to `Site` objects
-        hoppings : dict[Tuple[uuid.UUID, uuid.UUID], \
-            list[Tuple[Tuple[int, int, int], np.complex128]]]
-            Dictionary of hopping terms between states.
-            Keys are pairs of state UUIDs (destination_state_id,
-            source_state_id).
-            Values are lists of (displacement, amplitude) pairs where:
-            - displacement is a tuple of three integers (n1,n2,n3) indicating
-            which periodic image of the unit cell is involved
-            (0,0,0 means within the same unit cell)
-            - amplitude is a complex number representing the hopping strength
-            and phase
-        bandstructure : BandStructure
-            Band structure object for the `UnitCell`
-        id : uuid.UUID
-            Unique identifier for the `UnitCell`
+    name : str
+        Name of the unit cell
+    v1, v2, v3 : BasisVector
+        Basis vectors
+    sites : dict[uuid.UUID, Site]
+        Dictionary mapping site UUIDs to `Site` objects
+    hoppings : dict[Tuple[uuid.UUID, uuid.UUID], \
+        list[Tuple[Tuple[int, int, int], np.complex128]]]
+        Dictionary of hopping terms between states.
+        Keys are pairs of state UUIDs (destination_state_id,
+        source_state_id).
+        Values are lists of (displacement, amplitude) pairs where:
+        - displacement is a tuple of three integers (n1,n2,n3) indicating
+        which periodic image of the unit cell is involved
+        (0,0,0 means within the same unit cell)
+        - amplitude is a complex number representing the hopping strength
+        and phase
+    bandstructure : BandStructure
+        Band structure object for the `UnitCell`
+    id : uuid.UUID
+        Unique identifier for the `UnitCell`
 
     Methods
     -------
-
-        volume()
-            Compute the volume of the `UnitCell` using the scalar triple
-            product.
-        is_hermitian()
-            Check whether the hoppings are Hermitian.
-        reciprocal_vectors()
-            Compute the reciprocal lattice vectors for the periodic directions.
-        reduced_basis()
-            Return a reduced set of periodic `BasisVector`s using LLL
-            algorithm.
-        get_states()
-            Extract all `State`s from a `UnitCell` along with their identifying
-            information.
-        get_BZ()
-            Compute the Brillouin zone vertices and faces.
-        get_hamiltonian_function()
-            Generate a function that computes the Hamiltonian matrix
-            for a given k-point.
+    volume()
+        Compute the volume of the `UnitCell` using the scalar triple
+        product.
+    is_hermitian()
+        Check whether the hoppings are Hermitian.
+    reciprocal_vectors()
+        Compute the reciprocal lattice vectors for the periodic directions.
+    reduced_basis()
+        Return a reduced set of periodic `BasisVector`s using LLL
+        algorithm.
+    get_states()
+        Extract all `State`s from a `UnitCell` along with their identifying
+        information.
+    get_BZ()
+        Compute the Brillouin zone vertices and faces.
+    get_hamiltonian_function()
+        Generate a function that computes the Hamiltonian matrix
+        for a given k-point.
     """
 
     name: str
@@ -251,9 +247,8 @@ class UnitCell:
 
         Returns
         -------
-
-            float
-                Volume of the unit cell in arbitrary units
+        float
+            Volume of the unit cell in arbitrary units
         """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
@@ -269,8 +264,8 @@ class UnitCell:
 
         Returns
         -------
-            bool
-                `True` if Hermitian; `False` if not.
+        bool
+            `True` if Hermitian; `False` if not.
         """
         hermitian = True
 
@@ -301,9 +296,9 @@ class UnitCell:
 
         Returns
         -------
-            list[NDArray]
-                List of 3D reciprocal vectors (0 to 3 items depending on
-                periodicity)
+        list[NDArray[np.float64]]
+            List of 3D reciprocal vectors (0 to 3 items depending on
+            periodicity)
         """
         basis_vectors = [
             v for v in [self.v1, self.v2, self.v3] if v.is_periodic
@@ -359,15 +354,14 @@ class UnitCell:
 
         Parameters
         ----------
-
-            scale : float = 1e6
-                A float to scale the vectors for integer reduction.
-                Used because the LLL algorithm works with integer matrices.
+        scale : float = 1e6
+            A float to scale the vectors for integer reduction.
+            Used because the LLL algorithm works with integer matrices.
 
         Returns
         -------
-            list[BasisVector]
-                A list of BasisVector objects representing the reduced basis
+        list[BasisVector]
+            A list of BasisVector objects representing the reduced basis
         """
         vs = [self.v1, self.v2, self.v3]
         # Determine which vectors are periodic
@@ -414,10 +408,10 @@ class UnitCell:
 
         Returns
         -------
-            Tuple[list[State], list[Tuple[str, UUID, str, UUID]]]
-                A tuple containing a list of `State` objects and a list of
-                tuples (site_name, site_id, state_name, state_id)
-                providing context for each state (which site it belongs to).
+        Tuple[list[State], list[Tuple[str, UUID, str, UUID]]]
+            A tuple containing a list of `State` objects and a list of
+            tuples (site_name, site_id, state_name, state_id)
+            providing context for each state (which site it belongs to).
         """
         states = []
         state_info = []
@@ -442,10 +436,10 @@ class UnitCell:
 
         Returns
         -------
-            Tuple[NDArray[NDArray], NDArray[NDArray[NDArray]]]
-                The first element of the tuple gives the BZ vertex coordinates.
-                The second element gives a list of faces, where each face is
-                defined by vertex points. In 2D, the "faces" are edges.
+        Tuple[NDArray[NDArray], NDArray[NDArray[NDArray]]]
+            The first element of the tuple gives the BZ vertex coordinates.
+            The second element gives a list of faces, where each face is
+            defined by vertex points. In 2D, the "faces" are edges.
         """
         n_neighbors = (
             1  # Number of neighboring reciprocal lattice points to consider
@@ -535,9 +529,9 @@ class UnitCell:
 
         Returns
         -------
-            function
-                A function that takes k-points (numpy array) and returns a
-                complex Hamiltonian matrix.
+        function
+            A function that takes k-points (numpy array) and returns a
+            complex Hamiltonian matrix.
         """
         # Get the list of all states in the unit cell for
         # determining the Hamiltonian size
@@ -574,15 +568,15 @@ class UnitCell:
 
             Parameters
             ----------
-                k : NDArray[float]
-                    k-point vector in the basis of reciprocal lattice vectors
-                    If the system has n periodic directions, k should be an
-                    n-dimensional vector
+            k : NDArray[float]
+                k-point vector in the basis of reciprocal lattice vectors
+                If the system has n periodic directions, k should be an
+                n-dimensional vector
 
             Returns
             -------
-                NDArray
-                    Complex Hamiltonian matrix of size (n_states, n_states)
+            NDArray
+                Complex Hamiltonian matrix of size (n_states, n_states)
             """
             # Validate the k-point dimension matches the number of
             # periodic directions

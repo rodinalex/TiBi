@@ -1,8 +1,9 @@
 import json
-import uuid
 import numpy as np
-from typing import Dict, Any
-from src.tibitypes import UnitCell, Site, State, BasisVector
+from typing import Any
+import uuid
+
+from src.tibitypes import BandStructure, BasisVector, Site, State, UnitCell
 
 
 class UnitCellEncoder(json.JSONEncoder):
@@ -33,6 +34,16 @@ class UnitCellEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
 
+        # Handle BandStructure objects
+        if isinstance(obj, BandStructure):
+            return {
+                "type": "BandStructure",
+                "path": [x.tolist() for x in obj.path],
+                "special_points": [x.tolist() for x in obj.special_points],
+                "eigenvalues": [x.tolist() for x in obj.eigenvalues],
+                "eigenvectors": [x.tolist() for x in obj.eigenvectors],
+            }
+
         # Handle BasisVector objects
         if isinstance(obj, BasisVector):
             return {
@@ -57,6 +68,8 @@ class UnitCellEncoder(json.JSONEncoder):
                 "c1": obj.c1,
                 "c2": obj.c2,
                 "c3": obj.c3,
+                "R": obj.R,
+                "color": obj.color,
                 "states": states_dict,
                 "id": obj.id,
             }
@@ -68,14 +81,8 @@ class UnitCellEncoder(json.JSONEncoder):
 
             # Convert hoppings dictionary with tuple keys to string keys
             hoppings_dict = {
-                f"({k[0]}, {k[1]})": v for k, v in obj.hoppings.items()
+                f"{str(k[0])},{str(k[1])}": v for k, v in obj.hoppings.items()
             }
-
-            # Convert site_colors dictionary to have string keys
-            site_colors_dict = {str(k): v for k, v in obj.site_colors.items()}
-
-            # Convert site_sizes dictionary to have string keys
-            site_sizes_dict = {str(k): v for k, v in obj.site_sizes.items()}
 
             return {
                 "type": "UnitCell",
@@ -85,8 +92,7 @@ class UnitCellEncoder(json.JSONEncoder):
                 "v3": obj.v3,
                 "sites": sites_dict,
                 "hoppings": hoppings_dict,
-                "site_colors": site_colors_dict,
-                "site_sizes": site_sizes_dict,
+                "bandstructure": obj.bandstructure,
                 "id": obj.id,
             }
 
@@ -94,7 +100,7 @@ class UnitCellEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
+def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
     """
     Decode JSON objects into their appropriate custom types.
 
@@ -111,8 +117,34 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
     if "type" in json_obj:
         obj_type = json_obj["type"]
 
+        # Handle BandStructure
+        if obj_type == "BandStructure":
+            return BandStructure(
+                path=[np.array(x) for x in json_obj["path"]],
+                special_points=[
+                    np.array(x) for x in json_obj["special_points"]
+                ],
+                eigenvalues=[np.array(x) for x in json_obj["eigenvalues"]],
+                eigenvectors=[
+                    np.array(
+                        [
+                            [
+                                complex(real=real, imag=imag)
+                                for real, imag in row
+                                # Destructure each length-2 list
+                            ]
+                            for row in mat
+                        ],
+                        dtype=np.complex128,
+                    )
+                    for mat in json_obj[
+                        "eigenvectors"
+                    ]  # Each mat corresponds to a momentum point
+                ],
+            )
+
         # Handle BasisVector
-        if obj_type == "BasisVector":
+        elif obj_type == "BasisVector":
             return BasisVector(
                 x=json_obj["x"],
                 y=json_obj["y"],
@@ -131,6 +163,8 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
                 c1=json_obj["c1"],
                 c2=json_obj["c2"],
                 c3=json_obj["c3"],
+                R=json_obj["R"],
+                color=tuple(json_obj["color"]),
                 id=uuid.UUID(json_obj["id"]),
             )
             # Convert state dict with string keys back to UUID keys
@@ -145,6 +179,7 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
                 v1=json_obj["v1"],
                 v2=json_obj["v2"],
                 v3=json_obj["v3"],
+                bandstructure=json_obj["bandstructure"],
                 id=uuid.UUID(json_obj["id"]),
             )
 
@@ -159,30 +194,23 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
                 "hoppings"
             ].items():
                 # Parse the string key '(uuid1, uuid2)' back to tuple of UUIDs
-                key_parts = hopping_key_str.strip("()").split(", ")
-                key = (uuid.UUID(key_parts[0]), uuid.UUID(key_parts[1]))
+                k1_str, k2_str = hopping_key_str.split(",")
+                key = (uuid.UUID(k1_str), uuid.UUID(k2_str))
 
                 # Convert the hopping values: [(displacement, amplitude), ...]
                 converted_values = []
                 for displacement_list, amplitude_list in hopping_values:
-                    displacement = (
-                        displacement_list[0],
-                        displacement_list[1],
-                        displacement_list[2],
-                    )
+                    # displacement = (
+                    #     displacement_list[0],
+                    #     displacement_list[1],
+                    #     displacement_list[2],
+                    # )
+                    displacement = tuple(displacement_list)
                     # Convert [real, imag] list back to complex
                     amplitude = complex(amplitude_list[0], amplitude_list[1])
                     converted_values.append((displacement, amplitude))
 
                 unit_cell.hoppings[key] = converted_values
-
-            # Convert site_colors dict with string keys back to UUID keys
-            for site_id_str, color in json_obj.get("site_colors", {}).items():
-                unit_cell.site_colors[uuid.UUID(site_id_str)] = color
-
-            # Convert site_sizes dict with string keys back to UUID keys
-            for site_id_str, size in json_obj.get("site_sizes", {}).items():
-                unit_cell.site_sizes[uuid.UUID(site_id_str)] = size
 
             return unit_cell
 
@@ -190,14 +218,18 @@ def decode_unit_cell_json(json_obj: Dict[str, Any]) -> Any:
     return json_obj
 
 
-def serialize_unit_cells(unit_cells: Dict[uuid.UUID, UnitCell]) -> str:
+def serialize_unit_cells(unit_cells: dict[uuid.UUID, UnitCell]) -> str:
     """
     Serialize a dictionary of UnitCell objects to a JSON string.
 
-    Args:
-        unit_cells: Dictionary mapping UUIDs to UnitCell objects
+    Parameters
+    ----------
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
 
-    Returns:
+    Returns
+    -------
+    str
         JSON string representation of the unit_cells dictionary
     """
     # Convert dictionary with UUID keys to string keys for JSON serialization
@@ -205,14 +237,17 @@ def serialize_unit_cells(unit_cells: Dict[uuid.UUID, UnitCell]) -> str:
     return json.dumps(serializable_dict, cls=UnitCellEncoder, indent=2)
 
 
-def deserialize_unit_cells(json_str: str) -> Dict[uuid.UUID, UnitCell]:
+def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     """
     Deserialize a JSON string back into a dictionary of UnitCell objects.
 
-    Args:
-        json_str: JSON string representation of unit_cells dictionary
+    Parameters
+    json_str : str
+        JSON string representation of unit_cells dictionary
 
-    Returns:
+    Returns
+    -------
+    dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
     """
     # Parse the JSON string with custom object hook
