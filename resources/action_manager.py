@@ -15,6 +15,15 @@ class ActionManager(QObject):
 
     Attributes
     ----------
+    undo_stack : QUndoStack
+        Application-wide undo stack
+    file_actions : dict[str, QAction]
+        Actions pertinent to new project reset, saving, and loading
+    undo_redo_actions : dict[str, QAction]
+        Undo and Redo actions
+    unit_cell_actions : dict[str, QAction]
+        Actions to control the unit cell visualization
+        (toggling the unit cell wireframe on/off and )
     """
 
     def __init__(self, undo_stack: QUndoStack, parent=None):
@@ -22,18 +31,21 @@ class ActionManager(QObject):
         Initialize the action manager with groups of actions.
 
 
-        Args:
-            parent: Parent QObject (typically the main window or
-            app controller)
+        Parameters
+        ----------
+        undo_stack : QUndoStack
+            Application-wide undo stack
+        parent  : QObject
+            Parent QObject; in this case, its MainUIController
         """
         super().__init__(parent)
         self.undo_stack = undo_stack
         # Initialize action dictionaries for different categories
         self.file_actions: dict[str, QAction] = {}
         self.undo_redo_actions: dict[str, QAction] = {}
-        self.view_actions: dict[str, QAction] = {}
-        self.computation_actions: dict[str, QAction] = {}
-        self.help_actions: dict[str, QAction] = {}
+        # self.view_actions: dict[str, QAction] = {}
+        # self.computation_actions: dict[str, QAction] = {}
+        # self.help_actions: dict[str, QAction] = {}
         self.unit_cell_actions: dict[str, QAction] = {}
 
         # Create all actions
@@ -86,6 +98,7 @@ class ActionManager(QObject):
         )
 
     def _create_undo_redo_actions(self):
+        """Create the "forward/back" arrow undo/redo actions."""
         self.undo_redo_actions["undo"] = QAction(
             QIcon(os.path.join(basedir, "icons/undo.png")), "Undo", self
         )
@@ -96,11 +109,12 @@ class ActionManager(QObject):
         )
         self.undo_redo_actions["redo"].setStatusTip("Redo")
 
-        # Disable/enable based on stack state
+        # Disable/enable based on stack state.
+        # The actions become disabled if there is nothing to undo/redo
         self.undo_redo_actions["undo"].setEnabled(self.undo_stack.canUndo())
         self.undo_redo_actions["redo"].setEnabled(self.undo_stack.canRedo())
 
-        # Keep them updated as the stack changes
+        # Keep the action status updated as the user performs operations
         self.undo_stack.canUndoChanged.connect(
             self.undo_redo_actions["undo"].setEnabled
         )
@@ -108,24 +122,28 @@ class ActionManager(QObject):
             self.undo_redo_actions["redo"].setEnabled
         )
 
-    #     self.undo_stack.undoTextChanged.connect(self.update_undo_tooltip)
-    #     self.undo_stack.redoTextChanged.connect(self.update_redo_tooltip)
+        # When an undo/redo item is pushed to the stack, we track the
+        # text of the associated item
+        # (provided inside the command constructors)
+        # The new text is then used to construct the status bar tip
+        self.undo_stack.undoTextChanged.connect(self._update_undo_tooltip)
+        self.undo_stack.redoTextChanged.connect(self._update_redo_tooltip)
 
-    # def update_undo_tooltip(self):
-    #     if self.undo_stack.canUndo():
-    #         self.undo_redo_actions["undo"].setStatusTip(
-    #             f"Undo {self.undo_stack.undoText()}"
-    #         )
-    #     else:
-    #         self.undo_redo_actions["undo"].setStatusTip("Nothing to undo")
+    def _update_undo_tooltip(self):
+        if self.undo_stack.canUndo():
+            self.undo_redo_actions["undo"].setStatusTip(
+                f"Undo {self.undo_stack.undoText()}"
+            )
+        else:
+            self.undo_redo_actions["undo"].setStatusTip("Nothing to undo")
 
-    # def update_redo_tooltip(self):
-    #     if self.undo_stack.canRedo():
-    #         self.undo_redo_actions["redo"].setStatusTip(
-    #             f"Redo {self.undo_stack.redoText()}"
-    #         )
-    #     else:
-    #         self.undo_redo_actions["redo"].setStatusTip("Nothing to redo")
+    def _update_redo_tooltip(self):
+        if self.undo_stack.canRedo():
+            self.undo_redo_actions["redo"].setStatusTip(
+                f"Redo {self.undo_stack.redoText()}"
+            )
+        else:
+            self.undo_redo_actions["redo"].setStatusTip("Nothing to redo")
 
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
@@ -144,8 +162,10 @@ class ActionManager(QObject):
         """
         Connect actions to their handlers.
 
-        Args:
-            handlers: Dictionary mapping action names to handler functions
+        Parameters
+        ----------
+            handlers
+                Dictionary mapping action names to handler functions
         """
         # Connect file actions
         for action_name, action in self.file_actions.items():
