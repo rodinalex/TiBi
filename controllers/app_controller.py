@@ -8,6 +8,7 @@ from controllers.main_ui_controller import MainUIController
 from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
+from resources.constants import selection_init
 from src.tibitypes import UnitCell
 
 
@@ -212,44 +213,15 @@ class AppController(QObject):
 
     def _handle_project_refresh_requested(self):
         """
-        Handle a project refresh request. The unit cell dictionary and
+        Handle a project refresh request.
+
+        The unit cell dictionary and
         the project path have already been updated.
-        Here, the models and the views are refreshed.
+        Here, only the selection and views are refreshed.
         """
         # Current selection state (tracks which items are selected in the UI)
-        self.selection.update({"unit_cell": None, "site": None, "state": None})
-
-        # Form data for the currently selected unit cell
-        self.models["unit_cell_data"].update(
-            {
-                "unit_cell_name": "",
-                "v1x": 1.0,
-                "v1y": 0.0,
-                "v1z": 0.0,
-                "v2x": 0.0,
-                "v2y": 1.0,
-                "v2z": 0.0,
-                "v3x": 0.0,
-                "v3y": 0.0,
-                "v3z": 1.0,
-                "v1periodic": False,
-                "v2periodic": False,
-                "v3periodic": False,
-                "site_name": "",
-                "c1": 0.0,
-                "c2": 0.0,
-                "c3": 0.0,
-                "state_name": "",
-            }
-        )
-
-        # Band structure calculation results
-        # Uses AlwaysNotifyDataModel to ensure UI updates on every change
-        self.models["active_band_structure"].update(
-            {"k_path": None, "bands": None, "special_points": None}
-        )
-
-        self.uc_controller.tree_view.refresh_tree(self.models["unit_cells"])
+        self.selection.update(selection_init())
+        self.uc_controller.tree_view.refresh_tree(self.unit_cells)
         self._handle_plot_update_requested()
 
     def _handle_selection_requested(self, uc_id, site_id, state_id):

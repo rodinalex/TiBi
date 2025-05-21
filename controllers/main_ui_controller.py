@@ -9,6 +9,7 @@ from resources.action_manager import ActionManager
 from src.serialization import serialize_unit_cells, deserialize_unit_cells
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
+from views.main_window import MainWindow
 from views.status_bar_view import StatusBarView
 
 
@@ -22,9 +23,23 @@ class MainUIController(QObject):
 
     Attributes
     ----------
+    models : dict
+        A dictionary of global models
+    main_window : MainWindow
+        Subclass of QMainWindow containing the application's main view
+    menu_bar_view : MenuBarView
+        Standard menu bar
+    toolbar_view : MainToolbarView
+        Toolbar at the top of the application window
+    status_bar_view : StatusBarView
+        Status bar at the bottom of the application window
+    undo_stack : QUndoStack
+        Stack for 'undo-able' actions
 
     Signals
     -------
+    wireframe_toggled
+        Toggle the unit cell wireframe on/off
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
@@ -35,7 +50,7 @@ class MainUIController(QObject):
     def __init__(
         self,
         models,
-        main_window,
+        main_window: MainWindow,
         menu_bar_view: MenuBarView,
         toolbar_view: MainToolbarView,
         status_bar_view: StatusBarView,
@@ -44,13 +59,20 @@ class MainUIController(QObject):
         """
         Initialize the main UI controller.
 
-        Args:
-            models: Dictionary of data models used in the application
-            main_window: MainWindow instance
-            menu_bar_view: MenuBarView instance
-            toolbar_view: MainToolbarView instance
-            status_bar_view: StatusBarView instance
-            undo_stack: QUndoStack instance
+        Parameters
+        ----------
+        models : dict
+            A dictionary of global models
+        main_window : MainWindow
+            Subclass of QMainWindow containing the application's main view
+        menu_bar_view : MenuBarView
+            Standard menu bar
+        toolbar_view : MainToolbarView
+            Toolbar at the top of the application window
+        status_bar_view : StatusBarView
+            Status bar at the bottom of the application window
+        undo_stack : QUndoStack
+            Stack for 'undo-able' actions
         """
         super().__init__()
         self.models = models
@@ -119,8 +141,9 @@ class MainUIController(QObject):
         )
 
         if reply == QMessageBox.Yes:
-            self.models["unit_cells"].clear()
             self.models["project_path"] = None
+            self.models["unit_cells"].clear()
+            self.undo_stack.clear()
             self.project_refresh_requested.emit()
 
     @Slot()
