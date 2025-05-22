@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -47,7 +47,14 @@ class MainWindow(QMainWindow):
         2D plot view
     computation : ComputationView
         Multi-tab view used to set up calculations
+
+    Signals
+    -------
+    window_closed
+        Signals the main app to run the cleanup procedure
     """
+
+    window_closed = Signal()
 
     def __init__(
         self,
@@ -138,6 +145,11 @@ class MainWindow(QMainWindow):
 
         # Set as central widget
         self.setCentralWidget(main_view)
+
+    def closeEvent(self, event):
+        """Override the parent class closeEvent to emit a signal on closing."""
+        self.window_closed.emit()
+        super().closeEvent(event)
 
     def frame_widget(self, widget: QWidget) -> QFrame:
         """

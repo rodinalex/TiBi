@@ -209,6 +209,9 @@ class TiBiApplication:
         # Set initial status message
         self.main_ui_controller.update_status("Application started")
 
+        # Connect the shutdown signal from the main window
+        self.main_window.window_closed.connect(self._cleanup)
+
     def run(self):
         """
         Run the application.
@@ -222,6 +225,14 @@ class TiBiApplication:
         """
         self.main_window.show()
         return self.app.exec()
+
+    def _cleanup(self):
+        """
+        Tasks performed when the app is shut down.
+
+        - Disconnect the undo/redo stack signals
+        """
+        self.main_ui_controller.action_manager.disconnect_undo_redo()
 
 
 def main():

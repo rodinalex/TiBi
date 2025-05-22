@@ -145,6 +145,21 @@ class ActionManager(QObject):
         else:
             self.undo_redo_actions["redo"].setStatusTip("Nothing to redo")
 
+    def disconnect_undo_redo(self):
+        """Disconnect the signals during the shutdown.
+
+        This step prevents the objects deleted during the shutdown from
+        being accessed
+        """
+        self.undo_stack.canUndoChanged.disconnect(
+            self.undo_redo_actions["undo"].setEnabled
+        )
+        self.undo_stack.canRedoChanged.disconnect(
+            self.undo_redo_actions["redo"].setEnabled
+        )
+        self.undo_stack.undoTextChanged.disconnect(self._update_undo_tooltip)
+        self.undo_stack.redoTextChanged.disconnect(self._update_redo_tooltip)
+
     def _create_unit_cell_actions(self):
         """Create actions for unit cell visualization."""
         # Toggle wireframe action
