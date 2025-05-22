@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 import uuid
 
+from models.data_models import DataModel
 from src.band_structure import diagonalize_hamitonian, interpolate_k_path
 from src.tibitypes import UnitCell
 from views.computation_view import ComputationView
@@ -45,7 +46,9 @@ class ComputationController(QObject):
         self.computation_view = computation_view
 
         self.unit_cells: dict[uuid.UUID, UnitCell] = models["unit_cells"]
+        self.selection: DataModel = models["selection"]
         # Connect the signals
+        self.selection.signals.updated.connect(self._handle_selection_changed)
         self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
             self._compute_bands
         )
@@ -89,3 +92,20 @@ class ComputationController(QObject):
         unit_cell.bandstructure.eigenvectors = eigenvectors
         unit_cell.bandstructure.path = k_path
         self.band_computation_completed.emit()
+
+    def _handle_selection_changed(self):
+        """
+        Update the state projection box when the selection changes.
+
+        In addition to usual selection change by click,
+        the selection can change when items are added or removed to/from
+        the tree.
+        """
+        uc_id = self.selection["unit_cell"]
+        if uc_id:
+            unit_cell = self.unit_cells[uc_id]
+            _, state_info = unit_cell.get_states()
+            state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
+            self.computation_view.bands_panel.projection_box.refresh_combo(
+                state_info_strings
+            )

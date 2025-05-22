@@ -223,10 +223,16 @@ class AppController(QObject):
         Handle the change in the name of the tree items.
 
         This function is necessary to make sure that the label names in the
-        hopping matrix and hopping table accurately reflect the item names.
-        The effect is the redrawing of the hopping matrix.
+        hopping matrix, hopping table, and projection drop box
+        accurately reflect the item names.
         """
         self.hopping_controller.update_unit_cell()
+        uc_id = self.selection["unit_cell"]
+        unit_cell = self.unit_cells[uc_id]
+        _, state_info = unit_cell.get_states()
+        state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
+        bands_panel = self.computation_controller.computation_view.bands_panel
+        bands_panel.projection_box.refresh_combo(state_info_strings)
 
     def _handle_project_refresh_requested(self):
         """

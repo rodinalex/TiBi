@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QDoubleSpinBox, QFrame, QTreeView
+from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QFrame, QTreeView
 import uuid
 
 from src.tibitypes import UnitCell
@@ -352,3 +352,37 @@ class SystemTree(QTreeView):
                 }
 
         self.tree_selection_changed.emit(new_selection)
+
+
+class CheckableComboBox(QComboBox):
+    def __init__(self):
+        super().__init__()
+        # Create model
+        self.combo_model = QStandardItemModel()
+        # Set model to view
+        self.setModel(self.combo_model)
+
+    def refresh_combo(self, items: list[str]):
+        self.combo_model.clear()
+        for idx in range(len(items)):
+            # for text in items:
+            text = items[idx]
+            item = QStandardItem(text)
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setData(Qt.Unchecked, Qt.CheckStateRole)
+            item.setData(idx, Qt.UserData)
+            self.combo_model.appendRow(item)
+
+    def checked_items(self):
+        result = []
+        for ii in range(self.combo_model.rowCount()):
+            item = self.combo_model.item(ii)
+            if item.checkState() == Qt.Checked:
+                result.append(item.data(Qt.UserRole))
+        return result
+
+    def clear_selection(self):
+        pass
+
+    def select_all(self):
+        pass

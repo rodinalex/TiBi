@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 from PySide6.QtCore import Qt
-from resources.ui_elements import divider_line
+from resources.ui_elements import CheckableComboBox, divider_line
 from views.placeholder import PlaceholderWidget
 
 
@@ -29,7 +29,9 @@ class BandsView(QWidget):
         layout.addWidget(divider_line())
         layout.addWidget(PlaceholderWidget("BAND PROJECTION"), stretch=1)
         layout.addWidget(divider_line())
-        layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
+        self.projection_box = CheckableComboBox()
+        layout.addWidget(self.projection_box)
+        # layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
 
         # selection_form_layout = QFormLayout()
         # selection_form_layout.setVerticalSpacing(2)
