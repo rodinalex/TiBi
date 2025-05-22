@@ -159,11 +159,12 @@ class AppController(QObject):
                 "wireframe"
             ].isChecked()
         )
-        # band_structure = self.models["band_structures"].get(uc_id)
-        # self.models["bz_path"].clear()
 
         self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
         self.bz_plot_controller.update_brillouin_zone()
+        pair_selection = self.hopping_controller.pair_selection
+        if pair_selection[0] is not None and pair_selection[1] is not None:
+            self.uc_plot_controller.update_hopping_segments(pair_selection)
 
     def _handle_wireframe_toggled(self, status):
         """
@@ -188,6 +189,9 @@ class AppController(QObject):
             )
         ]
         self.uc_plot_controller.update_unit_cell(status, n1, n2, n3)
+        pair_selection = self.hopping_controller.pair_selection
+        if pair_selection[0] is not None and pair_selection[1] is not None:
+            self.uc_plot_controller.update_hopping_segments(pair_selection)
 
     def _handle_hopping_segments_requested(self):
         """
@@ -196,7 +200,7 @@ class AppController(QObject):
         After a pair of states is selected from the hopping button matrix,
         this function passes them to the update_hopping_segments function
         to draw the lines connecting the source state with the destination
-        ones.
+        ones. This approach avoids redrawing the rest of the plot.
         """
         pair_selection = self.hopping_controller.pair_selection
         self.uc_plot_controller.update_hopping_segments(pair_selection)
