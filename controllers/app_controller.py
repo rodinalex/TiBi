@@ -66,10 +66,26 @@ class AppController(QObject):
         self.unit_cells: dict[uuid.UUID, UnitCell] = self.models["unit_cells"]
 
         # Connect signals
+        # bz_plot_controller
+        # When the path is updated, the bandstructure is cleared.
+        # Clear the bandstructure plot
+
+        self.bz_plot_controller.bz_path_updated.connect(
+            lambda: self.plot_controller.plot_band_structure(
+                self.unit_cells[self.selection["unit_cell"]].bandstructure
+            )
+        )
+        # uc_controller
 
         # When an item in the tree view is renamed, refresh the hopping matrix
         # and table to reflect the correct names
         self.uc_controller.item_changed.connect(self._handle_item_changed)
+        # Refresh the plots after unit cell selection or parameter change
+        self.uc_controller.plot_update_requested.connect(
+            self._handle_plot_update_requested
+        )
+
+        # hopping controller
 
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
@@ -77,21 +93,18 @@ class AppController(QObject):
             self._handle_selection_requested
         )
 
-        # Refresh the plots after unit cell selection or parameter change
-        self.uc_controller.plot_update_requested.connect(
-            self._handle_plot_update_requested
-        )
-
         # Handle the request to draw hopping segments after a pair of states
         # is selected from the hopping button matrix
         self.hopping_controller.hopping_segments_requested.connect(
             self._handle_hopping_segments_requested
         )
+
         # Computation controller
         self.computation_controller.status_updated.connect(self._relay_status)
         self.computation_controller.band_computation_completed.connect(
             self._handle_plot_update_requested
         )
+
         # Toolbar signals
 
         self.main_ui_controller.project_refresh_requested.connect(
