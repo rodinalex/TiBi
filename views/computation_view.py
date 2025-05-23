@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QVBoxLayout,
     QLabel,
-    # QHBoxLayout,
+    QHBoxLayout,
     # QVBoxLayout,
     # QFormLayout,
     QPushButton,
@@ -36,11 +36,13 @@ class BandsView(QWidget):
         # selection_form_layout = QFormLayout()
         # selection_form_layout.setVerticalSpacing(2)
 
+        path_label = QLabel("Brillouin Zone Path")
+        path_label.setAlignment(
+            Qt.AlignCenter
+        )  # This centers the text within the label
+        self.selection_grid.addWidget(path_label, 0, 1, 1, 6)
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
-        gamma_label = QLabel("Brillouin Zone Path")
-        gamma_label.setAlignment(Qt.AlignCenter)
-        self.selection_grid.addWidget(gamma_label, 0, 0, 1, 6)
         self.selection_grid.addWidget(self.add_gamma_btn, 2, 1)
 
         # Vertex selection controls
@@ -68,15 +70,16 @@ class BandsView(QWidget):
         self.selection_grid.addWidget(self.prev_face_btn, 3, 4)
 
         # Path controls
-        self.remove_last_btn = QPushButton("Undo")
-        self.clear_path_btn = QPushButton("Clear")
+        self.remove_last_btn = QPushButton("Remove Last")
+        self.clear_path_btn = QPushButton("Clear Path")
 
+        kpoints_layout = QHBoxLayout()
         self.n_points_spinbox = QSpinBox()
         self.n_points_spinbox.setRange(1, 10000)
         self.n_points_spinbox.setValue(100)
         self.n_points_spinbox.setButtonSymbols(QSpinBox.NoButtons)
 
-        self.compute_bands_btn = QPushButton("Compute bands")
+        self.compute_bands_btn = QPushButton("Compute")
         self.compute_bands_btn.setEnabled(
             False
         )  # Disabled until path has at least two points
@@ -86,13 +89,14 @@ class BandsView(QWidget):
             False
         )  # Disabled until path has points
 
-        self.selection_grid.addWidget(self.clear_path_btn, 1, 7)
+        self.selection_grid.addWidget(self.clear_path_btn, 2, 6)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
-        self.selection_grid.addWidget(QLabel("K Points:"), 2, 6)
-        self.selection_grid.addWidget(self.n_points_spinbox, 2, 7)
+        kpoints_layout.addWidget(QLabel("k points:"))
+        kpoints_layout.addWidget(self.n_points_spinbox)
+        self.selection_grid.addLayout(kpoints_layout, 3, 6)
 
-        self.selection_grid.addWidget(self.compute_bands_btn, 3, 6, 1, 2)
+        self.selection_grid.addWidget(self.compute_bands_btn, 5, 6, 1, 1)
 
         self.selection_grid.setVerticalSpacing(2)
         self.selection_grid.setHorizontalSpacing(2)
