@@ -355,12 +355,18 @@ class SystemTree(QTreeView):
 
 
 class CheckableComboBox(QComboBox):
+
+    selection_changed = Signal()
+
     def __init__(self):
         super().__init__()
         # Create model
         self.combo_model = QStandardItemModel()
         # Set model to view
         self.setModel(self.combo_model)
+        self.combo_model.itemChanged.connect(
+            lambda _: self._emit_selection_changed()
+        )
 
     def refresh_combo(self, items: list[str]):
         self.combo_model.clear()
@@ -382,7 +388,20 @@ class CheckableComboBox(QComboBox):
         return result
 
     def clear_selection(self):
-        pass
+        self.combo_model.blockSignals(True)
+        for ii in range(self.combo_model.rowCount()):
+            item = self.combo_model.item(ii)
+            item.setData(Qt.Unchecked, Qt.CheckStateRole)
+        self.combo_model.blockSignals(False)
+        self._emit_selection_changed()
 
     def select_all(self):
-        pass
+        self.combo_model.blockSignals(True)
+        for ii in range(self.combo_model.rowCount()):
+            item = self.combo_model.item(ii)
+            item.setData(Qt.Checked, Qt.CheckStateRole)
+        self.combo_model.blockSignals(False)
+        self._emit_selection_changed()
+
+    def _emit_selection_changed(self):
+        self.selection_changed.emit()

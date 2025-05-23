@@ -143,15 +143,21 @@ class BandsView(QWidget):
 
         self.projection_combo = CheckableComboBox()
         self.project_btn = QPushButton("Project")
+        self.select_all_btn = QPushButton("All")
+        self.clear_all_btn = QPushButton("None")
 
         projection_left = QVBoxLayout()
         projection_right = QVBoxLayout()
+        projection_buttons = QHBoxLayout()
 
         projection_tools.addLayout(projection_left, stretch=3)
         projection_tools.addLayout(projection_right, stretch=1)
 
         projection_left.addWidget(self.projection_combo)
-        projection_left.addWidget(self.project_btn)
+        projection_left.addLayout(projection_buttons)
+
+        projection_buttons.addWidget(self.select_all_btn)
+        projection_buttons.addWidget(self.clear_all_btn)
 
         self.bands_radio = QRadioButton("Bands")
         self.dos_radio = QRadioButton("DOS")

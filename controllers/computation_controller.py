@@ -52,6 +52,12 @@ class ComputationController(QObject):
         self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
             self._compute_bands
         )
+        self.computation_view.bands_panel.select_all_btn.clicked.connect(
+            self.computation_view.bands_panel.projection_combo.select_all
+        )
+        self.computation_view.bands_panel.clear_all_btn.clicked.connect(
+            self.computation_view.bands_panel.projection_combo.clear_selection
+        )
 
     def _compute_bands(self):
         """
