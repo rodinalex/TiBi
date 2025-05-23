@@ -40,34 +40,34 @@ class BandsView(QWidget):
         path_label.setAlignment(
             Qt.AlignCenter
         )  # This centers the text within the label
-        self.selection_grid.addWidget(path_label, 0, 1, 1, 6)
+        self.selection_grid.addWidget(path_label, 0, 0, 1, 6)
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
-        self.selection_grid.addWidget(self.add_gamma_btn, 1, 3)
+        self.selection_grid.addWidget(self.add_gamma_btn, 1, 1)
 
         # Vertex selection controls
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
         self.add_vertex_btn = QPushButton("V")
-        self.selection_grid.addWidget(self.next_vertex_btn, 2, 4)
-        self.selection_grid.addWidget(self.add_vertex_btn, 2, 3)
-        self.selection_grid.addWidget(self.prev_vertex_btn, 2, 2)
+        self.selection_grid.addWidget(self.next_vertex_btn, 2, 2)
+        self.selection_grid.addWidget(self.add_vertex_btn, 2, 1)
+        self.selection_grid.addWidget(self.prev_vertex_btn, 2, 0)
 
         # Edge midpoint selection controls
         self.prev_edge_btn = QPushButton("←")
         self.next_edge_btn = QPushButton("→")
         self.add_edge_btn = QPushButton("E")
-        self.selection_grid.addWidget(self.next_edge_btn, 3, 4)
-        self.selection_grid.addWidget(self.add_edge_btn, 3, 3)
-        self.selection_grid.addWidget(self.prev_edge_btn, 3, 2)
+        self.selection_grid.addWidget(self.next_edge_btn, 3, 2)
+        self.selection_grid.addWidget(self.add_edge_btn, 3, 1)
+        self.selection_grid.addWidget(self.prev_edge_btn, 3, 0)
 
         # Face center selection controls
         self.prev_face_btn = QPushButton("←")
         self.next_face_btn = QPushButton("→")
         self.add_face_btn = QPushButton("F")
-        self.selection_grid.addWidget(self.next_face_btn, 4, 4)
-        self.selection_grid.addWidget(self.add_face_btn, 4, 3)
-        self.selection_grid.addWidget(self.prev_face_btn, 4, 2)
+        self.selection_grid.addWidget(self.next_face_btn, 4, 2)
+        self.selection_grid.addWidget(self.add_face_btn, 4, 1)
+        self.selection_grid.addWidget(self.prev_face_btn, 4, 0)
 
         # Path controls
         self.remove_last_btn = QPushButton("Remove Last")
@@ -84,19 +84,19 @@ class BandsView(QWidget):
             False
         )  # Disabled until path has at least two points
 
-        self.selection_grid.addWidget(self.remove_last_btn, 1, 6)
+        self.selection_grid.addWidget(self.remove_last_btn, 1, 4)
         self.remove_last_btn.setEnabled(
             False
         )  # Disabled until path has points
 
-        self.selection_grid.addWidget(self.clear_path_btn, 2, 6)
+        self.selection_grid.addWidget(self.clear_path_btn, 2, 4)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
         kpoints_layout.addWidget(QLabel("k points:"))
         kpoints_layout.addWidget(self.n_points_spinbox)
-        self.selection_grid.addLayout(kpoints_layout, 3, 6)
+        self.selection_grid.addLayout(kpoints_layout, 3, 4)
 
-        self.selection_grid.addWidget(self.compute_bands_btn, 4, 6, 1, 1)
+        self.selection_grid.addWidget(self.compute_bands_btn, 4, 4)
 
         self.selection_grid.setVerticalSpacing(2)
         self.selection_grid.setHorizontalSpacing(2)
@@ -183,7 +183,7 @@ class ComputationView(QWidget):
         self.tabs.addTab(self.bands_panel, "Bands")
         self.tabs.addTab(self.dos_panel, "DOS")
         self.tabs.addTab(self.topology_panel, "Topology")
-        self.tabs.setTabPosition(QTabWidget.North)
+        self.tabs.setTabPosition(QTabWidget.East)
         self.tabs.setDocumentMode(True)
         # Set size policy to make the tab widget expand
         self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
