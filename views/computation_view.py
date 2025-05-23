@@ -43,31 +43,31 @@ class BandsView(QWidget):
         self.selection_grid.addWidget(path_label, 0, 1, 1, 6)
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
-        self.selection_grid.addWidget(self.add_gamma_btn, 2, 1)
+        self.selection_grid.addWidget(self.add_gamma_btn, 1, 3)
 
         # Vertex selection controls
-        self.prev_vertex_btn = QPushButton("↓")
-        self.next_vertex_btn = QPushButton("↑")
+        self.prev_vertex_btn = QPushButton("←")
+        self.next_vertex_btn = QPushButton("→")
         self.add_vertex_btn = QPushButton("V")
-        self.selection_grid.addWidget(self.next_vertex_btn, 1, 2)
-        self.selection_grid.addWidget(self.add_vertex_btn, 2, 2)
-        self.selection_grid.addWidget(self.prev_vertex_btn, 3, 2)
+        self.selection_grid.addWidget(self.next_vertex_btn, 2, 4)
+        self.selection_grid.addWidget(self.add_vertex_btn, 2, 3)
+        self.selection_grid.addWidget(self.prev_vertex_btn, 2, 2)
 
         # Edge midpoint selection controls
-        self.prev_edge_btn = QPushButton("↓")
-        self.next_edge_btn = QPushButton("↑")
+        self.prev_edge_btn = QPushButton("←")
+        self.next_edge_btn = QPushButton("→")
         self.add_edge_btn = QPushButton("E")
-        self.selection_grid.addWidget(self.next_edge_btn, 1, 3)
-        self.selection_grid.addWidget(self.add_edge_btn, 2, 3)
-        self.selection_grid.addWidget(self.prev_edge_btn, 3, 3)
+        self.selection_grid.addWidget(self.next_edge_btn, 3, 4)
+        self.selection_grid.addWidget(self.add_edge_btn, 3, 3)
+        self.selection_grid.addWidget(self.prev_edge_btn, 3, 2)
 
         # Face center selection controls
-        self.prev_face_btn = QPushButton("↓")
-        self.next_face_btn = QPushButton("↑")
+        self.prev_face_btn = QPushButton("←")
+        self.next_face_btn = QPushButton("→")
         self.add_face_btn = QPushButton("F")
-        self.selection_grid.addWidget(self.next_face_btn, 1, 4)
-        self.selection_grid.addWidget(self.add_face_btn, 2, 4)
-        self.selection_grid.addWidget(self.prev_face_btn, 3, 4)
+        self.selection_grid.addWidget(self.next_face_btn, 4, 4)
+        self.selection_grid.addWidget(self.add_face_btn, 4, 3)
+        self.selection_grid.addWidget(self.prev_face_btn, 4, 2)
 
         # Path controls
         self.remove_last_btn = QPushButton("Remove Last")
@@ -96,7 +96,7 @@ class BandsView(QWidget):
         kpoints_layout.addWidget(self.n_points_spinbox)
         self.selection_grid.addLayout(kpoints_layout, 3, 6)
 
-        self.selection_grid.addWidget(self.compute_bands_btn, 5, 6, 1, 1)
+        self.selection_grid.addWidget(self.compute_bands_btn, 4, 6, 1, 1)
 
         self.selection_grid.setVerticalSpacing(2)
         self.selection_grid.setHorizontalSpacing(2)
