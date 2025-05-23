@@ -1,7 +1,7 @@
 import copy
 from PySide6.QtCore import QItemSelectionModel, Signal
 from PySide6.QtGui import QColor, QStandardItem, QUndoCommand
-from PySide6.QtWidgets import QDoubleSpinBox, QRadioButton
+from PySide6.QtWidgets import QApplication, QDoubleSpinBox, QRadioButton
 from resources.constants import (
     mk_new_unit_cell,
     mk_new_site,
@@ -673,6 +673,13 @@ class ReduceBasisCommand(QUndoCommand):
             uc.v2 = self.new_basis[1]
             uc.v3 = self.new_basis[2]
 
+            # Clear focus to avoid conflicts with programmatic
+            # filling of the boxes
+            focused_widget = QApplication.focusWidget()
+            if focused_widget:
+                focused_widget.clearFocus()
+            QApplication.processEvents()
+
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
@@ -685,6 +692,13 @@ class ReduceBasisCommand(QUndoCommand):
             uc.v1 = self.old_basis[0]
             uc.v2 = self.old_basis[1]
             uc.v3 = self.old_basis[2]
+
+            # Clear focus to avoid conflicts with programmatic
+            # filling of the boxes
+            focused_widget = QApplication.focusWidget()
+            if focused_widget:
+                focused_widget.clearFocus()
+            QApplication.processEvents()
 
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
