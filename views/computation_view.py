@@ -1,4 +1,4 @@
-# import numpy as np
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
     QTabWidget,
@@ -6,14 +6,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
-    # QFormLayout,
     QPushButton,
     QSpinBox,
     QGridLayout,
     QButtonGroup,
     QRadioButton,
 )
-from PySide6.QtCore import Qt
 from resources.ui_elements import CheckableComboBox, divider_line
 from views.placeholder import PlaceholderWidget
 
