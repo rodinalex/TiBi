@@ -232,7 +232,7 @@ class AppController(QObject):
         _, state_info = unit_cell.get_states()
         state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
         bands_panel = self.computation_controller.computation_view.bands_panel
-        bands_panel.projection_box.refresh_combo(state_info_strings)
+        bands_panel.projection_combo.refresh_combo(state_info_strings)
 
     def _handle_project_refresh_requested(self):
         """

@@ -106,6 +106,6 @@ class ComputationController(QObject):
             unit_cell = self.unit_cells[uc_id]
             _, state_info = unit_cell.get_states()
             state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-            self.computation_view.bands_panel.projection_box.refresh_combo(
+            self.computation_view.bands_panel.projection_combo.refresh_combo(
                 state_info_strings
             )

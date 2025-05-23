@@ -3,14 +3,15 @@ from PySide6.QtWidgets import (
     QWidget,
     QTabWidget,
     QSizePolicy,
-    QVBoxLayout,
     QLabel,
     QHBoxLayout,
-    # QVBoxLayout,
+    QVBoxLayout,
     # QFormLayout,
     QPushButton,
     QSpinBox,
     QGridLayout,
+    QButtonGroup,
+    QRadioButton,
 )
 from PySide6.QtCore import Qt
 from resources.ui_elements import CheckableComboBox, divider_line
@@ -21,53 +22,51 @@ class BandsView(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Selection panel
+        # Main Layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.selection_grid = QGridLayout()
-        layout.addLayout(self.selection_grid, stretch=1)
+        self.bands_selection_grid = QGridLayout()
+        self.projection_layout = QVBoxLayout()
+        layout.addLayout(self.bands_selection_grid, stretch=1)
         layout.addWidget(divider_line())
-        layout.addWidget(PlaceholderWidget("BAND PROJECTION"), stretch=1)
+        layout.addLayout(self.projection_layout)
         layout.addWidget(divider_line())
-        self.projection_box = CheckableComboBox()
-        layout.addWidget(self.projection_box)
-        # layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
+        layout.addWidget(PlaceholderWidget("DOS"), stretch=1)
 
-        # selection_form_layout = QFormLayout()
-        # selection_form_layout.setVerticalSpacing(2)
-
+        # Bands Panel
+        self.bands_selection_grid.setContentsMargins(10, 5, 15, 5)
         path_label = QLabel("Brillouin Zone Path")
         path_label.setAlignment(
             Qt.AlignCenter
         )  # This centers the text within the label
-        self.selection_grid.addWidget(path_label, 0, 0, 1, 6)
+        self.bands_selection_grid.addWidget(path_label, 0, 0, 1, 5)
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
-        self.selection_grid.addWidget(self.add_gamma_btn, 1, 1)
+        self.bands_selection_grid.addWidget(self.add_gamma_btn, 1, 1)
 
         # Vertex selection controls
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
         self.add_vertex_btn = QPushButton("V")
-        self.selection_grid.addWidget(self.next_vertex_btn, 2, 2)
-        self.selection_grid.addWidget(self.add_vertex_btn, 2, 1)
-        self.selection_grid.addWidget(self.prev_vertex_btn, 2, 0)
+        self.bands_selection_grid.addWidget(self.next_vertex_btn, 2, 2)
+        self.bands_selection_grid.addWidget(self.add_vertex_btn, 2, 1)
+        self.bands_selection_grid.addWidget(self.prev_vertex_btn, 2, 0)
 
         # Edge midpoint selection controls
         self.prev_edge_btn = QPushButton("←")
         self.next_edge_btn = QPushButton("→")
         self.add_edge_btn = QPushButton("E")
-        self.selection_grid.addWidget(self.next_edge_btn, 3, 2)
-        self.selection_grid.addWidget(self.add_edge_btn, 3, 1)
-        self.selection_grid.addWidget(self.prev_edge_btn, 3, 0)
+        self.bands_selection_grid.addWidget(self.next_edge_btn, 3, 2)
+        self.bands_selection_grid.addWidget(self.add_edge_btn, 3, 1)
+        self.bands_selection_grid.addWidget(self.prev_edge_btn, 3, 0)
 
         # Face center selection controls
         self.prev_face_btn = QPushButton("←")
         self.next_face_btn = QPushButton("→")
         self.add_face_btn = QPushButton("F")
-        self.selection_grid.addWidget(self.next_face_btn, 4, 2)
-        self.selection_grid.addWidget(self.add_face_btn, 4, 1)
-        self.selection_grid.addWidget(self.prev_face_btn, 4, 0)
+        self.bands_selection_grid.addWidget(self.next_face_btn, 4, 2)
+        self.bands_selection_grid.addWidget(self.add_face_btn, 4, 1)
+        self.bands_selection_grid.addWidget(self.prev_face_btn, 4, 0)
 
         # Path controls
         self.remove_last_btn = QPushButton("Remove Last")
@@ -84,22 +83,22 @@ class BandsView(QWidget):
             False
         )  # Disabled until path has at least two points
 
-        self.selection_grid.addWidget(self.remove_last_btn, 1, 4)
+        self.bands_selection_grid.addWidget(self.remove_last_btn, 1, 4)
         self.remove_last_btn.setEnabled(
             False
         )  # Disabled until path has points
 
-        self.selection_grid.addWidget(self.clear_path_btn, 2, 4)
+        self.bands_selection_grid.addWidget(self.clear_path_btn, 2, 4)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
         kpoints_layout.addWidget(QLabel("k points:"))
         kpoints_layout.addWidget(self.n_points_spinbox)
-        self.selection_grid.addLayout(kpoints_layout, 3, 4)
+        self.bands_selection_grid.addLayout(kpoints_layout, 3, 4)
 
-        self.selection_grid.addWidget(self.compute_bands_btn, 4, 4)
+        self.bands_selection_grid.addWidget(self.compute_bands_btn, 4, 4)
 
-        self.selection_grid.setVerticalSpacing(2)
-        self.selection_grid.setHorizontalSpacing(2)
+        self.bands_selection_grid.setVerticalSpacing(2)
+        self.bands_selection_grid.setHorizontalSpacing(2)
 
         # Initially disable all selection buttons
         btns = [
@@ -134,11 +133,39 @@ class BandsView(QWidget):
             self.add_face_btn,
         ]
 
-        # self.control_panel.addWidget(self.compute_bands_btn)
-        # self.control_panel.setSpacing(3)
-        # layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
+        # Projection panel
+        projection_label = QLabel("State Projection")
+        projection_label.setAlignment(Qt.AlignCenter)
+        projection_tools = QHBoxLayout()
 
-        # layout.addWidget(PlaceholderWidget("BANDS"))
+        self.projection_layout.setContentsMargins(10, 5, 15, 5)
+
+        self.projection_layout.addWidget(projection_label)
+        self.projection_layout.addLayout(projection_tools)
+
+        self.projection_combo = CheckableComboBox()
+        self.project_btn = QPushButton("Project")
+
+        projection_left = QVBoxLayout()
+        projection_right = QVBoxLayout()
+
+        projection_tools.addLayout(projection_left, stretch=3)
+        projection_tools.addLayout(projection_right, stretch=1)
+
+        projection_left.addWidget(self.projection_combo)
+        projection_left.addWidget(self.project_btn)
+
+        self.bands_radio = QRadioButton("Bands")
+        self.dos_radio = QRadioButton("DOS")
+
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.bands_radio, id=0)
+        self.radio_group.addButton(self.dos_radio, id=1)
+
+        projection_right.addWidget(self.bands_radio)
+        projection_right.addWidget(self.dos_radio)
+
+        # DOS Panel
 
 
 class DOSView(QWidget):
