@@ -24,10 +24,10 @@ class BandsView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.bands_selection_grid = QGridLayout()
-        self.projection_layout = QVBoxLayout()
+        self.proj_layout = QVBoxLayout()
         layout.addLayout(self.bands_selection_grid, stretch=1)
         layout.addWidget(divider_line())
-        layout.addLayout(self.projection_layout)
+        layout.addLayout(self.proj_layout)
         layout.addWidget(divider_line())
         layout.addWidget(PlaceholderWidget("DOS"), stretch=1)
 
@@ -136,28 +136,28 @@ class BandsView(QWidget):
         projection_label.setAlignment(Qt.AlignCenter)
         projection_tools = QHBoxLayout()
 
-        self.projection_layout.setContentsMargins(10, 5, 15, 5)
+        self.proj_layout.setContentsMargins(10, 5, 15, 5)
 
-        self.projection_layout.addWidget(projection_label)
-        self.projection_layout.addLayout(projection_tools)
+        self.proj_layout.addWidget(projection_label)
+        self.proj_layout.addLayout(projection_tools)
 
-        self.projection_combo = CheckableComboBox()
+        self.proj_combo = CheckableComboBox()
         self.project_btn = QPushButton("Project")
         self.select_all_btn = QPushButton("All")
         self.clear_all_btn = QPushButton("None")
 
-        projection_left = QVBoxLayout()
-        projection_right = QVBoxLayout()
-        projection_buttons = QHBoxLayout()
+        proj_left = QVBoxLayout()
+        proj_right = QVBoxLayout()
+        proj_buttons = QHBoxLayout()
 
-        projection_tools.addLayout(projection_left, stretch=3)
-        projection_tools.addLayout(projection_right, stretch=1)
+        projection_tools.addLayout(proj_left, stretch=3)
+        projection_tools.addLayout(proj_right, stretch=1)
 
-        projection_left.addWidget(self.projection_combo)
-        projection_left.addLayout(projection_buttons)
+        proj_left.addWidget(self.proj_combo)
+        proj_left.addLayout(proj_buttons)
 
-        projection_buttons.addWidget(self.select_all_btn)
-        projection_buttons.addWidget(self.clear_all_btn)
+        proj_buttons.addWidget(self.select_all_btn)
+        proj_buttons.addWidget(self.clear_all_btn)
 
         self.bands_radio = QRadioButton("Bands")
         self.dos_radio = QRadioButton("DOS")
@@ -166,8 +166,8 @@ class BandsView(QWidget):
         self.radio_group.addButton(self.bands_radio, id=0)
         self.radio_group.addButton(self.dos_radio, id=1)
 
-        projection_right.addWidget(self.bands_radio)
-        projection_right.addWidget(self.dos_radio)
+        proj_right.addWidget(self.bands_radio)
+        proj_right.addWidget(self.dos_radio)
 
         # DOS Panel
 

@@ -29,6 +29,7 @@ class ComputationController(QObject):
 
     status_updated = Signal(str)
     band_computation_completed = Signal()
+    projection_selection_changed = Signal(object)
 
     def __init__(self, models, computation_view: ComputationView):
         """
@@ -53,10 +54,13 @@ class ComputationController(QObject):
             self._compute_bands
         )
         self.computation_view.bands_panel.select_all_btn.clicked.connect(
-            self.computation_view.bands_panel.projection_combo.select_all
+            self.computation_view.bands_panel.proj_combo.select_all
         )
         self.computation_view.bands_panel.clear_all_btn.clicked.connect(
-            self.computation_view.bands_panel.projection_combo.clear_selection
+            self.computation_view.bands_panel.proj_combo.clear_selection
+        )
+        self.computation_view.bands_panel.proj_combo.selection_changed.connect(
+            self.projection_selection_changed.emit
         )
 
     def _compute_bands(self):
@@ -112,6 +116,6 @@ class ComputationController(QObject):
             unit_cell = self.unit_cells[uc_id]
             _, state_info = unit_cell.get_states()
             state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-            self.computation_view.bands_panel.projection_combo.refresh_combo(
+            self.computation_view.bands_panel.proj_combo.refresh_combo(
                 state_info_strings
             )

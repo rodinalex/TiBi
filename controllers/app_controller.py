@@ -104,7 +104,7 @@ class AppController(QObject):
         self.computation_controller.band_computation_completed.connect(
             self._handle_plot_update_requested
         )
-
+        self.computation_controller.projection_selection_changed.connect(print)
         # Toolbar signals
 
         self.main_ui_controller.project_refresh_requested.connect(
@@ -227,12 +227,12 @@ class AppController(QObject):
         accurately reflect the item names.
         """
         self.hopping_controller.update_unit_cell()
-        uc_id = self.selection["unit_cell"]
-        unit_cell = self.unit_cells[uc_id]
-        _, state_info = unit_cell.get_states()
-        state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-        bands_panel = self.computation_controller.computation_view.bands_panel
-        bands_panel.projection_combo.refresh_combo(state_info_strings)
+        # uc_id = self.selection["unit_cell"]
+        # unit_cell = self.unit_cells[uc_id]
+        # _, state_info = unit_cell.get_states()
+        # state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
+        # bands_panel = self.computation_controller.computation_view.bands_panel
+        # bands_panel.proj_combo.refresh_combo(state_info_strings)
 
     def _handle_project_refresh_requested(self):
         """
