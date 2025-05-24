@@ -5,7 +5,7 @@ import pyqtgraph.opengl as gl
 from typing import Tuple
 import uuid
 
-from models.data_models import DataModel
+from models.data_model import DataModel
 from resources.constants import CF_yellow, default_site_scaling
 from src.tibitypes import UnitCell
 from views.uc_plot_view import UnitCellPlotView

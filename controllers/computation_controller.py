@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 import uuid
 
-from models.data_models import DataModel
+from models.data_model import DataModel
 from src.band_structure import diagonalize_hamitonian, interpolate_k_path
 from src.tibitypes import UnitCell
 from views.computation_view import ComputationView

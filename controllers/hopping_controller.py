@@ -6,7 +6,7 @@ from typing import Tuple
 import uuid
 
 from commands.hopping_commands import SaveHoppingsCommand
-from models.data_models import DataModel
+from models.data_model import DataModel
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,

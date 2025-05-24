@@ -20,9 +20,6 @@ from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
 from views.status_bar_view import StatusBarView
 
-# Temporary placeholder
-from views.placeholder import PlaceholderWidget
-
 
 class MainWindow(QMainWindow):
     """
@@ -94,11 +91,11 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1400, 825))
+        self.setFixedSize(QSize(1000, 825))
 
         # Store references to UI components
         self.uc = uc
-        self.hopping = hopping
+        # self.hopping = hopping
         self.uc_plot = uc_plot
         self.bz_plot = bz_plot
         self.plot = plot
@@ -114,34 +111,27 @@ class MainWindow(QMainWindow):
         main_view = QWidget()
         main_layout = QHBoxLayout(main_view)
 
-        # Create four column layouts
-        column1_layout = QVBoxLayout()  # Unit cell creation
-        column2_layout = QVBoxLayout()  # Hopping creation
-        column3_layout = QVBoxLayout()  # UC 3D plot and 2D plots
-        column4_layout = QVBoxLayout()  # BZ 3D plot and computation
+        # Create three column layouts
+        unit_cell_layout = QVBoxLayout()  # UnitCell geometry and Sites
+        computation_layout = QVBoxLayout()  # Computation controls
+        plots_layout = QVBoxLayout()  # UC 3D plot and 2D plots
 
-        column1_layout.addWidget(self.frame_widget(self.uc), stretch=3)
+        unit_cell_layout.addWidget(self.frame_widget(self.uc), stretch=3)
 
-        column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
-        column2_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("[SPOT]")), stretch=1
+        computation_layout.addWidget(
+            self.frame_widget(self.bz_plot), stretch=1
         )
-
-        column3_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
-        column3_layout.addWidget(self.frame_widget(self.plot), stretch=1)
-
-        column4_layout.addWidget(self.frame_widget(self.bz_plot), stretch=6)
-        column4_layout.addWidget(
-            self.frame_widget(self.computation_view), stretch=10
+        computation_layout.addWidget(
+            self.frame_widget(self.computation_view), stretch=3
         )
-        column4_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("[PROGRESS]")), stretch=1
-        )
+        plots_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
+        plots_layout.addWidget(self.frame_widget(self.plot), stretch=1)
 
-        main_layout.addLayout(column1_layout, stretch=1)
-        main_layout.addLayout(column2_layout, stretch=6)
-        main_layout.addLayout(column3_layout, stretch=9)
-        main_layout.addLayout(column4_layout, stretch=4)
+        # column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
+
+        main_layout.addLayout(unit_cell_layout, stretch=1)
+        main_layout.addLayout(computation_layout, stretch=2)
+        main_layout.addLayout(plots_layout, stretch=3)
 
         # Set as central widget
         self.setCentralWidget(main_view)

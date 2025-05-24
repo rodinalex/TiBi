@@ -10,7 +10,7 @@ from commands.bz_commands import (
     ClearBZPathCommand,
     RemoveBZPointCommand,
 )
-from models.data_models import DataModel
+from models.data_model import DataModel
 from resources.constants import (
     CF_red,
     bz_point_lists_init,
