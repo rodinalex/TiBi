@@ -1,62 +1,9 @@
-import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QFrame, QTreeView
+from PySide6.QtWidgets import QTreeView
 import uuid
 
 from models import UnitCell
-
-
-def divider_line():
-    """
-    Create a horizontal line to be used as a divider in the UI.
-
-    Returns
-    -------
-        QFrame
-            A horizontal line with a sunken shadow effect."""
-    line = QFrame()
-    line.setFrameShape(QFrame.HLine)
-    line.setFrameShadow(QFrame.Sunken)
-    line.setFixedHeight(2)
-    line.setStyleSheet("color: #888888;")
-    return line
-
-
-class EnterKeySpinBox(QDoubleSpinBox):
-    """
-    Custom `QDoubleSpinBox` that emits a signal when the Enter key is pressed.
-    """
-
-    editingConfirmed = Signal()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._original_value = self.value()
-
-    def focusInEvent(self, event):
-        self._original_value = self.value()
-        super().focusInEvent(event)
-
-    def focusOutEvent(self, event):
-        # Revert to original value on focus out
-        self.blockSignals(True)
-        self.setValue(self._original_value)
-        self.blockSignals(False)
-        super().focusOutEvent(event)
-
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
-            # Emit signal only if the value has changed
-            if not np.isclose(self.value(), self._original_value):
-                self._original_value = self.value()
-                self.editingConfirmed.emit()
-        elif event.key() == Qt.Key_Escape:
-            self.blockSignals(True)
-            self.setValue(self._original_value)
-            self.blockSignals(False)
-        else:
-            super().keyPressEvent(event)
 
 
 class SystemTree(QTreeView):
@@ -352,54 +299,3 @@ class SystemTree(QTreeView):
                 }
 
         self.tree_selection_changed.emit(new_selection)
-
-
-class CheckableComboBox(QComboBox):
-
-    selection_changed = Signal(object)
-
-    def __init__(self):
-        super().__init__()
-        # Create model
-        self.combo_model = QStandardItemModel()
-        # Set model to view
-        self.setModel(self.combo_model)
-        self.combo_model.itemChanged.connect(
-            lambda _: self.selection_changed.emit(self.checked_items())
-        )
-
-    def refresh_combo(self, items: list[str]):
-        self.combo_model.clear()
-        for idx in range(len(items)):
-            # for text in items:
-            text = items[idx]
-            item = QStandardItem(text)
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setData(Qt.Checked, Qt.CheckStateRole)
-            item.setData(idx, Qt.UserRole)
-            self.combo_model.appendRow(item)
-        self.selection_changed.emit(self.checked_items())
-
-    def checked_items(self):
-        result = []
-        for ii in range(self.combo_model.rowCount()):
-            item = self.combo_model.item(ii)
-            if item.checkState() == Qt.Checked:
-                result.append(item.data(Qt.UserRole))
-        return result
-
-    def clear_selection(self):
-        self.combo_model.blockSignals(True)
-        for ii in range(self.combo_model.rowCount()):
-            item = self.combo_model.item(ii)
-            item.setData(Qt.Unchecked, Qt.CheckStateRole)
-        self.combo_model.blockSignals(False)
-        self.selection_changed.emit(self.checked_items())
-
-    def select_all(self):
-        self.combo_model.blockSignals(True)
-        for ii in range(self.combo_model.rowCount()):
-            item = self.combo_model.item(ii)
-            item.setData(Qt.Checked, Qt.CheckStateRole)
-        self.combo_model.blockSignals(False)
-        self.selection_changed.emit(self.checked_items())

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from resources.ui_elements import SystemTree
+from ..widgets import SystemTree
 
 
 class EnterOnlyDelegate(QStyledItemDelegate):

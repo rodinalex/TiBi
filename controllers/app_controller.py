@@ -1,14 +1,12 @@
 from PySide6.QtCore import QObject
 import uuid
 
-from controllers.bz_plot_controller import BrillouinZonePlotController
-from controllers.computation_controller import ComputationController
-
-# from controllers.hopping_controller import HoppingController
-from controllers.main_ui_controller import MainUIController
-from controllers.plot_controller import PlotController
-from controllers.uc_controller import UnitCellController
-from controllers.uc_plot_controller import UnitCellPlotController
+from .bz_plot_controller import BrillouinZonePlotController
+from .computation_controller import ComputationController
+from .main_ui_controller import MainUIController
+from .plot_controller import PlotController
+from .uc_controller import UnitCellController
+from .uc_plot_controller import UnitCellPlotController
 from resources.constants import selection_init
 from models import UnitCell
 

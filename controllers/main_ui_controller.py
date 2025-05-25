@@ -5,8 +5,11 @@ from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import uuid
 
-from resources.action_manager import ActionManager
-from src.serialization import serialize_unit_cells, deserialize_unit_cells
+from ui.actions.action_manager import ActionManager
+from logic.serialization.serialization import (
+    serialize_unit_cells,
+    deserialize_unit_cells,
+)
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
 from views.main_window import MainWindow

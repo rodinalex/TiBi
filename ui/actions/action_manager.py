@@ -57,13 +57,15 @@ class ActionManager(QObject):
         """Create actions related to file operations."""
         # New Unit Cell action
         self.file_actions["new_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/file.png")), "New Project", self
+            QIcon(os.path.join(basedir, "../../assets/icons/file.png")),
+            "New Project",
+            self,
         )
         self.file_actions["new_project"].setStatusTip("Create a new project")
 
         # Save Project action
         self.file_actions["save_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/save.png")),
+            QIcon(os.path.join(basedir, "../../assets/icons/save.png")),
             "Save Project",
             self,
         )
@@ -81,7 +83,7 @@ class ActionManager(QObject):
 
         # Open Project action
         self.file_actions["open_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/open.png")),
+            QIcon(os.path.join(basedir, "../../assets/icons/open.png")),
             "Open Project...",
             self,
         )
@@ -91,7 +93,9 @@ class ActionManager(QObject):
 
         # Import action
         self.file_actions["import_project"] = QAction(
-            QIcon(os.path.join(basedir, "icons/import.png")), "Import...", self
+            QIcon(os.path.join(basedir, "../../assets/icons/import.png")),
+            "Import...",
+            self,
         )
         self.file_actions["import_project"].setStatusTip(
             "Import data from an exiting project"
@@ -100,12 +104,16 @@ class ActionManager(QObject):
     def _create_undo_redo_actions(self):
         """Create the "forward/back" arrow undo/redo actions."""
         self.undo_redo_actions["undo"] = QAction(
-            QIcon(os.path.join(basedir, "icons/undo.png")), "Undo", self
+            QIcon(os.path.join(basedir, "../../assets/icons/undo.png")),
+            "Undo",
+            self,
         )
         self.undo_redo_actions["undo"].setStatusTip("Undo")
 
         self.undo_redo_actions["redo"] = QAction(
-            QIcon(os.path.join(basedir, "icons/redo.png")), "Redo", self
+            QIcon(os.path.join(basedir, "../../assets/icons/redo.png")),
+            "Redo",
+            self,
         )
         self.undo_redo_actions["redo"].setStatusTip("Redo")
 
@@ -164,7 +172,7 @@ class ActionManager(QObject):
         """Create actions for unit cell visualization."""
         # Toggle wireframe action
         self.unit_cell_actions["wireframe"] = QAction(
-            QIcon(os.path.join(basedir, "icons/box.png")),
+            QIcon(os.path.join(basedir, "../../assets/icons/box.png")),
             "Toggle wireframe",
             self,
         )

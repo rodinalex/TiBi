@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
-from resources.ui_elements import EnterKeySpinBox
+from ..widgets import EnterKeySpinBox
 from models import BasisVector
 
 

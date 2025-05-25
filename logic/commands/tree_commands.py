@@ -8,7 +8,7 @@ from resources.constants import (
 )
 import uuid
 
-from resources.ui_elements import SystemTree
+from views.widgets import SystemTree
 from models import UnitCell
 
 

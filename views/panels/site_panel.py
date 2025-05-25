@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from resources.ui_elements import EnterKeySpinBox
+from ..widgets import EnterKeySpinBox
 
 
 class SitePanel(QWidget):

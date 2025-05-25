@@ -16,7 +16,7 @@ from logic.commands import (
     UpdateUnitCellParameterCommand,
 )
 from models import DataModel, UnitCell
-from resources.ui_elements import EnterKeySpinBox
+from views.widgets import EnterKeySpinBox
 from views.uc_view import UnitCellView
 
 
