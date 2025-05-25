@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
 from resources.ui_elements import CheckableComboBox, divider_line
 from views.placeholder import PlaceholderWidget
 
+from .hopping_view import HoppingView
+
 
 class BandsView(QWidget):
     def __init__(self):
@@ -206,11 +208,13 @@ class ComputationView(QWidget):
         layout.setContentsMargins(
             0, 0, 0, 0
         )  # Remove margins to maximize space
+        self.hopping_panel = HoppingView()
         self.bands_panel = BandsView()
         self.dos_panel = DOSView()
         self.topology_panel = TopologyView()
         # Create main tab widget
         self.tabs = QTabWidget()
+        self.tabs.addTab(self.hopping_panel, "Hopping")
         self.tabs.addTab(self.bands_panel, "Bands")
         self.tabs.addTab(self.dos_panel, "DOS")
         self.tabs.addTab(self.topology_panel, "Topology")
