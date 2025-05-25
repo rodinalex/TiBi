@@ -3,7 +3,8 @@ import uuid
 
 from controllers.bz_plot_controller import BrillouinZonePlotController
 from controllers.computation_controller import ComputationController
-from controllers.hopping_controller import HoppingController
+
+# from controllers.hopping_controller import HoppingController
 from controllers.main_ui_controller import MainUIController
 from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
@@ -52,9 +53,9 @@ class AppController(QObject):
         self.computation_controller: ComputationController = self.controllers[
             "computation"
         ]
-        self.hopping_controller: HoppingController = self.controllers[
-            "hopping"
-        ]
+        # self.hopping_controller: HoppingController = self.controllers[
+        #     "hopping"
+        # ]
         self.main_ui_controller: MainUIController = self.controllers["main_ui"]
         self.plot_controller: PlotController = self.controllers["plot"]
         self.uc_controller: UnitCellController = self.controllers["uc"]
@@ -89,15 +90,15 @@ class AppController(QObject):
 
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
-        self.hopping_controller.selection_requested.connect(
-            self._handle_selection_requested
-        )
+        # self.hopping_controller.selection_requested.connect(
+        #     self._handle_selection_requested
+        # )
 
         # Handle the request to draw hopping segments after a pair of states
         # is selected from the hopping button matrix
-        self.hopping_controller.hopping_segments_requested.connect(
-            self._handle_hopping_segments_requested
-        )
+        # self.hopping_controller.hopping_segments_requested.connect(
+        #     self._handle_hopping_segments_requested
+        # )
 
         # Computation controller
         self.computation_controller.status_updated.connect(self._relay_status)

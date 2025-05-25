@@ -6,6 +6,8 @@ from src.band_structure import diagonalize_hamitonian, interpolate_k_path
 from src.tibitypes import UnitCell
 from views.computation_view import ComputationView
 
+from .hopping_controller import HoppingController
+
 
 class ComputationController(QObject):
     """
@@ -31,7 +33,7 @@ class ComputationController(QObject):
     band_computation_completed = Signal()
     projection_selection_changed = Signal(object)
 
-    def __init__(self, models, computation_view: ComputationView):
+    def __init__(self, models, undo_stack, computation_view: ComputationView):
         """
         Initialize the computation controller.
 
@@ -44,10 +46,18 @@ class ComputationController(QObject):
         """
         super().__init__()
         self.models = models
+        self.undo_stack = undo_stack
         self.computation_view = computation_view
 
         self.unit_cells: dict[uuid.UUID, UnitCell] = models["unit_cells"]
         self.selection: DataModel = models["selection"]
+        # Component controllers
+        self.hopping_controller = HoppingController(
+            self.unit_cells,
+            self.selection,
+            self.computation_view.hopping_panel,
+            self.undo_stack,
+        )
         # Connect the signals
         self.selection.signals.updated.connect(self._handle_selection_changed)
         self.computation_view.bands_panel.compute_bands_btn.clicked.connect(
