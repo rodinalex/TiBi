@@ -3,18 +3,18 @@ from PySide6.QtWidgets import QApplication
 import sys
 import uuid
 
-# View Panels
-from views.bz_plot_view import BrillouinZonePlotView
-from views.computation_view import ComputationView
-from views.plot_view import PlotView
-from views.uc_view import UnitCellView
-from views.uc_plot_view import UnitCellPlotView
-
-# Main UI View Components
-from views.menu_bar_view import MenuBarView
-from views.main_window import MainWindow
-from views.main_toolbar_view import MainToolbarView
-from views.status_bar_view import StatusBarView
+# View Components
+from views import (
+    BrillouinZonePlotView,
+    ComputationView,
+    MenuBarView,
+    MainWindow,
+    MainToolbarView,
+    PlotView,
+    StatusBarView,
+    UnitCellPlotView,
+    UnitCellView,
+)
 
 # Controller Components
 from controllers.app_controller import AppController

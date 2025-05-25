@@ -3,7 +3,7 @@ from PySide6.QtGui import QColor, QUndoStack
 from PySide6.QtWidgets import QColorDialog
 import uuid
 
-from commands.uc_commands import (
+from logic.commands import (
     AddUnitCellCommand,
     AddSiteCommand,
     AddStateCommand,

@@ -5,7 +5,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QUndoStack
 import uuid
 
-from commands.bz_commands import (
+from logic.commands import (
     AddBZPointCommand,
     ClearBZPathCommand,
     RemoveBZPointCommand,

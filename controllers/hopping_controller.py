@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QDoubleSpinBox, QMenu, QPushButton, QSpinBox
 from typing import Tuple
 import uuid
 
-from commands.hopping_commands import SaveHoppingsCommand
+from logic.commands import SaveHoppingsCommand
 from models import DataModel, UnitCell
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
