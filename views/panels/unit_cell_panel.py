@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 
 from resources.constants import CF_vermillion, CF_green, CF_sky
 from resources.ui_elements import EnterKeySpinBox
-from src.tibitypes import BasisVector
+from models import BasisVector
 
 
 class UnitCellPanel(QWidget):

@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject
 import numpy as np
 
-from src.tibitypes import BandStructure
+from models import BandStructure
 from views.plot_view import PlotView
 
 

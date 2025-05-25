@@ -25,14 +25,11 @@ from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 
-# Custom Dictionaries
-from models.data_model import DataModel
+# Models
+from models import DataModel, UnitCell
 
 # Constants
 from resources.constants import selection_init
-
-# Types
-from src.tibitypes import UnitCell
 
 
 class TiBiApplication:

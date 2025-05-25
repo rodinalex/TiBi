@@ -10,7 +10,7 @@ from resources.constants import (
 import uuid
 
 from resources.ui_elements import SystemTree
-from src.tibitypes import BasisVector, UnitCell
+from models import BasisVector, UnitCell
 from views.uc_view import UnitCellView
 
 

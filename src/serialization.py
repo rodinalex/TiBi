@@ -3,7 +3,7 @@ import numpy as np
 from typing import Any
 import uuid
 
-from src.tibitypes import BandStructure, BasisVector, Site, State, UnitCell
+from models import BandStructure, BasisVector, Site, State, UnitCell
 
 
 class UnitCellEncoder(json.JSONEncoder):

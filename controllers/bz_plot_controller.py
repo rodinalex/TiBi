@@ -10,13 +10,12 @@ from commands.bz_commands import (
     ClearBZPathCommand,
     RemoveBZPointCommand,
 )
-from models.data_model import DataModel
+from models import DataModel, UnitCell
 from resources.constants import (
     CF_red,
     bz_point_lists_init,
     bz_point_selection_init,
 )
-from src.tibitypes import UnitCell
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
 

@@ -10,7 +10,7 @@ from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
 from controllers.uc_plot_controller import UnitCellPlotController
 from resources.constants import selection_init
-from src.tibitypes import UnitCell
+from models import UnitCell
 
 
 class AppController(QObject):

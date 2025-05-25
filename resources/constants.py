@@ -1,5 +1,5 @@
 import random
-from src.tibitypes import BasisVector, State, Site, UnitCell
+from models import BasisVector, State, Site, UnitCell
 
 """
 Constants used by the application. These include style options, as well as

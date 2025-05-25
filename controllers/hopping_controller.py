@@ -6,13 +6,12 @@ from typing import Tuple
 import uuid
 
 from commands.hopping_commands import SaveHoppingsCommand
-from models.data_model import DataModel
+from models import DataModel, UnitCell
 from resources.button_styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,
     BUTTON_STYLE_NONHERMITIAN,
 )
-from src.tibitypes import UnitCell
 from views.panels import HoppingPanel
 
 

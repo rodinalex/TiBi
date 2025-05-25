@@ -4,7 +4,7 @@ from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QFrame, QTreeView
 import uuid
 
-from src.tibitypes import UnitCell
+from models import UnitCell
 
 
 def divider_line():

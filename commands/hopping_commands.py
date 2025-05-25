@@ -5,7 +5,7 @@ from PySide6.QtGui import QUndoCommand
 from typing import Tuple
 import uuid
 
-from src.tibitypes import UnitCell
+from models import UnitCell
 
 
 class SaveHoppingsCommand(QUndoCommand):

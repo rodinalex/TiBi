@@ -15,9 +15,8 @@ from commands.uc_commands import (
     UpdateSiteParameterCommand,
     UpdateUnitCellParameterCommand,
 )
-from models.data_model import DataModel
+from models import DataModel, UnitCell
 from resources.ui_elements import EnterKeySpinBox
-from src.tibitypes import UnitCell
 from views.uc_view import UnitCellView
 
 
