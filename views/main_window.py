@@ -10,8 +10,6 @@ from PySide6.QtWidgets import (
 # View Panels
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
-
-# from views.hopping_view import HoppingView
 from views.plot_view import PlotView
 from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
@@ -35,8 +33,6 @@ class MainWindow(QMainWindow):
     ----------
     uc : UnitCellView
         Unit cell editor view
-    hopping : HoppingView)
-        Hopping parameter editor view
     uc_plot : UnitCellPlotView
         Unit cell 3D visualization view
     bz_plot : BrillouinonePlotView)
@@ -57,7 +53,6 @@ class MainWindow(QMainWindow):
     def __init__(
         self,
         uc: UnitCellView,
-        # hopping: HoppingView,
         uc_plot: UnitCellPlotView,
         bz_plot: BrillouinZonePlotView,
         plot: PlotView,
@@ -73,8 +68,6 @@ class MainWindow(QMainWindow):
         ----------
         uc : UnitCellView
             Unit cell editor view
-        hopping : HoppingView)
-            Hopping parameter editor view
         uc_plot : UnitCellPlotView
             Unit cell 3D visualization view
         bz_plot : BrillouinonePlotView)
@@ -127,8 +120,6 @@ class MainWindow(QMainWindow):
         )
         plots_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
         plots_layout.addWidget(self.frame_widget(self.plot), stretch=1)
-
-        # column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
 
         main_layout.addLayout(unit_cell_layout, stretch=1)
         main_layout.addLayout(computation_layout, stretch=2)

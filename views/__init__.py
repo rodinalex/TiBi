@@ -1,5 +1,5 @@
-from .hopping_view import HoppingView
+# from .panels.hopping_panel import HoppingView
 
-__all__ = [
-    "HoppingView",
-]  # noqa: F401
+# __all__ = [
+#     "HoppingView",
+# ]  # noqa: F401

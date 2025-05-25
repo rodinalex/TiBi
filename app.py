@@ -6,8 +6,6 @@ import uuid
 # View Panels
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
-
-# from views.hopping_view import HoppingView
 from views.plot_view import PlotView
 from views.uc_view import UnitCellView
 from views.uc_plot_view import UnitCellPlotView
@@ -22,8 +20,6 @@ from views.status_bar_view import StatusBarView
 from controllers.app_controller import AppController
 from controllers.bz_plot_controller import BrillouinZonePlotController
 from controllers.computation_controller import ComputationController
-
-# from controllers.hopping_controller import HoppingController
 from controllers.main_ui_controller import MainUIController
 from controllers.plot_controller import PlotController
 from controllers.uc_controller import UnitCellController
@@ -75,7 +71,6 @@ class TiBiApplication:
 
         The view components are:
         - uc: used to construct unit cells/sites/states
-        - hopping: used to add hoppings between states in the unit cell
         - uc_plot: shows a 3D plot of the unit cell and its sites
         - bz_plot: shows the Brillouin zone of the unit cell
         - plot: shows 2D plots (e.g., band structures, density of states)
@@ -114,7 +109,6 @@ class TiBiApplication:
         # Initialize views
         # Panel views
         self.uc_view = UnitCellView()
-        # self.hopping_view = HoppingView()
         self.uc_plot_view = UnitCellPlotView()
         self.bz_plot_view = BrillouinZonePlotView()
         self.plot_view = PlotView()
@@ -127,7 +121,6 @@ class TiBiApplication:
         # Store the views in a dictionary
         self.views = {
             "uc": self.uc_view,
-            # "hopping": self.hopping_view,
             "uc_plot": self.uc_plot_view,
             "bz_plot": self.bz_plot_view,
             "plot": self.plot_view,
@@ -140,7 +133,6 @@ class TiBiApplication:
         # Initialize the main window
         self.main_window = MainWindow(
             self.uc_view,
-            # self.hopping_view,
             self.uc_plot_view,
             self.bz_plot_view,
             self.plot_view,
@@ -157,13 +149,6 @@ class TiBiApplication:
             self.uc_view,
             self.undo_stack,
         )
-
-        # self.hopping_controller = HoppingController(
-        #     self.unit_cells,
-        #     self.selection,
-        #     self.hopping_view,
-        #     self.undo_stack,
-        # )
 
         self.uc_plot_controller = UnitCellPlotController(
             self.unit_cells,
@@ -197,7 +182,6 @@ class TiBiApplication:
         # Store controllers in a dictionary
         self.controllers = {
             "uc": self.uc_controller,
-            # "hopping": self.hopping_controller,
             "uc_plot": self.uc_plot_controller,
             "bz_plot": self.bz_plot_controller,
             "plot": self.plot_controller,

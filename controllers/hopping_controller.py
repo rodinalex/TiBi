@@ -13,7 +13,7 @@ from resources.button_styles import (
     BUTTON_STYLE_NONHERMITIAN,
 )
 from src.tibitypes import UnitCell
-from views.hopping_view import HoppingView
+from views.panels import HoppingPanel
 
 
 class HoppingController(QObject):
@@ -39,7 +39,7 @@ class HoppingController(QObject):
             Dictionary mapping UUIDs to UnitCell objects
         selection : DataModel
             Model tracking the current selection
-        hopping_view : HoppingView
+        hopping_view : HoppingPanel
             The main view component
         undo_stack : QUndoStack
             `QUndoStack` to hold "undo-able" commands
@@ -95,7 +95,7 @@ class HoppingController(QObject):
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: DataModel,
-        hopping_view: HoppingView,
+        hopping_view: HoppingPanel,
         undo_stack: QUndoStack,
     ):
         """
@@ -108,7 +108,7 @@ class HoppingController(QObject):
                 Dictionary mapping UUIDs to UnitCell objects
             selection : DataModel
                 Model tracking the current selection
-            hopping_view : HoppingView
+            hopping_view : HoppingPanel
                 The main view component
             undo_stack : QUndoStack
                 `QUndoStack` to hold "undo-able" commands

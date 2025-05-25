@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 from resources.ui_elements import CheckableComboBox, divider_line
 from views.placeholder import PlaceholderWidget
 
-from .hopping_view import HoppingView
+from .panels import HoppingPanel
 
 
 class BandsView(QWidget):
@@ -208,7 +208,7 @@ class ComputationView(QWidget):
         layout.setContentsMargins(
             0, 0, 0, 0
         )  # Remove margins to maximize space
-        self.hopping_panel = HoppingView()
+        self.hopping_panel = HoppingPanel()
         self.bands_panel = BandsView()
         self.dos_panel = DOSView()
         self.topology_panel = TopologyView()
