@@ -6,7 +6,7 @@ from typing import Tuple
 import uuid
 
 from models import DataModel, UnitCell
-from resources.constants import CF_yellow, default_site_scaling
+from ui.constants import CF_yellow, default_site_scaling
 from views.uc_plot_view import UnitCellPlotView
 
 

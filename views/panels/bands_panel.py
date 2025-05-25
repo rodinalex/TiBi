@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QRadioButton,
 )
-from assets.utilities import divider_line
+from ui.utilities import divider_line
 from ..widgets import CheckableComboBox
 from views.placeholder import PlaceholderWidget
 

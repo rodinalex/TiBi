@@ -2,7 +2,7 @@ import numpy as np
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
-from resources.constants import (
+from ui.constants import (
     CF_vermillion,
     CF_yellow,
     CF_green,

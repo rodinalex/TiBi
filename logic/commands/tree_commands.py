@@ -1,7 +1,7 @@
 import copy
 from PySide6.QtCore import QItemSelectionModel, Signal
 from PySide6.QtGui import QStandardItem, QUndoCommand
-from resources.constants import (
+from models.factories import (
     mk_new_unit_cell,
     mk_new_site,
     mk_new_state,

@@ -7,7 +7,7 @@ from .main_ui_controller import MainUIController
 from .plot_controller import PlotController
 from .uc_controller import UnitCellController
 from .uc_plot_controller import UnitCellPlotController
-from resources.constants import selection_init
+from models.factories import selection_init
 from models import UnitCell
 
 

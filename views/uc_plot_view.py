@@ -3,7 +3,7 @@ import pyqtgraph.opengl as gl
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from resources.constants import CF_vermillion, CF_green, CF_sky
+from ui.constants import CF_vermillion, CF_green, CF_sky
 
 
 class UnitCellPlotView(QWidget):

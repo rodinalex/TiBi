@@ -29,7 +29,7 @@ from controllers.uc_plot_controller import UnitCellPlotController
 from models import DataModel, UnitCell
 
 # Constants
-from resources.constants import selection_init
+from models.factories import selection_init
 
 
 class TiBiApplication:
