@@ -1,181 +1,15 @@
 from dataclasses import dataclass, field
-import uuid
-from typing import Tuple
+import itertools
 import numpy as np
+from numpy.typing import NDArray
 from sympy.polys.domains import ZZ
 from sympy.polys.matrices import DM
 from scipy.spatial import Voronoi
-import itertools
+import uuid
 
-
-@dataclass
-class BandStructure:
-    """
-    An object containing a system's band structure.
-
-    Attributes
-    ----------
-
-        path : list[NDArray]
-            A list of point coordinates along which the bands are calculated.
-        special_points : list[NDArray]
-            A list of high-symmetry point coordinates used for the path.
-        eigenvalues : list[NDArray]
-            A list of arrays, where each array contains eivenvalues
-            corresponding to each point on the path.
-        eigenvectors : list[NDArray]
-            A list of 2D arrays, where each array contains the eigenvectors
-            corresponding to each point on the path.
-
-    Methods
-    -------
-        clear()
-            Reset the band structure to the initial state.
-        reset_bands()
-            Reset the band structure by clearing the path, eigenvalues, and
-            eigenvectors.
-        add_point(point: NDArray)
-            Add a point to the special points path. Reset all other fields.
-        remove_point()
-            Remove the last point from the special points path. Reset all other
-            fields.
-    """
-
-    path: list[np.ndarray] = field(default_factory=list)
-    special_points: list[np.ndarray] = field(default_factory=list)
-    eigenvalues: list[np.ndarray] = field(default_factory=list)
-    eigenvectors: list[np.ndarray] = field(default_factory=list)
-
-    def clear(self):
-        """Reset the band structure to the initial state."""
-        self.special_points.clear()
-        self.reset_bands()
-
-    def reset_bands(self):
-        """
-        Reset the band structure by clearing the path, eigenvalues, and
-        eigenvectors.
-        """
-        self.path.clear()
-        self.eigenvalues.clear()
-        self.eigenvectors.clear()
-
-    def add_point(self, point: np.ndarray):
-        """
-        Add a point to the special points path. Reset all other fields.
-
-        Parameters
-        ----------
-            point : NDArray
-                The point to be added to the special points path.
-        """
-        self.reset_bands()
-        self.special_points.append(point)
-
-    def remove_point(self):
-        """
-        Remove the last point from the special points path. Reset all other
-        fields.
-        """
-        self.reset_bands()
-        self.special_points.pop(-1)
-
-
-@dataclass
-class BasisVector:
-    """
-    A basis vector in 3D space for a crystalline unit cell.
-
-    Attributes
-    ----------
-    x : float
-        x-component in Cartesian coordinates
-    y : float
-        y-component in Cartesian coordinates
-    z : float
-        z-component in Cartesian coordinates
-    is_periodic : bool
-        Flag denoting whether the crystal repeats in this direction
-
-    Methods
-    -------
-    as_array()
-       Convert the `BasisVector` to a NumPy array with 3 elements.
-
-    """
-
-    x: float
-    y: float
-    z: float
-    is_periodic: bool = False
-
-    def as_array(self) -> np.ndarray:
-        """
-        Convert the `BasisVector` to a NumPy array.
-
-        Returns
-        -------
-            NDArray
-                3D vector as a NumPy array [x, y, z]
-        """
-        return np.array([self.x, self.y, self.z])
-
-
-@dataclass
-class State:
-    """
-    A quantum state within a `Site`.
-
-    Each `State` has a `name` and belongs to a `Site` in the `UnitCell`.
-    `State`s are the fundamental entities between which hopping can occur.
-
-    Attributes
-    ----------
-        name : str
-            Name of the `State` (e.g., "s", "px", "py", etc.)
-        id : UUID
-            Unique identifier for the `State`
-    """
-
-    name: str
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-
-
-@dataclass
-class Site:
-    """
-    A physical site (like an atom) within a `UnitCell`.
-
-    `Site`s are positioned using fractional coordinates relative to
-    the `UnitCell`'s basis vectors. Each `Site` can contain multiple `State`s.
-    The position is specified using fractional coordinates within
-    the `UnitCell`, where each coordinate ranges from 0 to 1.
-
-    Attributes
-    ----------
-
-        name : str
-            Name of the `Site` (e.g., atom name like "C", "Fe", etc.)
-        c1, c2, c3 : float
-            Fractional coordinates along the `BasisVector`s, ranging (0-1)
-        R : float
-            `Site` radius used for plotting
-        color : Tuple[float, float, float, float]
-            `Site` color used for plotting
-        states : dict[UUID, State]
-            Dictionary mapping state UUIDs to `State` objects
-        id : UUID
-            Unique identifier for the `Site`
-    """
-
-    name: str
-    c1: float
-    c2: float
-    c3: float
-    R: float
-    color: Tuple[float, float, float, float]
-    states: dict[uuid.UUID, State] = field(default_factory=dict)
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
+from .band_structure import BandStructure
+from .basis_vector import BasisVector
+from .site import Site
 
 
 @dataclass
@@ -187,50 +21,48 @@ class UnitCell:
 
     Attributes
     ----------
-
-        name : str
-            Name of the unit cell
-        v1, v2, v3 : BasisVector
-            Basis vectors
-        sites : dict[uuid.UUID, Site]
-            Dictionary mapping site UUIDs to `Site` objects
-        hoppings : dict[Tuple[uuid.UUID, uuid.UUID], \
-            list[Tuple[Tuple[int, int, int], np.complex128]]]
-            Dictionary of hopping terms between states.
-            Keys are pairs of state UUIDs (destination_state_id,
-            source_state_id).
-            Values are lists of (displacement, amplitude) pairs where:
-            - displacement is a tuple of three integers (n1,n2,n3) indicating
-            which periodic image of the unit cell is involved
-            (0,0,0 means within the same unit cell)
-            - amplitude is a complex number representing the hopping strength
-            and phase
-        bandstructure : BandStructure
-            Band structure object for the `UnitCell`
-        id : uuid.UUID
-            Unique identifier for the `UnitCell`
+    name : str
+        Name of the unit cell
+    v1, v2, v3 : BasisVector
+        Basis vectors
+    sites : dict[uuid.UUID, Site]
+        Dictionary mapping site UUIDs to `Site` objects
+    hoppings : dict[tuple[uuid.UUID, uuid.UUID], \
+        list[tuple[tuple[int, int, int], np.complex128]]]
+        Dictionary of hopping terms between states.
+        Keys are pairs of state UUIDs (destination_state_id,
+        source_state_id).
+        Values are lists of (displacement, amplitude) pairs where:
+        - displacement is a tuple of three integers (n1,n2,n3) indicating
+        which periodic image of the unit cell is involved
+        (0,0,0 means within the same unit cell)
+        - amplitude is a complex number representing the hopping strength
+        and phase
+    bandstructure : BandStructure
+        Band structure object for the `UnitCell`
+    id : uuid.UUID
+        Unique identifier for the `UnitCell`
 
     Methods
     -------
-
-        volume()
-            Compute the volume of the `UnitCell` using the scalar triple
-            product.
-        is_hermitian()
-            Check whether the hoppings are Hermitian.
-        reciprocal_vectors()
-            Compute the reciprocal lattice vectors for the periodic directions.
-        reduced_basis()
-            Return a reduced set of periodic `BasisVector`s using LLL
-            algorithm.
-        get_states()
-            Extract all `State`s from a `UnitCell` along with their identifying
-            information.
-        get_BZ()
-            Compute the Brillouin zone vertices and faces.
-        get_hamiltonian_function()
-            Generate a function that computes the Hamiltonian matrix
-            for a given k-point.
+    volume()
+        Compute the volume of the `UnitCell` using the scalar triple
+        product.
+    is_hermitian()
+        Check whether the hoppings are Hermitian.
+    reciprocal_vectors()
+        Compute the reciprocal lattice vectors for the periodic directions.
+    reduced_basis()
+        Return a reduced set of periodic `BasisVector`s using LLL
+        algorithm.
+    get_states()
+        Extract all `State`s from a `UnitCell` along with their identifying
+        information.
+    get_BZ()
+        Compute the Brillouin zone vertices and faces.
+    get_hamiltonian_function()
+        Generate a function that computes the Hamiltonian matrix
+        for a given k-point.
     """
 
     name: str
@@ -239,21 +71,20 @@ class UnitCell:
     v3: BasisVector
     sites: dict[uuid.UUID, Site] = field(default_factory=dict)
     hoppings: dict[
-        Tuple[uuid.UUID, uuid.UUID],
-        list[Tuple[Tuple[int, int, int], np.complex128]],
+        tuple[uuid.UUID, uuid.UUID],
+        list[tuple[tuple[int, int, int], np.complex128]],
     ] = field(default_factory=dict)
     bandstructure: BandStructure = field(default_factory=BandStructure)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
-    def volume(self) -> float:
+    def volume(self) -> np.float64:
         """
         Compute the volume of the `UnitCell` using the scalar triple product.
 
         Returns
         -------
-
-            float
-                Volume of the unit cell in arbitrary units
+        np.float64
+            Volume of the unit cell in arbitrary units
         """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
         return np.dot(a1, np.cross(a2, a3))
@@ -269,8 +100,8 @@ class UnitCell:
 
         Returns
         -------
-            bool
-                `True` if Hermitian; `False` if not.
+        bool
+            `True` if Hermitian; `False` if not.
         """
         hermitian = True
 
@@ -290,7 +121,7 @@ class UnitCell:
                 break
         return hermitian
 
-    def reciprocal_vectors(self) -> list[np.ndarray]:
+    def reciprocal_vectors(self) -> list[NDArray[np.float64]]:
         """
         Compute the reciprocal lattice vectors for the periodic directions.
 
@@ -301,9 +132,9 @@ class UnitCell:
 
         Returns
         -------
-            list[NDArray]
-                List of 3D reciprocal vectors (0 to 3 items depending on
-                periodicity)
+        list[NDArray[np.float64]]
+            List of 3D reciprocal vectors (0 to 3 items depending on
+            periodicity)
         """
         basis_vectors = [
             v for v in [self.v1, self.v2, self.v3] if v.is_periodic
@@ -315,33 +146,33 @@ class UnitCell:
 
         elif num_periodic == 1:
             a1 = basis_vectors[0].as_array()
-            G1 = 2 * np.pi * a1 / np.dot(a1, a1)
-            return [G1]
+            g1 = 2 * np.pi * a1 / np.dot(a1, a1)
+            return [g1]
 
         elif num_periodic == 2:
             a1, a2 = [v.as_array() for v in basis_vectors]
             normal = np.cross(a1, a2)
-            G1 = (
+            g1 = (
                 2
                 * np.pi
                 * np.cross(normal, a2)
                 / np.dot(a1, np.cross(a2, normal))
             )
-            G2 = (
+            g2 = (
                 2
                 * np.pi
                 * np.cross(a1, normal)
                 / np.dot(a2, np.cross(normal, a1))
             )
-            return [G1, G2]
+            return [g1, g2]
 
         elif num_periodic == 3:
             a1, a2, a3 = [v.as_array() for v in basis_vectors]
             volume = np.dot(a1, np.cross(a2, a3))
-            G1 = 2 * np.pi * np.cross(a2, a3) / volume
-            G2 = 2 * np.pi * np.cross(a3, a1) / volume
-            G3 = 2 * np.pi * np.cross(a1, a2) / volume
-            return [G1, G2, G3]
+            g1 = 2 * np.pi * np.cross(a2, a3) / volume
+            g2 = 2 * np.pi * np.cross(a3, a1) / volume
+            g3 = 2 * np.pi * np.cross(a1, a2) / volume
+            return [g1, g2, g3]
 
         else:
             raise ValueError("Invalid number of periodic vectors.")
@@ -359,15 +190,14 @@ class UnitCell:
 
         Parameters
         ----------
-
-            scale : float = 1e6
-                A float to scale the vectors for integer reduction.
-                Used because the LLL algorithm works with integer matrices.
+        scale : float = 1e6
+            A float to scale the vectors for integer reduction.
+            Used because the LLL algorithm works with integer matrices.
 
         Returns
         -------
-            list[BasisVector]
-                A list of BasisVector objects representing the reduced basis
+        list[BasisVector]
+            A list of BasisVector objects representing the reduced basis
         """
         vs = [self.v1, self.v2, self.v3]
         # Determine which vectors are periodic
@@ -414,10 +244,10 @@ class UnitCell:
 
         Returns
         -------
-            Tuple[list[State], list[Tuple[str, UUID, str, UUID]]]
-                A tuple containing a list of `State` objects and a list of
-                tuples (site_name, site_id, state_name, state_id)
-                providing context for each state (which site it belongs to).
+        tuple[list[State], list[tuple[str, uuid.UUID, str, uuid.UUID]]]
+            A tuple containing a list of `State` objects and a list of
+            tuples (site_name, site_id, state_name, state_id)
+            providing context for each state (which site it belongs to).
         """
         states = []
         state_info = []
@@ -442,10 +272,11 @@ class UnitCell:
 
         Returns
         -------
-            Tuple[NDArray[NDArray], NDArray[NDArray[NDArray]]]
-                The first element of the tuple gives the BZ vertex coordinates.
-                The second element gives a list of faces, where each face is
-                defined by vertex points. In 2D, the "faces" are edges.
+        Tuple[NDArray[NDArray[np.float64]],\
+            NDArray[NDArray[NDArray[np.float64]]]]
+            The first element of the tuple gives the BZ vertex coordinates.
+            The second element gives a list of faces, where each face is
+            defined by vertex points. In 2D, the "faces" are edges.
         """
         n_neighbors = (
             1  # Number of neighboring reciprocal lattice points to consider
@@ -460,8 +291,8 @@ class UnitCell:
             bz_faces = np.array([])
 
         elif dim == 1:
-            G1 = reciprocal_vectors[0]
-            bz_vertices = np.array([[G1[0] / 2], [-G1[0] / 2]])
+            g1 = reciprocal_vectors[0]
+            bz_vertices = np.array([[g1[0] / 2], [-g1[0] / 2]])
             bz_faces = np.array([])
 
         else:
@@ -535,9 +366,9 @@ class UnitCell:
 
         Returns
         -------
-            function
-                A function that takes k-points (numpy array) and returns a
-                complex Hamiltonian matrix.
+        function
+            A function that takes k-points (numpy array) and returns a
+            complex Hamiltonian matrix.
         """
         # Get the list of all states in the unit cell for
         # determining the Hamiltonian size
@@ -574,15 +405,15 @@ class UnitCell:
 
             Parameters
             ----------
-                k : NDArray[float]
-                    k-point vector in the basis of reciprocal lattice vectors
-                    If the system has n periodic directions, k should be an
-                    n-dimensional vector
+            k : NDArray[np.float64]
+                k-point vector in the basis of reciprocal lattice vectors
+                If the system has n periodic directions, k should be an
+                n-dimensional vector
 
             Returns
             -------
-                NDArray
-                    Complex Hamiltonian matrix of size (n_states, n_states)
+            NDArray[np.float64]
+                Complex Hamiltonian matrix of size (n_states, n_states)
             """
             # Validate the k-point dimension matches the number of
             # periodic directions

@@ -98,7 +98,7 @@ class HoppingTable(QWidget):
         layout.addWidget(self.hopping_table)
 
 
-class HoppingView(QWidget):
+class HoppingPanel(QWidget):
     """
     View for editing hopping parameters between quantum states.
 

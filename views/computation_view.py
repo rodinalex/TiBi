@@ -1,160 +1,10 @@
-# import numpy as np
 from PySide6.QtWidgets import (
-    QWidget,
-    QTabWidget,
     QSizePolicy,
+    QTabWidget,
     QVBoxLayout,
-    QLabel,
-    # QHBoxLayout,
-    # QVBoxLayout,
-    # QFormLayout,
-    QPushButton,
-    QSpinBox,
-    QGridLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt
-from resources.ui_elements import divider_line
-from views.placeholder import PlaceholderWidget
-
-
-class BandsView(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Selection panel
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.selection_grid = QGridLayout()
-        layout.addLayout(self.selection_grid, stretch=1)
-        layout.addWidget(divider_line())
-        layout.addWidget(PlaceholderWidget("BAND PROJECTION"), stretch=1)
-        layout.addWidget(divider_line())
-        layout.addWidget(PlaceholderWidget("SPOT"), stretch=1)
-
-        # selection_form_layout = QFormLayout()
-        # selection_form_layout.setVerticalSpacing(2)
-
-        # Gamma point controls (Γ - origin of reciprocal space)
-        self.add_gamma_btn = QPushButton("Γ")
-        gamma_label = QLabel("Brillouin Zone Path")
-        gamma_label.setAlignment(Qt.AlignCenter)
-        self.selection_grid.addWidget(gamma_label, 0, 0, 1, 6)
-        self.selection_grid.addWidget(self.add_gamma_btn, 2, 1)
-
-        # Vertex selection controls
-        self.prev_vertex_btn = QPushButton("↓")
-        self.next_vertex_btn = QPushButton("↑")
-        self.add_vertex_btn = QPushButton("V")
-        self.selection_grid.addWidget(self.next_vertex_btn, 1, 2)
-        self.selection_grid.addWidget(self.add_vertex_btn, 2, 2)
-        self.selection_grid.addWidget(self.prev_vertex_btn, 3, 2)
-
-        # Edge midpoint selection controls
-        self.prev_edge_btn = QPushButton("↓")
-        self.next_edge_btn = QPushButton("↑")
-        self.add_edge_btn = QPushButton("E")
-        self.selection_grid.addWidget(self.next_edge_btn, 1, 3)
-        self.selection_grid.addWidget(self.add_edge_btn, 2, 3)
-        self.selection_grid.addWidget(self.prev_edge_btn, 3, 3)
-
-        # Face center selection controls
-        self.prev_face_btn = QPushButton("↓")
-        self.next_face_btn = QPushButton("↑")
-        self.add_face_btn = QPushButton("F")
-        self.selection_grid.addWidget(self.next_face_btn, 1, 4)
-        self.selection_grid.addWidget(self.add_face_btn, 2, 4)
-        self.selection_grid.addWidget(self.prev_face_btn, 3, 4)
-
-        # Path controls
-        self.remove_last_btn = QPushButton("Undo")
-        self.clear_path_btn = QPushButton("Clear")
-
-        self.n_points_spinbox = QSpinBox()
-        self.n_points_spinbox.setRange(1, 10000)
-        self.n_points_spinbox.setValue(100)
-        self.n_points_spinbox.setButtonSymbols(QSpinBox.NoButtons)
-
-        self.compute_bands_btn = QPushButton("Compute bands")
-        self.compute_bands_btn.setEnabled(
-            False
-        )  # Disabled until path has at least two points
-
-        self.selection_grid.addWidget(self.remove_last_btn, 1, 6)
-        self.remove_last_btn.setEnabled(
-            False
-        )  # Disabled until path has points
-
-        self.selection_grid.addWidget(self.clear_path_btn, 1, 7)
-        self.clear_path_btn.setEnabled(False)  # Disabled until path has points
-
-        self.selection_grid.addWidget(QLabel("K Points:"), 2, 6)
-        self.selection_grid.addWidget(self.n_points_spinbox, 2, 7)
-
-        self.selection_grid.addWidget(self.compute_bands_btn, 3, 6, 1, 2)
-
-        self.selection_grid.setVerticalSpacing(2)
-        self.selection_grid.setHorizontalSpacing(2)
-
-        # Initially disable all selection buttons
-        btns = [
-            self.add_gamma_btn,
-            self.prev_vertex_btn,
-            self.next_vertex_btn,
-            self.add_vertex_btn,
-            self.prev_edge_btn,
-            self.next_edge_btn,
-            self.add_edge_btn,
-            self.prev_face_btn,
-            self.next_face_btn,
-            self.add_face_btn,
-        ]
-        for btn in btns:
-            btn.setEnabled(False)
-
-        # Group buttons by type for easier controller access
-        self.vertex_btns = [
-            self.prev_vertex_btn,
-            self.next_vertex_btn,
-            self.add_vertex_btn,
-        ]
-        self.edge_btns = [
-            self.prev_edge_btn,
-            self.next_edge_btn,
-            self.add_edge_btn,
-        ]
-        self.face_btns = [
-            self.prev_face_btn,
-            self.next_face_btn,
-            self.add_face_btn,
-        ]
-
-        # self.control_panel.addWidget(self.compute_bands_btn)
-        # self.control_panel.setSpacing(3)
-        # layout.setContentsMargins(0, 0, 0, 0)  # Remove margins to maximize space
-
-        # layout.addWidget(PlaceholderWidget("BANDS"))
-
-
-class DOSView(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # Remove margins to maximize space
-
-        layout.addWidget(PlaceholderWidget("DOS"))
-
-
-class TopologyView(QWidget):
-    def __init__(self):
-        super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # Remove margins to maximize space
-
-        layout.addWidget(PlaceholderWidget("TOPOLOGY"))
+from .panels import BandsPanel, HoppingPanel
 
 
 class ComputationView(QWidget):
@@ -169,15 +19,13 @@ class ComputationView(QWidget):
         layout.setContentsMargins(
             0, 0, 0, 0
         )  # Remove margins to maximize space
-        self.bands_panel = BandsView()
-        self.dos_panel = DOSView()
-        self.topology_panel = TopologyView()
+        self.hopping_panel = HoppingPanel()
+        self.bands_panel = BandsPanel()
         # Create main tab widget
         self.tabs = QTabWidget()
+        self.tabs.addTab(self.hopping_panel, "Hopping")
         self.tabs.addTab(self.bands_panel, "Bands")
-        self.tabs.addTab(self.dos_panel, "DOS")
-        self.tabs.addTab(self.topology_panel, "Topology")
-        self.tabs.setTabPosition(QTabWidget.North)
+        self.tabs.setTabPosition(QTabWidget.East)
         self.tabs.setDocumentMode(True)
         # Set size policy to make the tab widget expand
         self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

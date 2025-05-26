@@ -2,12 +2,10 @@ from itertools import product
 import numpy as np
 from PySide6.QtCore import QObject
 import pyqtgraph.opengl as gl
-from typing import Tuple
 import uuid
 
-from models.data_models import DataModel
-from resources.constants import CF_yellow, default_site_scaling
-from src.tibitypes import UnitCell
+from models import DataModel, UnitCell
+from ui.constants import CF_yellow, default_site_scaling
 from views.uc_plot_view import UnitCellPlotView
 
 
@@ -203,7 +201,7 @@ class UnitCellPlotController(QObject):
 
     def _get_unit_cell_edges(
         self, a1, a2, a3
-    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
         """
         Get the edges of the unit cell parallelepiped.
 
@@ -214,7 +212,7 @@ class UnitCellPlotController(QObject):
 
         Returns
         -------
-        list[Tuple[Tuple[float, float, float], Tuple[float, float, float]]]
+        list[tuple[tuple[float, float, float], tuple[float, float, float]]]
             A list of edges in the unit cell parallelepiped.
             Each edge is represented as a tuple of two vertices.
             Each vertex is a tuple of three floats (x, y, z).

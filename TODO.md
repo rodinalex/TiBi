@@ -34,7 +34,6 @@
 
 - Make sure that we cannot add the same BZ point multiple times
 
-
 🔧 Core Functionalities You Already Have (and are spot-on):
 Band structure with high-symmetry path + projections (like orbital or atomic character).
 DOS and projected DOS, computed over a grid.

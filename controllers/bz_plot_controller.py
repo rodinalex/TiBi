@@ -5,18 +5,14 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QUndoStack
 import uuid
 
-from commands.bz_commands import (
+from logic.commands import (
     AddBZPointCommand,
     ClearBZPathCommand,
     RemoveBZPointCommand,
 )
-from models.data_models import DataModel
-from resources.constants import (
-    CF_red,
-    bz_point_lists_init,
-    bz_point_selection_init,
-)
-from src.tibitypes import UnitCell
+from models import DataModel, UnitCell
+from ui.constants import CF_red
+from models.factories import bz_point_lists_init, bz_point_selection_init
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
 

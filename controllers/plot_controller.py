@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject
 import numpy as np
 
-from src.tibitypes import BandStructure
+from models import BandStructure
 from views.plot_view import PlotView
 
 
@@ -51,7 +51,6 @@ class PlotController(QObject):
         self.plot_view.ax.set_ylabel("Energy")
         self.plot_view.ax.set_xticks([])  # hide x-axis ticks
         self.plot_view.ax.grid(True, axis="y")  # grid only on y-axis
-
         path = np.array(bandstructure.path)
         bands = np.array(bandstructure.eigenvalues)
         special_points = np.array(bandstructure.special_points)
@@ -79,24 +78,3 @@ class PlotController(QObject):
                 )
         # Draw the canvas
         self.plot_view.canvas.draw()
-
-
-# Future enhancement: Add special point labels and vertical lines
-# # Add vertical lines at special points
-# special_distances = [distances[0]]  # First point
-
-# # Add intermediate points where path changes direction
-# for i in range(1, len(special_points)):
-#     idx = i * (self.num_points // (len(special_points) - 1))
-#     if idx < len(distances):
-#         special_distances.append(distances[idx])
-
-# # Add vertical lines at special points
-# for dist in special_distances:
-#     self.ax.axvline(x=dist, color="k", linestyle="--", alpha=0.5)
-
-# # Set x-ticks at special points with labels
-# self.ax.set_xticks(special_distances)
-# if len(self.special_point_labels) >= len(special_distances):
-#     self.ax.set_xticklabels(self.special_point_labels[:
-#  len(special_distances)])

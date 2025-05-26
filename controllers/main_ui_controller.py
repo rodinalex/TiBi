@@ -5,10 +5,14 @@ from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import uuid
 
-from resources.action_manager import ActionManager
-from src.serialization import serialize_unit_cells, deserialize_unit_cells
+from ui.actions.action_manager import ActionManager
+from logic.serialization.serialization import (
+    serialize_unit_cells,
+    deserialize_unit_cells,
+)
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
+from views.main_window import MainWindow
 from views.status_bar_view import StatusBarView
 
 
@@ -22,9 +26,23 @@ class MainUIController(QObject):
 
     Attributes
     ----------
+    models : dict
+        A dictionary of global models
+    main_window : MainWindow
+        Subclass of QMainWindow containing the application's main view
+    menu_bar_view : MenuBarView
+        Standard menu bar
+    toolbar_view : MainToolbarView
+        Toolbar at the top of the application window
+    status_bar_view : StatusBarView
+        Status bar at the bottom of the application window
+    undo_stack : QUndoStack
+        Stack for 'undo-able' actions
 
     Signals
     -------
+    wireframe_toggled
+        Toggle the unit cell wireframe on/off
     """
 
     wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
@@ -34,8 +52,10 @@ class MainUIController(QObject):
 
     def __init__(
         self,
-        models,
-        main_window,
+        project_path,
+        unit_cells,
+        selection,
+        main_window: MainWindow,
         menu_bar_view: MenuBarView,
         toolbar_view: MainToolbarView,
         status_bar_view: StatusBarView,
@@ -44,16 +64,25 @@ class MainUIController(QObject):
         """
         Initialize the main UI controller.
 
-        Args:
-            models: Dictionary of data models used in the application
-            main_window: MainWindow instance
-            menu_bar_view: MenuBarView instance
-            toolbar_view: MainToolbarView instance
-            status_bar_view: StatusBarView instance
-            undo_stack: QUndoStack instance
+        Parameters
+        ----------
+        models : dict
+            A dictionary of global models
+        main_window : MainWindow
+            Subclass of QMainWindow containing the application's main view
+        menu_bar_view : MenuBarView
+            Standard menu bar
+        toolbar_view : MainToolbarView
+            Toolbar at the top of the application window
+        status_bar_view : StatusBarView
+            Status bar at the bottom of the application window
+        undo_stack : QUndoStack
+            Stack for 'undo-able' actions
         """
         super().__init__()
-        self.models = models
+        self.project_path = project_path
+        self.unit_cells = unit_cells
+        self.selection = selection
         self.main_window = main_window
         self.menu_bar = menu_bar_view
         self.toolbar = toolbar_view
@@ -119,8 +148,9 @@ class MainUIController(QObject):
         )
 
         if reply == QMessageBox.Yes:
-            self.models["unit_cells"].clear()
-            self.models["project_path"] = None
+            self.project_path = None
+            self.unit_cells.clear()
+            self.undo_stack.clear()
             self.project_refresh_requested.emit()
 
     @Slot()
@@ -149,9 +179,9 @@ class MainUIController(QObject):
                 with open(file_path, "r", encoding="utf-8") as f:
                     json_string = f.read()
                 unit_cells = deserialize_unit_cells(json_string)
-                self.models["unit_cells"].clear()
-                self.models["unit_cells"].update(unit_cells)
-                self.models["project_path"] = file_path
+                self.unit_cells.clear()
+                self.unit_cells.update(unit_cells)
+                self.project_path = file_path
                 self.project_refresh_requested.emit()
             except Exception as e:
                 QMessageBox.critical(
@@ -197,7 +227,6 @@ class MainUIController(QObject):
 
                 self.models["unit_cells"].update(new_unit_cells)
                 self.project_refresh_requested.emit()
-                print(self.models["unit_cells"])
             except Exception as e:
                 QMessageBox.critical(
                     self.main_window,
@@ -223,6 +252,7 @@ class MainUIController(QObject):
         else:
             file_path = None
 
+        # If there is no path, open a dialog for the user to pick it
         if not file_path:
             # Open a save file dialog
             file_path, _ = QFileDialog.getSaveFileName(

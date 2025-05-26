@@ -1,158 +1,35 @@
-from PySide6.QtCore import QSize
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import (
-    QApplication,
-    QFrame,
-    QHBoxLayout,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QApplication
 import sys
 import uuid
 
-# View Panels
-from views.bz_plot_view import BrillouinZonePlotView
-from views.computation_view import ComputationView
-from views.hopping_view import HoppingView
-from views.plot_view import PlotView
-from views.uc_view import UnitCellView
-from views.uc_plot_view import UnitCellPlotView
-
-# Main UI View Components
-from views.menu_bar_view import MenuBarView
-from views.main_toolbar_view import MainToolbarView
-from views.status_bar_view import StatusBarView
-
-# Temporary placeholder
-from views.placeholder import PlaceholderWidget
+# View Components
+from views import (
+    BrillouinZonePlotView,
+    ComputationView,
+    MenuBarView,
+    MainWindow,
+    MainToolbarView,
+    PlotView,
+    StatusBarView,
+    UnitCellPlotView,
+    UnitCellView,
+)
 
 # Controller Components
-from controllers.app_controller import AppController
-from controllers.bz_plot_controller import BrillouinZonePlotController
-from controllers.computation_controller import ComputationController
-from controllers.hopping_controller import HoppingController
-from controllers.main_ui_controller import MainUIController
-from controllers.plot_controller import PlotController
-from controllers.uc_controller import UnitCellController
-from controllers.uc_plot_controller import UnitCellPlotController
+from controllers import (
+    AppController,
+    BrillouinZonePlotController,
+    ComputationController,
+    MainUIController,
+    PlotController,
+    UnitCellController,
+    UnitCellPlotController,
+)
 
-# Custom Dictionaries
-from models.data_models import DataModel
-
-# Constants
-from resources.constants import selection_init
-
-# Types
-from src.tibitypes import UnitCell
-
-
-class MainWindow(QMainWindow):
-    """
-    Main application window that defines the UI layout.
-
-    This class is purely a view component that arranges the UI elements and
-    doesn't contain business logic or model manipulation. It creates a
-    four-column layout for organizing the different components of the
-    application, along with menu bar, toolbar, and status bar.
-
-    Following the MVC pattern, this class is restricted to presentation
-    concerns only.
-    """
-
-    def __init__(
-        self,
-        uc: UnitCellView,
-        hopping: HoppingView,
-        uc_plot: UnitCellPlotView,
-        bz_plot: BrillouinZonePlotView,
-        plot: PlotView,
-        computation_view: ComputationView,
-        menu_bar: MenuBarView,
-        toolbar: MainToolbarView,
-        status_bar: StatusBarView,
-    ):
-        """
-        Initialize the main window with views for different components.
-
-        Args:
-            uc (UnitCellView): Unit cell editor view
-            hopping (HoppingView): Hopping parameter editor view
-            uc_plot (UnitCellPlotView): Unit cell 3D visualization view
-            bz_plot (BrillouinonePlotView): Brillouin zone 3D visualization view
-            plot (PlotView): 2D plot view
-            computation (ComputationView): Multi-tab view used to set up calculations
-            menu_bar (MenuBarView): Menu bar view
-            toolbar (MainToolbarView): Main toolbar view
-            status_bar (StatusBarView): Status bar view
-        """
-        super().__init__()
-        self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1400, 825))
-
-        # Store references to UI components
-        self.uc = uc
-        self.hopping = hopping
-        self.uc_plot = uc_plot
-        self.bz_plot = bz_plot
-        self.plot = plot
-        self.computation_view = computation_view
-        # Set menu bar
-        self.setMenuBar(menu_bar)
-        # Add toolbar
-        self.addToolBar(toolbar)
-        # Set status bar
-        self.setStatusBar(status_bar)
-
-        # Main Layout
-        main_view = QWidget()
-        main_layout = QHBoxLayout(main_view)
-
-        # Create four column layouts
-        column1_layout = QVBoxLayout()  # Unit cell creation
-        column2_layout = QVBoxLayout()  # Hopping creation
-        column3_layout = QVBoxLayout()  # UC 3D plot and 2D plots
-        column4_layout = QVBoxLayout()  # BZ 3D plot and computation
-
-        column1_layout.addWidget(self.frame_widget(self.uc), stretch=3)
-
-        column2_layout.addWidget(self.frame_widget(self.hopping), stretch=5)
-        column2_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("[SPOT]")), stretch=1
-        )
-
-        column3_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
-        column3_layout.addWidget(self.frame_widget(self.plot), stretch=1)
-
-        column4_layout.addWidget(self.frame_widget(self.bz_plot), stretch=6)
-        column4_layout.addWidget(
-            self.frame_widget(self.computation_view), stretch=10
-        )
-        column4_layout.addWidget(
-            self.frame_widget(PlaceholderWidget("[PROGRESS]")), stretch=1
-        )
-
-        main_layout.addLayout(column1_layout, stretch=1)
-        main_layout.addLayout(column2_layout, stretch=6)
-        main_layout.addLayout(column3_layout, stretch=9)
-        main_layout.addLayout(column4_layout, stretch=4)
-
-        # Set as central widget
-        self.setCentralWidget(main_view)
-
-    def frame_widget(self, widget: QWidget) -> QFrame:
-        """
-        Enclose a widget in a frame. Used to make the layout look more
-        structured.
-        """
-        frame = QFrame()
-        frame.setFrameShape(QFrame.Box)
-        frame.setLineWidth(1)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.addWidget(widget, stretch=1)
-        frame.setLayout(layout)
-        return frame
+# Models and factories
+from models import DataModel, UnitCell
+from models.factories import selection_init
 
 
 class TiBiApplication:
@@ -188,22 +65,9 @@ class TiBiApplication:
         of unit cells and sites.
         - selection: a dictionary with UUID's of the selected
         unit cells/sites/states
-        - bz_path: a list of arrays of length D, where D is the system
-        dimensionality, defining a path throught the Brillouing zone
-        Used for band computation. Shared by the bz_plot_controller
-        and computation_controller.
-        - active_band_structure: a dictionary containing the band
-        structure data of the currently-selected unit cell.
-        - band_structures: A dictionary of the band structures that
-        have been obtained in the current sessions for the unit cells.
-        The keys are unit cells UUID's and the values are
-        BandStructure objects. Storing the band structures allows
-        the user to quickly switch between different unit cells to
-        compare their band structures.
 
         The view components are:
         - uc: used to construct unit cells/sites/states
-        - hopping: used to add hoppings between states in the unit cell
         - uc_plot: shows a 3D plot of the unit cell and its sites
         - bz_plot: shows the Brillouin zone of the unit cell
         - plot: shows 2D plots (e.g., band structures, density of states)
@@ -232,17 +96,9 @@ class TiBiApplication:
         self.unit_cells: dict[uuid.UUID, UnitCell] = {}
         self.selection = DataModel(selection_init())
 
-        # Store the models in a dictionary
-        self.models = {
-            "project_path": self.project_path,
-            "unit_cells": self.unit_cells,
-            "selection": self.selection,
-        }
-
         # Initialize views
         # Panel views
         self.uc_view = UnitCellView()
-        self.hopping_view = HoppingView()
         self.uc_plot_view = UnitCellPlotView()
         self.bz_plot_view = BrillouinZonePlotView()
         self.plot_view = PlotView()
@@ -252,23 +108,9 @@ class TiBiApplication:
         self.toolbar = MainToolbarView()
         self.status_bar = StatusBarView()
 
-        # Store the views in a dictionary
-        self.views = {
-            "uc": self.uc_view,
-            "hopping": self.hopping_view,
-            "uc_plot": self.uc_plot_view,
-            "bz_plot": self.bz_plot_view,
-            "plot": self.plot_view,
-            "computation": self.computation_view,
-            "menu_bar": self.menu_bar,
-            "toolbar": self.toolbar,
-            "status_bar": self.status_bar,
-        }
-
         # Initialize the main window
         self.main_window = MainWindow(
             self.uc_view,
-            self.hopping_view,
             self.uc_plot_view,
             self.bz_plot_view,
             self.plot_view,
@@ -283,13 +125,6 @@ class TiBiApplication:
             self.unit_cells,
             self.selection,
             self.uc_view,
-            self.undo_stack,
-        )
-
-        self.hopping_controller = HoppingController(
-            self.unit_cells,
-            self.selection,
-            self.hopping_view,
             self.undo_stack,
         )
 
@@ -310,11 +145,16 @@ class TiBiApplication:
         self.plot_controller = PlotController(self.plot_view)
 
         self.computation_controller = ComputationController(
-            self.models, self.computation_view
+            self.unit_cells,
+            self.selection,
+            self.computation_view,
+            self.undo_stack,
         )
 
         self.main_ui_controller = MainUIController(
-            self.models,
+            self.project_path,
+            self.unit_cells,
+            self.selection,
             self.main_window,
             self.menu_bar,
             self.toolbar,
@@ -322,21 +162,23 @@ class TiBiApplication:
             self.undo_stack,
         )
 
-        self.controllers = {
-            "uc": self.uc_controller,
-            "hopping": self.hopping_controller,
-            "uc_plot": self.uc_plot_controller,
-            "bz_plot": self.bz_plot_controller,
-            "plot": self.plot_controller,
-            "computation": self.computation_controller,
-            "main_ui": self.main_ui_controller,
-        }
-
         # Initialize the top-level application controller
-        self.app_controller = AppController(self.models, self.controllers)
+        self.app_controller = AppController(
+            self.unit_cells,
+            self.selection,
+            self.uc_controller,
+            self.uc_plot_controller,
+            self.bz_plot_controller,
+            self.plot_controller,
+            self.computation_controller,
+            self.main_ui_controller,
+        )
 
         # Set initial status message
         self.main_ui_controller.update_status("Application started")
+
+        # Connect the shutdown signal from the main window
+        self.main_window.window_closed.connect(self._cleanup)
 
     def run(self):
         """
@@ -344,11 +186,21 @@ class TiBiApplication:
 
         Shows the main window and starts the Qt event loop.
 
-        Returns:
-            int: Application exit code
+        Returns
+        -------
+        int
+            Application exit code
         """
         self.main_window.show()
         return self.app.exec()
+
+    def _cleanup(self):
+        """
+        Tasks performed when the app is shut down.
+
+        - Disconnect the undo/redo stack signals
+        """
+        self.main_ui_controller.action_manager.disconnect_undo_redo()
 
 
 def main():
@@ -357,8 +209,10 @@ def main():
 
     Creates and runs the TiBi application.
 
-    Returns:
-        int: Application exit code
+    Returns
+    -------
+    int
+        Application exit code
     """
     # Create and initialize the application
     app = TiBiApplication()

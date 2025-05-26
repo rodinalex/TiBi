@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QUndoCommand
 
-from src.tibitypes import UnitCell
+from models import UnitCell
 from views.computation_view import ComputationView
 
 
