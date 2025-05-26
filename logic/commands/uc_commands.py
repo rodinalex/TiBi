@@ -1,4 +1,3 @@
-import copy
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QUndoCommand
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox, QRadioButton
@@ -36,8 +35,6 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         The old value of the parameter before the change
     new_value : float
         The new value of the parameter after the change
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -77,14 +74,11 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         self.signal = signal
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.get("unit_cell")
 
         self.old_value = getattr(
             getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
-        )
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
         )
 
     def redo(self):
@@ -94,7 +88,6 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.new_value,
         )
         self.spinbox.setValue(self.new_value)
-        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def undo(self):
@@ -104,9 +97,6 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
         self.signal.emit()
 
 
@@ -140,8 +130,6 @@ class ReduceBasisCommand(QUndoCommand):
         The old basis vectors of the unit cell before reduction
     new_basis : list[BasisVector]
         The new basis vectors of the unit cell after reduction
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -178,9 +166,6 @@ class ReduceBasisCommand(QUndoCommand):
             uc = self.unit_cells[self.uc_id]
             self.old_basis = [uc.v1, uc.v2, uc.v3]
             self.new_basis = uc.reduced_basis()
-            self.bandstructure = copy.deepcopy(
-                self.unit_cells[self.uc_id].bandstructure
-            )
 
     def redo(self):
         if self.uc_id:
@@ -199,7 +184,6 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
-            self.unit_cells[self.uc_id].bandstructure.clear()
             self.signal.emit()
 
     def undo(self):
@@ -218,9 +202,6 @@ class ReduceBasisCommand(QUndoCommand):
 
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
-            )
-            self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-                self.bandstructure
             )
             self.signal.emit()
 
@@ -273,8 +254,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
         The new basis vector 2 of the unit cell after the change
     new_v3 : BasisVector
         The new basis vector 3 of the unit cell after the change
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -286,6 +265,27 @@ class ChangeDimensionalityCommand(QUndoCommand):
         dim: int,
         buttons: list[QRadioButton],
     ):
+        """
+        Initialize the ChangeDimensionalityCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : dict[str, uuid.UUID]
+            Dictionary containing the current selection
+        param : str
+            The parameter to be updated (radius, color, etc.)
+        unit_cell_view : UnitCellView
+            Unit cell editing panel
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        dim : int
+            New dimensionality
+        buttons : list[QRadioButton]
+            Dimensionality radio buttons
+        """
         super().__init__("Change dimensionality")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -328,9 +328,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
             self.new_v3 = BasisVector(
                 self.old_v3.x, self.old_v3.y, self.old_v3.z, True
             )
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
 
     def redo(self):
         self._set_vector_enables(self.new_dim)
@@ -345,8 +342,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.new_dim)
-        self.unit_cells[self.uc_id].bandstructure.clear()
-
         self.signal.emit()
 
     def undo(self):
@@ -363,10 +358,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.old_dim)
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
-
         self.signal.emit()
 
     def _set_vector_enables(self, dim):
