@@ -5,7 +5,7 @@ from .bz_plot_controller import BrillouinZonePlotController
 from .computation_controller import ComputationController
 from .main_ui_controller import MainUIController
 from models.factories import selection_init
-from models import UnitCell
+from models import DataModel, UnitCell
 from .plot_controller import PlotController
 from .uc_controller import UnitCellController
 from .uc_plot_controller import UnitCellPlotController
@@ -23,32 +23,56 @@ class AppController(QObject):
 
     Attributes
     ----------
-    models : dict
-        Dictionary of data models used in the application
-    controllers : dict
-        Dictionary of controllers for different application components
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : DataModel
+        `DataModel` tracking the current selection
+    bz_plot_controller : BrillouinZonePlotController
+        Controller of the BZ graphical component
+    computation_controller : ComputationController
+        Controller orchestrating computations
+    main_ui_controller : MainUIController
+        Controller in charge of menus and toolbars
+    plot_controller : PlotController
+        Controller of the results graphical component
+    uc_controller : UnitCellController
+        Controller in charge of `UnitCell` creation/editing
+    uc_plot_controller : UnitCellPlotController
+        Controller of the `UnitCell` graphical component
     """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
-        uc_controller: UnitCellController,
-        uc_plot_controller: UnitCellPlotController,
+        selection: DataModel,
         bz_plot_controller: BrillouinZonePlotController,
-        plot_controller: PlotController,
         computation_controller: ComputationController,
         main_ui_controller: MainUIController,
+        plot_controller: PlotController,
+        uc_controller: UnitCellController,
+        uc_plot_controller: UnitCellPlotController,
     ):
         """
         Initialize the application controller.
 
         Parameters
         ----------
-        models : dict
-            Dictionary of data models used in the application
-        controllers : dict
-            Dctionary of controllers for different application components
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            `DataModel` tracking the current selection
+        bz_plot_controller : BrillouinZonePlotController
+            Controller of the BZ graphical component
+        computation_controller : ComputationController
+            Controller orchestrating computations
+        main_ui_controller : MainUIController
+            Controller in charge of menus and toolbars
+        plot_controller : PlotController
+            Controller of the results graphical component
+        uc_controller : UnitCellController
+            Controller in charge of `UnitCell` creation/editing
+        uc_plot_controller : UnitCellPlotController
+            Controller of the `UnitCell` graphical component
         """
         super().__init__()
         # self.models = models
@@ -67,43 +91,29 @@ class AppController(QObject):
         # bz_plot_controller
         # When the path is updated, the bandstructure is cleared.
         # Clear the bandstructure plot
-
         self.bz_plot_controller.bz_path_updated.connect(
             lambda: self.plot_controller.plot_band_structure(
                 self.unit_cells[self.selection["unit_cell"]].bandstructure
             )
         )
-        # uc_controller
-
-        # When an item in the tree view is renamed, refresh the hopping matrix
-        # and table to reflect the correct names
-        self.uc_controller.item_changed.connect(self._handle_item_changed)
-        # Refresh the plots after unit cell selection or parameter change
-        self.uc_controller.plot_update_requested.connect(
-            self._handle_plot_update_requested
-        )
-
-        # hopping controller
-
-        # Handle the programmatic selection of an item in the tree
-        # due to undo/redo in the hopping controller
-        # self.hopping_controller.selection_requested.connect(
-        #     self._handle_selection_requested
-        # )
-
-        # Handle the request to draw hopping segments after a pair of states
-        # is selected from the hopping button matrix
-        # self.hopping_controller.hopping_segments_requested.connect(
-        #     self._handle_hopping_segments_requested
-        # )
-
-        # Computation controller
+        # computation_controller
         self.computation_controller.status_updated.connect(self._relay_status)
         self.computation_controller.band_computation_completed.connect(
             self._handle_plot_update_requested
         )
         self.computation_controller.projection_selection_changed.connect(print)
-        # Toolbar signals
+        # Handle the programmatic selection of an item in the tree
+        # due to undo/redo in the hopping controller
+        self.computation_controller.selection_requested.connect(
+            self._handle_selection_requested
+        )
+        # Handle the request to draw hopping segments after a pair of states
+        # is selected from the hopping button matrix
+        self.computation_controller.hopping_segments_requested.connect(
+            self._handle_hopping_segments_requested
+        )
+
+        # main_ui_controller
 
         self.main_ui_controller.project_refresh_requested.connect(
             self._handle_project_refresh_requested
@@ -125,6 +135,18 @@ class AppController(QObject):
             self._handle_wireframe_toggled
         )
 
+        # plot_controller
+
+        # uc_controller
+        # When an item in the tree view is renamed, refresh the hopping matrix
+        # and table to reflect the correct names
+        self.uc_controller.item_changed.connect(self._handle_item_changed)
+        # Refresh the plots after unit cell selection or parameter change
+        self.uc_controller.plot_update_requested.connect(
+            self._handle_plot_update_requested
+        )
+        # uc_plot_controller
+
     def _relay_status(self, msg):
         """
         Send a message to the status bar.
@@ -134,6 +156,9 @@ class AppController(QObject):
     def _handle_plot_update_requested(self):
         """
         Handle requests to update unit cell and Brillouin zone plots.
+
+        The signal is emitted by the `UnitCellController` when system
+        parameters that impact the visual structure change.
         """
         uc_id = self.selection.get("unit_cell")
         if uc_id is not None:
@@ -150,13 +175,16 @@ class AppController(QObject):
             self.main_ui_controller.toolbar.n3_spinbox.setEnabled(
                 unit_cell.v3.is_periodic
             )
-            self.plot_controller.plot_band_structure(unit_cell.bandstructure)
 
+            # Plot the band structure (if available)
+            self.plot_controller.plot_band_structure(unit_cell.bandstructure)
+        # Deactivate the spinners
         else:
             self.main_ui_controller.toolbar.n1_spinbox.setEnabled(False)
             self.main_ui_controller.toolbar.n2_spinbox.setEnabled(False)
             self.main_ui_controller.toolbar.n3_spinbox.setEnabled(False)
 
+        # Get the parameters for the unit cell plot
         n1, n2, n3 = [
             spinbox.value() if spinbox.isEnabled() else 1
             for spinbox in (
@@ -171,9 +199,11 @@ class AppController(QObject):
             ].isChecked()
         )
 
+        # Update the 3D plots for BZ and UC
         self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
         self.bz_plot_controller.update_brillouin_zone()
-        pair_selection = self.hopping_controller.pair_selection
+        # If a pair of states is selected, also plot the hopping segments
+        pair_selection = self.computation_controller.get_pair_selection
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
 
@@ -200,7 +230,7 @@ class AppController(QObject):
             )
         ]
         self.uc_plot_controller.update_unit_cell(status, n1, n2, n3)
-        pair_selection = self.hopping_controller.pair_selection
+        pair_selection = self.computation_controller.get_pair_selection
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
 
@@ -213,7 +243,7 @@ class AppController(QObject):
         to draw the lines connecting the source state with the destination
         ones. This approach avoids redrawing the rest of the plot.
         """
-        pair_selection = self.hopping_controller.pair_selection
+        pair_selection = self.computation_controller.get_pair_selection
         self.uc_plot_controller.update_hopping_segments(pair_selection)
 
     def _handle_item_changed(self):
@@ -224,13 +254,7 @@ class AppController(QObject):
         hopping matrix, hopping table, and projection drop box
         accurately reflect the item names.
         """
-        self.hopping_controller.update_unit_cell()
-        # uc_id = self.selection["unit_cell"]
-        # unit_cell = self.unit_cells[uc_id]
-        # _, state_info = unit_cell.get_states()
-        # state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-        # bands_panel = self.computation_controller.computation_view.bands_panel
-        # bands_panel.proj_combo.refresh_combo(state_info_strings)
+        self.computation_controller.update_hopping_panel()
 
     def _handle_project_refresh_requested(self):
         """

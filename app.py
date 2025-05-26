@@ -35,19 +35,6 @@ from models.factories import selection_init
 class TiBiApplication:
     """
     Main application class that initializes and connects all components.
-
-    This class serves as the application composition root, responsible for:
-    1. Creating global data models
-    2. Creating views
-    3. Creating controllers
-    4. Wiring everything together
-    5. Starting the application
-
-    The application follows the MVC architecture with reactive data binding:
-    - Models store application state and emit signals when they change
-    - Views display data and capture user input without knowledge of models
-    - Controllers link models and views, handling user actions and
-    model updates
     """
 
     def __init__(self):
@@ -166,12 +153,12 @@ class TiBiApplication:
         self.app_controller = AppController(
             self.unit_cells,
             self.selection,
-            self.uc_controller,
-            self.uc_plot_controller,
             self.bz_plot_controller,
-            self.plot_controller,
             self.computation_controller,
             self.main_ui_controller,
+            self.plot_controller,
+            self.uc_controller,
+            self.uc_plot_controller,
         )
 
         # Set initial status message

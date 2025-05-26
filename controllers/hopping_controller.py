@@ -60,16 +60,16 @@ class HoppingController(QObject):
     Signals
     -------
     btn_clicked
-        Emitted when a button is clicked, carrying the source \
+        Emitted when a button is clicked, carrying the source
             and destination state info
     hoppings_changed
-        Emitted by the command when couplings are modified
+        Emitted by the command when couplings are modified.
+        The signal carries the information about the selection.
     hopping_segments_requested
-        Emitted when the coupling table is updated, triggering an\
-            update of hopping segments. The signal carries the\
-            information about the selection.
+        Emitted when the coupling table is updated, triggering an
+            update of hopping segments.
     selection_requested
-        Emitted when the selection change in the tree is required,\
+        Emitted when the selection change in the tree is required,
             carrying the unit cell, site, and state IDs
     """
 
@@ -88,6 +88,8 @@ class HoppingController(QObject):
     # an update of hopping segments in the unit cell plot
     hopping_segments_requested = Signal()
 
+    # Signal emitted when the selection change in the tree is required,
+    # carrying the unit cell, site, and state IDs
     selection_requested = Signal(object, object, object)
 
     def __init__(

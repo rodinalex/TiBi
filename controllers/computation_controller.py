@@ -21,6 +21,12 @@ class ComputationController(QObject):
     computation_view : ComputationView
         UI object containing the computation view
 
+    Methods
+    -------
+    get_pair_selection()
+        Get the selected state pair from the hopping matrix, if any.
+    update_hopping_panel()
+        Redraw the hoppings panel.
 
     Signals
     -------
@@ -33,6 +39,9 @@ class ComputationController(QObject):
     status_updated = Signal(str)
     band_computation_completed = Signal()
     projection_selection_changed = Signal(object)
+
+    hopping_segments_requested = Signal()
+    selection_requested = Signal(object, object, object)
 
     def __init__(
         self,
@@ -72,31 +81,31 @@ class ComputationController(QObject):
             self.computation_view.bands_panel
         )
         # Connect the signals
+        # Hoppings Panel
+        self.hopping_controller.hopping_segments_requested.connect(
+            self.hopping_segments_requested.emit
+        )
+        self.hopping_controller.selection_requested.connect(
+            self.selection_requested.emit
+        )
 
-    #     self.selection.signals.updated.connect(self._handle_selection_changed)
-    #     self.computation_view.bands_panel.select_all_btn.clicked.connect(
-    #         self.computation_view.bands_panel.proj_combo.select_all
-    #     )
-    #     self.computation_view.bands_panel.clear_all_btn.clicked.connect(
-    #         self.computation_view.bands_panel.proj_combo.clear_selection
-    #     )
-    #     self.computation_view.bands_panel.proj_combo.selection_changed.connect(
-    #         self.projection_selection_changed.emit
-    #     )
+    def get_pair_selection(self):
+        """
+        Get the selected state pair from the hopping matrix, if any.
 
-    # def _handle_selection_changed(self):
-    #     """
-    #     Update the state projection box when the selection changes.
+        Returns
+        -------
+        list[tuple]  | list[None]
+            List of selected states, if available, where the elements of
+            the list are (site_name, site_id, state_name, state_id).
+        """
+        return self.hopping_controller.pair_selection
 
-    #     In addition to usual selection change by click,
-    #     the selection can change when items are added or removed to/from
-    #     the tree.
-    #     """
-    #     uc_id = self.selection["unit_cell"]
-    #     if uc_id:
-    #         unit_cell = self.unit_cells[uc_id]
-    #         _, state_info = unit_cell.get_states()
-    #         state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-    #         self.computation_view.bands_panel.proj_combo.refresh_combo(
-    #             state_info_strings
-    #         )
+    def update_hopping_panel(self):
+        """
+        Redraw the hoppings panel.
+
+        This method is called when the user renames a tree item to make sure
+        that the matrix table contains the correct item names.
+        """
+        self.hopping_controller.update_unit_cell()
