@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
 )
 from ui.utilities import divider_line
 from ..widgets import CheckableComboBox
-from views.placeholder import PlaceholderWidget
 
 
 class BandsPanel(QWidget):
@@ -22,48 +21,49 @@ class BandsPanel(QWidget):
         # Main Layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.bands_selection_grid = QGridLayout()
+        self.bands_grid = QGridLayout()
         self.proj_layout = QVBoxLayout()
-        layout.addLayout(self.bands_selection_grid, stretch=1)
+        self.dos_grid = QGridLayout()
+        layout.addLayout(self.bands_grid, stretch=1)
         layout.addWidget(divider_line())
         layout.addLayout(self.proj_layout)
         layout.addWidget(divider_line())
-        layout.addWidget(PlaceholderWidget("DOS"), stretch=1)
+        layout.addLayout(self.dos_grid, stretch=1)
 
         # Bands Section
-        self.bands_selection_grid.setContentsMargins(10, 5, 15, 5)
+        self.bands_grid.setContentsMargins(10, 5, 15, 5)
         path_label = QLabel("Brillouin Zone Path")
         path_label.setAlignment(
             Qt.AlignCenter
         )  # This centers the text within the label
-        self.bands_selection_grid.addWidget(path_label, 0, 0, 1, 5)
+        self.bands_grid.addWidget(path_label, 0, 0, 1, 5)
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
-        self.bands_selection_grid.addWidget(self.add_gamma_btn, 1, 1)
+        self.bands_grid.addWidget(self.add_gamma_btn, 1, 1)
 
         # Vertex selection controls
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
         self.add_vertex_btn = QPushButton("V")
-        self.bands_selection_grid.addWidget(self.next_vertex_btn, 2, 2)
-        self.bands_selection_grid.addWidget(self.add_vertex_btn, 2, 1)
-        self.bands_selection_grid.addWidget(self.prev_vertex_btn, 2, 0)
+        self.bands_grid.addWidget(self.next_vertex_btn, 2, 2)
+        self.bands_grid.addWidget(self.add_vertex_btn, 2, 1)
+        self.bands_grid.addWidget(self.prev_vertex_btn, 2, 0)
 
         # Edge midpoint selection controls
         self.prev_edge_btn = QPushButton("←")
         self.next_edge_btn = QPushButton("→")
         self.add_edge_btn = QPushButton("E")
-        self.bands_selection_grid.addWidget(self.next_edge_btn, 3, 2)
-        self.bands_selection_grid.addWidget(self.add_edge_btn, 3, 1)
-        self.bands_selection_grid.addWidget(self.prev_edge_btn, 3, 0)
+        self.bands_grid.addWidget(self.next_edge_btn, 3, 2)
+        self.bands_grid.addWidget(self.add_edge_btn, 3, 1)
+        self.bands_grid.addWidget(self.prev_edge_btn, 3, 0)
 
         # Face center selection controls
         self.prev_face_btn = QPushButton("←")
         self.next_face_btn = QPushButton("→")
         self.add_face_btn = QPushButton("F")
-        self.bands_selection_grid.addWidget(self.next_face_btn, 4, 2)
-        self.bands_selection_grid.addWidget(self.add_face_btn, 4, 1)
-        self.bands_selection_grid.addWidget(self.prev_face_btn, 4, 0)
+        self.bands_grid.addWidget(self.next_face_btn, 4, 2)
+        self.bands_grid.addWidget(self.add_face_btn, 4, 1)
+        self.bands_grid.addWidget(self.prev_face_btn, 4, 0)
 
         # Path controls
         self.remove_last_btn = QPushButton("Remove Last")
@@ -80,22 +80,22 @@ class BandsPanel(QWidget):
             False
         )  # Disabled until path has at least two points
 
-        self.bands_selection_grid.addWidget(self.remove_last_btn, 1, 4)
+        self.bands_grid.addWidget(self.remove_last_btn, 1, 4)
         self.remove_last_btn.setEnabled(
             False
         )  # Disabled until path has points
 
-        self.bands_selection_grid.addWidget(self.clear_path_btn, 2, 4)
+        self.bands_grid.addWidget(self.clear_path_btn, 2, 4)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
         kpoints_layout.addWidget(QLabel("k points:"))
         kpoints_layout.addWidget(self.n_points_spinbox)
-        self.bands_selection_grid.addLayout(kpoints_layout, 3, 4)
+        self.bands_grid.addLayout(kpoints_layout, 3, 4)
 
-        self.bands_selection_grid.addWidget(self.compute_bands_btn, 4, 4)
+        self.bands_grid.addWidget(self.compute_bands_btn, 4, 4)
 
-        self.bands_selection_grid.setVerticalSpacing(2)
-        self.bands_selection_grid.setHorizontalSpacing(2)
+        self.bands_grid.setVerticalSpacing(2)
+        self.bands_grid.setHorizontalSpacing(2)
 
         # Initially disable all selection buttons
         btns = [
@@ -169,3 +169,36 @@ class BandsPanel(QWidget):
         proj_right.addWidget(self.dos_radio)
 
         # DOS Section
+        self.dos_grid.setContentsMargins(10, 5, 15, 5)
+        dos_label = QLabel("Brillouin Zone Grid")
+        dos_label.setAlignment(
+            Qt.AlignCenter
+        )  # This centers the text within the label
+        self.dos_grid.addWidget(dos_label, 0, 0, 1, 5)
+        v1_points_layout = QHBoxLayout()
+        v2_points_layout = QHBoxLayout()
+        v3_points_layout = QHBoxLayout()
+
+        self.v1_points_spinbox = QSpinBox()
+        self.v2_points_spinbox = QSpinBox()
+        self.v3_points_spinbox = QSpinBox()
+
+        for b in [
+            self.v1_points_spinbox,
+            self.v2_points_spinbox,
+            self.v3_points_spinbox,
+        ]:
+            b.setRange(2, 200)
+            b.setValue(30)
+            b.setButtonSymbols(QSpinBox.NoButtons)
+
+        v1_points_layout.addWidget(QLabel("v<sub>1</sub> points:"))
+        v2_points_layout.addWidget(QLabel("v<sub>2</sub> points:"))
+        v3_points_layout.addWidget(QLabel("v<sub>3</sub> points:"))
+
+        v1_points_layout.addWidget(self.v1_points_spinbox)
+        v2_points_layout.addWidget(self.v2_points_spinbox)
+        v3_points_layout.addWidget(self.v3_points_spinbox)
+        self.dos_grid.addLayout(v1_points_layout, 1, 0)
+        self.dos_grid.addLayout(v2_points_layout, 2, 0)
+        self.dos_grid.addLayout(v3_points_layout, 3, 0)
