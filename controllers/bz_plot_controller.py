@@ -357,13 +357,13 @@ class BrillouinZonePlotController(QObject):
 
         Parameters
         ----------
-            points
-                Array of point coordinates
+        points
+            Array of point coordinates
 
         Returns
         -------
-            NDArray
-                Array of points with 3D coordinates
+        NDArray
+            Array of points with 3D coordinates
         """
         pad_width = 3 - self.dim
         if pad_width > 0:
@@ -422,8 +422,8 @@ class BrillouinZonePlotController(QObject):
 
         Parameters
         ----------
-            point : str
-                The type of point to add ("gamma", "vertex", "edge", or "face")
+        point : str
+            The type of point to add ("gamma", "vertex", "edge", or "face")
         """
 
         if point == "gamma":

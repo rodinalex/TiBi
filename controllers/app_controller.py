@@ -98,10 +98,9 @@ class AppController(QObject):
         )
         # computation_controller
         self.computation_controller.status_updated.connect(self._relay_status)
-        self.computation_controller.band_computation_completed.connect(
+        self.computation_controller.bands_computed.connect(
             self._handle_plot_update_requested
         )
-        self.computation_controller.projection_selection_changed.connect(print)
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
         self.computation_controller.selection_requested.connect(

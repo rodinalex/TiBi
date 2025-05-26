@@ -32,16 +32,17 @@ class ComputationController(QObject):
     -------
     status_updated
         Signal emitted to update the status of the computation
-    band_computation_completed
-        Signal notifying that the data can be plotted
+    bands_computed
+        Signal notifying that the band computation is done
     """
 
     status_updated = Signal(str)
-    band_computation_completed = Signal()
-    projection_selection_changed = Signal(object)
 
+    # Hopping controller signals to relay
     hopping_segments_requested = Signal()
     selection_requested = Signal(object, object, object)
+    # Band controller signals to relay
+    bands_computed = Signal()
 
     def __init__(
         self,
@@ -78,7 +79,7 @@ class ComputationController(QObject):
             self.undo_stack,
         )
         self.bands_controller = BandsController(
-            self.computation_view.bands_panel
+            self.unit_cells, self.selection, self.computation_view.bands_panel
         )
         # Connect the signals
         # Hoppings Panel
@@ -88,6 +89,9 @@ class ComputationController(QObject):
         self.hopping_controller.selection_requested.connect(
             self.selection_requested.emit
         )
+        # Bands Panel
+        self.bands_controller.bands_computed.connect(self.bands_computed.emit)
+        self.bands_controller.status_updated.connect(self.status_updated.emit)
 
     def get_pair_selection(self):
         """
