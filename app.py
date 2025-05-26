@@ -17,18 +17,18 @@ from views import (
 )
 
 # Controller Components
-from controllers.app_controller import AppController
-from controllers.bz_plot_controller import BrillouinZonePlotController
-from controllers.computation_controller import ComputationController
-from controllers.main_ui_controller import MainUIController
-from controllers.plot_controller import PlotController
-from controllers.uc_controller import UnitCellController
-from controllers.uc_plot_controller import UnitCellPlotController
+from controllers import (
+    AppController,
+    BrillouinZonePlotController,
+    ComputationController,
+    MainUIController,
+    PlotController,
+    UnitCellController,
+    UnitCellPlotController,
+)
 
-# Models
+# Models and factories
 from models import DataModel, UnitCell
-
-# Constants
 from models.factories import selection_init
 
 
@@ -96,13 +96,6 @@ class TiBiApplication:
         self.unit_cells: dict[uuid.UUID, UnitCell] = {}
         self.selection = DataModel(selection_init())
 
-        # Store the models in a dictionary
-        self.models = {
-            "project_path": self.project_path,
-            "unit_cells": self.unit_cells,
-            "selection": self.selection,
-        }
-
         # Initialize views
         # Panel views
         self.uc_view = UnitCellView()
@@ -114,18 +107,6 @@ class TiBiApplication:
         self.menu_bar = MenuBarView()
         self.toolbar = MainToolbarView()
         self.status_bar = StatusBarView()
-
-        # Store the views in a dictionary
-        self.views = {
-            "uc": self.uc_view,
-            "uc_plot": self.uc_plot_view,
-            "bz_plot": self.bz_plot_view,
-            "plot": self.plot_view,
-            "computation": self.computation_view,
-            "menu_bar": self.menu_bar,
-            "toolbar": self.toolbar,
-            "status_bar": self.status_bar,
-        }
 
         # Initialize the main window
         self.main_window = MainWindow(
@@ -164,11 +145,16 @@ class TiBiApplication:
         self.plot_controller = PlotController(self.plot_view)
 
         self.computation_controller = ComputationController(
-            self.models, self.undo_stack, self.computation_view
+            self.unit_cells,
+            self.selection,
+            self.computation_view,
+            self.undo_stack,
         )
 
         self.main_ui_controller = MainUIController(
-            self.models,
+            self.project_path,
+            self.unit_cells,
+            self.selection,
             self.main_window,
             self.menu_bar,
             self.toolbar,
@@ -176,18 +162,17 @@ class TiBiApplication:
             self.undo_stack,
         )
 
-        # Store controllers in a dictionary
-        self.controllers = {
-            "uc": self.uc_controller,
-            "uc_plot": self.uc_plot_controller,
-            "bz_plot": self.bz_plot_controller,
-            "plot": self.plot_controller,
-            "computation": self.computation_controller,
-            "main_ui": self.main_ui_controller,
-        }
-
         # Initialize the top-level application controller
-        self.app_controller = AppController(self.models, self.controllers)
+        self.app_controller = AppController(
+            self.unit_cells,
+            self.selection,
+            self.uc_controller,
+            self.uc_plot_controller,
+            self.bz_plot_controller,
+            self.plot_controller,
+            self.computation_controller,
+            self.main_ui_controller,
+        )
 
         # Set initial status message
         self.main_ui_controller.update_status("Application started")

@@ -34,43 +34,43 @@ class HoppingController(QObject):
 
     Attributes
     ----------
-        unit_cells : dict[UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            Model tracking the current selection
-        hopping_view : HoppingPanel
-            The main view component
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        state_info : list[tuple]
-            List of tuples containing state information \
-                (site_name, site_id, state_name, state_id)\
-                for each `State` in the `UnitCell`
-        pair_selection : list[tuple]
-            2-element list of tuples containing the selected state pair
-        hoppings : dict[Tuple[uuid, uuid],\
-              list[Tuple[int, int, int], np.complex128]]
-            Dictionary containing the hopping parameters for the `UnitCell`
+    unit_cells : dict[UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : DataModel
+        Model tracking the current selection
+    hopping_view : HoppingPanel
+        The main view component
+    undo_stack : QUndoStack
+        `QUndoStack` to hold "undo-able" commands
+    state_info : list[tuple]
+        List of tuples containing state information \
+            (site_name, site_id, state_name, state_id)\
+            for each `State` in the `UnitCell`
+    pair_selection : list[tuple]
+        2-element list of tuples containing the selected state pair
+    hoppings : dict[Tuple[uuid, uuid],\
+            list[Tuple[int, int, int], np.complex128]]
+        Dictionary containing the hopping parameters for the `UnitCell`
 
     Methods
     -------
-        update_unit_cell()
-            Updates the hopping data model with the `UnitCell`'s hoppings
+    update_unit_cell()
+        Updates the hopping data model with the `UnitCell`'s hoppings
 
     Signals
     -------
-        btn_clicked
-            Emitted when a button is clicked, carrying the source \
-                and destination state info
-        hoppings_changed
-            Emitted by the command when couplings are modified
-        hopping_segments_requested
-            Emitted when the coupling table is updated, triggering an\
-                update of hopping segments. The signal carries the\
-                information about the selection.
-        selection_requested
-            Emitted when the selection change in the tree is required,\
-                carrying the unit cell, site, and state IDs
+    btn_clicked
+        Emitted when a button is clicked, carrying the source \
+            and destination state info
+    hoppings_changed
+        Emitted by the command when couplings are modified
+    hopping_segments_requested
+        Emitted when the coupling table is updated, triggering an\
+            update of hopping segments. The signal carries the\
+            information about the selection.
+    selection_requested
+        Emitted when the selection change in the tree is required,\
+            carrying the unit cell, site, and state IDs
     """
 
     # Signal emitted when a button is clicked, carrying the source and
@@ -102,15 +102,14 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-
-            unit_cells : dict[UUID, UnitCell]
-                Dictionary mapping UUIDs to UnitCell objects
-            selection : DataModel
-                Model tracking the current selection
-            hopping_view : HoppingPanel
-                The main view component
-            undo_stack : QUndoStack
-                `QUndoStack` to hold "undo-able" commands
+        unit_cells : dict[UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : DataModel
+            Model tracking the current selection
+        hopping_view : HoppingPanel
+            The main view component
+        undo_stack : QUndoStack
+            `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
         self.unit_cells = unit_cells
@@ -250,12 +249,12 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            button : QPushButton
-                The button to style
-            has_hopping : bool
-                Indicator whether the button marks a connection with hoppings
-            hermitian : bool
-                Boolean indicating whether the coupling is Hermitian
+        button : QPushButton
+            The button to style
+        has_hopping : bool
+            Indicator whether the button marks a connection with hoppings
+        hermitian : bool
+            Boolean indicating whether the coupling is Hermitian
         """
         if not has_hopping:
             style = BUTTON_STYLE_DEFAULT
@@ -296,10 +295,10 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
-                Information Tuple for the destination `State` (row)
-            s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
-                Information Tuple for the source `State` (column)
+        s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
+            Information Tuple for the destination `State` (row)
+        s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
+            Information Tuple for the source `State` (column)
         """
         # Store the UUIDs of the selected states
         self.pair_selection = [s1, s2]
@@ -489,12 +488,12 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            button : QPushButton
-                The button that was right-clicked
-            ii : int
-                Row index of the button in the matrix
-            jj : int
-                Column index of the button in the matrix
+        button : QPushButton
+            The button that was right-clicked
+        ii : int
+            Row index of the button in the matrix
+        jj : int
+            Column index of the button in the matrix
         """
         menu = QMenu()
         # Send hopping data to the transpose element
@@ -529,10 +528,10 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            ii : int
-                Index of the destination state in the matrix
-            jj : int
-                Index of the source state in the matrix
+        ii : int
+            Index of the destination state in the matrix
+        jj : int
+            Index of the source state in the matrix
         """
         s1 = self.state_info[ii]  # Destination
         s2 = self.state_info[jj]  # Source
@@ -556,10 +555,10 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            ii : int
-                Index of the destination state in the matrix (row index)
-            jj : int
-                Index of the source state in the matrix (column index)
+        ii : int
+            Index of the destination state in the matrix (row index)
+        jj : int
+            Index of the source state in the matrix (column index)
         """
         s1 = self.state_info[ii]  # Destination
         s2 = self.state_info[jj]  # Source
@@ -587,16 +586,16 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-            uc_id : uuid.UUID
-                UUID of the unit cell
-            site_id : uuid.UUID
-                UUID of the site
-            state_id : uuid.UUID
-                UUID of the state
-            s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
-                Information Tuple for the destination `State` (row)
-            s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
-                Information Tuple for the source `State` (column)
+        uc_id : uuid.UUID
+            UUID of the unit cell
+        site_id : uuid.UUID
+            UUID of the site
+        state_id : uuid.UUID
+            UUID of the state
+        s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
+            Information Tuple for the destination `State` (row)
+        s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
+            Information Tuple for the source `State` (column)
         """
 
         if (

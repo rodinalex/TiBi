@@ -4,11 +4,11 @@ import uuid
 from .bz_plot_controller import BrillouinZonePlotController
 from .computation_controller import ComputationController
 from .main_ui_controller import MainUIController
+from models.factories import selection_init
+from models import UnitCell
 from .plot_controller import PlotController
 from .uc_controller import UnitCellController
 from .uc_plot_controller import UnitCellPlotController
-from models.factories import selection_init
-from models import UnitCell
 
 
 class AppController(QObject):
@@ -29,7 +29,17 @@ class AppController(QObject):
         Dictionary of controllers for different application components
     """
 
-    def __init__(self, models, controllers):
+    def __init__(
+        self,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: dict[str, uuid.UUID],
+        uc_controller: UnitCellController,
+        uc_plot_controller: UnitCellPlotController,
+        bz_plot_controller: BrillouinZonePlotController,
+        plot_controller: PlotController,
+        computation_controller: ComputationController,
+        main_ui_controller: MainUIController,
+    ):
         """
         Initialize the application controller.
 
@@ -41,28 +51,17 @@ class AppController(QObject):
             Dctionary of controllers for different application components
         """
         super().__init__()
-        self.models = models
-        self.controllers = controllers
+        # self.models = models
+        self.unit_cells = unit_cells
+        self.selection = selection
 
         # Extract the relevant models and controllers
-        self.bz_plot_controller: BrillouinZonePlotController = (
-            self.controllers["bz_plot"]
-        )
-        self.computation_controller: ComputationController = self.controllers[
-            "computation"
-        ]
-        # self.hopping_controller: HoppingController = self.controllers[
-        #     "hopping"
-        # ]
-        self.main_ui_controller: MainUIController = self.controllers["main_ui"]
-        self.plot_controller: PlotController = self.controllers["plot"]
-        self.uc_controller: UnitCellController = self.controllers["uc"]
-        self.uc_plot_controller: UnitCellPlotController = self.controllers[
-            "uc_plot"
-        ]
-
-        self.selection: dict[str, uuid.UUID] = self.models["selection"]
-        self.unit_cells: dict[uuid.UUID, UnitCell] = self.models["unit_cells"]
+        self.bz_plot_controller = bz_plot_controller
+        self.computation_controller = computation_controller
+        self.main_ui_controller = main_ui_controller
+        self.plot_controller = plot_controller
+        self.uc_controller = uc_controller
+        self.uc_plot_controller = uc_plot_controller
 
         # Connect signals
         # bz_plot_controller

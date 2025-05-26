@@ -61,14 +61,12 @@ class UnitCellController(QObject):
         has the correct item names
     """
 
-    plot_update_requested = (
-        Signal()
-    )  # A signal requesting a plot update. The signal is listened to by
+    plot_update_requested = Signal()
+    # A signal requesting a plot update. The signal is listened to by
     # the app_controller, forwarding the request to the appropriate
     # plotting controllers
-    item_changed = (
-        Signal()
-    )  # A signal emitted when the user changes the item by interacting
+    item_changed = Signal()
+    # A signal emitted when the user changes the item by interacting
     # with the tree. Used to notify the app_controller
     # that the hopping matrix needs to be redrawn to
     # reflect the correct site/state names

@@ -107,11 +107,14 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
     This is used as the object_hook for json.loads() to deserialize
     JSON data back into UnitCell, Site, State, and BasisVector objects.
 
-    Args:
-        json_obj: A dictionary representing a JSON object
+    Parameters
+    ----------
+    json_obj : dict
+        A dictionary representing a JSON object
 
-    Returns:
-        The appropriate Python object based on the 'type' field
+    Returns
+    -------
+    The appropriate Python object based on the 'type' field
     """
     # Check if this is one of our custom types
     if "type" in json_obj:
@@ -242,6 +245,7 @@ def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     Deserialize a JSON string back into a dictionary of UnitCell objects.
 
     Parameters
+    ----------
     json_str : str
         JSON string representation of unit_cells dictionary
 

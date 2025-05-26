@@ -52,7 +52,9 @@ class MainUIController(QObject):
 
     def __init__(
         self,
-        models,
+        project_path,
+        unit_cells,
+        selection,
         main_window: MainWindow,
         menu_bar_view: MenuBarView,
         toolbar_view: MainToolbarView,
@@ -78,7 +80,9 @@ class MainUIController(QObject):
             Stack for 'undo-able' actions
         """
         super().__init__()
-        self.models = models
+        self.project_path = project_path
+        self.unit_cells = unit_cells
+        self.selection = selection
         self.main_window = main_window
         self.menu_bar = menu_bar_view
         self.toolbar = toolbar_view
@@ -144,8 +148,8 @@ class MainUIController(QObject):
         )
 
         if reply == QMessageBox.Yes:
-            self.models["project_path"] = None
-            self.models["unit_cells"].clear()
+            self.project_path = None
+            self.unit_cells.clear()
             self.undo_stack.clear()
             self.project_refresh_requested.emit()
 
@@ -175,9 +179,9 @@ class MainUIController(QObject):
                 with open(file_path, "r", encoding="utf-8") as f:
                     json_string = f.read()
                 unit_cells = deserialize_unit_cells(json_string)
-                self.models["unit_cells"].clear()
-                self.models["unit_cells"].update(unit_cells)
-                self.models["project_path"] = file_path
+                self.unit_cells.clear()
+                self.unit_cells.update(unit_cells)
+                self.project_path = file_path
                 self.project_refresh_requested.emit()
             except Exception as e:
                 QMessageBox.critical(

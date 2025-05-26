@@ -20,16 +20,16 @@ class SystemTree(QTreeView):
 
     Attributes
     ----------
-        tree_model : QStandardItemModel
-            The model used to populate the tree view.
-        root_node : QStandardItem
-            The root item of the tree model, representing the tree's top level.
+    tree_model : QStandardItemModel
+        The model used to populate the tree view.
+    root_node : QStandardItem
+        The root item of the tree model, representing the tree's top level.
 
     Signals
     --------
-        tree_selection_changed : Signal
-            Emitted when the selection in the tree changes. The signal carries
-            a dictionary with the selected `UnitCell`, `Site`, and `State` IDs.
+    tree_selection_changed : Signal
+        Emitted when the selection in the tree changes. The signal carries
+        a dictionary with the selected `UnitCell`, `Site`, and `State` IDs.
     """
 
     tree_selection_changed = Signal(object)
@@ -69,9 +69,9 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-            unit_cells : dict[uuid.UUID, UnitCell]
-                Dictionary of `UnitCells`s to be displayed in the tree.
-                The keys are UUIDs and the values are `UnitCell` objects.
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary of `UnitCells`s to be displayed in the tree.
+            The keys are UUIDs and the values are `UnitCell` objects.
         """
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
@@ -103,14 +103,15 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-            item_name : str
-                Name of the item.
-            item_id : UUID
-                id of the item.
+        item_name : str
+            Name of the item.
+        item_id : uuid.UUID
+            id of the item.
+
         Returns
         -------
-            QStandardItem
-                The new tree item.
+        QStandardItem
+            The new tree item.
         """
         tree_item = QStandardItem(item_name)
         tree_item.setData(item_id, Qt.UserRole)  # Store the ID
@@ -128,17 +129,17 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-            uc_id : UUID
-                id of the `UnitCell`
-            site_id : UUID, optional
-                id of the `Site`
-            state_id : UUID, optional
-                id of the `State`
+        uc_id : uuid.UUID
+            id of the `UnitCell`
+        site_id : uuid.UUID, optional
+            id of the `Site`
+        state_id : uuid.UUID, optional
+            id of the `State`
 
         Returns
         -------
-            QStandardItem | None
-                The required item if found, `None` otherwise.
+        QStandardItem | None
+            The required item if found, `None` otherwise.
         """
         if state_id is not None:
             parent = self.find_item_by_id(uc_id, site_id)
@@ -161,12 +162,12 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-            uc_id : UUID
-                id of the `UnitCell`
-            site_id : UUID, optional
-                id of the `Site`
-            state_id : UUID, optional
-                id of the `State`
+        uc_id : uuid.UUID
+            id of the `UnitCell`
+        site_id : uuid.UUID, optional
+            id of the `Site`
+        state_id : uuid.UUID, optional
+            id of the `State`
         """
         item = self.find_item_by_id(uc_id, site_id, state_id)
         if item:
@@ -181,13 +182,12 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-
-            uc_id : UUID
-                id of the `UnitCell`
-            site_id : UUID, optional
-                id of the `Site`
-            state_id : UUID, optional
-                id of the `State`
+        uc_id : uuid.UUID
+            id of the `UnitCell`
+        site_id : uuid.UUID, optional
+            id of the `Site`
+        state_id : uuid.UUID, optional
+            id of the `State`
         """
         if state_id is not None:  # Adding a state
             parent = self.find_item_by_id(uc_id, site_id)
@@ -216,13 +216,12 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-
-            uc_id : UUID
-                id of the `UnitCell`
-            site_id : UUID, optional
-                id of the `Site`
-            state_id : UUID, optional
-                id of the `State`
+        uc_id : uuid.UUID
+            id of the `UnitCell`
+        site_id : uuid.UUID, optional
+            id of the `Site`
+        state_id : uuid.UUID, optional
+            id of the `State`
         """
         item = self.find_item_by_id(uc_id, site_id, state_id)
         if item:
@@ -255,10 +254,10 @@ class SystemTree(QTreeView):
 
         Parameters
         ----------
-            selected : QStandardItem
-                The newly selected item
-            deselected : QStandardItem
-                The previously selected items that are now deselected
+        selected : QStandardItem
+            The newly selected item
+        deselected : QStandardItem
+            The previously selected items that are now deselected
         """
         indexes = selected.indexes()
 

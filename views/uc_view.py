@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.utilities import divider_line
 from .panels import SitePanel, TreeViewPanel, UnitCellPanel
+from ui.utilities import divider_line
 
 
 class UnitCellView(QWidget):

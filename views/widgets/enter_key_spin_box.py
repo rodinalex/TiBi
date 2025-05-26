@@ -6,6 +6,9 @@ from PySide6.QtWidgets import QDoubleSpinBox
 class EnterKeySpinBox(QDoubleSpinBox):
     """
     Custom `QDoubleSpinBox` that emits a signal when the Enter key is pressed.
+
+    On defocus, the value is reset to the original value and no signal
+    is emitted.
     """
 
     editingConfirmed = Signal()

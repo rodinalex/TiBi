@@ -4,6 +4,28 @@ from PySide6.QtWidgets import QComboBox
 
 
 class CheckableComboBox(QComboBox):
+    """
+    Drop-down box that supports multiple selections.
+
+    Selected items are denoted by ticks.
+
+    Methods
+    -------
+    refresh_combo : list[str]
+        Reset the menu with a new list of items.
+    checked_items
+        Get the indices of the selected items.
+    clear_selection
+        Deselect all items.
+    select_all
+        Select all items.
+
+    Signals
+    -------
+    selection_changed
+        Emitted when the selection changes. Even if multiple items
+    are selected/deselected, the signal is emitted once.
+    """
 
     selection_changed = Signal(object)
 
@@ -18,6 +40,10 @@ class CheckableComboBox(QComboBox):
         )
 
     def refresh_combo(self, items: list[str]):
+        """
+        refresh_combo : list[str]
+            Reset the menu with a new list of items.
+        """
         self.combo_model.clear()
         for idx in range(len(items)):
             # for text in items:
@@ -30,6 +56,15 @@ class CheckableComboBox(QComboBox):
         self.selection_changed.emit(self.checked_items())
 
     def checked_items(self):
+        """
+        checked_items
+            Get the indices of the selected items.
+
+        Returns
+        -------
+        result : list[int]
+            List of indices of selected items
+        """
         result = []
         for ii in range(self.combo_model.rowCount()):
             item = self.combo_model.item(ii)
@@ -38,6 +73,10 @@ class CheckableComboBox(QComboBox):
         return result
 
     def clear_selection(self):
+        """
+        clear_selection
+        Deselect all items.
+        """
         self.combo_model.blockSignals(True)
         for ii in range(self.combo_model.rowCount()):
             item = self.combo_model.item(ii)
@@ -46,6 +85,10 @@ class CheckableComboBox(QComboBox):
         self.selection_changed.emit(self.checked_items())
 
     def select_all(self):
+        """
+        select_all
+        Select all items.
+        """
         self.combo_model.blockSignals(True)
         for ii in range(self.combo_model.rowCount()):
             item = self.combo_model.item(ii)
