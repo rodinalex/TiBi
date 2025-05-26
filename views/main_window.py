@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1000, 825))
+        self.setFixedSize(QSize(1100, 825))
 
         # Store references to UI components
         self.uc = uc
