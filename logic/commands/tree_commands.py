@@ -156,8 +156,6 @@ class AddStateCommand(QUndoCommand):
         UUID of the selected `Site` when the command was issued
     state : State
         Newly created `State`
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -185,9 +183,6 @@ class AddStateCommand(QUndoCommand):
         self.uc_id = self.selection["unit_cell"]
         self.site_id = self.selection["site"]
         self.state = mk_new_state()
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
 
     # Add the newly-created state to the dictionary and create a tree item
     def redo(self):
@@ -197,7 +192,6 @@ class AddStateCommand(QUndoCommand):
         self.tree_view.add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
-        self.unit_cells[self.uc_id].bandstructure.reset_bands()
 
     # Remove the site from the dictionary and the tree using its id
     def undo(self):
@@ -208,9 +202,6 @@ class AddStateCommand(QUndoCommand):
         )
         self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state.id
-        )
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
         )
 
 
@@ -242,8 +233,6 @@ class DeleteItemCommand(QUndoCommand):
         UUID of the selected `Site` when the command was issued
     state_id : uuid.UUID
         UUID of the selected `State` when the command was issued
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
@@ -290,10 +279,6 @@ class DeleteItemCommand(QUndoCommand):
         elif self.uc_id:
             self.item = copy.deepcopy(self.unit_cells[self.uc_id])
 
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
-
     # Delete the item
     def redo(self):
         if self.state_id:
@@ -308,7 +293,6 @@ class DeleteItemCommand(QUndoCommand):
                 else:
                     kept_hoppings[k] = v
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
-            self.unit_cells[self.uc_id].bandstructure.reset_bands()
             # Delete the selected state from the site
             del (
                 self.unit_cells[self.uc_id]
@@ -317,7 +301,6 @@ class DeleteItemCommand(QUndoCommand):
             )
         # No state selected, therefore remove the site from the unit cell
         elif self.site_id:
-            self.bandstructure = self.unit_cells[self.uc_id].bandstructure
             self.removed_hoppings = {}
             kept_hoppings = {}
             for state in (
@@ -329,9 +312,6 @@ class DeleteItemCommand(QUndoCommand):
                     else:
                         kept_hoppings[k] = v
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
-            # If the site has states, reset the band structure
-            if self.unit_cells[self.uc_id].sites[self.site_id].states:
-                self.unit_cells[self.uc_id].bandstructure.reset_bands()
             # Delete the selected site from the unit cell
             del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
@@ -349,13 +329,11 @@ class DeleteItemCommand(QUndoCommand):
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
             unit_cell.hoppings.update(self.removed_hoppings)
-            unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
 
         elif self.site_id:
             unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
             unit_cell.hoppings.update(self.removed_hoppings)
-            unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
 
         elif self.uc_id:
             self.unit_cells[self.item.id] = self.item
