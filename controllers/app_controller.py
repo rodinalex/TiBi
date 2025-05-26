@@ -203,7 +203,7 @@ class AppController(QObject):
         self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
         self.bz_plot_controller.update_brillouin_zone()
         # If a pair of states is selected, also plot the hopping segments
-        pair_selection = self.computation_controller.get_pair_selection
+        pair_selection = self.computation_controller.get_pair_selection()
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
 
@@ -230,7 +230,7 @@ class AppController(QObject):
             )
         ]
         self.uc_plot_controller.update_unit_cell(status, n1, n2, n3)
-        pair_selection = self.computation_controller.get_pair_selection
+        pair_selection = self.computation_controller.get_pair_selection()
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
 
@@ -243,7 +243,7 @@ class AppController(QObject):
         to draw the lines connecting the source state with the destination
         ones. This approach avoids redrawing the rest of the plot.
         """
-        pair_selection = self.computation_controller.get_pair_selection
+        pair_selection = self.computation_controller.get_pair_selection()
         self.uc_plot_controller.update_hopping_segments(pair_selection)
 
     def _handle_item_changed(self):
