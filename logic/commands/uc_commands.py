@@ -88,6 +88,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.new_value,
         )
         self.spinbox.setValue(self.new_value)
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def undo(self):
@@ -97,6 +98,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
 
@@ -184,6 +186,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
+            self.unit_cells[self.uc_id].bandstructure.clear()
             self.signal.emit()
 
     def undo(self):
@@ -203,6 +206,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
+            self.unit_cells[self.uc_id].bandstructure.clear()
             self.signal.emit()
 
 
@@ -342,6 +346,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.new_dim)
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def undo(self):
@@ -358,6 +363,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.old_dim)
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def _set_vector_enables(self, dim):

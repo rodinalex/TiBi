@@ -21,8 +21,6 @@ class AddBZPointCommand(QUndoCommand):
         `UnitCell` to which the point will be addeed
     point : NDArray[np.float64]
         The point to be added
-    bandstructure : BandStructure
-        `BandStructure` prior to the point addition
     computation_view : ComputationView
         UI object containing the computation view
     signal : Signal
@@ -56,8 +54,6 @@ class AddBZPointCommand(QUndoCommand):
         self.computation_view = computation_view
         self.signal = signal
 
-        self.bandstructure = copy.deepcopy(self.unit_cell.bandstructure)
-
     def redo(self):
 
         self.unit_cell.bandstructure.add_point(self.point)
@@ -74,7 +70,7 @@ class AddBZPointCommand(QUndoCommand):
 
     def undo(self):
 
-        self.unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
+        self.unit_cell.bandstructure.remove_point()
         self.computation_view.bands_panel.remove_last_btn.setEnabled(
             len(self.unit_cell.bandstructure.special_points) > 0
         )
@@ -100,8 +96,6 @@ class RemoveBZPointCommand(QUndoCommand):
         `UnitCell` from which the point will be removed
     point : NDArray
         The point to be removed
-    bandstructure : BandStructure
-        `BandStructure` prior to the point removal
     computation_view : ComputationView
         UI object containing the computation view
     signal : Signal
@@ -131,7 +125,9 @@ class RemoveBZPointCommand(QUndoCommand):
         self.computation_view = computation_view
         self.signal = signal
 
-        self.bandstructure = copy.deepcopy(self.unit_cell.bandstructure)
+        self.point = copy.deepcopy(
+            self.unit_cell.bandstructure.special_points[-1]
+        )
 
     def redo(self):
         self.unit_cell.bandstructure.remove_point()
@@ -147,7 +143,7 @@ class RemoveBZPointCommand(QUndoCommand):
         self.signal.emit()
 
     def undo(self):
-        self.unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
+        self.unit_cell.bandstructure.add_point(self.point)
         self.computation_view.bands_panel.remove_last_btn.setEnabled(
             len(self.unit_cell.bandstructure.special_points) > 0
         )
@@ -171,8 +167,8 @@ class ClearBZPathCommand(QUndoCommand):
     ----------
     unit_cell : UnitCell
         `UnitCell` whose path will be cleared
-    bandstructure : BandStructure
-        `BandStructure` prior to the path clearing
+    special_points : list[NDArray[np.float64]]
+        List of special points before clearing the path
     computation_view : ComputationView
         UI object containing the computation view
     signal : Signal
@@ -202,7 +198,9 @@ class ClearBZPathCommand(QUndoCommand):
         self.computation_view = computation_view
         self.signal = signal
 
-        self.bandstructure = copy.deepcopy(self.unit_cell.bandstructure)
+        self.special_points = copy.deepcopy(
+            self.unit_cell.bandstructure.special_points
+        )
 
     def redo(self):
         self.unit_cell.bandstructure.clear()
@@ -218,7 +216,10 @@ class ClearBZPathCommand(QUndoCommand):
         self.signal.emit()
 
     def undo(self):
-        self.unit_cell.bandstructure = copy.deepcopy(self.bandstructure)
+        self.unit_cell.bandstructure.clear()
+        self.unit_cell.bandstructure.special_points = copy.deepcopy(
+            self.special_points
+        )
         self.computation_view.bands_panel.remove_last_btn.setEnabled(
             len(self.unit_cell.bandstructure.special_points) > 0
         )

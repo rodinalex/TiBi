@@ -189,6 +189,7 @@ class AddStateCommand(QUndoCommand):
         unit_cell = self.unit_cells[self.uc_id]
         site = unit_cell.sites[self.site_id]
         site.states[self.state.id] = self.state
+        unit_cell.bandstructure.reset_bands()
         self.tree_view.add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
@@ -200,6 +201,7 @@ class AddStateCommand(QUndoCommand):
             .sites[self.site_id]
             .states[self.state.id]
         )
+        self.unit_cells[self.uc_id].bandstructure.reset_bands()
         self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
@@ -293,6 +295,7 @@ class DeleteItemCommand(QUndoCommand):
                 else:
                     kept_hoppings[k] = v
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
+            self.unit_cells[self.uc_id].bandstructure.reset_bands()
             # Delete the selected state from the site
             del (
                 self.unit_cells[self.uc_id]
@@ -312,6 +315,8 @@ class DeleteItemCommand(QUndoCommand):
                     else:
                         kept_hoppings[k] = v
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
+            if self.removed_hoppings:
+                self.unit_cells[self.uc_id].bandstructure.reset_bands()
             # Delete the selected site from the unit cell
             del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
@@ -328,11 +333,14 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell = self.unit_cells[self.uc_id]
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
+            unit_cell.bandstructure.reset_bands()
             unit_cell.hoppings.update(self.removed_hoppings)
 
         elif self.site_id:
             unit_cell = self.unit_cells[self.uc_id]
             unit_cell.sites[self.item.id] = self.item
+            if self.removed_hoppings:
+                unit_cell.bandstructure.reset_bands()
             unit_cell.hoppings.update(self.removed_hoppings)
 
         elif self.uc_id:

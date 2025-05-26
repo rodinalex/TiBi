@@ -38,8 +38,6 @@ class SaveHoppingsCommand(QUndoCommand):
         List of new hoppings to be added to the `hoppings` dictionary
     old_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
         List of old hoppings to be removed from the `hoppings` dictionary
-    bandstructure : BandStructure
-        `BandStructure` prior to the point addition
     signal : Signal
         Signal to be emitted when the command is executed. The signal
         carries the information about the selected `UnitCell`, `Site`,
@@ -59,7 +57,6 @@ class SaveHoppingsCommand(QUndoCommand):
 
         Parameters
         ----------
-
         unit_cells : dict[uuid.UUID, UnitCell]
             Reference to the dictionary mapping UUIDs to UnitCell objects
         selection : dict[str, uuid.UUID]
@@ -94,10 +91,6 @@ class SaveHoppingsCommand(QUndoCommand):
         )
         self.signal = signal
 
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
-
     def redo(self):
         # Insert the hoppings into the unit cell model
         if self.new_hoppings == []:
@@ -124,9 +117,7 @@ class SaveHoppingsCommand(QUndoCommand):
             self.unit_cells[self.uc_id].hoppings[
                 (self.s1[3], self.s2[3])
             ] = self.old_hoppings
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
+        self.unit_cells[self.uc_id].bandstructure.reset_bands()
         # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
