@@ -168,6 +168,9 @@ class AppController(QObject):
         self._update_unit_cell_plot()
         self.bz_plot_controller.update_brillouin_zone()
 
+        # Update the hopping panel
+        self.computation_controller.update_hopping_panel()
+
     def _handle_hopping_segments_requested(self):
         """
         Handle the request to draw hopping segments.
@@ -210,14 +213,9 @@ class AppController(QObject):
         )
 
     def _handle_bands_computed(self):
-        pass
-        # Send the update to computation
-        # Plot the bands, if available
-        # Set the projection combo box
-        #
-        # uc_id = self.selection.get("unit_cell")
-        # unit_cell = self.unit_cells[uc_id]
-        # self.plot_controller.plot_band_structure(unit_cell.bandstructure)
+        uc_id = self.selection.get("unit_cell")
+        unit_cell = self.unit_cells[uc_id]
+        self.plot_controller.plot_band_structure(unit_cell.bandstructure)
 
     def _update_unit_cell_plot(self):
         n1, n2, n3, wireframe_shown = (

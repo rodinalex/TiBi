@@ -128,7 +128,6 @@ class HoppingController(QObject):
         self.hoppings = {}
 
         # Connect Signals
-        self.selection.signals.updated.connect(self.update_unit_cell)
         self.btn_clicked.connect(self._update_pair_selection)
 
         self.hopping_view.table_panel.add_row_btn.clicked.connect(
