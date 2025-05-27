@@ -1,14 +1,15 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget,
-    QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
-    QPushButton,
-    QSpinBox,
-    QGridLayout,
     QButtonGroup,
+    QDoubleSpinBox,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
     QRadioButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 from ui.utilities import divider_line
 from ..widgets import CheckableComboBox
@@ -144,6 +145,8 @@ class BandsPanel(QWidget):
         self.project_btn = QPushButton("Project")
         self.select_all_btn = QPushButton("All")
         self.clear_all_btn = QPushButton("None")
+        self.select_all_btn.setEnabled(False)
+        self.clear_all_btn.setEnabled(False)
 
         proj_left = QVBoxLayout()
         proj_right = QVBoxLayout()
@@ -164,24 +167,31 @@ class BandsPanel(QWidget):
         self.radio_group = QButtonGroup(self)
         self.radio_group.addButton(self.bands_radio, id=0)
         self.radio_group.addButton(self.dos_radio, id=1)
+        self.bands_radio.setChecked(True)
 
         proj_right.addWidget(self.bands_radio)
         proj_right.addWidget(self.dos_radio)
 
         # DOS Section
         self.dos_grid.setContentsMargins(10, 5, 15, 5)
-        dos_label = QLabel("Brillouin Zone Grid")
-        dos_label.setAlignment(
-            Qt.AlignCenter
-        )  # This centers the text within the label
-        self.dos_grid.addWidget(dos_label, 0, 0, 1, 5)
+        dos_grid_label = QLabel("Brillouin Zone Grid")
+        dos_grid_label.setAlignment(Qt.AlignCenter)
+        self.dos_grid.addWidget(dos_grid_label, 0, 0, 1, 2)
+        dos_presentation_label = QLabel("DOS Visualization")
+        dos_presentation_label.setAlignment(Qt.AlignCenter)
+        self.dos_grid.addWidget(dos_presentation_label, 5, 0, 1, 2)
+        # Grid points controls
         v1_points_layout = QHBoxLayout()
         v2_points_layout = QHBoxLayout()
         v3_points_layout = QHBoxLayout()
+        num_bins_layout = QHBoxLayout()
+        broadening_layout = QHBoxLayout()
 
         self.v1_points_spinbox = QSpinBox()
         self.v2_points_spinbox = QSpinBox()
         self.v3_points_spinbox = QSpinBox()
+        self.num_bins_spinbox = QSpinBox()
+        self.broadening_spinbox = QDoubleSpinBox()
 
         for b in [
             self.v1_points_spinbox,
@@ -191,14 +201,57 @@ class BandsPanel(QWidget):
             b.setRange(2, 200)
             b.setValue(30)
             b.setButtonSymbols(QSpinBox.NoButtons)
+            b.setEnabled(False)
+
+        self.num_bins_spinbox.setValue(20)
+        self.num_bins_spinbox.setButtonSymbols(QSpinBox.NoButtons)
+        self.broadening_spinbox.setDecimals(3)
+        self.broadening_spinbox.setRange(0.001, 10.0)
+        self.broadening_spinbox.setValue(0.001)
+        self.broadening_spinbox.setButtonSymbols(QSpinBox.NoButtons)
 
         v1_points_layout.addWidget(QLabel("v<sub>1</sub> points:"))
         v2_points_layout.addWidget(QLabel("v<sub>2</sub> points:"))
         v3_points_layout.addWidget(QLabel("v<sub>3</sub> points:"))
+        num_bins_layout.addWidget(QLabel("Bin number:"))
+        broadening_layout.addWidget(QLabel("Broadening:"))
 
         v1_points_layout.addWidget(self.v1_points_spinbox)
         v2_points_layout.addWidget(self.v2_points_spinbox)
         v3_points_layout.addWidget(self.v3_points_spinbox)
+        num_bins_layout.addWidget(self.num_bins_spinbox)
+        broadening_layout.addWidget(self.broadening_spinbox)
+
         self.dos_grid.addLayout(v1_points_layout, 1, 0)
         self.dos_grid.addLayout(v2_points_layout, 2, 0)
         self.dos_grid.addLayout(v3_points_layout, 3, 0)
+        self.dos_grid.setRowMinimumHeight(4, 10)  # Spacer row
+        self.dos_grid.addLayout(num_bins_layout, 6, 0)
+        self.dos_grid.addLayout(broadening_layout, 7, 0)
+
+        self.compute_grid_btn = QPushButton("Compute")
+        self.compute_grid_btn.setEnabled(False)
+
+        # Grid type choice
+        self.MP_radio = QRadioButton("Monkhorst-Pack")
+        self.Gamma_radio = QRadioButton("Γ-centered")
+        self.grid_choice_group = QButtonGroup(self)
+        self.grid_choice_group.addButton(self.MP_radio, id=0)
+        self.grid_choice_group.addButton(self.Gamma_radio, id=1)
+        self.MP_radio.setChecked(True)
+
+        # DOS presentation choice
+        self.histogram_radio = QRadioButton("Histogram")
+        self.lorentzian_radio = QRadioButton("Lorentzian")
+        self.presentation_choice_group = QButtonGroup(self)
+        self.presentation_choice_group.addButton(self.histogram_radio, id=0)
+        self.presentation_choice_group.addButton(self.lorentzian_radio, id=1)
+        self.histogram_radio.setChecked(True)
+
+        self.dos_grid.addWidget(self.MP_radio, 1, 1)
+        self.dos_grid.addWidget(self.Gamma_radio, 2, 1)
+        self.dos_grid.addWidget(self.compute_grid_btn, 3, 1)
+
+        self.dos_grid.addWidget(self.histogram_radio, 6, 1)
+        self.dos_grid.addWidget(self.lorentzian_radio, 7, 1)
+        self.dos_grid.setVerticalSpacing(2)
