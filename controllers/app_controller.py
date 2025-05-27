@@ -114,36 +114,18 @@ class AppController(QObject):
         )
 
         # main_ui_controller
-
         self.main_ui_controller.project_refresh_requested.connect(
             self._handle_project_refresh_requested
         )
-
-        # Update the plots when the number of unit cells to be plotted changes
-        self.main_ui_controller.toolbar.n1_spinbox.valueChanged.connect(
-            self._update_panels
+        self.main_ui_controller.unit_cell_update_requested.connect(
+            self._update_unit_cell_plot
         )
-        self.main_ui_controller.toolbar.n2_spinbox.valueChanged.connect(
-            self._update_panels
-        )
-        self.main_ui_controller.toolbar.n3_spinbox.valueChanged.connect(
-            self._update_panels
-        )
-
-        # Toggle the wireframe in the unit cell plot
-        self.main_ui_controller.wireframe_toggled.connect(
-            self._handle_wireframe_toggled
-        )
-
-        # plot_controller
-
         # uc_controller
         # When an item in the tree view is renamed, refresh the hopping matrix
         # and table to reflect the correct names
         self.uc_controller.item_renamed.connect(self._handle_item_renamed)
         # Refresh the plots after unit cell selection or parameter change
         self.uc_controller.parameter_changed.connect(self._update_panels)
-        # uc_plot_controller
 
     def _relay_status(self, msg):
         """
@@ -163,14 +145,10 @@ class AppController(QObject):
 
             # Check which vectors of the unit cell are periodic and activate
             # the UC spinners if they are
-            self.main_ui_controller.toolbar.n1_spinbox.setEnabled(
-                unit_cell.v1.is_periodic
-            )
-            self.main_ui_controller.toolbar.n2_spinbox.setEnabled(
-                unit_cell.v2.is_periodic
-            )
-            self.main_ui_controller.toolbar.n3_spinbox.setEnabled(
-                unit_cell.v3.is_periodic
+            self.main_ui_controller.set_spinbox_status(
+                unit_cell.v1.is_periodic,
+                unit_cell.v2.is_periodic,
+                unit_cell.v3.is_periodic,
             )
 
             # Plot the band structure (if available)
@@ -183,60 +161,12 @@ class AppController(QObject):
 
         # Deactivate the spinners
         else:
-            self.main_ui_controller.toolbar.n1_spinbox.setEnabled(False)
-            self.main_ui_controller.toolbar.n2_spinbox.setEnabled(False)
-            self.main_ui_controller.toolbar.n3_spinbox.setEnabled(False)
+            self.main_ui_controller.set_spinbox_status(False, False, False)
             self.computation_controller.set_dimensionality(0)
 
-        # Get the parameters for the unit cell plot
-        n1, n2, n3 = [
-            spinbox.value() if spinbox.isEnabled() else 1
-            for spinbox in (
-                self.main_ui_controller.toolbar.n1_spinbox,
-                self.main_ui_controller.toolbar.n2_spinbox,
-                self.main_ui_controller.toolbar.n3_spinbox,
-            )
-        ]
-        wireframe_shown = (
-            self.main_ui_controller.action_manager.unit_cell_actions[
-                "wireframe"
-            ].isChecked()
-        )
-
         # Update the 3D plots for BZ and UC
-        self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
+        self._update_unit_cell_plot()
         self.bz_plot_controller.update_brillouin_zone()
-        # If a pair of states is selected, also plot the hopping segments
-        pair_selection = self.computation_controller.get_pair_selection()
-        if pair_selection[0] is not None and pair_selection[1] is not None:
-            self.uc_plot_controller.update_hopping_segments(pair_selection)
-
-    def _handle_wireframe_toggled(self, status):
-        """
-        Handle the toggling of the wireframe button in the toolbar.
-
-        Extract the number of unit cells to be plotted along each direction
-        from the corresponding spinboxes, check whether the wireframe
-        is toggled on or off, and call the `update_unit_cell`
-        function with the relevant parameters.
-
-        Parameters
-        ----------
-        status : bool
-            The status of the wireframe toggle button.
-        """
-        n1, n2, n3 = [
-            spinbox.value() if spinbox.isEnabled() else 1
-            for spinbox in (
-                self.main_ui_controller.toolbar.n1_spinbox,
-                self.main_ui_controller.toolbar.n2_spinbox,
-                self.main_ui_controller.toolbar.n3_spinbox,
-            )
-        ]
-        self.uc_plot_controller.update_unit_cell(status, n1, n2, n3)
-        pair_selection = self.computation_controller.get_pair_selection()
-        if pair_selection[0] is not None and pair_selection[1] is not None:
-            self.uc_plot_controller.update_hopping_segments(pair_selection)
 
     def _handle_hopping_segments_requested(self):
         """
@@ -288,3 +218,13 @@ class AppController(QObject):
         # uc_id = self.selection.get("unit_cell")
         # unit_cell = self.unit_cells[uc_id]
         # self.plot_controller.plot_band_structure(unit_cell.bandstructure)
+
+    def _update_unit_cell_plot(self):
+        n1, n2, n3, wireframe_shown = (
+            self.main_ui_controller.get_uc_plot_properties()
+        )
+        self.uc_plot_controller.update_unit_cell(wireframe_shown, n1, n2, n3)
+        # If a pair of states is selected, also plot the hopping segments
+        pair_selection = self.computation_controller.get_pair_selection()
+        if pair_selection[0] is not None and pair_selection[1] is not None:
+            self.uc_plot_controller.update_hopping_segments(pair_selection)

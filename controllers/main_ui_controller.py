@@ -41,11 +41,12 @@ class MainUIController(QObject):
 
     Signals
     -------
-    wireframe_toggled
-        Toggle the unit cell wireframe on/off
+    unit_cell_update_requested : Signal
+        Request to update the unit cell plot with new parameters
     """
 
-    wireframe_toggled = Signal(bool)  # Toggle the unit cell wireframe on/off
+    unit_cell_update_requested = Signal()
+    # Requst an updated unit cell plot
     # Request a UI refresh after creating a new project
     # or loading an existing one
     project_refresh_requested = Signal()
@@ -101,6 +102,17 @@ class MainUIController(QObject):
         self.menu_bar.set_actions(self.action_manager)
         self.toolbar.set_actions(self.action_manager)
 
+        # Connect spinbox signals
+        self.toolbar.n1_spinbox.valueChanged.connect(
+            lambda _: self.unit_cell_update_requested.emit()
+        )
+        self.toolbar.n2_spinbox.valueChanged.connect(
+            lambda _: self.unit_cell_update_requested.emit()
+        )
+        self.toolbar.n3_spinbox.valueChanged.connect(
+            lambda _: self.unit_cell_update_requested.emit()
+        )
+
     def _connect_action_handlers(self):
         """Connect actions to their handler methods."""
         # Create a dictionary mapping action names to handler methods
@@ -125,8 +137,27 @@ class MainUIController(QObject):
         # Connect actions to handlers
         self.action_manager.connect_signals(handlers)
 
-    # Handler methods for actions
+    # Methods to get information about the current state
+    def get_uc_plot_properties(self):
+        n1, n2, n3 = [
+            spinbox.value() if spinbox.isEnabled() else 1
+            for spinbox in (
+                self.toolbar.n1_spinbox,
+                self.toolbar.n2_spinbox,
+                self.toolbar.n3_spinbox,
+            )
+        ]
+        wireframe_enabled = self.action_manager.unit_cell_actions[
+            "wireframe"
+        ].isChecked()
+        return n1, n2, n3, wireframe_enabled
 
+    def set_spinbox_status(self, n1_enabled, n2_enabled, n3_enabled):
+        self.toolbar.n1_spinbox.setEnabled(n1_enabled)
+        self.toolbar.n2_spinbox.setEnabled(n2_enabled)
+        self.toolbar.n3_spinbox.setEnabled(n3_enabled)
+
+    # Handler methods for actions
     @Slot()
     def _handle_new_project(self):
         """
@@ -270,7 +301,7 @@ class MainUIController(QObject):
             self.models["project_path"] = file_path
 
     @Slot()
-    def _handle_wireframe_toggle(self, is_checked):
+    def _handle_wireframe_toggle(self):
         """
         Handle wireframe toggle.
 
@@ -278,7 +309,7 @@ class MainUIController(QObject):
         """
         self.update_status("Wireframe...")
         # Implementation will be added later
-        self.wireframe_toggled.emit(is_checked)
+        self.unit_cell_update_requested.emit()
 
     # Methods to be called from other controllers
     def update_status(self, message):
