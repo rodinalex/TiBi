@@ -87,6 +87,8 @@ class AppController(QObject):
         self.uc_plot_controller = uc_plot_controller
 
         # Connect signals
+        self.selection.signals.updated.connect(self._update_panels)
+
         # bz_plot_controller
         # When the path is updated, the bandstructure is cleared.
         # Clear the bandstructure plot
@@ -119,13 +121,13 @@ class AppController(QObject):
 
         # Update the plots when the number of unit cells to be plotted changes
         self.main_ui_controller.toolbar.n1_spinbox.valueChanged.connect(
-            self._handle_system_update
+            self._update_panels
         )
         self.main_ui_controller.toolbar.n2_spinbox.valueChanged.connect(
-            self._handle_system_update
+            self._update_panels
         )
         self.main_ui_controller.toolbar.n3_spinbox.valueChanged.connect(
-            self._handle_system_update
+            self._update_panels
         )
 
         # Toggle the wireframe in the unit cell plot
@@ -138,11 +140,9 @@ class AppController(QObject):
         # uc_controller
         # When an item in the tree view is renamed, refresh the hopping matrix
         # and table to reflect the correct names
-        self.uc_controller.item_changed.connect(self._handle_item_changed)
+        self.uc_controller.item_renamed.connect(self._handle_item_renamed)
         # Refresh the plots after unit cell selection or parameter change
-        self.uc_controller.parameter_changed.connect(
-            self._handle_system_update
-        )
+        self.uc_controller.parameter_changed.connect(self._update_panels)
         # uc_plot_controller
 
     def _relay_status(self, msg):
@@ -151,12 +151,11 @@ class AppController(QObject):
         """
         self.main_ui_controller.update_status(msg)
 
-    def _handle_system_update(self):
+    def _update_panels(self):
         """
-        Handle requests to update plots and panels..
+        Handle requests to update plots and panels.
 
-        The signal is emitted by the `UnitCellController` when system
-        parameters change.
+        Takes place when system parameters or the selection change.
         """
         uc_id = self.selection.get("unit_cell")
         if uc_id is not None:
@@ -251,7 +250,7 @@ class AppController(QObject):
         pair_selection = self.computation_controller.get_pair_selection()
         self.uc_plot_controller.update_hopping_segments(pair_selection)
 
-    def _handle_item_changed(self):
+    def _handle_item_renamed(self):
         """
         Handle the change in the name of the tree items.
 
@@ -272,7 +271,7 @@ class AppController(QObject):
         # Current selection state (tracks which items are selected in the UI)
         self.selection.update(selection_init())
         self.uc_controller.tree_view.refresh_tree(self.unit_cells)
-        self._handle_system_update()
+        self._update_panels()
 
     def _handle_selection_requested(self, uc_id, site_id, state_id):
         """Programmatically select an item in the tree view."""

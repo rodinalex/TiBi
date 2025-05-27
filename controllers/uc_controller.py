@@ -55,8 +55,8 @@ class UnitCellController(QObject):
     -------
     parameter_changed
         Signal emitted when a unit cell or site parameter is changed.
-    item_changed
-        Signal emitted when a tree item is changed.
+    item_renamed
+        Signal emitted when a tree item is renamed.
         Necessary to make sure that the hopping matrix
         has the correct item names
     """
@@ -66,8 +66,8 @@ class UnitCellController(QObject):
     # The signal is listened to by
     # the app_controller, forwarding the request to the appropriate
     # controllers
-    item_changed = Signal()
-    # A signal emitted when the user changes the item by interacting
+    item_renamed = Signal()
+    # A signal emitted when the user renames the item by interacting
     # with the tree. Used to notify the app_controller
     # that the hopping matrix needs to be redrawn to
     # reflect the correct site/state names
@@ -142,7 +142,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
-                    signal=self.item_changed,
+                    signal=self.item_renamed,
                     item=self.tree_model.itemFromIndex(x),
                 )
             )
@@ -392,8 +392,6 @@ class UnitCellController(QObject):
             self.unit_cell_view.site_stack.setCurrentWidget(
                 self.unit_cell_view.site_info_label
             )
-
-        self.parameter_changed.emit()
 
     def _pick_site_color(self):
         """
