@@ -83,3 +83,23 @@ class BandsController(QObject):
         unit_cell.bandstructure.eigenvectors = eigenvectors
         unit_cell.bandstructure.path = k_path
         self.bands_computed.emit()
+
+    def set_dimensionality(self, dim: int):
+
+        self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
+        self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
+        self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
+
+    def set_combo(self, items: list[str]):
+        """
+        Set the items in the combo box.
+
+        Parameters
+        ----------
+        items : list[str]
+            List of items to set in the combo box.
+        """
+        self.bands_panel.proj_combo.refresh_combo(items)
+        self.bands_panel.select_all_btn.setEnabled(len(items) > 0)
+        self.bands_panel.clear_all_btn.setEnabled(len(items) > 0)
+        self.bands_panel.proj_combo.select_all()

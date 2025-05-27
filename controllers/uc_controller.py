@@ -53,18 +53,19 @@ class UnitCellController(QObject):
 
     Signals
     -------
-    plot_update_requested
-        Signal requesting a plot update
+    parameter_changed
+        Signal emitted when a unit cell or site parameter is changed.
     item_changed
         Signal emitted when a tree item is changed.
         Necessary to make sure that the hopping matrix
         has the correct item names
     """
 
-    plot_update_requested = Signal()
-    # A signal requesting a plot update. The signal is listened to by
+    parameter_changed = Signal()
+    # A signal emitted when the user changes a system parameter.
+    # The signal is listened to by
     # the app_controller, forwarding the request to the appropriate
-    # plotting controllers
+    # controllers
     item_changed = Signal()
     # A signal emitted when the user changes the item by interacting
     # with the tree. Used to notify the app_controller
@@ -172,7 +173,7 @@ class UnitCellController(QObject):
                             vector=vector_name,
                             coordinate=axis,
                             spinbox=spinboxes[ii],
-                            signal=self.plot_update_requested,
+                            signal=self.parameter_changed,
                         )
                     )
                 )
@@ -196,7 +197,7 @@ class UnitCellController(QObject):
                             unit_cells=self.unit_cells,
                             selection=self.selection,
                             unit_cell_view=self.unit_cell_view,
-                            signal=self.plot_update_requested,
+                            signal=self.parameter_changed,
                             dim=d,
                             buttons=self.radio_buttons,
                         )
@@ -217,7 +218,7 @@ class UnitCellController(QObject):
                         selection=self.selection,
                         param=p,
                         spinbox=s,
-                        signal=self.plot_update_requested,
+                        signal=self.parameter_changed,
                     )
                 )
             )
@@ -230,7 +231,7 @@ class UnitCellController(QObject):
                     selection=self.selection,
                     param="R",
                     spinbox=self.R,
-                    signal=self.plot_update_requested,
+                    signal=self.parameter_changed,
                 )
             )
         )
@@ -281,7 +282,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     unit_cell_view=self.unit_cell_view,
-                    signal=self.plot_update_requested,
+                    signal=self.parameter_changed,
                 )
             )
         )
@@ -392,7 +393,7 @@ class UnitCellController(QObject):
                 self.unit_cell_view.site_info_label
             )
 
-        self.plot_update_requested.emit()
+        self.parameter_changed.emit()
 
     def _pick_site_color(self):
         """
@@ -428,6 +429,6 @@ class UnitCellController(QObject):
                     new_color=new_color,
                     old_color=start_color,
                     unit_cell_view=self.unit_cell_view,
-                    signal=self.plot_update_requested,
+                    signal=self.parameter_changed,
                 )
             )

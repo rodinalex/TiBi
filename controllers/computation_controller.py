@@ -90,7 +90,9 @@ class ComputationController(QObject):
             self.selection_requested.emit
         )
         # Bands Panel
-        self.bands_controller.bands_computed.connect(self.bands_computed.emit)
+        self.bands_controller.bands_computed.connect(
+            self._handle_bands_computed
+        )
         self.bands_controller.status_updated.connect(self.status_updated.emit)
 
     def get_pair_selection(self):
@@ -113,3 +115,14 @@ class ComputationController(QObject):
         that the matrix table contains the correct item names.
         """
         self.hopping_controller.update_unit_cell()
+
+    def set_dimensionality(self, dim: int):
+        self.bands_controller.set_dimensionality(dim)
+
+    def _handle_bands_computed(self):
+        # Update the projection combo box
+        unit_cell = self.unit_cells[self.selection.get("unit_cell")]
+        _, state_info = unit_cell.get_states()
+        combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
+        self.bands_controller.set_combo(combo_labels)
+        self.bands_computed.emit

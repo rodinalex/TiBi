@@ -75,7 +75,6 @@ class AppController(QObject):
             Controller of the `UnitCell` graphical component
         """
         super().__init__()
-        # self.models = models
         self.unit_cells = unit_cells
         self.selection = selection
 
@@ -99,7 +98,7 @@ class AppController(QObject):
         # computation_controller
         self.computation_controller.status_updated.connect(self._relay_status)
         self.computation_controller.bands_computed.connect(
-            self._handle_plot_update_requested
+            self._handle_bands_computed
         )
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
@@ -120,13 +119,13 @@ class AppController(QObject):
 
         # Update the plots when the number of unit cells to be plotted changes
         self.main_ui_controller.toolbar.n1_spinbox.valueChanged.connect(
-            self._handle_plot_update_requested
+            self._handle_system_update
         )
         self.main_ui_controller.toolbar.n2_spinbox.valueChanged.connect(
-            self._handle_plot_update_requested
+            self._handle_system_update
         )
         self.main_ui_controller.toolbar.n3_spinbox.valueChanged.connect(
-            self._handle_plot_update_requested
+            self._handle_system_update
         )
 
         # Toggle the wireframe in the unit cell plot
@@ -141,8 +140,8 @@ class AppController(QObject):
         # and table to reflect the correct names
         self.uc_controller.item_changed.connect(self._handle_item_changed)
         # Refresh the plots after unit cell selection or parameter change
-        self.uc_controller.plot_update_requested.connect(
-            self._handle_plot_update_requested
+        self.uc_controller.parameter_changed.connect(
+            self._handle_system_update
         )
         # uc_plot_controller
 
@@ -152,12 +151,12 @@ class AppController(QObject):
         """
         self.main_ui_controller.update_status(msg)
 
-    def _handle_plot_update_requested(self):
+    def _handle_system_update(self):
         """
-        Handle requests to update unit cell and Brillouin zone plots.
+        Handle requests to update plots and panels..
 
         The signal is emitted by the `UnitCellController` when system
-        parameters that impact the visual structure change.
+        parameters change.
         """
         uc_id = self.selection.get("unit_cell")
         if uc_id is not None:
@@ -177,11 +176,18 @@ class AppController(QObject):
 
             # Plot the band structure (if available)
             self.plot_controller.plot_band_structure(unit_cell.bandstructure)
+            self.computation_controller.set_dimensionality(
+                unit_cell.v1.is_periodic
+                + unit_cell.v2.is_periodic
+                + unit_cell.v3.is_periodic
+            )
+
         # Deactivate the spinners
         else:
             self.main_ui_controller.toolbar.n1_spinbox.setEnabled(False)
             self.main_ui_controller.toolbar.n2_spinbox.setEnabled(False)
             self.main_ui_controller.toolbar.n3_spinbox.setEnabled(False)
+            self.computation_controller.set_dimensionality(0)
 
         # Get the parameters for the unit cell plot
         n1, n2, n3 = [
@@ -266,10 +272,20 @@ class AppController(QObject):
         # Current selection state (tracks which items are selected in the UI)
         self.selection.update(selection_init())
         self.uc_controller.tree_view.refresh_tree(self.unit_cells)
-        self._handle_plot_update_requested()
+        self._handle_system_update()
 
     def _handle_selection_requested(self, uc_id, site_id, state_id):
         """Programmatically select an item in the tree view."""
         self.uc_controller.tree_view._select_item_by_id(
             uc_id, site_id, state_id
         )
+
+    def _handle_bands_computed(self):
+        pass
+        # Send the update to computation
+        # Plot the bands, if available
+        # Set the projection combo box
+        #
+        # uc_id = self.selection.get("unit_cell")
+        # unit_cell = self.unit_cells[uc_id]
+        # self.plot_controller.plot_band_structure(unit_cell.bandstructure)
