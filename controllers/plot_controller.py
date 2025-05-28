@@ -35,7 +35,7 @@ class PlotController(QObject):
         super().__init__()
         self.plot_view = plot_view
 
-    def plot_band_structure(self, bandstructure: BandStructure):
+    def plot_band_structure(self, bandstructure: BandStructure, states):
         """
         Plot the band structure.
 
@@ -75,6 +75,29 @@ class PlotController(QObject):
             for x in pos_special_points:
                 self.plot_view.ax.axvline(
                     x=x, color="gray", linestyle="--", linewidth=0.8
+                )
+
+                default_radius = 50  # or tweak as needed
+
+            evecs = np.array(
+                bandstructure.eigenvectors
+            )  # shape: (n_k, n_b, n_basis)
+            n_k, n_b = bands.shape
+
+            for band_idx in range(n_b):
+                x_vals = pos
+                y_vals = bands[:, band_idx]
+
+                # Compute projection magnitude squared for each k-point
+                projections = (
+                    np.abs(evecs[:, band_idx, states]) ** 2
+                )  # shape (n_k, len(states))
+                sizes = default_radius * np.sum(
+                    projections, axis=1
+                )  # shape (n_k,)
+
+                self.plot_view.ax.scatter(
+                    x_vals, y_vals, s=sizes, color="red", alpha=0.6
                 )
         # Draw the canvas
         self.plot_view.canvas.draw()

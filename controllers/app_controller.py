@@ -96,13 +96,16 @@ class AppController(QObject):
         # resulting in a cleared plot.
         self.bz_plot_controller.bz_path_updated.connect(
             lambda: self.plot_controller.plot_band_structure(
-                self.unit_cells[self.selection.unit_cell].bandstructure
+                self.unit_cells[self.selection.unit_cell].bandstructure, []
             )
         )
         # computation_controller
         self.computation_controller.status_updated.connect(self._relay_status)
         self.computation_controller.bands_computed.connect(
             self._handle_bands_computed
+        )
+        self.computation_controller.projection_selection_changed.connect(
+            self.plot_bands
         )
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
@@ -126,7 +129,7 @@ class AppController(QObject):
         # When an item in the tree view is renamed, refresh the hopping matrix
         # and table to reflect the correct names
         self.uc_controller.hopping_projection_update_requested.connect(
-            self._handle_item_renamed
+            self._handle_hopping_projection_update
         )
         # Refresh the plots after unit cell selection or parameter change
         self.uc_controller.parameter_changed.connect(self._update_panels)
@@ -155,12 +158,15 @@ class AppController(QObject):
                 unit_cell.v3.is_periodic,
             )
 
-            # Plot the band structure (if available)
-            self.plot_controller.plot_band_structure(unit_cell.bandstructure)
             self.computation_controller.set_dimensionality(
                 unit_cell.v1.is_periodic
                 + unit_cell.v2.is_periodic
                 + unit_cell.v3.is_periodic
+            )
+            # Populate the projection drop box
+            # Plot the band structure (if available)
+            self.plot_controller.plot_band_structure(
+                unit_cell.bandstructure, []
             )
 
         # Deactivate the spinners
@@ -172,8 +178,9 @@ class AppController(QObject):
         self._update_unit_cell_plot()
         self.bz_plot_controller.update_brillouin_zone()
 
-        # Update the hopping panel
+        # Update the hopping panel and projection combo
         self.computation_controller.update_hopping_panel()
+        self.computation_controller.update_projection_combo()
 
     def _handle_hopping_segments_requested(self):
         """
@@ -187,15 +194,17 @@ class AppController(QObject):
         pair_selection = self.computation_controller.get_pair_selection()
         self.uc_plot_controller.update_hopping_segments(pair_selection)
 
-    def _handle_item_renamed(self):
+    def _handle_hopping_projection_update(self):
         """
-        Handle the change in the name of the tree items.
+        Redraw the hopping panels and the projection dropbox.
 
         This function is necessary to make sure that the label names in the
         hopping matrix, hopping table, and projection drop box
-        accurately reflect the item names.
+        accurately reflect the item names. Additionally, if states are added
+        or removed, the hopping matrix needs to be updated.
         """
         self.computation_controller.update_hopping_panel()
+        self.computation_controller.update_projection_combo()
 
     def _handle_project_refresh_requested(self):
         """
@@ -212,6 +221,7 @@ class AppController(QObject):
 
     def _handle_selection_requested(self, uc_id, site_id, state_id):
         """Programmatically select an item in the tree view."""
+        # FIX THIS: WE SHOULD NOT ACCESS THE INTERNAL VIEW OF A CONTROLLER
         self.uc_controller.tree_view._select_item_by_id(
             uc_id, site_id, state_id
         )
@@ -232,3 +242,13 @@ class AppController(QObject):
         pair_selection = self.computation_controller.get_pair_selection()
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
+
+    def plot_bands(self, idx):
+        uc_id = self.selection.unit_cell
+        if uc_id is not None:
+            unit_cell = self.unit_cells[uc_id]
+            # Populate the projection drop box
+            # Plot the band structure (if available)
+            self.plot_controller.plot_band_structure(
+                unit_cell.bandstructure, idx
+            )

@@ -29,6 +29,7 @@ class BandsController(QObject):
     """
 
     bands_computed = Signal()
+    projection_selection_changed = Signal(object)
     status_updated = Signal(str)
 
     def __init__(
@@ -43,6 +44,9 @@ class BandsController(QObject):
         self.bands_panel = bands_panel
 
         self.bands_panel.compute_bands_btn.clicked.connect(self._compute_bands)
+        self.bands_panel.proj_combo.selection_changed.connect(
+            self.projection_selection_changed.emit
+        )
 
     def _compute_bands(self):
         """
@@ -103,3 +107,6 @@ class BandsController(QObject):
         self.bands_panel.select_all_btn.setEnabled(len(items) > 0)
         self.bands_panel.clear_all_btn.setEnabled(len(items) > 0)
         self.bands_panel.proj_combo.select_all()
+
+    def get_projection_indices(self):
+        return self.bands_panel.proj_combo.checked_items()

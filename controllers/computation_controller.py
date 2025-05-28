@@ -43,6 +43,7 @@ class ComputationController(QObject):
     selection_requested = Signal(object, object, object)
     # Band controller signals to relay
     bands_computed = Signal()
+    projection_selection_changed = Signal(object)
 
     def __init__(
         self,
@@ -94,6 +95,9 @@ class ComputationController(QObject):
             self._handle_bands_computed
         )
         self.bands_controller.status_updated.connect(self.status_updated.emit)
+        self.bands_controller.projection_selection_changed.connect(
+            self.projection_selection_changed.emit
+        )
 
     def get_pair_selection(self):
         """
@@ -126,3 +130,14 @@ class ComputationController(QObject):
         combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
         self.bands_controller.set_combo(combo_labels)
         self.bands_computed.emit()
+
+    def update_projection_combo(self):
+        uc_id = self.selection.unit_cell
+        if uc_id:
+            unit_cell = self.unit_cells[uc_id]
+            _, state_info = unit_cell.get_states()
+            combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
+            self.bands_controller.set_combo(combo_labels)
+
+    def get_projection_indices(self):
+        return self.bands_controller.get_projection_indices()
