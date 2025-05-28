@@ -125,4 +125,4 @@ class ComputationController(QObject):
         _, state_info = unit_cell.get_states()
         combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
         self.bands_controller.set_combo(combo_labels)
-        self.bands_computed.emit
+        self.bands_computed.emit()

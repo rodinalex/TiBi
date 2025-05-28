@@ -213,6 +213,8 @@ class AppController(QObject):
         )
 
     def _handle_bands_computed(self):
+        # FOR NOW, THE BAND STRUCTURE IS PLOTTED
+        # WE NEED TO ACCESS THE COMBO BOX TO GET THE PROJECTION
         uc_id = self.selection.get("unit_cell")
         unit_cell = self.unit_cells[uc_id]
         self.plot_controller.plot_band_structure(unit_cell.bandstructure)
