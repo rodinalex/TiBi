@@ -4,8 +4,7 @@ import uuid
 from .bz_plot_controller import BrillouinZonePlotController
 from .computation_controller import ComputationController
 from .main_ui_controller import MainUIController
-from models.factories import selection_init
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from .plot_controller import PlotController
 from .uc_controller import UnitCellController
 from .uc_plot_controller import UnitCellPlotController
@@ -25,8 +24,8 @@ class AppController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
-        `DataModel` tracking the current selection
+    selection : Selection
+        `Selection` tracking the current selection
     bz_plot_controller : BrillouinZonePlotController
         Controller of the BZ graphical component
     computation_controller : ComputationController
@@ -44,7 +43,7 @@ class AppController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         bz_plot_controller: BrillouinZonePlotController,
         computation_controller: ComputationController,
         main_ui_controller: MainUIController,
@@ -87,7 +86,7 @@ class AppController(QObject):
         self.uc_plot_controller = uc_plot_controller
 
         # Connect signals
-        self.selection.signals.updated.connect(self._update_panels)
+        self.selection.unit_cell_updated.connect(self._update_panels)
 
         # bz_plot_controller
         # When the path is updated, the bandstructure is cleared.
@@ -139,7 +138,7 @@ class AppController(QObject):
 
         Takes place when system parameters or the selection change.
         """
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         if uc_id is not None:
             unit_cell = self.unit_cells[uc_id]
 
@@ -202,7 +201,7 @@ class AppController(QObject):
         Here, only the selection and views are refreshed.
         """
         # Current selection state (tracks which items are selected in the UI)
-        self.selection.update(selection_init())
+        self.selection.set_selection(uc_id=None, site_id=None, state_id=None)
         self.uc_controller.tree_view.refresh_tree(self.unit_cells)
         self._update_panels()
 
@@ -215,7 +214,7 @@ class AppController(QObject):
     def _handle_bands_computed(self):
         # FOR NOW, THE BAND STRUCTURE IS PLOTTED
         # WE NEED TO ACCESS THE COMBO BOX TO GET THE PROJECTION
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         unit_cell = self.unit_cells[uc_id]
         self.plot_controller.plot_band_structure(unit_cell.bandstructure)
 

@@ -9,7 +9,7 @@ from models.factories import (
 import uuid
 
 from views.widgets import SystemTree
-from models import UnitCell
+from models import Selection, UnitCell
 
 
 class AddUnitCellCommand(QUndoCommand):
@@ -83,7 +83,7 @@ class AddSiteCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
@@ -96,7 +96,7 @@ class AddSiteCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         tree_view: SystemTree,
     ):
         """
@@ -106,7 +106,7 @@ class AddSiteCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
@@ -115,7 +115,7 @@ class AddSiteCommand(QUndoCommand):
         self.unit_cells = unit_cells
         self.selection = selection
         self.tree_view = tree_view
-        self.uc_id = self.selection["unit_cell"]
+        self.uc_id = self.selection.unit_cell
         self.site = mk_new_site()
 
     # Add the newly-created site to the dictionary and create a tree item
@@ -146,8 +146,8 @@ class AddStateCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
     uc_id : uuid.UUID
@@ -161,7 +161,7 @@ class AddStateCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         tree_view: SystemTree,
     ):
         """
@@ -171,7 +171,7 @@ class AddStateCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
@@ -225,7 +225,7 @@ class DeleteItemCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
@@ -240,7 +240,7 @@ class DeleteItemCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         tree_view: SystemTree,
     ):
         """
@@ -250,7 +250,7 @@ class DeleteItemCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
                 Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
@@ -260,9 +260,9 @@ class DeleteItemCommand(QUndoCommand):
         self.selection = selection
         self.tree_view = tree_view
 
-        self.uc_id = self.selection.get("unit_cell", None)
-        self.site_id = self.selection.get("site", None)
-        self.state_id = self.selection.get("state", None)
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
+        self.state_id = self.selection.state
 
         # Save the item to be deleted for undo
         if self.state_id:
@@ -366,7 +366,7 @@ class RenameTreeItemCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
@@ -389,7 +389,7 @@ class RenameTreeItemCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         tree_view: SystemTree,
         signal: Signal,
         item: QStandardItem,
@@ -401,7 +401,7 @@ class RenameTreeItemCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
@@ -418,9 +418,9 @@ class RenameTreeItemCommand(QUndoCommand):
         self.item_changed = signal
         self.new_name = item.text()
 
-        self.uc_id = self.selection.get("unit_cell", None)
-        self.site_id = self.selection.get("site", None)
-        self.state_id = self.selection.get("state", None)
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
+        self.state_id = self.selection.state
 
         # Get the old name
         if self.state_id:

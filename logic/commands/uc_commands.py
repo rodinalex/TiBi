@@ -3,7 +3,7 @@ from PySide6.QtGui import QColor, QUndoCommand
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox, QRadioButton
 import uuid
 
-from models import BasisVector, UnitCell
+from models import BasisVector, Selection, UnitCell
 from views.uc_view import UnitCellView
 
 
@@ -18,7 +18,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     vector : str
         The vector to be updated (v1, v2, or v3)
@@ -40,7 +40,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         vector: str,
         coordinate: str,
         spinbox: QDoubleSpinBox,
@@ -53,7 +53,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         vector : str
             The vector to be updated (v1, v2, or v3)
@@ -74,7 +74,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         self.signal = signal
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.selection.get("unit_cell")
+        self.uc_id = self.selection.unit_cell
 
         self.old_value = getattr(
             getattr(self.unit_cells[self.uc_id], self.vector),
@@ -119,7 +119,7 @@ class ReduceBasisCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
@@ -137,7 +137,7 @@ class ReduceBasisCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
@@ -148,7 +148,7 @@ class ReduceBasisCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         unit_cell_view : UnitCellView
             UI object containing the unit cell view
@@ -162,7 +162,7 @@ class ReduceBasisCommand(QUndoCommand):
         self.unit_cell_view = unit_cell_view
         self.signal = signal
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.unit_cell
 
         if self.uc_id:
             uc = self.unit_cells[self.uc_id]
@@ -230,7 +230,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
@@ -263,7 +263,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         unit_cell_view: UnitCellView,
         signal: Signal,
         dim: int,
@@ -276,7 +276,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         param : str
             The parameter to be updated (radius, color, etc.)
@@ -298,7 +298,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.new_dim = dim
         self.buttons = buttons
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.unit_cell
         uc = self.unit_cells[self.uc_id]
         self.old_v1 = uc.v1
         self.old_v2 = uc.v2
@@ -421,7 +421,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     param : str
         The parameter to be updated (radius, color, etc.)
@@ -443,7 +443,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         param: str,
         spinbox: QDoubleSpinBox,
         signal: Signal,
@@ -455,7 +455,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         param : str
             The parameter to be updated (radius, color, etc.)
@@ -473,8 +473,8 @@ class UpdateSiteParameterCommand(QUndoCommand):
         self.signal = signal
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.selection.get("unit_cell", None)
-        self.site_id = self.selection.get("site", None)
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
 
         self.old_value = getattr(
             self.unit_cells[self.uc_id].sites[self.site_id],
@@ -508,7 +508,7 @@ class ChangeSiteColorCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Dictionary containing the current selection
     new_color : QColor
         The new color to be set for the site
@@ -524,7 +524,7 @@ class ChangeSiteColorCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         new_color: QColor,
         old_color: QColor,
         unit_cell_view: UnitCellView,
@@ -537,7 +537,7 @@ class ChangeSiteColorCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Dictionary containing the current selection
         new_color : QColor
             The new color to be set for the site

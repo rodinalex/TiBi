@@ -81,8 +81,7 @@ class TiBiApplication:
         # Initialize global models
         self.project_path = None
         self.unit_cells: dict[uuid.UUID, UnitCell] = {}
-        self.selection = DataModel(selection_init())
-
+        self.selection = Selection()
         # Initialize views
         # Panel views
         self.uc_view = UnitCellView()

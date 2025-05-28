@@ -15,7 +15,7 @@ from logic.commands import (
     UpdateSiteParameterCommand,
     UpdateUnitCellParameterCommand,
 )
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from views.widgets import EnterKeySpinBox
 from views.uc_view import UnitCellView
 
@@ -34,8 +34,8 @@ class UnitCellController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
-        `DataModel` tracking the current selection
+    selection : Selection
+        `Selection` tracking the current selection
     unit_cell_view : UnitCellView
         The main view component
     undo_stack : QUndoStack
@@ -75,7 +75,7 @@ class UnitCellController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         unit_cell_view: UnitCellView,
         undo_stack: QUndoStack,
     ):
@@ -86,8 +86,8 @@ class UnitCellController(QObject):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            `DataModel` tracking the current selection
+        selection : Selection
+            `Selection` tracking the current selection
         unit_cell_view : UnitCellView
             The main view component
         undo_stack : QUndoStack
@@ -126,13 +126,15 @@ class UnitCellController(QObject):
         # SIGNALS
         # Selection change. Triggered by the change of the selection model
         # to show the appropriate panels and plots
-        self.selection.signals.updated.connect(self._show_panels)
+        self.selection.selection_changed.connect(self._show_panels)
 
         # Tree view signals
         # Triggered when the tree selection changed.
         # Updates the selection dictionary
         self.tree_view.tree_selection_changed.connect(
-            lambda x: self.selection.update(x)
+            lambda x: self.selection.set_selection(
+                uc_id=x["unit_cell"], site_id=x["site"], state_id=x["state"]
+            )
         )
 
         # Triggered when a tree item's name is changed by double clicking on it
@@ -309,9 +311,8 @@ class UnitCellController(QObject):
 
         Buttons are also enabled/disabled based on the selection context.
         """
-        unit_cell_id = self.selection.get("unit_cell", None)
-        site_id = self.selection.get("site", None)
-
+        unit_cell_id = self.selection.unit_cell
+        site_id = self.selection.site
         if unit_cell_id:
             # Get the selected unit cell
             uc = self.unit_cells[unit_cell_id]

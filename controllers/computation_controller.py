@@ -4,7 +4,7 @@ import uuid
 
 from .bands_controller import BandsController
 from .hopping_controller import HoppingController
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from views.computation_view import ComputationView
 
 
@@ -16,8 +16,8 @@ class ComputationController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
-        `DataModel` tracking the current selection
+    selection : Selection
+        Model tracking the current selection
     computation_view : ComputationView
         UI object containing the computation view
 
@@ -47,7 +47,7 @@ class ComputationController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         computation_view: ComputationView,
         undo_stack: QUndoStack,
     ):
@@ -58,8 +58,8 @@ class ComputationController(QObject):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            `DataModel` tracking the current selection
+        selection : Selection
+            `Selection` tracking the current selection
         computation_view : ComputationView
             UI object containing the computation view
         undo_stack : QUndoStack
@@ -121,7 +121,7 @@ class ComputationController(QObject):
 
     def _handle_bands_computed(self):
         # Update the projection combo box
-        unit_cell = self.unit_cells[self.selection.get("unit_cell")]
+        unit_cell = self.unit_cells[self.selection.unit_cell]
         _, state_info = unit_cell.get_states()
         combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
         self.bands_controller.set_combo(combo_labels)

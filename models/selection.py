@@ -5,6 +5,8 @@ class Selection(QObject):
     """
     Currently selected item.
 
+    The item is characterized by a series of uuid.UUID's.
+
     Attributes
     ----------
     unit_cell : uuid.UUID | None
@@ -28,14 +30,20 @@ class Selection(QObject):
         Emitted when a new `Site` is selected.
     state_updated
         Emitted when a new `State` is selected.
+    selection_changed
+        Emitted when the selection changes, in addition
+        to the specific signal.
     """
 
     unit_cell_updated = Signal()
     site_updated = Signal()
     state_updated = Signal()
+    selection_changed = Signal()
 
     def __init__(self):
         """Initialize the Selection object."""
+        super().__init__()
+
         self.unit_cell = None
         self.site = None
         self.state = None
@@ -57,13 +65,16 @@ class Selection(QObject):
         current_site = self.site
         current_state = self.state
 
-        if current_uc != uc_id:
-            self.unit_cell_updated.emit()
-        elif current_site != site_id:
-            self.site_updated.emit()
-        elif current_state != state_id:
-            self.state_updated.emit()
-
         self.unit_cell = uc_id
         self.site = site_id
         self.state = state_id
+
+        if current_uc != uc_id:
+            self.unit_cell_updated.emit()
+            self.selection_changed.emit()
+        elif current_site != site_id:
+            self.site_updated.emit()
+            self.selection_changed.emit()
+        elif current_state != state_id:
+            self.state_updated.emit()
+            self.selection_changed.emit()

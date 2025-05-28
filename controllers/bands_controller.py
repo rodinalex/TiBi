@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, Signal
 import uuid
 
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from views.panels import BandsPanel
 from core.band_structure import diagonalize_hamitonian, interpolate_k_path
 
@@ -14,7 +14,7 @@ class BandsController(QObject):
     ----------
     unit_cells : dict[UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
+    selection : Selection
         Model tracking the current selection
     bands_panel : BandsPanel
         Main panel for bands and BZ grid calculations
@@ -34,7 +34,7 @@ class BandsController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         bands_panel: BandsPanel,
     ):
         super().__init__()
@@ -52,7 +52,7 @@ class BandsController(QObject):
         """
 
         # Get the selected unit cell
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         unit_cell = self.unit_cells[uc_id]
 
         # Check if the coupling is Hermitian and only then calculate

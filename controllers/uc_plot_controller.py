@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject
 import pyqtgraph.opengl as gl
 import uuid
 
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from ui.constants import CF_yellow, default_site_scaling
 from views.uc_plot_view import UnitCellPlotView
 
@@ -31,7 +31,7 @@ class UnitCellPlotController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
+    selection : Selection
         Model tracking the currently selected unit cell, site, and state
     uc_plot_view : UnitCellPlotView
         The view component for the 3D visualization
@@ -44,7 +44,7 @@ class UnitCellPlotController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         uc_plot_view: UnitCellPlotView,
     ):
         """
@@ -54,7 +54,7 @@ class UnitCellPlotController(QObject):
         ----------
         unit_cells: dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection: DataModel
+        selection: Selection
             Model tracking the currently selected unit cell, site, and state
         uc_plot_view: UnitCellPlotView
             The view component for the 3D visualization
@@ -85,7 +85,7 @@ class UnitCellPlotController(QObject):
         n1, n2, n3: int
             Number of repetitions along the corresponding basis vector
         """
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         # Clear previous plot items except axes
         for key, item in list(self.uc_plot_items.items()):
             self.uc_plot_view.view.removeItem(item)
@@ -170,7 +170,7 @@ class UnitCellPlotController(QObject):
 
             sphere_radius = (
                 self.unit_cell.sites[site_id].R * default_site_scaling
-                if site_id == self.selection.get("site")
+                if site_id == self.selection.site
                 else self.unit_cell.sites[site_id].R
             )
             # Create a sphere for the site.

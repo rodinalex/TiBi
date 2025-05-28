@@ -10,7 +10,7 @@ from logic.commands import (
     ClearBZPathCommand,
     RemoveBZPointCommand,
 )
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from ui.constants import CF_red
 from models.factories import bz_point_lists_init, bz_point_selection_init
 from views.bz_plot_view import BrillouinZonePlotView
@@ -35,7 +35,7 @@ class BrillouinZonePlotController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
+    selection : Selection
         Model tracking the currently selected unit cell, site, and state
     bz_plot_view : BrillouinZonePlotView
         The view component for displaying the Brillouin zone
@@ -68,7 +68,7 @@ class BrillouinZonePlotController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         bz_plot_view: BrillouinZonePlotView,
         computation_view: ComputationView,
         undo_stack: QUndoStack,
@@ -80,7 +80,7 @@ class BrillouinZonePlotController(QObject):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
+        selection : Selection
             Model tracking the currently selected unit cell, site, and state
         bz_plot_view : BrillouinZonePlotView
             The view component for displaying the Brillouin zone
@@ -165,7 +165,7 @@ class BrillouinZonePlotController(QObject):
         The method is triggered whenever the unit cell changes or
         a new unit cell is selected.
         """
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         # Clear previous plot items except axes
         for key, item in list(self.bz_plot_items.items()):
             self.bz_plot_view.view.removeItem(item)

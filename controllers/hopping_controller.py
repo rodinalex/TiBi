@@ -6,7 +6,7 @@ from typing import Tuple
 import uuid
 
 from logic.commands import SaveHoppingsCommand
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from ui.styles.button_styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,
@@ -36,7 +36,7 @@ class HoppingController(QObject):
     ----------
     unit_cells : dict[UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
+    selection : Selection
         Model tracking the current selection
     hopping_view : HoppingPanel
         The main view component
@@ -95,7 +95,7 @@ class HoppingController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         hopping_view: HoppingPanel,
         undo_stack: QUndoStack,
     ):
@@ -106,7 +106,7 @@ class HoppingController(QObject):
         ----------
         unit_cells : dict[UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
+        selection : Selection
             Model tracking the current selection
         hopping_view : HoppingPanel
             The main view component
@@ -149,7 +149,7 @@ class HoppingController(QObject):
         It retrieves the currently selected unit cell and its hoppings,
         refreshing the matrix.
         """
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         # Deselect the previous states
         self.pair_selection[0] = None
         self.pair_selection[1] = None
