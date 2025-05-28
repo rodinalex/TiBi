@@ -22,20 +22,14 @@ from views.uc_view import UnitCellView
 
 class UnitCellController(QObject):
     """
-    Controller managing interactions between the UI and unit cell data model.
-
-    This controller connects UI signals from the form panels and tree view to
-    appropriate commands that modify the underlying data models.
-    It handles all CRUD (create, read, update, delete) operations for
-    the hierarchy of unit cells, sites, and states.
-
+    Controller managing the `UnitCell`, `Site`, and `State` creation panel.
 
     Attributes
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
     selection : Selection
-        `Selection` tracking the current selection
+        Model tracking the currently selected unit cell, site, and state
     unit_cell_view : UnitCellView
         The main view component
     undo_stack : QUndoStack
@@ -44,7 +38,7 @@ class UnitCellController(QObject):
         Lists of spinboxes for basis vector components
     R, c1, c2, c3 : EnterKeySpinBox
         Spinboxes for site properties
-    tree_view_panel :TreeViewPanel
+    tree_view_panel : TreeViewPanel
         The tree view panel component
     tree_view : SystemTree
         The tree view component
@@ -53,24 +47,27 @@ class UnitCellController(QObject):
 
     Signals
     -------
-    parameter_changed
-        Signal emitted when a unit cell or site parameter is changed.
+    unit_cell_parameter_changed
+        Signal emitted when a unit cell parameter is changed.
+        This triggers a redraw of the panels orchestrated by
+        the app_controller. Whenever unit cell parameter changes,
+        the derived quantities (band structure, BZ grid, etc),
+        are discarded due to being stale. The clearing is handled
+        by the associated commands
+    site_parameter_changed
+        Signal emitted when a site parameter is changed.
+        This triggers a redraw only of the unit cell plot.
+        Changing site parameters does not invalidate the derived quantities
+        since the site parameters are purely cosmetic.
     hopping_projection_update_requested
         Signal emitted when a tree item is renamed or the structure of the
-        unit cell changes, requiring an update of the hopping matrix.
-        (Adding/removing states)
+        unit cell changes (adding/removing states), requiring
+        an update of the hopping matrix and the projection selection.
     """
 
-    parameter_changed = Signal()
-    # A signal emitted when the user changes a system parameter.
-    # The signal is listened to by
-    # the app_controller, forwarding the request to the appropriate
-    # controllers
+    unit_cell_parameter_changed = Signal()
+    site_parameter_changed = Signal()
     hopping_projection_update_requested = Signal()
-    # A signal emitted when the user renames the item by interacting
-    # with the tree. Used to notify the app_controller
-    # that the hopping matrix needs to be redrawn to
-    # reflect the correct site/state names
 
     def __init__(
         self,
@@ -87,14 +84,13 @@ class UnitCellController(QObject):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
         selection : Selection
-            `Selection` tracking the current selection
+            Model tracking the currently selected unit cell, site, and state
         unit_cell_view : UnitCellView
             The main view component
         undo_stack : QUndoStack
             `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
-        # Store references to UI components and data models
         self.unit_cells = unit_cells
         self.selection = selection
         self.unit_cell_view = unit_cell_view
@@ -115,7 +111,7 @@ class UnitCellController(QObject):
         self.c3 = self.unit_cell_view.site_panel.c3
 
         # Store the tree_view_panel, tree_view and tree_model as
-        # parameters for convenience
+        # attributes for convenience
         self.tree_view_panel = self.unit_cell_view.tree_view_panel
         self.tree_view = self.tree_view_panel.tree_view
         self.tree_model = self.tree_view.tree_model
@@ -124,13 +120,11 @@ class UnitCellController(QObject):
         self.tree_view.refresh_tree(self.unit_cells)
 
         # SIGNALS
-        # Selection change. Triggered by the change of the selection model
-        # to show the appropriate panels and plots
+        # Selection change.
         self.selection.selection_changed.connect(self._show_panels)
 
         # Tree view signals
-        # Triggered when the tree selection changed.
-        # Updates the selection dictionary
+        # When the tree selection changes, the selection model is updated
         self.tree_view.tree_selection_changed.connect(
             lambda x: self.selection.set_selection(
                 uc_id=x["unit_cell"], site_id=x["site"], state_id=x["state"]
@@ -152,6 +146,13 @@ class UnitCellController(QObject):
 
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button
+        # The signal is emitted only when there are states that are deleted
+        # (either directly or as part of a site). If a state is deleted,
+        # derived quantities (bands, BZ grid, etc.) are discarded
+        # due to being stale.
+        # If a unit cell is deleted,
+        # the signal is not emitted as the unit cell deletion changes the
+        # selection, which is handled separately.
         self.unit_cell_view.tree_view_panel.delete_requested.connect(
             lambda: self.undo_stack.push(
                 DeleteItemCommand(
@@ -163,7 +164,8 @@ class UnitCellController(QObject):
             )
         )
 
-        # Unit Cell basis vector signals.
+        # Unit Cell basis vector signals. Emitted when the user confirms
+        # the change in the corresponding field but pressing Enter.
         def connect_vector_fields(
             vector_name, spinboxes: list[EnterKeySpinBox]
         ):
@@ -176,11 +178,12 @@ class UnitCellController(QObject):
                             vector=vector_name,
                             coordinate=axis,
                             spinbox=spinboxes[ii],
-                            signal=self.parameter_changed,
+                            signal=self.unit_cell_parameter_changed,
                         )
                     )
                 )
 
+        # Connect the fields for the three basis vectors
         connect_vector_fields("v1", self.v1)
         connect_vector_fields("v2", self.v2)
         connect_vector_fields("v3", self.v3)
@@ -192,6 +195,9 @@ class UnitCellController(QObject):
             self.unit_cell_view.unit_cell_panel.radio2D,
             self.unit_cell_view.unit_cell_panel.radio3D,
         ]
+        # Dimensionality change signals from the radio buttons.
+        # Changes in dimensionality trigger the same response
+        # as in the basis vector coordinates.
         for dim, radio in enumerate(self.radio_buttons):
             radio.toggled.connect(
                 lambda checked, d=dim: (
@@ -200,7 +206,7 @@ class UnitCellController(QObject):
                             unit_cells=self.unit_cells,
                             selection=self.selection,
                             unit_cell_view=self.unit_cell_view,
-                            signal=self.parameter_changed,
+                            signal=self.unit_cell_parameter_changed,
                             dim=d,
                             buttons=self.radio_buttons,
                         )
@@ -211,7 +217,7 @@ class UnitCellController(QObject):
             )
 
         # Site panel signals.
-        # Site fractional coordinates
+        # Signals for fractional site coordinates.
         for param in ["c1", "c2", "c3"]:
             spinbox: EnterKeySpinBox = getattr(self, param)
             spinbox.editingConfirmed.connect(
@@ -221,7 +227,7 @@ class UnitCellController(QObject):
                         selection=self.selection,
                         param=p,
                         spinbox=s,
-                        signal=self.parameter_changed,
+                        signal=self.site_parameter_changed,
                     )
                 )
             )
@@ -234,7 +240,7 @@ class UnitCellController(QObject):
                     selection=self.selection,
                     param="R",
                     spinbox=self.R,
-                    signal=self.parameter_changed,
+                    signal=self.site_parameter_changed,
                 )
             )
         )
@@ -258,7 +264,9 @@ class UnitCellController(QObject):
                 )
             )
         )
-        # New State button
+        # New State button. Adding states emits a signal requiring
+        # the system to redraw the hopping matrix and update the
+        # projection dropdown.
         self.unit_cell_view.site_panel.new_state_btn.clicked.connect(
             lambda: self.undo_stack.push(
                 AddStateCommand(
@@ -280,14 +288,14 @@ class UnitCellController(QObject):
                 )
             )
         )
-        # Reduce button--LLL argorithm to obtain the primitive cell
+        # Reduce button--LLL argorithm to obtain the primitive cell.
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             lambda: self.undo_stack.push(
                 ReduceBasisCommand(
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     unit_cell_view=self.unit_cell_view,
-                    signal=self.parameter_changed,
+                    signal=self.unit_cell_parameter_changed,
                 )
             )
         )
@@ -330,7 +338,7 @@ class UnitCellController(QObject):
             self.unit_cell_view.unit_cell_panel.radio_group.button(
                 dim
             ).setChecked(True)
-
+            # Enable the coordinate fields depending on the dimensionality
             self.unit_cell_view.unit_cell_panel.v1[0].setEnabled(True)
             self.unit_cell_view.unit_cell_panel.v1[1].setEnabled(dim > 1)
             self.unit_cell_view.unit_cell_panel.v1[2].setEnabled(dim > 2)
@@ -401,8 +409,7 @@ class UnitCellController(QObject):
         """
         Open a color dialog to select a color for the selected site.
 
-        After the color is picked, a command is issued to create an
-        undoable change.
+        After the color is picked, an undoable command is issued.
         """
         old_color = (
             self.unit_cells[self.selection.unit_cell]
@@ -431,6 +438,6 @@ class UnitCellController(QObject):
                     new_color=new_color,
                     old_color=start_color,
                     unit_cell_view=self.unit_cell_view,
-                    signal=self.parameter_changed,
+                    signal=self.site_parameter_changed,
                 )
             )

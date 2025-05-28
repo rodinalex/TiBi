@@ -19,7 +19,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
     selection : Selection
-        Dictionary containing the current selection
+        Model tracking the currently selected unit cell, site, and state
     vector : str
         The vector to be updated (v1, v2, or v3)
     coordinate : str
@@ -54,7 +54,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
         selection : Selection
-            Dictionary containing the current selection
+            Model tracking the currently selected unit cell, site, and state
         vector : str
             The vector to be updated (v1, v2, or v3)
         coordinate : str
@@ -120,7 +120,7 @@ class ReduceBasisCommand(QUndoCommand):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
     selection : Selection
-        Dictionary containing the current selection
+        Model tracking the currently selected unit cell, site, and state
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
     signal : Signal
@@ -149,7 +149,7 @@ class ReduceBasisCommand(QUndoCommand):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
         selection : Selection
-            Dictionary containing the current selection
+            Model tracking the currently selected unit cell, site, and state
         unit_cell_view : UnitCellView
             UI object containing the unit cell view
         signal : Signal
@@ -231,7 +231,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
     selection : Selection
-        Dictionary containing the current selection
+        Model tracking the currently selected unit cell, site, and state
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
     signal : Signal
@@ -277,7 +277,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
         selection : Selection
-            Dictionary containing the current selection
+            Model tracking the currently selected unit cell, site, and state
         param : str
             The parameter to be updated (radius, color, etc.)
         unit_cell_view : UnitCellView
@@ -422,7 +422,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
     selection : Selection
-        Dictionary containing the current selection
+        Model tracking the currently selected unit cell, site, and state
     param : str
         The parameter to be updated (radius, color, etc.)
     spinbox : QDoubleSpinBox
@@ -456,7 +456,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
         selection : Selection
-            Dictionary containing the current selection
+            Model tracking the currently selected unit cell, site, and state
         param : str
             The parameter to be updated (radius, color, etc.)
         spinbox : QDoubleSpinBox
@@ -509,7 +509,7 @@ class ChangeSiteColorCommand(QUndoCommand):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
     selection : Selection
-        Dictionary containing the current selection
+        Model tracking the currently selected unit cell, site, and state
     new_color : QColor
         The new color to be set for the site
     old_color : QColor
@@ -538,7 +538,7 @@ class ChangeSiteColorCommand(QUndoCommand):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
         selection : Selection
-            Dictionary containing the current selection
+            Model tracking the currently selected unit cell, site, and state
         new_color : QColor
             The new color to be set for the site
         old_color : QColor
