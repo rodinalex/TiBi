@@ -28,8 +28,7 @@ from controllers import (
 )
 
 # Models and factories
-from models import DataModel, Selection, UnitCell
-from models.factories import selection_init
+from models import Selection, UnitCell
 
 
 class TiBiApplication:

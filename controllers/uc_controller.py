@@ -402,8 +402,8 @@ class UnitCellController(QObject):
         undoable change.
         """
         old_color = (
-            self.unit_cells[self.selection["unit_cell"]]
-            .sites[self.selection["site"]]
+            self.unit_cells[self.selection.unit_cell]
+            .sites[self.selection.site]
             .color
         )
 

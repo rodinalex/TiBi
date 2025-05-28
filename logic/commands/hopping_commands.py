@@ -5,7 +5,7 @@ from PySide6.QtGui import QUndoCommand
 from typing import Tuple
 import uuid
 
-from models import UnitCell
+from models import Selection, UnitCell
 
 
 class SaveHoppingsCommand(QUndoCommand):
@@ -20,7 +20,7 @@ class SaveHoppingsCommand(QUndoCommand):
 
     unit_cells : dict[uuid.UUID, UnitCell]
         Reference to the dictionary mapping UUIDs to UnitCell objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Reference to the dictionary containing the current selection
     uc_id : uuid.UUID
         UUID of the selected `UnitCell` when the command was issued
@@ -47,7 +47,7 @@ class SaveHoppingsCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         pair_selection: list[Tuple[str, uuid.UUID, str, uuid.UUID]],
         new_hoppings: list[Tuple[Tuple[int, int, int], np.complex128]],
         signal: Signal,
@@ -59,7 +59,7 @@ class SaveHoppingsCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Reference to the dictionary mapping UUIDs to UnitCell objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Reference to the dictionary containing the current selection
         pair_selection : list[Tuple[str, uuid.UUID, str, uuid.UUID]]
             Reference to the list of selected `State`s
@@ -74,9 +74,9 @@ class SaveHoppingsCommand(QUndoCommand):
         super().__init__("Modify Hoppings")
         self.unit_cells = unit_cells
         self.selection = selection
-        self.uc_id = self.selection["unit_cell"]
-        self.site_id = self.selection["site"]
-        self.state_id = self.selection["state"]
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
+        self.state_id = self.selection.state
 
         # Selected state UUIDs
         self.pair_selection = pair_selection

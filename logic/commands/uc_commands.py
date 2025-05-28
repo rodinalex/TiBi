@@ -577,8 +577,8 @@ class ChangeSiteColorCommand(QUndoCommand):
         )
 
         # Update the color in the dictionary (0-1 scale)
-        self.unit_cells[self.selection["unit_cell"]].sites[
-            self.selection["site"]
+        self.unit_cells[self.selection.unit_cell].sites[
+            self.selection.site
         ].color = (
             color.redF(),
             color.greenF(),

@@ -4,28 +4,6 @@ from ui.constants import default_site_size
 
 
 # Model initialization factories.
-def selection_init():
-    """
-    Initialize the selection model with default values.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the initial values for the selection model.
-    """
-    return {
-        "unit_cell": None,
-        "site": None,
-        "state": None,
-    }  # Item selection from the tree
-
-
-def active_band_structure_init():
-    return {
-        "k_path": None,
-        "bands": None,
-        "special_points": None,
-    }  # Active band structure used for plotting
 
 
 def bz_point_selection_init():

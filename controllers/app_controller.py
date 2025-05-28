@@ -86,14 +86,17 @@ class AppController(QObject):
         self.uc_plot_controller = uc_plot_controller
 
         # Connect signals
+        # Redraw the panels only when the unit cell selection changes.
+        # Selecting inside the unit cell should not cause redraws.
         self.selection.unit_cell_updated.connect(self._update_panels)
 
         # bz_plot_controller
         # When the path is updated, the bandstructure is cleared.
-        # Clear the bandstructure plot
+        # We pass an empty band structure to the plotting function
+        # resulting in a cleared plot.
         self.bz_plot_controller.bz_path_updated.connect(
             lambda: self.plot_controller.plot_band_structure(
-                self.unit_cells[self.selection["unit_cell"]].bandstructure
+                self.unit_cells[self.selection.unit_cell].bandstructure
             )
         )
         # computation_controller

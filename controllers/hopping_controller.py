@@ -462,7 +462,7 @@ class HoppingController(QObject):
         ]
         # Only update the model if the hoppings have changed
         if set(merged_couplings) == set(
-            self.unit_cells[self.selection["unit_cell"]].hoppings.get(
+            self.unit_cells[self.selection.unit_cell].hoppings.get(
                 (self.pair_selection[0][3], self.pair_selection[1][3]), []
             )
         ):
@@ -600,9 +600,9 @@ class HoppingController(QObject):
         """
 
         if (
-            self.selection["unit_cell"] != uc_id
-            or self.selection["site"] != site_id
-            or self.selection["state"] != state_id
+            self.selection.unit_cell != uc_id
+            or self.selection.site != site_id
+            or self.selection.state != state_id
         ):
             self.selection_requested.emit(uc_id, site_id, state_id)
         else:

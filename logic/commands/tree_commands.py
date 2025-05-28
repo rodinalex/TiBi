@@ -180,8 +180,8 @@ class AddStateCommand(QUndoCommand):
         self.unit_cells = unit_cells
         self.selection = selection
         self.tree_view = tree_view
-        self.uc_id = self.selection["unit_cell"]
-        self.site_id = self.selection["site"]
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
         self.state = mk_new_state()
 
     # Add the newly-created state to the dictionary and create a tree item
