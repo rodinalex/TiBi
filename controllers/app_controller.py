@@ -58,8 +58,8 @@ class AppController(QObject):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            `DataModel` tracking the current selection
+        selection : Selection
+            `Selection` tracking the current selection
         bz_plot_controller : BrillouinZonePlotController
             Controller of the BZ graphical component
         computation_controller : ComputationController
