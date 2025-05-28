@@ -598,6 +598,12 @@ class HoppingController(QObject):
         s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
             Information Tuple for the source `State` (column)
         """
+        # If the unit cell selection needs to change, matrix redrawing
+        # will be handled by the app controller as all panels are updated
+        # Otherwise, we need to refresh the matrix manually.
+
+        if self.selection.unit_cell == uc_id:
+            self._refresh_matrix()
 
         if (
             self.selection.unit_cell != uc_id
@@ -605,8 +611,6 @@ class HoppingController(QObject):
             or self.selection.state != state_id
         ):
             self.selection_requested.emit(uc_id, site_id, state_id)
-        else:
-            self._refresh_matrix()
 
         # Update Pair Selection
         self._update_pair_selection(s1, s2)
