@@ -150,6 +150,8 @@ class AddStateCommand(QUndoCommand):
         Model containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
+    signal : Signal
+        Signal emitted when the state is added/removed
     uc_id : uuid.UUID
         UUID of the selected `UnitCell` when the command was issued
     site_id : uuid.UUID
@@ -163,6 +165,7 @@ class AddStateCommand(QUndoCommand):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: Selection,
         tree_view: SystemTree,
+        signal: Signal,
     ):
         """
         Initialize the AddStateCommand.
@@ -175,11 +178,14 @@ class AddStateCommand(QUndoCommand):
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
+        signal : Signal
+            Signal emitted when the state is added/removed
         """
         super().__init__("Add State")
         self.unit_cells = unit_cells
         self.selection = selection
         self.tree_view = tree_view
+        self.signal = signal
         self.uc_id = self.selection.unit_cell
         self.site_id = self.selection.site
         self.state = mk_new_state()
@@ -193,6 +199,7 @@ class AddStateCommand(QUndoCommand):
         self.tree_view.add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
+        self.signal.emit()
 
     # Remove the site from the dictionary and the tree using its id
     def undo(self):
@@ -205,6 +212,7 @@ class AddStateCommand(QUndoCommand):
         self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
+        self.signal.emit()
 
 
 class DeleteItemCommand(QUndoCommand):
@@ -229,6 +237,8 @@ class DeleteItemCommand(QUndoCommand):
         Dictionary containing the current selection
     tree_view : SystemTree
         UI object containing the tree view
+    signal : Signal
+        Signal emitted when a state is added/removed
     uc_id : uuid.UUID
         UUID of the selected `UnitCell` when the command was issued
     site_id : uuid.UUID
@@ -242,6 +252,7 @@ class DeleteItemCommand(QUndoCommand):
         unit_cells: dict[uuid.UUID, UnitCell],
         selection: Selection,
         tree_view: SystemTree,
+        signal: Signal,
     ):
         """
         Initialize the DeleteItemCommand.
@@ -254,11 +265,14 @@ class DeleteItemCommand(QUndoCommand):
             Dictionary containing the current selection
         tree_view : SystemTree
             UI object containing the tree view
+        signal : Signal
+            Signal emitted when a state is added/removed
         """
         super().__init__("Delete Item")
         self.unit_cells = unit_cells
         self.selection = selection
         self.tree_view = tree_view
+        self.signal = signal
 
         self.uc_id = self.selection.unit_cell
         self.site_id = self.selection.site
@@ -302,6 +316,8 @@ class DeleteItemCommand(QUndoCommand):
                 .sites[self.site_id]
                 .states[self.state_id]
             )
+            self.signal.emit()
+
         # No state selected, therefore remove the site from the unit cell
         elif self.site_id:
             self.removed_hoppings = {}
@@ -317,6 +333,9 @@ class DeleteItemCommand(QUndoCommand):
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
             if self.removed_hoppings:
                 self.unit_cells[self.uc_id].bandstructure.reset_bands()
+            # If the site has states, request a redraw of the hopping matrix
+            if self.unit_cells[self.uc_id].sites[self.site_id].states:
+                self.signal.emit()
             # Delete the selected site from the unit cell
             del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
@@ -335,6 +354,7 @@ class DeleteItemCommand(QUndoCommand):
             site.states[self.item.id] = self.item
             unit_cell.bandstructure.reset_bands()
             unit_cell.hoppings.update(self.removed_hoppings)
+            self.signal.emit()
 
         elif self.site_id:
             unit_cell = self.unit_cells[self.uc_id]
@@ -342,7 +362,9 @@ class DeleteItemCommand(QUndoCommand):
             if self.removed_hoppings:
                 unit_cell.bandstructure.reset_bands()
             unit_cell.hoppings.update(self.removed_hoppings)
-
+            # If the site has states, request a redraw of the hopping matrix
+            if self.unit_cells[self.uc_id].sites[self.site_id].states:
+                self.signal.emit()
         elif self.uc_id:
             self.unit_cells[self.item.id] = self.item
 
@@ -415,7 +437,7 @@ class RenameTreeItemCommand(QUndoCommand):
         self.unit_cells = unit_cells
         self.selection = selection
         self.tree_view = tree_view
-        self.item_changed = signal
+        self.signal = signal
         self.new_name = item.text()
 
         self.uc_id = self.selection.unit_cell
@@ -454,7 +476,7 @@ class RenameTreeItemCommand(QUndoCommand):
             self.unit_cells[self.uc_id].name = self.new_name
 
         item.setText(self.new_name)
-        self.item_changed.emit()
+        self.signal.emit()
 
     def undo(self):
         item = self.tree_view.find_item_by_id(
@@ -473,4 +495,4 @@ class RenameTreeItemCommand(QUndoCommand):
             self.unit_cells[self.uc_id].name = self.old_name
 
         item.setText(self.old_name)
-        self.item_changed.emit()
+        self.signal.emit()

@@ -55,10 +55,10 @@ class UnitCellController(QObject):
     -------
     parameter_changed
         Signal emitted when a unit cell or site parameter is changed.
-    item_renamed
-        Signal emitted when a tree item is renamed.
-        Necessary to make sure that the hopping matrix
-        has the correct item names
+    hopping_projection_update_requested
+        Signal emitted when a tree item is renamed or the structure of the
+        unit cell changes, requiring an update of the hopping matrix.
+        (Adding/removing states)
     """
 
     parameter_changed = Signal()
@@ -66,7 +66,7 @@ class UnitCellController(QObject):
     # The signal is listened to by
     # the app_controller, forwarding the request to the appropriate
     # controllers
-    item_renamed = Signal()
+    hopping_projection_update_requested = Signal()
     # A signal emitted when the user renames the item by interacting
     # with the tree. Used to notify the app_controller
     # that the hopping matrix needs to be redrawn to
@@ -144,7 +144,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
-                    signal=self.item_renamed,
+                    signal=self.hopping_projection_update_requested,
                     item=self.tree_model.itemFromIndex(x),
                 )
             )
@@ -158,6 +158,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
                 )
             )
         )
@@ -264,6 +265,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
                 )
             )
         )
@@ -274,6 +276,7 @@ class UnitCellController(QObject):
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
                 )
             )
         )

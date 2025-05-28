@@ -125,7 +125,9 @@ class AppController(QObject):
         # uc_controller
         # When an item in the tree view is renamed, refresh the hopping matrix
         # and table to reflect the correct names
-        self.uc_controller.item_renamed.connect(self._handle_item_renamed)
+        self.uc_controller.hopping_projection_update_requested.connect(
+            self._handle_item_renamed
+        )
         # Refresh the plots after unit cell selection or parameter change
         self.uc_controller.parameter_changed.connect(self._update_panels)
 
