@@ -151,11 +151,13 @@ class HoppingController(QObject):
         """
         uc_id = self.selection.unit_cell
         # Deselect the previous states
-        self.pair_selection[0] = None
-        self.pair_selection[1] = None
-        self.hopping_view.table_stack.setCurrentWidget(
-            self.hopping_view.table_info_label
-        )  # Hide the table until a pair is selected
+
+        self._update_pair_selection(None, None)
+        # self.pair_selection[0] = None
+        # self.pair_selection[1] = None
+        # self.hopping_view.table_stack.setCurrentWidget(
+        #     self.hopping_view.table_info_label
+        # )  # Hide the table until a pair is selected
 
         # If no unit cell selected, hide the panels
         if uc_id is None:
@@ -296,23 +298,29 @@ class HoppingController(QObject):
 
         Parameters
         ----------
-        s1 : Tuple[str, uuid.UUID, str, uuid.UUID]
-            Information Tuple for the destination `State` (row)
-        s2 : Tuple[str, uuid.UUID, str, uuid.UUID]
-            Information Tuple for the source `State` (column)
+        s1 : tuple[str, uuid.UUID, str, uuid.UUID] | None
+            Information tuple for the destination `State` (row)
+        s2 : tuple[str, uuid.UUID, str, uuid.UUID] | None
+            Information tuple for the source `State` (column)
         """
+
         # Store the UUIDs of the selected states
         self.pair_selection = [s1, s2]
-        self.hopping_view.table_stack.setCurrentWidget(
-            self.hopping_view.table_panel
-        )
+        if (s1 is None) or (s2 is None):
+            self.hopping_view.table_stack.setCurrentWidget(
+                self.hopping_view.table_info_label
+            )
+        else:
+            self.hopping_view.table_stack.setCurrentWidget(
+                self.hopping_view.table_panel
+            )
 
-        # Update the table title to show the selected states
-        # (source → destination)
-        self.hopping_view.table_panel.table_title.setText(
-            f"{s2[0]}.{s2[2]} → {s1[0]}.{s1[2]}"
-        )
-        self._refresh_table()
+            # Update the table title to show the selected states
+            # (source → destination)
+            self.hopping_view.table_panel.table_title.setText(
+                f"{s2[0]}.{s2[2]} → {s1[0]}.{s1[2]}"
+            )
+            self._refresh_table()
 
     def _refresh_table(self):
         """Clear the table and repopulate it with the latest hopping terms"""
