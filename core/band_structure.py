@@ -11,15 +11,15 @@ def interpolate_k_path(points: list[NDArray[np.float64]], n_total: int):
 
     Parameters
     ----------
-        points : list[NDArray[np.float64]]
-            List or array of k-points defining the path
-        n_total : int
-            Total number of points to distribute along the entire path
+    points : list[NDArray[np.float64]]
+        List or array of k-points defining the path
+    n_total : int
+        Total number of points to distribute along the entire path
 
     Returns
     -------
-        NDArray[NDArray[np.float64]]
-            Array of interpolated k-points along the path
+    NDArray[NDArray[np.float64]]
+        Array of interpolated k-points along the path
     """
     points = np.array(points)
     # Get the distances between consecutive points
@@ -53,19 +53,19 @@ def diagonalize_hamitonian(hamiltonian, points):
 
     Parameters
     ----------
-        hamiltonian
-            Function that generates a Hamiltonian matrix for a given k-point
-        points : NDArray[NDArray[np.float64]]
-            Array of k-points along which to calculate bands
+    hamiltonian
+        Function that generates a Hamiltonian matrix for a given k-point
+    points : NDArray[NDArray[np.float64]]
+        Array of k-points along which to calculate bands
 
     Returns
     -------
-        eigenvalues : list[NDArray[np.float64]]
-            Array of shape (n_kpoints, n_bands) containing the energy
-            eigenvalues at each k-point
-        eigenvectors : list[NDArray[np.float64]]
-            Array of shape (n_kpoints, n_bands, n_bands) containing the
-            eigenvectors at each k-point
+    eigenvalues : list[NDArray[np.float64]]
+        Array of shape (n_kpoints, n_bands) containing the energy
+        eigenvalues at each k-point
+    eigenvectors : list[NDArray[np.float64]]
+        Array of shape (n_kpoints, n_bands, n_bands) containing the
+        eigenvectors at each k-point
     """
     eigenvalues = []
     eigenvectors = []

@@ -4,7 +4,7 @@ import uuid
 
 from .bands_controller import BandsController
 from .hopping_controller import HoppingController
-from models import DataModel, UnitCell
+from models import Selection, UnitCell
 from views.computation_view import ComputationView
 
 
@@ -16,28 +16,50 @@ class ComputationController(QObject):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
-        `DataModel` tracking the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     computation_view : ComputationView
         UI object containing the computation view
+    hopping_controller : HoppingController
+        Child controller in charge of the hopping panel of the computation UI
+    bands_controller : BandsController
+        Child controller in charge of the bands panel of the computation UI
 
+    Methods
+    -------
+    get_pair_selection()
+        Get the selected state pair from the hopping matrix, if any.
+    update_hopping_panel()
+        Redraw the hoppings panel.
 
     Signals
     -------
     status_updated
         Signal emitted to update the status of the computation
-    band_computation_completed
-        Signal notifying that the data can be plotted
+    bands_plot_requested
+        Request bands plot.
+        Re-emitting signal from `BandsController`
+    hopping_segments_requested
+        Signal requesting the plotting of hopping segments in the
+        unit cell plot. Re-emitting signal for the `HoppingController`
+        when the user selects a pair of sites from the hopping matrix.
+    selection_requested
+        Signal requesting a programmatic selection. Re-emitting signal for
+        the `HoppingController`.
     """
 
     status_updated = Signal(str)
-    band_computation_completed = Signal()
-    projection_selection_changed = Signal(object)
+
+    # Hopping controller signals to relay
+    hopping_segments_requested = Signal()
+    selection_requested = Signal(object, object, object)
+    # Band controller signals to relay
+    bands_plot_requested = Signal()
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         computation_view: ComputationView,
         undo_stack: QUndoStack,
     ):
@@ -48,8 +70,8 @@ class ComputationController(QObject):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection : DataModel
-            `DataModel` tracking the current selection
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         computation_view : ComputationView
             UI object containing the computation view
         undo_stack : QUndoStack
@@ -69,34 +91,57 @@ class ComputationController(QObject):
             self.undo_stack,
         )
         self.bands_controller = BandsController(
-            self.computation_view.bands_panel
+            self.unit_cells, self.selection, self.computation_view.bands_panel
         )
         # Connect the signals
+        # Hoppings Panel
+        self.hopping_controller.hopping_segments_requested.connect(
+            self.hopping_segments_requested.emit
+        )
+        self.hopping_controller.selection_requested.connect(
+            self.selection_requested.emit
+        )
+        # Bands Panel
+        self.bands_controller.bands_plot_requested.connect(
+            self.bands_plot_requested.emit
+        )
+        self.bands_controller.status_updated.connect(self.status_updated.emit)
 
-    #     self.selection.signals.updated.connect(self._handle_selection_changed)
-    #     self.computation_view.bands_panel.select_all_btn.clicked.connect(
-    #         self.computation_view.bands_panel.proj_combo.select_all
-    #     )
-    #     self.computation_view.bands_panel.clear_all_btn.clicked.connect(
-    #         self.computation_view.bands_panel.proj_combo.clear_selection
-    #     )
-    #     self.computation_view.bands_panel.proj_combo.selection_changed.connect(
-    #         self.projection_selection_changed.emit
-    #     )
+    def get_pair_selection(self):
+        """
+        Get the selected state pair from the hopping matrix, if any.
 
-    # def _handle_selection_changed(self):
-    #     """
-    #     Update the state projection box when the selection changes.
+        Returns
+        -------
+        list[tuple]  | list[None]
+            List of selected states, if available, where the elements of
+            the list are (site_name, site_id, state_name, state_id).
+        """
+        return self.hopping_controller.pair_selection
 
-    #     In addition to usual selection change by click,
-    #     the selection can change when items are added or removed to/from
-    #     the tree.
-    #     """
-    #     uc_id = self.selection["unit_cell"]
-    #     if uc_id:
-    #         unit_cell = self.unit_cells[uc_id]
-    #         _, state_info = unit_cell.get_states()
-    #         state_info_strings = [f"{x[0]} : {x[2]}" for x in state_info]
-    #         self.computation_view.bands_panel.proj_combo.refresh_combo(
-    #             state_info_strings
-    #         )
+    def update_hopping_panel(self):
+        """
+        Redraw the hoppings UI panel.
+
+        This method is called when the user renames a tree item to make sure
+        that the matrix table contains the correct item names.
+        """
+        self.hopping_controller.update_unit_cell()
+
+    def update_bands_panel(self):
+        """
+        Update the bands UI panel.
+        """
+        self.bands_controller.update_bands_panel()
+
+    def update_projection_combo(self):
+        """
+        Update the projection combo.
+        """
+        self.bands_controller.update_combo()
+
+    def get_projection_indices(self):
+        """
+        Get the projection indices from the projection combo.
+        """
+        return self.bands_controller.get_projection_indices()

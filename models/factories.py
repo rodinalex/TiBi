@@ -1,31 +1,9 @@
 import random
 from models import BasisVector, State, Site, UnitCell
-from ui.constants import default_site_size
+from ui.constants import DEFAULT_SITE_SIZE
 
 
 # Model initialization factories.
-def selection_init():
-    """
-    Initialize the selection model with default values.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the initial values for the selection model.
-    """
-    return {
-        "unit_cell": None,
-        "site": None,
-        "state": None,
-    }  # Item selection from the tree
-
-
-def active_band_structure_init():
-    return {
-        "k_path": None,
-        "bands": None,
-        "special_points": None,
-    }  # Active band structure used for plotting
 
 
 def bz_point_selection_init():
@@ -74,7 +52,7 @@ def mk_new_site():
     c1 = 0  # Fractional coordinate along first basis vector
     c2 = 0  # Fractional coordinate along second basis vector
     c3 = 0  # Fractional coordinate along third basis vector
-    R = default_site_size
+    R = DEFAULT_SITE_SIZE
     color = (
         random.uniform(0, 1),
         random.uniform(0, 1),

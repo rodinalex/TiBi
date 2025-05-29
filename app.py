@@ -28,26 +28,12 @@ from controllers import (
 )
 
 # Models and factories
-from models import DataModel, UnitCell
-from models.factories import selection_init
+from models import Selection, UnitCell
 
 
 class TiBiApplication:
     """
     Main application class that initializes and connects all components.
-
-    This class serves as the application composition root, responsible for:
-    1. Creating global data models
-    2. Creating views
-    3. Creating controllers
-    4. Wiring everything together
-    5. Starting the application
-
-    The application follows the MVC architecture with reactive data binding:
-    - Models store application state and emit signals when they change
-    - Views display data and capture user input without knowledge of models
-    - Controllers link models and views, handling user actions and
-    model updates
     """
 
     def __init__(self):
@@ -94,8 +80,7 @@ class TiBiApplication:
         # Initialize global models
         self.project_path = None
         self.unit_cells: dict[uuid.UUID, UnitCell] = {}
-        self.selection = DataModel(selection_init())
-
+        self.selection = Selection()
         # Initialize views
         # Panel views
         self.uc_view = UnitCellView()
@@ -142,7 +127,9 @@ class TiBiApplication:
             self.undo_stack,
         )
 
-        self.plot_controller = PlotController(self.plot_view)
+        self.plot_controller = PlotController(
+            self.unit_cells, self.selection, self.plot_view
+        )
 
         self.computation_controller = ComputationController(
             self.unit_cells,
@@ -166,12 +153,12 @@ class TiBiApplication:
         self.app_controller = AppController(
             self.unit_cells,
             self.selection,
-            self.uc_controller,
-            self.uc_plot_controller,
             self.bz_plot_controller,
-            self.plot_controller,
             self.computation_controller,
             self.main_ui_controller,
+            self.plot_controller,
+            self.uc_controller,
+            self.uc_plot_controller,
         )
 
         # Set initial status message

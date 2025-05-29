@@ -1,10 +1,9 @@
-import copy
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor, QUndoCommand
 from PySide6.QtWidgets import QApplication, QDoubleSpinBox, QRadioButton
 import uuid
 
-from models import BasisVector, UnitCell
+from models import BasisVector, Selection, UnitCell
 from views.uc_view import UnitCellView
 
 
@@ -19,8 +18,8 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     vector : str
         The vector to be updated (v1, v2, or v3)
     coordinate : str
@@ -36,14 +35,12 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         The old value of the parameter before the change
     new_value : float
         The new value of the parameter after the change
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         vector: str,
         coordinate: str,
         spinbox: QDoubleSpinBox,
@@ -56,8 +53,8 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
-            Dictionary containing the current selection
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         vector : str
             The vector to be updated (v1, v2, or v3)
         coordinate : str
@@ -77,14 +74,11 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         self.signal = signal
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.unit_cell
 
         self.old_value = getattr(
             getattr(self.unit_cells[self.uc_id], self.vector),
             self.coordinate,
-        )
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
         )
 
     def redo(self):
@@ -104,9 +98,7 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
             self.old_value,
         )
         self.spinbox.setValue(self.old_value)
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
 
@@ -127,8 +119,8 @@ class ReduceBasisCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
     signal : Signal
@@ -140,14 +132,12 @@ class ReduceBasisCommand(QUndoCommand):
         The old basis vectors of the unit cell before reduction
     new_basis : list[BasisVector]
         The new basis vectors of the unit cell after reduction
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
@@ -158,8 +148,8 @@ class ReduceBasisCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
-            Dictionary containing the current selection
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         unit_cell_view : UnitCellView
             UI object containing the unit cell view
         signal : Signal
@@ -172,15 +162,12 @@ class ReduceBasisCommand(QUndoCommand):
         self.unit_cell_view = unit_cell_view
         self.signal = signal
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.unit_cell
 
         if self.uc_id:
             uc = self.unit_cells[self.uc_id]
             self.old_basis = [uc.v1, uc.v2, uc.v3]
             self.new_basis = uc.reduced_basis()
-            self.bandstructure = copy.deepcopy(
-                self.unit_cells[self.uc_id].bandstructure
-            )
 
     def redo(self):
         if self.uc_id:
@@ -219,9 +206,7 @@ class ReduceBasisCommand(QUndoCommand):
             self.unit_cell_view.unit_cell_panel.set_basis_vectors(
                 uc.v1, uc.v2, uc.v3
             )
-            self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-                self.bandstructure
-            )
+            self.unit_cells[self.uc_id].bandstructure.clear()
             self.signal.emit()
 
 
@@ -245,8 +230,8 @@ class ChangeDimensionalityCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     unit_cell_view : UnitCellView
         UI object containing the unit cell view
     signal : Signal
@@ -273,19 +258,38 @@ class ChangeDimensionalityCommand(QUndoCommand):
         The new basis vector 2 of the unit cell after the change
     new_v3 : BasisVector
         The new basis vector 3 of the unit cell after the change
-    bandstructure : BandStructure
-        The band structure of the unit cell before the change
     """
 
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         unit_cell_view: UnitCellView,
         signal: Signal,
         dim: int,
         buttons: list[QRadioButton],
     ):
+        """
+        Initialize the ChangeDimensionalityCommand.
+
+        Parameters
+        ----------
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to `UnitCell` objects
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
+        param : str
+            The parameter to be updated (radius, color, etc.)
+        unit_cell_view : UnitCellView
+            Unit cell editing panel
+        signal : Signal
+            Signal to be emitted when the command is executed,
+            requesting a plot update
+        dim : int
+            New dimensionality
+        buttons : list[QRadioButton]
+            Dimensionality radio buttons
+        """
         super().__init__("Change dimensionality")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -294,7 +298,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         self.new_dim = dim
         self.buttons = buttons
 
-        self.uc_id = self.selection.get("unit_cell", None)
+        self.uc_id = self.selection.unit_cell
         uc = self.unit_cells[self.uc_id]
         self.old_v1 = uc.v1
         self.old_v2 = uc.v2
@@ -328,9 +332,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
             self.new_v3 = BasisVector(
                 self.old_v3.x, self.old_v3.y, self.old_v3.z, True
             )
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
 
     def redo(self):
         self._set_vector_enables(self.new_dim)
@@ -346,7 +347,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
 
         self._set_checked_button(self.new_dim)
         self.unit_cells[self.uc_id].bandstructure.clear()
-
         self.signal.emit()
 
     def undo(self):
@@ -363,10 +363,7 @@ class ChangeDimensionalityCommand(QUndoCommand):
         )
 
         self._set_checked_button(self.old_dim)
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
-
+        self.unit_cells[self.uc_id].bandstructure.clear()
         self.signal.emit()
 
     def _set_vector_enables(self, dim):
@@ -424,8 +421,8 @@ class UpdateSiteParameterCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     param : str
         The parameter to be updated (radius, color, etc.)
     spinbox : QDoubleSpinBox
@@ -446,7 +443,7 @@ class UpdateSiteParameterCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         param: str,
         spinbox: QDoubleSpinBox,
         signal: Signal,
@@ -458,8 +455,8 @@ class UpdateSiteParameterCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
-            Dictionary containing the current selection
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         param : str
             The parameter to be updated (radius, color, etc.)
         spinbox : QDoubleSpinBox
@@ -476,8 +473,8 @@ class UpdateSiteParameterCommand(QUndoCommand):
         self.signal = signal
         self.new_value = self.spinbox.value()
 
-        self.uc_id = self.selection.get("unit_cell", None)
-        self.site_id = self.selection.get("site", None)
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
 
         self.old_value = getattr(
             self.unit_cells[self.uc_id].sites[self.site_id],
@@ -511,8 +508,8 @@ class ChangeSiteColorCommand(QUndoCommand):
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to `UnitCell` objects
-    selection : dict[str, uuid.UUID]
-        Dictionary containing the current selection
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     new_color : QColor
         The new color to be set for the site
     old_color : QColor
@@ -527,7 +524,7 @@ class ChangeSiteColorCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         new_color: QColor,
         old_color: QColor,
         unit_cell_view: UnitCellView,
@@ -540,8 +537,8 @@ class ChangeSiteColorCommand(QUndoCommand):
         ----------
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to `UnitCell` objects
-        selection : dict[str, uuid.UUID]
-            Dictionary containing the current selection
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         new_color : QColor
             The new color to be set for the site
         old_color : QColor
@@ -580,8 +577,8 @@ class ChangeSiteColorCommand(QUndoCommand):
         )
 
         # Update the color in the dictionary (0-1 scale)
-        self.unit_cells[self.selection["unit_cell"]].sites[
-            self.selection["site"]
+        self.unit_cells[self.selection.unit_cell].sites[
+            self.selection.site
         ].color = (
             color.redF(),
             color.greenF(),

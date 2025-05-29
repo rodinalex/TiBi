@@ -4,8 +4,8 @@ from PySide6.QtCore import QObject
 import pyqtgraph.opengl as gl
 import uuid
 
-from models import DataModel, UnitCell
-from ui.constants import CF_yellow, default_site_scaling
+from models import Selection, UnitCell
+from ui.constants import CF_YELLOW, DEFAULT_SITE_SCALING
 from views.uc_plot_view import UnitCellPlotView
 
 
@@ -15,23 +15,13 @@ class UnitCellPlotController(QObject):
 
     This controller manages the 3D visualization of unit cells, handling the
     rendering of unit cell wireframes, site positions, and periodic
-    repetitions. It observes changes to the selected unit cell and its
-    properties, updating the visualization in response to any modifications.
-
-    The controller provides functionality for:
-    1. Visualizing the unit cell as a wireframe parallelepiped
-    2. Displaying sites (atoms) as colored spheres
-    3. Showing multiple periodic repetitions of the unit cell
-    4. Highlighting selected sites
-
-    The visualization updates reactively when the unit cell data changes
-    or when the user adjusts the number of periodic repetitions via spinners.
+    repetitions.
 
     Attributes
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
-    selection : DataModel
+    selection : Selection
         Model tracking the currently selected unit cell, site, and state
     uc_plot_view : UnitCellPlotView
         The view component for the 3D visualization
@@ -44,7 +34,7 @@ class UnitCellPlotController(QObject):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: DataModel,
+        selection: Selection,
         uc_plot_view: UnitCellPlotView,
     ):
         """
@@ -54,7 +44,7 @@ class UnitCellPlotController(QObject):
         ----------
         unit_cells: dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
-        selection: DataModel
+        selection: Selection
             Model tracking the currently selected unit cell, site, and state
         uc_plot_view: UnitCellPlotView
             The view component for the 3D visualization
@@ -72,25 +62,19 @@ class UnitCellPlotController(QObject):
         """
         Set or update the unit cell to be displayed in the 3D view.
 
-        This method handles the complete process of updating the visualization:
-        1. Stores the new unit cell reference
-        2. Clears existing visualization elements
-        3. Creates new visualization elements for the unit cell and its sites
-        4. Updates the coordinate axes to match the unit cell basis vectors
-
         Parameters
         ----------
-        wireframe_shown: bool
+        wireframe_shown : bool
             Denotes whether the primitive vector wireframe is drawn
-        n1, n2, n3: int
+        n1, n2, n3 : int
             Number of repetitions along the corresponding basis vector
         """
-        uc_id = self.selection.get("unit_cell")
+        uc_id = self.selection.unit_cell
         # Clear previous plot items except axes
         for key, item in list(self.uc_plot_items.items()):
             self.uc_plot_view.view.removeItem(item)
             del self.uc_plot_items[key]
-
+        # Early exit if no unit cell selected
         if uc_id is None:
             return
 
@@ -152,6 +136,7 @@ class UnitCellPlotController(QObject):
         a1, a2, a3 : int
             Integer multiples of the unit cell basis vectors v1, v2, and v3.
         """
+        # Early exit if no unit cell or it contains no sites
         if not self.unit_cell or not self.unit_cell.sites:
             return
 
@@ -169,8 +154,8 @@ class UnitCellPlotController(QObject):
             sphere_color = self.unit_cell.sites[site_id].color
 
             sphere_radius = (
-                self.unit_cell.sites[site_id].R * default_site_scaling
-                if site_id == self.selection.get("site")
+                self.unit_cell.sites[site_id].R * DEFAULT_SITE_SCALING
+                if site_id == self.selection.site
                 else self.unit_cell.sites[site_id].R
             )
             # Create a sphere for the site.
@@ -238,6 +223,7 @@ class UnitCellPlotController(QObject):
                 v1 + v2 + v3,  # Top 4 vertices
             ]
         )
+        # Shift the corners by the appropriate multiples of basis vectors
         verts = [v + (a1 * v1 + a2 * v2 + a3 * v3) for v in verts]
         # Define the 12 edges of the parallelepiped
         edges = np.array(
@@ -259,9 +245,9 @@ class UnitCellPlotController(QObject):
         # Convert edges into line segments
         vertex_tuples = []
         for edge in edges:
-            V1 = tuple(verts[edge[0]])
-            V2 = tuple(verts[edge[1]])
-            vertex_tuples.append(tuple(sorted((V1, V2))))
+            vert1 = tuple(verts[edge[0]])
+            vert2 = tuple(verts[edge[1]])
+            vertex_tuples.append(tuple(sorted((vert1, vert2))))
 
         return vertex_tuples
 
@@ -292,14 +278,15 @@ class UnitCellPlotController(QObject):
         # s1 and s2 are tuples (site_name, site_id, state_name, state_id)
         s1, s2 = pair_selection
         hoppings = self.unit_cell.hoppings.get((s1[3], s2[3]))
+        # Early exit if the states are not coupled
         if hoppings is None:
             return
-
+        # Get the basis vectors
         v1 = self.unit_cell.v1.as_array()
         v2 = self.unit_cell.v2.as_array()
         v3 = self.unit_cell.v3.as_array()
 
-        # Get the location of the source site
+        # Get the location of the source site in the (0,0,0) unit cell
         source = self.unit_cell.sites[s2[1]]
         source_pos = source.c1 * v1 + source.c2 * v2 + source.c3 * v3
 
@@ -308,18 +295,21 @@ class UnitCellPlotController(QObject):
         target_pos = target.c1 * v1 + target.c2 * v2 + target.c3 * v3
 
         segments = []
+        # Extract the displacements for the selected state pair
         for (d1, d2, d3), _ in hoppings:
             target = target_pos + d1 * v1 + d2 * v2 + d3 * v3
+            # Sequentially append the source and the target for each
+            # coupling segment
             segments.append(source_pos)
             segments.append(target)
 
         hopping_segments = gl.GLLinePlotItem(
             pos=segments,
-            color=CF_yellow,
+            color=CF_YELLOW,
             width=5,
             mode="lines",
         )
-
+        # Shift so that the source state is in a unit cell at the origin
         shift = (
             (self.n1 % 2) * v1 + (self.n2 % 2) * v2 + (self.n3 % 2) * v3
         ) / 2

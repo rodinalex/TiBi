@@ -87,7 +87,7 @@ class UnitCell:
             Volume of the unit cell in arbitrary units
         """
         a1, a2, a3 = [v.as_array() for v in [self.v1, self.v2, self.v3]]
-        return np.dot(a1, np.cross(a2, a3))
+        return np.abs(np.dot(a1, np.cross(a2, a3)))
 
     def is_hermitian(self) -> bool:
         """

@@ -3,11 +3,11 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget
 from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
 from ui.constants import (
-    CF_vermillion,
-    CF_yellow,
-    CF_green,
-    CF_sky,
-    CF_blue,
+    CF_VERMILLION,
+    CF_YELLOW,
+    CF_GREEN,
+    CF_SKY,
+    CF_BLUE,
 )
 
 
@@ -35,8 +35,8 @@ class BrillouinZonePlotView(QWidget):
         self.setMinimumSize(QSize(300, 200))
 
         # Colors
-        self.point_color = CF_blue
-        self.selected_point_color = CF_yellow
+        self.point_color = CF_BLUE
+        self.selected_point_color = CF_YELLOW
 
         # Setup layout
         layout = QVBoxLayout(self)
@@ -58,9 +58,9 @@ class BrillouinZonePlotView(QWidget):
         ]
         for ii, color in enumerate(
             [
-                CF_vermillion,
-                CF_green,
-                CF_sky,
+                CF_VERMILLION,
+                CF_GREEN,
+                CF_SKY,
             ]
         ):
             self.view.addItem(

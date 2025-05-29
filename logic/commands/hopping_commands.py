@@ -5,7 +5,7 @@ from PySide6.QtGui import QUndoCommand
 from typing import Tuple
 import uuid
 
-from models import UnitCell
+from models import Selection, UnitCell
 
 
 class SaveHoppingsCommand(QUndoCommand):
@@ -20,7 +20,7 @@ class SaveHoppingsCommand(QUndoCommand):
 
     unit_cells : dict[uuid.UUID, UnitCell]
         Reference to the dictionary mapping UUIDs to UnitCell objects
-    selection : dict[str, uuid.UUID]
+    selection : Selection
         Reference to the dictionary containing the current selection
     uc_id : uuid.UUID
         UUID of the selected `UnitCell` when the command was issued
@@ -38,8 +38,6 @@ class SaveHoppingsCommand(QUndoCommand):
         List of new hoppings to be added to the `hoppings` dictionary
     old_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
         List of old hoppings to be removed from the `hoppings` dictionary
-    bandstructure : BandStructure
-        `BandStructure` prior to the point addition
     signal : Signal
         Signal to be emitted when the command is executed. The signal
         carries the information about the selected `UnitCell`, `Site`,
@@ -49,7 +47,7 @@ class SaveHoppingsCommand(QUndoCommand):
     def __init__(
         self,
         unit_cells: dict[uuid.UUID, UnitCell],
-        selection: dict[str, uuid.UUID],
+        selection: Selection,
         pair_selection: list[Tuple[str, uuid.UUID, str, uuid.UUID]],
         new_hoppings: list[Tuple[Tuple[int, int, int], np.complex128]],
         signal: Signal,
@@ -59,10 +57,9 @@ class SaveHoppingsCommand(QUndoCommand):
 
         Parameters
         ----------
-
         unit_cells : dict[uuid.UUID, UnitCell]
             Reference to the dictionary mapping UUIDs to UnitCell objects
-        selection : dict[str, uuid.UUID]
+        selection : Selection
             Reference to the dictionary containing the current selection
         pair_selection : list[Tuple[str, uuid.UUID, str, uuid.UUID]]
             Reference to the list of selected `State`s
@@ -77,9 +74,9 @@ class SaveHoppingsCommand(QUndoCommand):
         super().__init__("Modify Hoppings")
         self.unit_cells = unit_cells
         self.selection = selection
-        self.uc_id = self.selection["unit_cell"]
-        self.site_id = self.selection["site"]
-        self.state_id = self.selection["state"]
+        self.uc_id = self.selection.unit_cell
+        self.site_id = self.selection.site
+        self.state_id = self.selection.state
 
         # Selected state UUIDs
         self.pair_selection = pair_selection
@@ -93,10 +90,6 @@ class SaveHoppingsCommand(QUndoCommand):
             )
         )
         self.signal = signal
-
-        self.bandstructure = copy.deepcopy(
-            self.unit_cells[self.uc_id].bandstructure
-        )
 
     def redo(self):
         # Insert the hoppings into the unit cell model
@@ -124,9 +117,7 @@ class SaveHoppingsCommand(QUndoCommand):
             self.unit_cells[self.uc_id].hoppings[
                 (self.s1[3], self.s2[3])
             ] = self.old_hoppings
-        self.unit_cells[self.uc_id].bandstructure = copy.deepcopy(
-            self.bandstructure
-        )
+        self.unit_cells[self.uc_id].bandstructure.reset_bands()
         # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
