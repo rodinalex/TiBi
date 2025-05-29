@@ -195,7 +195,16 @@ class BandsController(QObject):
         The UI components are activated/deactivated based on
         the system parameters.
         Projection menu is also updated programmatically.
+        Selection is set to "bands"
         """
+        # Set the radio toggle to bands
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(True)
+
+        self.bands_panel.bands_radio.setChecked(True)
+
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(False)
         uc_id = self.selection.unit_cell
         if uc_id is None:
             dim = 0
@@ -207,6 +216,21 @@ class BandsController(QObject):
                 + unit_cell.v2.is_periodic
                 + unit_cell.v3.is_periodic
             )
+            # Fill out the fields
+            bandstructure = unit_cell.bandstructure
+            bz_grid = unit_cell.bz_grid
+
+            if bandstructure.path:
+                self.bands_panel.n_points_spinbox.setValue(
+                    len(bandstructure.path)
+                )
+            else:
+                self.bands_panel.n_points_spinbox.setValue(100)
+            # Set the type of the grid
+            self.bands_panel.grid_choice_group.button(
+                bz_grid.is_gamma_centered
+            ).setChecked(True)
+
         # BZ path selection buttons
         # Activate/deactivate buttons based on dimensionality
         self.bands_panel.add_gamma_btn.setEnabled(dim > 0)
