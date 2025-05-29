@@ -74,6 +74,14 @@ class BandsController(QObject):
         self.bands_panel.proj_combo.selection_changed.connect(
             lambda _: self.bands_plot_requested.emit()
         )
+        # Toggle whether to show bands or DOS:
+        self.bands_panel.radio_group.buttonClicked.connect(
+            lambda _: (
+                self.bands_plot_requested.emit()
+                if (self.bands_panel.radio_group.checkedId() == 0)
+                else self.dos_plot_requested.emit()
+            )
+        )
 
     def _compute_bands(self):
         """
