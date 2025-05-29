@@ -179,6 +179,11 @@ class BandsController(QObject):
         self.status_updated.emit("Grid computation complete")
 
         # Update the BZ grid
+        unit_cell.bz_grid.grid_divs = (
+            self.bands_panel.v1_points_spinbox.value(),
+            self.bands_panel.v2_points_spinbox.value(),
+            self.bands_panel.v3_points_spinbox.value(),
+        )
         unit_cell.bz_grid.eigenvalues = eigenvalues
         unit_cell.bz_grid.eigenvectors = eigenvectors
         unit_cell.bz_grid.k_points = k_points
@@ -230,6 +235,9 @@ class BandsController(QObject):
             self.bands_panel.grid_choice_group.button(
                 bz_grid.is_gamma_centered
             ).setChecked(True)
+            self.bands_panel.v1_points_spinbox.setValue(bz_grid.grid_divs[0])
+            self.bands_panel.v2_points_spinbox.setValue(bz_grid.grid_divs[1])
+            self.bands_panel.v3_points_spinbox.setValue(bz_grid.grid_divs[2])
 
         # BZ path selection buttons
         # Activate/deactivate buttons based on dimensionality

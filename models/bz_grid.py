@@ -12,6 +12,8 @@ class BrillouinZoneGrid:
     ----------
     is_gamma_centered : bool
         A boolean marking whether the grid is Gamma centered or Monkhorst-Pack
+    grid_divs : tuple[int, int, int]
+        Number of divisions along each reciprocal basis vector
     k_points : list[NDArray[np.float64]]
         The coordinates of the grid points.
     eigenvalues : list[NDArray[np.float64]]
@@ -29,6 +31,7 @@ class BrillouinZoneGrid:
     """
 
     is_gamma_centered: bool = True
+    grid_divs: tuple[int, int, int] = (30, 30, 30)
     k_points: list[NDArray[np.float64]] = field(default_factory=list)
     eigenvalues: list[NDArray[np.float64]] = field(default_factory=list)
     eigenvectors: list[NDArray[np.float64]] = field(default_factory=list)

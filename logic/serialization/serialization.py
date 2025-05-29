@@ -56,6 +56,7 @@ class UnitCellEncoder(json.JSONEncoder):
             return {
                 "type": "BrillouinZoneGrid",
                 "is_gamma_centered": obj.is_gamma_centered,
+                "grid_divs": list(obj.grid_divs),
                 "k_points": [x.tolist() for x in obj.k_points],
                 "eigenvalues": [x.tolist() for x in obj.eigenvalues],
                 "eigenvectors": [x.tolist() for x in obj.eigenvectors],
@@ -167,6 +168,7 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
         elif obj_type == "BrillouinZoneGrid":
             return BrillouinZoneGrid(
                 is_gamma_centered=json_obj["is_gamma_centered"],
+                grid_divs=tuple(json_obj["grid_divs"]),
                 k_points=[np.array(x) for x in json_obj["k_points"]],
                 eigenvalues=[np.array(x) for x in json_obj["eigenvalues"]],
                 eigenvectors=[
