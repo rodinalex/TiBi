@@ -32,7 +32,7 @@ class HoppingController(QObject):
     unit_cells : dict[UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
     selection : Selection
-        Model tracking the current selection
+        Model tracking the currently selected unit cell, site, and state
     hopping_view : HoppingPanel
         The main view component
     undo_stack : QUndoStack
@@ -94,7 +94,7 @@ class HoppingController(QObject):
         unit_cells : dict[UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
         selection : Selection
-            Model tracking the current selection
+            Model tracking the currently selected unit cell, site, and state
         hopping_view : HoppingPanel
             The main view component
         undo_stack : QUndoStack

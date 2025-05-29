@@ -11,10 +11,10 @@ from logic.commands import (
     RemoveBZPointCommand,
 )
 from models import Selection, UnitCell
-from ui.constants import CF_RED
 from models.factories import bz_point_lists_init, bz_point_selection_init
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
+from ui.constants import CF_RED
 
 
 class BrillouinZonePlotController(QObject):
@@ -24,12 +24,10 @@ class BrillouinZonePlotController(QObject):
     This controller manages the 3D visualization of the Brillouin zone.
     It handles the visualization of selected high-symmetry points within
     the BZ and paths for band structure calculations.
-    The controller observes the selection model and updates
-    the visualization whenever the unit cell changes.
 
-    The controller also handles the visualization of k-paths
-    (sequences of k-points in reciprocal space) used for band structure
-    calculations.
+    The controller observes two views: BZ plot itself and a panel in the
+    computation view which allows one to select BZ points and create
+    path.
 
     Attributes
     ----------
@@ -153,7 +151,7 @@ class BrillouinZonePlotController(QObject):
 
     def update_brillouin_zone(self):
         """
-        Update the Brillouin zone visualization based on the current unit cell.
+        Update the Brillouin zone visualization.
 
         This method is the core rendering function that:
         1. Clears any existing visualization
@@ -162,7 +160,7 @@ class BrillouinZonePlotController(QObject):
         edge midpoints, face centers)
         4. Updates UI controls based on the dimensionality of the BZ
 
-        The method is triggered whenever the unit cell changes or
+        The method is triggered whenever the `UnitCell` changes or
         a new unit cell is selected.
         """
         uc_id = self.selection.unit_cell
@@ -170,16 +168,16 @@ class BrillouinZonePlotController(QObject):
         for key, item in list(self.bz_plot_items.items()):
             self.bz_plot_view.view.removeItem(item)
             del self.bz_plot_items[key]
-        # Reset BZ data, but not the path which is provided by the
-        # app controller. The reason for this feature is that, if a unit cell
-        # already has a calculated band structure, the band structure comes
-        # with a specific path in the BZ. Hence, the app conroller sets
-        # the band structure plot in the appropriate panel and the BZ path
-        # in the BZ plot.
 
         # Indices of the selected high-symmetry points in the BZ
+        # The key is the type of the high symmetry point
+        # ("face", "edge", "vertex")
+        # The values are the cardinal indices of each type
         self.bz_point_selection = bz_point_selection_init()
-        # Lists of high-symmetry points, grouped by type
+        # Lists of high-symmetry points, grouped by type.
+        # The key is the type of the high symmetry point
+        # ("face", "edge", "vertex")
+        # The values are arrays of length-3 arrays of coordinates
         self.bz_point_lists = bz_point_lists_init()
 
         if uc_id is None:
@@ -199,7 +197,7 @@ class BrillouinZonePlotController(QObject):
             return
         else:
             self.unit_cell = self.unit_cells[uc_id]
-
+        # Enable the path controls depending on the number of path points
         self.computation_view.bands_panel.remove_last_btn.setEnabled(
             len(self.unit_cell.bandstructure.special_points) > 0
         )
@@ -279,6 +277,7 @@ class BrillouinZonePlotController(QObject):
         # Plot the BZ points as spheres
         # Add Gamma point at origin
         sphere = self._make_point()
+        sphere.setColor((1, 1, 1, 1))
 
         self.bz_plot_view.view.addItem(sphere)
         self.bz_plot_items["Gamma"] = sphere
@@ -307,8 +306,7 @@ class BrillouinZonePlotController(QObject):
         Create a wireframe visualization of the Brillouin zone.
 
         This method extracts edges from the Brillouin zone faces and creates a
-        GLLinePlotItem to visualize them. The wireframe helps users understand
-        the shape and boundaries of the Brillouin zone in reciprocal space.
+        GLLinePlotItem to visualize them.
 
         For 2D BZ, the wireframe is a polygon outline.
         For 3D BZ, the wireframe is the edges of the polyhedron.
@@ -344,6 +342,7 @@ class BrillouinZonePlotController(QObject):
 
     def _make_point(self, vertex_size=0.20):
         """Create a sphere mesh item for a point in the BZ."""
+        vertex_size = 1 / (self.unit_cell.volume()) ** (1 / 3) / 4
         return gl.GLMeshItem(
             meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=vertex_size),
             smooth=True,
@@ -450,7 +449,6 @@ class BrillouinZonePlotController(QObject):
 
     def _remove_last_point(self):
         """Remove the last point added to the path."""
-
         self.undo_stack.push(
             RemoveBZPointCommand(
                 unit_cell=self.unit_cell,
