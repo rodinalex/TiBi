@@ -1,7 +1,11 @@
 from PySide6.QtCore import QObject, Signal
 import uuid
 
-from core.band_structure import diagonalize_hamitonian, interpolate_k_path
+from core.band_structure import (
+    diagonalize_hamitonian,
+    get_BZ_grid,
+    interpolate_k_path,
+)
 from models import Selection, UnitCell
 from views.panels import BandsPanel
 
@@ -64,6 +68,7 @@ class BandsController(QObject):
         self.bands_panel = bands_panel
         # Conenct the signals
         self.bands_panel.compute_bands_btn.clicked.connect(self._compute_bands)
+        self.bands_panel.compute_grid_btn.clicked.connect(self._compute_grid)
         self.bands_panel.proj_combo.selection_changed.connect(
             lambda _: self.bands_plot_requested.emit()
         )
@@ -110,6 +115,43 @@ class BandsController(QObject):
         self.update_combo()
         self.bands_plot_requested.emit()
 
+    def _compute_grid(self):
+        """
+        Calculate the BZ grid using the settings from the panel.
+        """
+
+        # Get the selected unit cell
+        uc_id = self.selection.unit_cell
+        unit_cell = self.unit_cells[uc_id]
+
+        # Check if the coupling is Hermitian and only then calculate
+        if not unit_cell.is_hermitian():
+            self.status_updated.emit(
+                "Computation halted: the system is non-Hermitian"
+            )
+            return
+
+        bz_grid = get_BZ_grid(
+            unit_cell=unit_cell,
+            n1=self.bands_panel.v1_points_spinbox.value(),
+            n2=self.bands_panel.v2_points_spinbox.value(),
+            n3=self.bands_panel.v3_points_spinbox.value(),
+            typ=self.bands_panel.grid_choice_group.checkedId(),
+        )
+
+        # Get Hamiltonian function
+        hamiltonian_func = unit_cell.get_hamiltonian_function()
+
+        self.status_updated.emit("Computing the grid")
+
+        eigenvalues, eigenvectors = diagonalize_hamitonian(
+            hamiltonian_func, bz_grid
+        )
+        self.status_updated.emit("Grid computation complete")
+
+        # Save the grid
+        # Emit signals
+
     def update_bands_panel(self):
         """
         Update the `BandsPanel`.
@@ -140,24 +182,32 @@ class BandsController(QObject):
             btn.setEnabled(dim > 2)
 
         # Computation and BZ path buttons
-        self.bands_panel.remove_last_btn.setEnabled(
-            len(unit_cell.bandstructure.special_points) > 0
-        )
-        self.bands_panel.clear_path_btn.setEnabled(
-            len(unit_cell.bandstructure.special_points) > 0
-        )
-        self.bands_panel.compute_bands_btn.setEnabled(
-            len(unit_cell.bandstructure.special_points) > 1
-        )
-        # BZ grid spinboxes
-        self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
-        self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
-        self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
+        if uc_id is None:
+            self.bands_panel.remove_last_btn.setEnabled(False)
+            self.bands_panel.clear_path_btn.setEnabled(False)
+            self.bands_panel.compute_bands_btn.setEnabled(False)
+
+        else:
+            self.bands_panel.remove_last_btn.setEnabled(
+                len(unit_cell.bandstructure.special_points) > 0
+            )
+            self.bands_panel.clear_path_btn.setEnabled(
+                len(unit_cell.bandstructure.special_points) > 0
+            )
+            self.bands_panel.compute_bands_btn.setEnabled(
+                len(unit_cell.bandstructure.special_points) > 1
+            )
 
         # BZ grid spinboxes
         self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
         self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
         self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
+
+        # BZ grid spinboxes and button
+        self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
+        self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
+        self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
+        self.bands_panel.compute_grid_btn.setEnabled(dim > 0)
 
         # Update the projection combo
         self.update_combo()
