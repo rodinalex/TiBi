@@ -45,6 +45,13 @@ class UnitCellController(QObject):
     tree_model : QStandardItemModel
         The model backing the tree view
 
+    Methods
+    -------
+    refresh_tree()
+        Refresh the system tree using the current state.
+    select_item(uuid.UUID, uuid.UUID, uuid.UUID):
+        Select a tree item using the ID's.
+
     Signals
     -------
     unit_cell_parameter_changed
@@ -441,3 +448,15 @@ class UnitCellController(QObject):
                     signal=self.site_parameter_changed,
                 )
             )
+
+    def refresh_tree(self):
+        """
+        Refresh the system tree using the current state.
+        """
+        self.tree_view.refresh_tree(self.unit_cells)
+
+    def select_item(self, uc_id, site_id, state_id):
+        """
+        Select a tree item using the ID's.
+        """
+        self.tree_view._select_item_by_id(uc_id, site_id, state_id)

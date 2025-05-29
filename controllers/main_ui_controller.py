@@ -5,11 +5,12 @@ from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import uuid
 
-from ui.actions.action_manager import ActionManager
 from logic.serialization.serialization import (
     serialize_unit_cells,
     deserialize_unit_cells,
 )
+from models import Selection, UnitCell
+from ui.actions.action_manager import ActionManager
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
 from views.main_window import MainWindow
@@ -26,8 +27,13 @@ class MainUIController(QObject):
 
     Attributes
     ----------
-    models : dict
-        A dictionary of global models
+    project_path : str | None
+        The file to which the dictionary containing the unit
+        cell objects is saved
+    unit_cells : dict[uuid.UUID, UnitCell]
+        Dictionary mapping UUIDs to UnitCell objects
+    selection : Selection
+        Model tracking the currently selected unit cell, site, and state
     main_window : MainWindow
         Subclass of QMainWindow containing the application's main view
     menu_bar_view : MenuBarView
@@ -38,6 +44,13 @@ class MainUIController(QObject):
         Status bar at the bottom of the application window
     undo_stack : QUndoStack
         Stack for 'undo-able' actions
+
+    Methods
+    -------
+    get_uc_plot_properties()
+        Get the unit cell visualization properties.
+    set_spinbox_status()
+        Activate/deactivate unit cell spinboxes.
 
     Signals
     -------
@@ -53,9 +66,9 @@ class MainUIController(QObject):
 
     def __init__(
         self,
-        project_path,
-        unit_cells,
-        selection,
+        project_path: str | None,
+        unit_cells: dict[uuid.UUID, UnitCell],
+        selection: Selection,
         main_window: MainWindow,
         menu_bar_view: MenuBarView,
         toolbar_view: MainToolbarView,
@@ -67,8 +80,13 @@ class MainUIController(QObject):
 
         Parameters
         ----------
-        models : dict
-            A dictionary of global models
+        project_path : str | None
+            The file to which the dictionary containing the unit
+            cell objects is saved
+        unit_cells : dict[uuid.UUID, UnitCell]
+            Dictionary mapping UUIDs to UnitCell objects
+        selection : Selection
+            Model tracking the currently selected unit cell, site, and state
         main_window : MainWindow
             Subclass of QMainWindow containing the application's main view
         menu_bar_view : MenuBarView
@@ -78,7 +96,7 @@ class MainUIController(QObject):
         status_bar_view : StatusBarView
             Status bar at the bottom of the application window
         undo_stack : QUndoStack
-            Stack for 'undo-able' actions
+            `QUndoStack` to hold "undo-able" commands
         """
         super().__init__()
         self.project_path = project_path
@@ -139,6 +157,19 @@ class MainUIController(QObject):
 
     # Methods to get information about the current state
     def get_uc_plot_properties(self):
+        """
+        Get the unit cell visualization properties.
+
+        The function returns the number of unit cells to be plotted
+        along each basis vector, as well as whether the wireframe
+        is plotted.
+
+        Returns
+        -------
+        int, int, int, bool
+            Numbers of unit cells along each of the three vectors and
+            a boolean for the wireframe.
+        """
         n1, n2, n3 = [
             spinbox.value() if spinbox.isEnabled() else 1
             for spinbox in (
@@ -153,6 +184,7 @@ class MainUIController(QObject):
         return n1, n2, n3, wireframe_enabled
 
     def set_spinbox_status(self, n1_enabled, n2_enabled, n3_enabled):
+        """Activate/deactivate the unit cell spinboxes"""
         self.toolbar.n1_spinbox.setEnabled(n1_enabled)
         self.toolbar.n2_spinbox.setEnabled(n2_enabled)
         self.toolbar.n3_spinbox.setEnabled(n3_enabled)
@@ -256,7 +288,7 @@ class MainUIController(QObject):
                     uc.id = new_id
                     new_unit_cells[new_id] = uc
 
-                self.models["unit_cells"].update(new_unit_cells)
+                self.unit_cells.update(new_unit_cells)
                 self.project_refresh_requested.emit()
             except Exception as e:
                 QMessageBox.critical(
@@ -277,9 +309,9 @@ class MainUIController(QObject):
         new file name. If there is no path, Save acts as Save As.
         """
         self.update_status("Saving project...")
-        json_string = serialize_unit_cells(self.models["unit_cells"])
+        json_string = serialize_unit_cells(self.unit_cells)
         if use_existing_path:
-            file_path = self.models["project_path"]
+            file_path = self.project_path
         else:
             file_path = None
 
@@ -298,7 +330,7 @@ class MainUIController(QObject):
                 file_path += ".json"
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(json_string)
-            self.models["project_path"] = file_path
+            self.project_path = file_path
 
     @Slot()
     def _handle_wireframe_toggle(self):
@@ -316,7 +348,9 @@ class MainUIController(QObject):
         """
         Display a message in the status bar.
 
-        Args:
-            message: Message to display
+        Parameters
+        ----------
+        message : str
+            Message to display
         """
         self.status_bar.update_status(message)

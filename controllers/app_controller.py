@@ -104,8 +104,9 @@ class AppController(QObject):
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
         self.computation_controller.selection_requested.connect(
-            self._handle_selection_requested
+            self.uc_controller.select_item
         )
+
         # Handle the request to draw hopping segments after a pair of states
         # is selected from the hopping button matrix
         self.computation_controller.hopping_segments_requested.connect(
@@ -205,15 +206,8 @@ class AppController(QObject):
         """
         # Current selection state (tracks which items are selected in the UI)
         self.selection.set_selection(uc_id=None, site_id=None, state_id=None)
-        self.uc_controller.tree_view.refresh_tree(self.unit_cells)
+        self.uc_controller.refresh_tree()
         self._update_panels()
-
-    def _handle_selection_requested(self, uc_id, site_id, state_id):
-        """Programmatically select an item in the tree view."""
-        # FIX THIS: WE SHOULD NOT ACCESS THE INTERNAL VIEW OF A CONTROLLER
-        self.uc_controller.tree_view._select_item_by_id(
-            uc_id, site_id, state_id
-        )
 
     def _update_unit_cell_plot(self):
         """
