@@ -11,7 +11,7 @@ from logic.commands import (
     RemoveBZPointCommand,
 )
 from models import Selection, UnitCell
-from ui.constants import CF_red
+from ui.constants import CF_RED
 from models.factories import bz_point_lists_init, bz_point_selection_init
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
@@ -498,7 +498,7 @@ class BrillouinZonePlotController(QObject):
             path_pos.extend([path_3d[ii], path_3d[ii + 1]])
         # Create the path visualization
         path_object = gl.GLLinePlotItem(
-            pos=np.array(path_pos), color=CF_red, width=5, mode="lines"
+            pos=np.array(path_pos), color=CF_RED, width=5, mode="lines"
         )
         self.bz_plot_view.view.addItem(path_object)
         self.bz_plot_items["bz_path"] = path_object

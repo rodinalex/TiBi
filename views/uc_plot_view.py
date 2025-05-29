@@ -3,7 +3,7 @@ import pyqtgraph.opengl as gl
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from ui.constants import CF_vermillion, CF_green, CF_sky
+from ui.constants import CF_VERMILLION, CF_GREEN, CF_SKY
 
 
 class UnitCellPlotView(QWidget):
@@ -51,9 +51,9 @@ class UnitCellPlotView(QWidget):
         ]
         for ii, color in enumerate(
             [
-                CF_vermillion,
-                CF_green,
-                CF_sky,
+                CF_VERMILLION,
+                CF_GREEN,
+                CF_SKY,
             ]
         ):
             self.view.addItem(

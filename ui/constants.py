@@ -11,3 +11,5 @@ CF_BLUE = (0, 114 / 255, 178 / 255, 1.0)
 # Constants for plotting sites in the 3D unit cell plot
 DEFAULT_SITE_SIZE = 0.1  # Default size of the sphere
 DEFAULT_SITE_SCALING = 1.5  # Default scaling of the sphere for selected sites
+# Constants for scatterplots
+DEFAULT_SCATTER_RADIUS = 50

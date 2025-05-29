@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.constants import CF_vermillion, CF_green, CF_sky
+from ui.constants import CF_VERMILLION, CF_GREEN, CF_SKY
 from ..widgets import EnterKeySpinBox
 from models import BasisVector
 
@@ -119,7 +119,7 @@ class UnitCellPanel(QWidget):
 
         # Create a coordinate label column to the left of coordinate columns
         for ii, (text, color) in enumerate(
-            zip(["x", "y", "z"], [CF_vermillion, CF_green, CF_sky]), start=1
+            zip(["x", "y", "z"], [CF_VERMILLION, CF_GREEN, CF_SKY]), start=1
         ):
             label = QLabel(text)
             label.setAlignment(Qt.AlignCenter)

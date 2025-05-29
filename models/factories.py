@@ -1,6 +1,6 @@
 import random
 from models import BasisVector, State, Site, UnitCell
-from ui.constants import default_site_size
+from ui.constants import DEFAULT_SITE_SIZE
 
 
 # Model initialization factories.
@@ -52,7 +52,7 @@ def mk_new_site():
     c1 = 0  # Fractional coordinate along first basis vector
     c2 = 0  # Fractional coordinate along second basis vector
     c3 = 0  # Fractional coordinate along third basis vector
-    R = default_site_size
+    R = DEFAULT_SITE_SIZE
     color = (
         random.uniform(0, 1),
         random.uniform(0, 1),
