@@ -4,8 +4,6 @@ from ui.constants import DEFAULT_SITE_SIZE
 
 
 # Model initialization factories.
-
-
 def bz_point_selection_init():
     return {
         "vertex": None,

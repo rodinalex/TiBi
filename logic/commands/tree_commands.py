@@ -196,6 +196,7 @@ class AddStateCommand(QUndoCommand):
         site = unit_cell.sites[self.site_id]
         site.states[self.state.id] = self.state
         unit_cell.bandstructure.reset_bands()
+        unit_cell.bz_grid.clear()
         self.tree_view.add_tree_item(
             self.state.name, self.uc_id, self.site_id, self.state.id
         )
@@ -209,6 +210,7 @@ class AddStateCommand(QUndoCommand):
             .states[self.state.id]
         )
         self.unit_cells[self.uc_id].bandstructure.reset_bands()
+        self.unit_cells[self.uc_id].bz_grid.clear()
         self.tree_view.remove_tree_item(
             self.uc_id, self.site_id, self.state.id
         )
@@ -310,6 +312,7 @@ class DeleteItemCommand(QUndoCommand):
                     kept_hoppings[k] = v
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
             self.unit_cells[self.uc_id].bandstructure.reset_bands()
+            self.unit_cells[self.uc_id].bz_grid.clear()
             # Delete the selected state from the site
             del (
                 self.unit_cells[self.uc_id]
@@ -333,6 +336,7 @@ class DeleteItemCommand(QUndoCommand):
             self.unit_cells[self.uc_id].hoppings = kept_hoppings
             if self.removed_hoppings:
                 self.unit_cells[self.uc_id].bandstructure.reset_bands()
+                self.unit_cells[self.uc_id].bz_grid.clear()
             # If the site has states, request a redraw of the hopping matrix
             if self.unit_cells[self.uc_id].sites[self.site_id].states:
                 self.signal.emit()
@@ -353,6 +357,7 @@ class DeleteItemCommand(QUndoCommand):
             site = unit_cell.sites[self.site_id]
             site.states[self.item.id] = self.item
             unit_cell.bandstructure.reset_bands()
+            unit_cell.bz_grid.clear()
             unit_cell.hoppings.update(self.removed_hoppings)
             self.signal.emit()
 
@@ -361,6 +366,7 @@ class DeleteItemCommand(QUndoCommand):
             unit_cell.sites[self.item.id] = self.item
             if self.removed_hoppings:
                 unit_cell.bandstructure.reset_bands()
+                unit_cell.bz_grid.clear()
             unit_cell.hoppings.update(self.removed_hoppings)
             # If the site has states, request a redraw of the hopping matrix
             if self.unit_cells[self.uc_id].sites[self.site_id].states:

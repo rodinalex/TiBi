@@ -1,33 +1,20 @@
 # TiBiPy Project Roadmap
 
 ## Features
-- Export the system to a file
-- Import a system from a file
 - Add hints for the status bar
 - Selectively hide sites for clarity
-- Fix the band plotting layout
 - Figure out dragging of hoppings between different site pairs
-- Undo possibility
 - Progress bar for calculations
 - Maybe a 3D plot with a grid of points in the momentum space that we can make light up/switch off by adjusting energy range/state composition
 
 ## Functionality
 - Threads/workers
-- Undo/Redo. List of undoable tasks
-  - Add UnitCell, Site, State
-  - Remove UnitCell, Site, State
-  - Rename UnitCell, Site, State
-  - Modify UnitCell, Site
-  - Remove hoppings
+
 
 ## Tasks
-- Dedicate the right panel to calculations:
-  - Move BZ panel to the right
-  - Put a placeholder instead of its current panel (to be used for other system creation options, maybe supercell)
 - Add a progress bar at the bottom of the right panel
 - Investigate threading
 - Add DOS panel (with projection) to the right panel
-- Add band visualization options to the right panel (?) maybe to show the projected bands to the states in the system?
 - Berry curvature/connection/phase panel on the right. Figure out how to visualize it
 
 ## Bugs

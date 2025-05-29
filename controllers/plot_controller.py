@@ -127,3 +127,16 @@ class PlotController(QObject):
                     )
             # Draw the canvas
             self.plot_view.canvas.draw()
+
+    def plot_dos(self):
+        self.plot_view.ax.clear()
+        uc_id = self.selection.unit_cell
+        if uc_id is not None:
+            bz_grid = self.unit_cells[uc_id].bz_grid
+            all_eigenvalues = np.concatenate(bz_grid.eigenvalues)
+            num_bins = 100
+            hist, bin_edges = np.histogram(all_eigenvalues, bins=num_bins)
+            bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+            dos = hist / len(bz_grid.k_points)
+            self.plot_view.ax.plot(bin_centers, dos)
+            self.plot_view.canvas.draw()

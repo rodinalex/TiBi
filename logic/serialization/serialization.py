@@ -3,7 +3,14 @@ import numpy as np
 from typing import Any
 import uuid
 
-from models import BandStructure, BasisVector, Site, State, UnitCell
+from models import (
+    BandStructure,
+    BasisVector,
+    BrillouinZoneGrid,
+    Site,
+    State,
+    UnitCell,
+)
 
 
 class UnitCellEncoder(json.JSONEncoder):
@@ -40,6 +47,17 @@ class UnitCellEncoder(json.JSONEncoder):
                 "type": "BandStructure",
                 "path": [x.tolist() for x in obj.path],
                 "special_points": [x.tolist() for x in obj.special_points],
+                "eigenvalues": [x.tolist() for x in obj.eigenvalues],
+                "eigenvectors": [x.tolist() for x in obj.eigenvectors],
+            }
+
+        # Handle BrillouinZoneGrid objects
+        if isinstance(obj, BrillouinZoneGrid):
+            return {
+                "type": "BrillouinZoneGrid",
+                "is_gamma_centered": obj.is_gamma_centered,
+                "grid_divs": list(obj.grid_divs),
+                "k_points": [x.tolist() for x in obj.k_points],
                 "eigenvalues": [x.tolist() for x in obj.eigenvalues],
                 "eigenvectors": [x.tolist() for x in obj.eigenvectors],
             }
@@ -93,6 +111,7 @@ class UnitCellEncoder(json.JSONEncoder):
                 "sites": sites_dict,
                 "hoppings": hoppings_dict,
                 "bandstructure": obj.bandstructure,
+                "bz_grid": obj.bz_grid,
                 "id": obj.id,
             }
 
@@ -145,7 +164,30 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
                     ]  # Each mat corresponds to a momentum point
                 ],
             )
-
+        # Handle BandStructure
+        elif obj_type == "BrillouinZoneGrid":
+            return BrillouinZoneGrid(
+                is_gamma_centered=json_obj["is_gamma_centered"],
+                grid_divs=tuple(json_obj["grid_divs"]),
+                k_points=[np.array(x) for x in json_obj["k_points"]],
+                eigenvalues=[np.array(x) for x in json_obj["eigenvalues"]],
+                eigenvectors=[
+                    np.array(
+                        [
+                            [
+                                complex(real=real, imag=imag)
+                                for real, imag in row
+                                # Destructure each length-2 list
+                            ]
+                            for row in mat
+                        ],
+                        dtype=np.complex128,
+                    )
+                    for mat in json_obj[
+                        "eigenvectors"
+                    ]  # Each mat corresponds to a momentum point
+                ],
+            )
         # Handle BasisVector
         elif obj_type == "BasisVector":
             return BasisVector(
@@ -183,6 +225,7 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
                 v2=json_obj["v2"],
                 v3=json_obj["v3"],
                 bandstructure=json_obj["bandstructure"],
+                bz_grid=json_obj["bz_grid"],
                 id=uuid.UUID(json_obj["id"]),
             )
 
@@ -223,12 +266,12 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
 
 def serialize_unit_cells(unit_cells: dict[uuid.UUID, UnitCell]) -> str:
     """
-    Serialize a dictionary of UnitCell objects to a JSON string.
+    Serialize a dictionary of `UnitCell` objects to a JSON string.
 
     Parameters
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
-        Dictionary mapping UUIDs to UnitCell objects
+        Dictionary mapping UUIDs to `UnitCell` objects
 
     Returns
     -------
@@ -242,7 +285,7 @@ def serialize_unit_cells(unit_cells: dict[uuid.UUID, UnitCell]) -> str:
 
 def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     """
-    Deserialize a JSON string back into a dictionary of UnitCell objects.
+    Deserialize a JSON string back into a dictionary of `UnitCell` objects.
 
     Parameters
     ----------
@@ -252,7 +295,7 @@ def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     Returns
     -------
     dict[uuid.UUID, UnitCell]
-        Dictionary mapping UUIDs to UnitCell objects
+        Dictionary mapping UUIDs to `UnitCell` objects
     """
     # Parse the JSON string with custom object hook
     string_keyed_dict = json.loads(json_str, object_hook=decode_unit_cell_json)

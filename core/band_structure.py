@@ -1,3 +1,5 @@
+import itertools
+from models import UnitCell
 import numpy as np
 from numpy.typing import NDArray
 
@@ -45,6 +47,56 @@ def interpolate_k_path(points: list[NDArray[np.float64]], n_total: int):
     k_path.append(points[-1])
 
     return k_path
+
+
+def get_BZ_grid(
+    unit_cell: UnitCell,
+    n1: int,
+    n2: int,
+    n3: int,
+    typ: int,
+) -> list[NDArray[np.float64]]:
+    """
+    Generate a grid of points in the BZ.
+
+    Depending on the system dimensionality, the output momentum arrays
+    have different lengths. The user can choose between Gamma-centered
+    and Monkhorst-Pack grids.
+
+    Parameters
+    ----------
+    unit_cell : UnitCell
+        `UnitCell` whose grid is being calculated.
+    n1, n2, n3 : int
+        Number of points along each reciprocal vector
+    typ : int
+        0 or 1, with 0 corresponding to the MP and 1 to Gamma-centered grids.
+    """
+    reciprocal_vectors = unit_cell.reciprocal_vectors()
+    dim = (
+        unit_cell.v1.is_periodic
+        + unit_cell.v2.is_periodic
+        + unit_cell.v3.is_periodic
+    )
+
+    # Multiples of each vector based on the type of the grid
+    def get_multiples(n, grid_type):
+        if grid_type == 1:
+            return [(jj - np.floor(n / 2)) / n for jj in range(n)]
+        else:
+            return [(jj + 1 / 2) / n - 1 / 2 for jj in range(n)]
+
+    m1 = get_multiples(n1, typ) if unit_cell.v1.is_periodic else [0.0]
+    m2 = get_multiples(n2, typ) if unit_cell.v2.is_periodic else [0.0]
+    m3 = get_multiples(n3, typ) if unit_cell.v3.is_periodic else [0.0]
+
+    multiples = [m1, m2, m3][0:dim]
+    k_points = []
+    for ms in itertools.product(*multiples):
+        k = sum([ms[d] * reciprocal_vectors[d] for d in range(dim)])
+        k_points.append(k[0:dim])
+
+    return k_points
 
 
 def diagonalize_hamitonian(hamiltonian, points):
