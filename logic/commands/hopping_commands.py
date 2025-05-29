@@ -102,6 +102,7 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.new_hoppings
         self.unit_cells[self.uc_id].bandstructure.reset_bands()
+        self.unit_cells[self.uc_id].bz_grid.clear()
         # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
@@ -118,6 +119,7 @@ class SaveHoppingsCommand(QUndoCommand):
                 (self.s1[3], self.s2[3])
             ] = self.old_hoppings
         self.unit_cells[self.uc_id].bandstructure.reset_bands()
+        self.unit_cells[self.uc_id].bz_grid.clear()
         # Emit the signal with appropriate selection parameters
         self.signal.emit(
             self.uc_id, self.site_id, self.state_id, self.s1, self.s2
