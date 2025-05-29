@@ -220,17 +220,6 @@ class BrillouinZonePlotController(QObject):
             0 if len(self.bz_vertices) == 0 else len(self.bz_vertices[0])
         )
 
-        # Activate/deactivate buttons based on dimensionality
-        self.computation_view.bands_panel.add_gamma_btn.setEnabled(
-            self.dim > 0
-        )
-        for btn in self.computation_view.bands_panel.vertex_btns:
-            btn.setEnabled(self.dim > 0)
-        for btn in self.computation_view.bands_panel.edge_btns:
-            btn.setEnabled(self.dim > 1)
-        for btn in self.computation_view.bands_panel.face_btns:
-            btn.setEnabled(self.dim > 2)
-
         # Extract vertices and faces from the BZ data
         # Note: In 2D, the faces are equivalent to edges.
         # In 3D, the faces are polygons.
