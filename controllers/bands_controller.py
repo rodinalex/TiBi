@@ -21,8 +21,8 @@ class BandsController(QObject):
 
     Methods
     -------
-    set_dimensionality(int)
-        Set systen dimensionality to activate/deactivate ui components.
+    update_bands_panel()
+        Update the `BandsPanel`.
     set_combo(list[str])
         Populate the projection dropdown menu with state labels.
     get_projection_indices()
@@ -110,13 +110,25 @@ class BandsController(QObject):
         unit_cell.bandstructure.path = k_path
         self.bands_computed.emit()
 
-    def set_dimensionality(self, dim: int):
+    def update_bands_panel(self):
         """
-        Set the system dimensionality.
+        Update the `BandsPanel`.
 
-        The panel components are activated/deactivated based on
-        the dimensionality.
+        The UI components are activated/deactivated based on
+        the system parameters.
+        Projection menu is also updated programmatically.
         """
+        uc_id = self.selection.unit_cell
+        if uc_id is None:
+            dim = 0
+        else:
+            unit_cell = self.unit_cells[uc_id]
+            # Get the system dimensionality
+            dim = (
+                unit_cell.v1.is_periodic
+                + unit_cell.v2.is_periodic
+                + unit_cell.v3.is_periodic
+            )
         # BZ path selection buttons
         # Activate/deactivate buttons based on dimensionality
         self.bands_panel.add_gamma_btn.setEnabled(dim > 0)
@@ -127,24 +139,44 @@ class BandsController(QObject):
         for btn in self.bands_panel.face_btns:
             btn.setEnabled(dim > 2)
 
+        # Computation and BZ path buttons
+        self.bands_panel.remove_last_btn.setEnabled(
+            len(unit_cell.bandstructure.special_points) > 0
+        )
+        self.bands_panel.clear_path_btn.setEnabled(
+            len(unit_cell.bandstructure.special_points) > 0
+        )
+        self.bands_panel.compute_bands_btn.setEnabled(
+            len(unit_cell.bandstructure.special_points) > 1
+        )
         # BZ grid spinboxes
         self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
         self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
         self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
 
-    def set_combo(self, items: list[str]):
+        # BZ grid spinboxes
+        self.bands_panel.v1_points_spinbox.setEnabled(dim > 0)
+        self.bands_panel.v2_points_spinbox.setEnabled(dim > 1)
+        self.bands_panel.v3_points_spinbox.setEnabled(dim > 2)
+
+        # Update the projection combo
+        self.update_combo()
+
+    def update_combo(self):
         """
         Update the states in the combo box.
 
         Once the items are updated, the selection buttons are activated
         if the number of items is not zero. Additionally, all the items
         are selected programatically.
-
-        Parameters
-        ----------
-        items : list[str]
-            List of items to set in the combo box.
         """
+        uc_id = self.selection.unit_cell
+        if uc_id is None:
+            items = []
+        else:
+            unit_cell = self.unit_cells[uc_id]
+            _, state_info = unit_cell.get_states()
+            items = [f"{s[0]}.{s[2]}" for s in state_info]
         self.bands_panel.proj_combo.refresh_combo(items)
         self.bands_panel.select_all_btn.setEnabled(len(items) > 0)
         self.bands_panel.clear_all_btn.setEnabled(len(items) > 0)

@@ -181,32 +181,9 @@ class BrillouinZonePlotController(QObject):
         self.bz_point_lists = bz_point_lists_init()
 
         if uc_id is None:
-            # Disable all buttons
-            self.computation_view.bands_panel.add_gamma_btn.setEnabled(False)
-            for btn in self.computation_view.bands_panel.vertex_btns:
-                btn.setEnabled(False)
-            for btn in self.computation_view.bands_panel.edge_btns:
-                btn.setEnabled(False)
-            for btn in self.computation_view.bands_panel.face_btns:
-                btn.setEnabled(False)
-            self.computation_view.bands_panel.remove_last_btn.setEnabled(False)
-            self.computation_view.bands_panel.clear_path_btn.setEnabled(False)
-            self.computation_view.bands_panel.compute_bands_btn.setEnabled(
-                False
-            )
             return
         else:
             self.unit_cell = self.unit_cells[uc_id]
-        # Enable the path controls depending on the number of path points
-        self.computation_view.bands_panel.remove_last_btn.setEnabled(
-            len(self.unit_cell.bandstructure.special_points) > 0
-        )
-        self.computation_view.bands_panel.clear_path_btn.setEnabled(
-            len(self.unit_cell.bandstructure.special_points) > 0
-        )
-        self.computation_view.bands_panel.compute_bands_btn.setEnabled(
-            len(self.unit_cell.bandstructure.special_points) > 1
-        )
 
         # Guard against 0-volume Brillouin zone: can occur in the process
         # of creation of the unit cell or due to a mistake

@@ -120,24 +120,16 @@ class ComputationController(QObject):
         """
         self.hopping_controller.update_unit_cell()
 
-    def set_dimensionality(self, dim: int):
-        self.bands_controller.set_dimensionality(dim)
+    def set_dimensionality(self):
+        self.bands_controller.update_bands_panel()
 
     def _handle_bands_computed(self):
         # Update the projection combo box
-        unit_cell = self.unit_cells[self.selection.unit_cell]
-        _, state_info = unit_cell.get_states()
-        combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
-        self.bands_controller.set_combo(combo_labels)
+        self.bands_controller.update_combo()
         self.bands_computed.emit()
 
     def update_projection_combo(self):
-        uc_id = self.selection.unit_cell
-        if uc_id:
-            unit_cell = self.unit_cells[uc_id]
-            _, state_info = unit_cell.get_states()
-            combo_labels = [f"{s[0]}.{s[2]}" for s in state_info]
-            self.bands_controller.set_combo(combo_labels)
+        self.bands_controller.update_combo()
 
     def get_projection_indices(self):
         return self.bands_controller.get_projection_indices()

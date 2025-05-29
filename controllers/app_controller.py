@@ -158,11 +158,7 @@ class AppController(QObject):
                 unit_cell.v3.is_periodic,
             )
 
-            self.computation_controller.set_dimensionality(
-                unit_cell.v1.is_periodic
-                + unit_cell.v2.is_periodic
-                + unit_cell.v3.is_periodic
-            )
+            self.computation_controller.set_dimensionality()
             # Populate the projection drop box
             # Plot the band structure (if available)
             self.plot_controller.plot_band_structure(
@@ -172,7 +168,7 @@ class AppController(QObject):
         # Deactivate the spinners
         else:
             self.main_ui_controller.set_spinbox_status(False, False, False)
-            self.computation_controller.set_dimensionality(0)
+            self.computation_controller.set_dimensionality()
 
         # Update the 3D plots for BZ and UC
         self._update_unit_cell_plot()
