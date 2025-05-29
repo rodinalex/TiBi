@@ -9,6 +9,7 @@ import uuid
 
 from .band_structure import BandStructure
 from .basis_vector import BasisVector
+from .bz_grid import BrillouinZoneGrid
 from .site import Site
 
 
@@ -40,6 +41,8 @@ class UnitCell:
         and phase
     bandstructure : BandStructure
         Band structure object for the `UnitCell`
+    bz_grid: BrillouinZoneGrid
+        Grid of points in the Brillouin zone
     id : uuid.UUID
         Unique identifier for the `UnitCell`
 
@@ -75,6 +78,7 @@ class UnitCell:
         list[tuple[tuple[int, int, int], np.complex128]],
     ] = field(default_factory=dict)
     bandstructure: BandStructure = field(default_factory=BandStructure)
+    bz_grid: BrillouinZoneGrid = field(default_factory=BrillouinZoneGrid)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def volume(self) -> np.float64:

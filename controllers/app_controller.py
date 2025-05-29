@@ -101,6 +101,7 @@ class AppController(QObject):
         self.computation_controller.bands_plot_requested.connect(
             self._plot_bands
         )
+        self.computation_controller.dos_plot_requested.connect(self._plot_dos)
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
         self.computation_controller.selection_requested.connect(
@@ -230,3 +231,11 @@ class AppController(QObject):
         """
         idx = self.computation_controller.get_projection_indices()
         self.plot_controller.plot_band_structure(idx)
+
+    def _plot_dos(self):
+        """
+        Plot the dos for the selected `UnitCell`.
+        """
+        pass
+        # idx = self.computation_controller.get_projection_indices()
+        # self.plot_controller.plot_band_structure(idx)

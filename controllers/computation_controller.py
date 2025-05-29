@@ -39,6 +39,9 @@ class ComputationController(QObject):
     bands_plot_requested
         Request bands plot.
         Re-emitting signal from `BandsController`
+    dos_plot_requested
+        Request bands plot.
+        Re-emitting signal from `BandsController`
     hopping_segments_requested
         Signal requesting the plotting of hopping segments in the
         unit cell plot. Re-emitting signal for the `HoppingController`
@@ -55,6 +58,7 @@ class ComputationController(QObject):
     selection_requested = Signal(object, object, object)
     # Band controller signals to relay
     bands_plot_requested = Signal()
+    dos_plot_requested = Signal()
 
     def __init__(
         self,
@@ -104,6 +108,9 @@ class ComputationController(QObject):
         # Bands Panel
         self.bands_controller.bands_plot_requested.connect(
             self.bands_plot_requested.emit
+        )
+        self.bands_controller.dos_plot_requested.connect(
+            self.dos_plot_requested.emit
         )
         self.bands_controller.status_updated.connect(self.status_updated.emit)
 

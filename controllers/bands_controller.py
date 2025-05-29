@@ -36,12 +36,14 @@ class BandsController(QObject):
     -------
     bands_plot_requested
         Request band plots update.
-        Emitted after bands computation or when projection selection changes.
+    dos_plot_requested
+        Request dos plots update.
     status_updated
         Update the status bar information.
     """
 
     bands_plot_requested = Signal()
+    dos_plot_requested = Signal()
     status_updated = Signal(str)
 
     def __init__(
@@ -131,7 +133,7 @@ class BandsController(QObject):
             )
             return
 
-        bz_grid = get_BZ_grid(
+        k_points = get_BZ_grid(
             unit_cell=unit_cell,
             n1=self.bands_panel.v1_points_spinbox.value(),
             n2=self.bands_panel.v2_points_spinbox.value(),
@@ -145,12 +147,17 @@ class BandsController(QObject):
         self.status_updated.emit("Computing the grid")
 
         eigenvalues, eigenvectors = diagonalize_hamitonian(
-            hamiltonian_func, bz_grid
+            hamiltonian_func, k_points
         )
         self.status_updated.emit("Grid computation complete")
 
-        # Save the grid
-        # Emit signals
+        # Update the BZ grid
+        unit_cell.bz_grid.eigenvalues = eigenvalues
+        unit_cell.bz_grid.eigenvectors = eigenvectors
+        unit_cell.bz_grid.k_points = k_points
+        # Update combo to make sure all sites are selected
+        self.update_combo()
+        self.dos_plot_requested.emit()
 
     def update_bands_panel(self):
         """
