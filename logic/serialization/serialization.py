@@ -262,12 +262,12 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
 
 def serialize_unit_cells(unit_cells: dict[uuid.UUID, UnitCell]) -> str:
     """
-    Serialize a dictionary of UnitCell objects to a JSON string.
+    Serialize a dictionary of `UnitCell` objects to a JSON string.
 
     Parameters
     ----------
     unit_cells : dict[uuid.UUID, UnitCell]
-        Dictionary mapping UUIDs to UnitCell objects
+        Dictionary mapping UUIDs to `UnitCell` objects
 
     Returns
     -------
@@ -281,7 +281,7 @@ def serialize_unit_cells(unit_cells: dict[uuid.UUID, UnitCell]) -> str:
 
 def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     """
-    Deserialize a JSON string back into a dictionary of UnitCell objects.
+    Deserialize a JSON string back into a dictionary of `UnitCell` objects.
 
     Parameters
     ----------
@@ -291,7 +291,7 @@ def deserialize_unit_cells(json_str: str) -> dict[uuid.UUID, UnitCell]:
     Returns
     -------
     dict[uuid.UUID, UnitCell]
-        Dictionary mapping UUIDs to UnitCell objects
+        Dictionary mapping UUIDs to `UnitCell` objects
     """
     # Parse the JSON string with custom object hook
     string_keyed_dict = json.loads(json_str, object_hook=decode_unit_cell_json)

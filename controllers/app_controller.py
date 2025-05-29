@@ -236,6 +236,7 @@ class AppController(QObject):
         """
         Plot the dos for the selected `UnitCell`.
         """
-        pass
+        # pass
+        self.plot_controller.plot_dos()
         # idx = self.computation_controller.get_projection_indices()
         # self.plot_controller.plot_band_structure(idx)
