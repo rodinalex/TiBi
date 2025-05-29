@@ -110,6 +110,7 @@ class UnitCellEncoder(json.JSONEncoder):
                 "sites": sites_dict,
                 "hoppings": hoppings_dict,
                 "bandstructure": obj.bandstructure,
+                "bz_grid": obj.bz_grid,
                 "id": obj.id,
             }
 
@@ -222,6 +223,7 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
                 v2=json_obj["v2"],
                 v3=json_obj["v3"],
                 bandstructure=json_obj["bandstructure"],
+                bz_grid=json_obj["bz_grid"],
                 id=uuid.UUID(json_obj["id"]),
             )
 
