@@ -23,7 +23,7 @@ class BandsController(QObject):
     -------
     update_bands_panel()
         Update the `BandsPanel`.
-    set_combo(list[str])
+    set_combo()
         Populate the projection dropdown menu with state labels.
     get_projection_indices()
         Get the states selected for projection from the dropdown menu.
@@ -33,7 +33,9 @@ class BandsController(QObject):
     bands_computed
         Once the bands are computed, the signal is used to trigger plotting.
     projection_selection_changed
-        Change in projection triggers band replotting
+        Change in projection triggers band replotting.
+        Re-emitting signal for the combo box, passing along the indices
+        of the selected sites.
     status_updated
         Update the status bar information.
     """
@@ -108,6 +110,8 @@ class BandsController(QObject):
         unit_cell.bandstructure.eigenvalues = eigenvalues
         unit_cell.bandstructure.eigenvectors = eigenvectors
         unit_cell.bandstructure.path = k_path
+        # Update combo to make sure all sites are selected
+        self.update_combo()
         self.bands_computed.emit()
 
     def update_bands_panel(self):

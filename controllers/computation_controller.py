@@ -17,9 +17,13 @@ class ComputationController(QObject):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
     selection : Selection
-        Model tracking the current selection
+        Model tracking the currently selected unit cell, site, and state
     computation_view : ComputationView
         UI object containing the computation view
+    hopping_controller : HoppingController
+        Child controller in charge of the hopping panel of the computation UI
+    bands_controller : BandsController
+        Child controller in charge of the bands panel of the computation UI
 
     Methods
     -------
@@ -33,7 +37,19 @@ class ComputationController(QObject):
     status_updated
         Signal emitted to update the status of the computation
     bands_computed
-        Signal notifying that the band computation is done
+        Signal notifying that the band computation is done.
+        Re-emitting signal from `BandsController`
+    hopping_segments_requested
+        Signal requesting the plotting of hopping segments in the
+        unit cell plot. Re-emitting signal for the `HoppingController`
+        when the user selects a pair of sites from the hopping matrix.
+    projection_selection_changed
+        Signal notifying that the projection selection has changed.
+        Re-emitting signal for the `BandsController`, passing along the indices
+        of the selected sites.
+    selection_requested
+        Signal requesting a programmatic selection. Re-emitting signal for
+        the `HoppingController`.
     """
 
     status_updated = Signal(str)
@@ -60,7 +76,7 @@ class ComputationController(QObject):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
         selection : Selection
-            `Selection` tracking the current selection
+            Model tracking the currently selected unit cell, site, and state
         computation_view : ComputationView
             UI object containing the computation view
         undo_stack : QUndoStack
@@ -91,9 +107,7 @@ class ComputationController(QObject):
             self.selection_requested.emit
         )
         # Bands Panel
-        self.bands_controller.bands_computed.connect(
-            self._handle_bands_computed
-        )
+        self.bands_controller.bands_computed.connect(self.bands_computed.emit)
         self.bands_controller.status_updated.connect(self.status_updated.emit)
         self.bands_controller.projection_selection_changed.connect(
             self.projection_selection_changed.emit
@@ -113,23 +127,27 @@ class ComputationController(QObject):
 
     def update_hopping_panel(self):
         """
-        Redraw the hoppings panel.
+        Redraw the hoppings UI panel.
 
         This method is called when the user renames a tree item to make sure
         that the matrix table contains the correct item names.
         """
         self.hopping_controller.update_unit_cell()
 
-    def set_dimensionality(self):
+    def update_bands_panel(self):
+        """
+        Update the bands UI panel.
+        """
         self.bands_controller.update_bands_panel()
 
-    def _handle_bands_computed(self):
-        # Update the projection combo box
-        self.bands_controller.update_combo()
-        self.bands_computed.emit()
-
     def update_projection_combo(self):
+        """
+        Update the projection combo.
+        """
         self.bands_controller.update_combo()
 
     def get_projection_indices(self):
+        """
+        Get the projection indices from the projection combo.
+        """
         return self.bands_controller.get_projection_indices()
