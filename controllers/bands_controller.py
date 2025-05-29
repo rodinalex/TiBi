@@ -72,10 +72,14 @@ class BandsController(QObject):
         self.bands_panel.compute_bands_btn.clicked.connect(self._compute_bands)
         self.bands_panel.compute_grid_btn.clicked.connect(self._compute_grid)
         self.bands_panel.proj_combo.selection_changed.connect(
-            lambda _: self.bands_plot_requested.emit()
+            lambda _: (
+                self.bands_plot_requested.emit()
+                if (self.bands_panel.radio_group.checkedId() == 0)
+                else self.dos_plot_requested.emit()
+            )
         )
         # Toggle whether to show bands or DOS:
-        self.bands_panel.radio_group.buttonClicked.connect(
+        self.bands_panel.radio_group.buttonToggled.connect(
             lambda _: (
                 self.bands_plot_requested.emit()
                 if (self.bands_panel.radio_group.checkedId() == 0)
@@ -89,6 +93,14 @@ class BandsController(QObject):
 
         The path is defined by the special points in the Brillouin zone.
         """
+        # Set the radio toggle to the correct option
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(True)
+
+        self.bands_panel.bands_radio.setChecked(True)
+
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(False)
 
         # Get the selected unit cell
         uc_id = self.selection.unit_cell
@@ -123,12 +135,19 @@ class BandsController(QObject):
         unit_cell.bandstructure.path = k_path
         # Update combo to make sure all sites are selected
         self.update_combo()
-        self.bands_plot_requested.emit()
 
     def _compute_grid(self):
         """
         Calculate the BZ grid using the settings from the panel.
         """
+        # Set the radio toggle to the correct option
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(True)
+
+        self.bands_panel.dos_radio.setChecked(True)
+
+        for b in self.bands_panel.radio_group.buttons():
+            b.blockSignals(False)
 
         # Get the selected unit cell
         uc_id = self.selection.unit_cell
@@ -163,9 +182,11 @@ class BandsController(QObject):
         unit_cell.bz_grid.eigenvalues = eigenvalues
         unit_cell.bz_grid.eigenvectors = eigenvectors
         unit_cell.bz_grid.k_points = k_points
+        unit_cell.bz_grid.is_gamma_centered = bool(
+            self.bands_panel.grid_choice_group.checkedId()
+        )
         # Update combo to make sure all sites are selected
         self.update_combo()
-        self.dos_plot_requested.emit()
 
     def update_bands_panel(self):
         """
