@@ -3,7 +3,14 @@ import numpy as np
 from typing import Any
 import uuid
 
-from models import BandStructure, BasisVector, Site, State, UnitCell
+from models import (
+    BandStructure,
+    BasisVector,
+    BrillouinZoneGrid,
+    Site,
+    State,
+    UnitCell,
+)
 
 
 class UnitCellEncoder(json.JSONEncoder):
@@ -40,6 +47,16 @@ class UnitCellEncoder(json.JSONEncoder):
                 "type": "BandStructure",
                 "path": [x.tolist() for x in obj.path],
                 "special_points": [x.tolist() for x in obj.special_points],
+                "eigenvalues": [x.tolist() for x in obj.eigenvalues],
+                "eigenvectors": [x.tolist() for x in obj.eigenvectors],
+            }
+
+        # Handle BrillouinZoneGrid objects
+        if isinstance(obj, BrillouinZoneGrid):
+            return {
+                "type": "BrillouinZoneGrid",
+                "is_gamma_centered": obj.is_gamma_centered,
+                "k_points": [x.tolist() for x in obj.k_points],
                 "eigenvalues": [x.tolist() for x in obj.eigenvalues],
                 "eigenvectors": [x.tolist() for x in obj.eigenvectors],
             }
@@ -145,7 +162,29 @@ def decode_unit_cell_json(json_obj: dict[str, Any]) -> Any:
                     ]  # Each mat corresponds to a momentum point
                 ],
             )
-
+        # Handle BandStructure
+        elif obj_type == "BrillouinZoneGrid":
+            return BrillouinZoneGrid(
+                is_gamma_centered=json_obj["is_gamma_centered"],
+                k_points=[np.array(x) for x in json_obj["k_points"]],
+                eigenvalues=[np.array(x) for x in json_obj["eigenvalues"]],
+                eigenvectors=[
+                    np.array(
+                        [
+                            [
+                                complex(real=real, imag=imag)
+                                for real, imag in row
+                                # Destructure each length-2 list
+                            ]
+                            for row in mat
+                        ],
+                        dtype=np.complex128,
+                    )
+                    for mat in json_obj[
+                        "eigenvectors"
+                    ]  # Each mat corresponds to a momentum point
+                ],
+            )
         # Handle BasisVector
         elif obj_type == "BasisVector":
             return BasisVector(
