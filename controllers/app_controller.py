@@ -25,7 +25,7 @@ class AppController(QObject):
     unit_cells : dict[uuid.UUID, UnitCell]
         Dictionary mapping UUIDs to UnitCell objects
     selection : Selection
-        `Selection` tracking the current selection
+        Model tracking the currently selected unit cell, site, and state
     bz_plot_controller : BrillouinZonePlotController
         Controller of the BZ graphical component
     computation_controller : ComputationController
@@ -59,7 +59,7 @@ class AppController(QObject):
         unit_cells : dict[uuid.UUID, UnitCell]
             Dictionary mapping UUIDs to UnitCell objects
         selection : Selection
-            `Selection` tracking the current selection
+            Model tracking the currently selected unit cell, site, and state
         bz_plot_controller : BrillouinZonePlotController
             Controller of the BZ graphical component
         computation_controller : ComputationController
@@ -76,8 +76,6 @@ class AppController(QObject):
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
-
-        # Extract the relevant models and controllers
         self.bz_plot_controller = bz_plot_controller
         self.computation_controller = computation_controller
         self.main_ui_controller = main_ui_controller
@@ -89,23 +87,19 @@ class AppController(QObject):
         # Redraw the panels only when the unit cell selection changes.
         # Selecting inside the unit cell should not cause redraws.
         self.selection.unit_cell_updated.connect(self._update_panels)
+        # When a new site is selected, reddraw only the unit cell plot
+        self.selection.site_updated.connect(self._update_unit_cell_plot)
 
         # bz_plot_controller
         # When the path is updated, the bandstructure is cleared.
         # We pass an empty band structure to the plotting function
         # resulting in a cleared plot.
-        self.bz_plot_controller.bz_path_updated.connect(
-            lambda: self.plot_controller.plot_band_structure(
-                self.unit_cells[self.selection.unit_cell].bandstructure, []
-            )
-        )
+        self.bz_plot_controller.bz_path_updated.connect(self._plot_bands)
+
         # computation_controller
         self.computation_controller.status_updated.connect(self._relay_status)
-        self.computation_controller.bands_computed.connect(
-            self._handle_bands_computed
-        )
-        self.computation_controller.projection_selection_changed.connect(
-            self.plot_bands
+        self.computation_controller.bands_plot_requested.connect(
+            self._plot_bands
         )
         # Handle the programmatic selection of an item in the tree
         # due to undo/redo in the hopping controller
@@ -129,7 +123,13 @@ class AppController(QObject):
         self.uc_controller.hopping_projection_update_requested.connect(
             self._handle_hopping_projection_update
         )
-        self.uc_controller.site_parameter_changed.connect(self._update_panels)
+        # If site parameter changes, the change is purely cosmetic,
+        # so the only the unit cell plot is redrawn
+        self.uc_controller.site_parameter_changed.connect(
+            self._update_unit_cell_plot
+        )
+        # Unit cell parameter changes typically invalidate
+        # derived quantities, requiring a full redraw.
         self.uc_controller.unit_cell_parameter_changed.connect(
             self._update_panels
         )
@@ -144,7 +144,8 @@ class AppController(QObject):
         """
         Handle requests to update plots and panels.
 
-        Takes place when system parameters or the selection change.
+        This major update is called when the `UnitCell` selection changes,
+        `UnitCell` parameter changes or `Site` parameter changes.
         """
         uc_id = self.selection.unit_cell
         if uc_id is not None:
@@ -158,25 +159,17 @@ class AppController(QObject):
                 unit_cell.v3.is_periodic,
             )
 
-            self.computation_controller.set_dimensionality()
-            # Populate the projection drop box
-            # Plot the band structure (if available)
-            self.plot_controller.plot_band_structure(
-                unit_cell.bandstructure, []
-            )
-
         # Deactivate the spinners
         else:
             self.main_ui_controller.set_spinbox_status(False, False, False)
-            self.computation_controller.set_dimensionality()
 
         # Update the 3D plots for BZ and UC
         self._update_unit_cell_plot()
         self.bz_plot_controller.update_brillouin_zone()
 
-        # Update the hopping panel and projection combo
+        # Update the computation panels
+        self.computation_controller.update_bands_panel()
         self.computation_controller.update_hopping_panel()
-        self.computation_controller.update_projection_combo()
 
     def _handle_hopping_segments_requested(self):
         """
@@ -222,14 +215,12 @@ class AppController(QObject):
             uc_id, site_id, state_id
         )
 
-    def _handle_bands_computed(self):
-        # FOR NOW, THE BAND STRUCTURE IS PLOTTED
-        # WE NEED TO ACCESS THE COMBO BOX TO GET THE PROJECTION
-        uc_id = self.selection.unit_cell
-        unit_cell = self.unit_cells[uc_id]
-        self.plot_controller.plot_band_structure(unit_cell.bandstructure)
-
     def _update_unit_cell_plot(self):
+        """
+        Redraw the unit cell plot.
+
+        Called during the full panels update or when site parameters change.
+        """
         n1, n2, n3, wireframe_shown = (
             self.main_ui_controller.get_uc_plot_properties()
         )
@@ -239,12 +230,9 @@ class AppController(QObject):
         if pair_selection[0] is not None and pair_selection[1] is not None:
             self.uc_plot_controller.update_hopping_segments(pair_selection)
 
-    def plot_bands(self, idx):
-        uc_id = self.selection.unit_cell
-        if uc_id is not None:
-            unit_cell = self.unit_cells[uc_id]
-            # Populate the projection drop box
-            # Plot the band structure (if available)
-            self.plot_controller.plot_band_structure(
-                unit_cell.bandstructure, idx
-            )
+    def _plot_bands(self):
+        """
+        Plot the bands for the selected `UnitCell`.
+        """
+        idx = self.computation_controller.get_projection_indices()
+        self.plot_controller.plot_band_structure(idx)

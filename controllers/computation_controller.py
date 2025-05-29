@@ -36,17 +36,13 @@ class ComputationController(QObject):
     -------
     status_updated
         Signal emitted to update the status of the computation
-    bands_computed
-        Signal notifying that the band computation is done.
+    bands_plot_requested
+        Request bands plot.
         Re-emitting signal from `BandsController`
     hopping_segments_requested
         Signal requesting the plotting of hopping segments in the
         unit cell plot. Re-emitting signal for the `HoppingController`
         when the user selects a pair of sites from the hopping matrix.
-    projection_selection_changed
-        Signal notifying that the projection selection has changed.
-        Re-emitting signal for the `BandsController`, passing along the indices
-        of the selected sites.
     selection_requested
         Signal requesting a programmatic selection. Re-emitting signal for
         the `HoppingController`.
@@ -58,8 +54,7 @@ class ComputationController(QObject):
     hopping_segments_requested = Signal()
     selection_requested = Signal(object, object, object)
     # Band controller signals to relay
-    bands_computed = Signal()
-    projection_selection_changed = Signal(object)
+    bands_plot_requested = Signal()
 
     def __init__(
         self,
@@ -107,11 +102,10 @@ class ComputationController(QObject):
             self.selection_requested.emit
         )
         # Bands Panel
-        self.bands_controller.bands_computed.connect(self.bands_computed.emit)
-        self.bands_controller.status_updated.connect(self.status_updated.emit)
-        self.bands_controller.projection_selection_changed.connect(
-            self.projection_selection_changed.emit
+        self.bands_controller.bands_plot_requested.connect(
+            self.bands_plot_requested.emit
         )
+        self.bands_controller.status_updated.connect(self.status_updated.emit)
 
     def get_pair_selection(self):
         """

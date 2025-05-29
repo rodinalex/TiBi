@@ -30,18 +30,14 @@ class BandsController(QObject):
 
     Signals
     -------
-    bands_computed
-        Once the bands are computed, the signal is used to trigger plotting.
-    projection_selection_changed
-        Change in projection triggers band replotting.
-        Re-emitting signal for the combo box, passing along the indices
-        of the selected sites.
+    bands_plot_requested
+        Request band plots update.
+        Emitted after bands computation or when projection selection changes.
     status_updated
         Update the status bar information.
     """
 
-    bands_computed = Signal()
-    projection_selection_changed = Signal(object)
+    bands_plot_requested = Signal()
     status_updated = Signal(str)
 
     def __init__(
@@ -69,7 +65,7 @@ class BandsController(QObject):
         # Conenct the signals
         self.bands_panel.compute_bands_btn.clicked.connect(self._compute_bands)
         self.bands_panel.proj_combo.selection_changed.connect(
-            self.projection_selection_changed.emit
+            lambda _: self.bands_plot_requested.emit()
         )
 
     def _compute_bands(self):
@@ -112,7 +108,7 @@ class BandsController(QObject):
         unit_cell.bandstructure.path = k_path
         # Update combo to make sure all sites are selected
         self.update_combo()
-        self.bands_computed.emit()
+        self.bands_plot_requested.emit()
 
     def update_bands_panel(self):
         """

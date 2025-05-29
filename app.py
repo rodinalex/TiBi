@@ -127,7 +127,9 @@ class TiBiApplication:
             self.undo_stack,
         )
 
-        self.plot_controller = PlotController(self.plot_view)
+        self.plot_controller = PlotController(
+            self.unit_cells, self.selection, self.plot_view
+        )
 
         self.computation_controller = ComputationController(
             self.unit_cells,
