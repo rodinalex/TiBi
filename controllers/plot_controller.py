@@ -125,7 +125,7 @@ class PlotController(QObject):
             # Draw the canvas
             self.plot_view.canvas.draw()
 
-    def plot_dos(self, num_bins, states):
+    def plot_dos(self, num_bins, states, plot_type, broadening):
         """
         Plot the density of states using the Brillouin zone grid.
 
@@ -136,6 +136,10 @@ class PlotController(QObject):
         states : list[int]
             List of integers denoting onto which states
             the bands need to be projected.
+        plot_type : int
+            Histogram (0) or Lorentzian (1)
+        broadening : np.float64
+            Broadening parameter for the Lorentzian DOS
         """
         self.plot_view.ax.clear()
 
@@ -167,28 +171,33 @@ class PlotController(QObject):
 
             bin_edges = np.histogram_bin_edges(energies, bins=num_bins)
             # Histogram or Lorentzian:
+            if plot_type == 0:  # Histogram
+                # Construct a histogram using the selected states' probability
+                # for each eigenvalue as the weight
+                hist, _ = np.histogram(
+                    energies, bins=bin_edges, weights=projections
+                )
+                # Get the bind centers and normalize the histogram
+                bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+                bin_width = bin_edges[1] - bin_edges[0]
 
-            # Construct a histogram using the selected states' probability
-            # for each eigenvalue as the weight
-            hist, _ = np.histogram(
-                energies, bins=bin_edges, weights=projections
-            )
-            # Get the bind centers and normalize the histogram
-            bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-            bin_width = bin_edges[1] - bin_edges[0]
-
-            dos = hist / len(bz_grid.k_points)
-            self.plot_view.ax.bar(
-                bin_centers,
-                dos,
-                width=bin_width,
-                color=CF_SKY,
-                edgecolor=CF_BLUE,
-            )
-
-            # self.plot_view.ax.plot(
-            #     bin_centers, dos, linestyle="-", color=CF_SKY
-            # )
+                dos = hist / len(bz_grid.k_points)
+                self.plot_view.ax.bar(
+                    bin_centers,
+                    dos,
+                    width=bin_width,
+                    color=CF_SKY,
+                    edgecolor=CF_BLUE,
+                )
+            else:
+                # Get pairwise differences between the energy grid
+                # and the centers of the Lorentzians
+                delta = energies[:, None] - bin_edges[None, :]
+                lorentzians = (broadening / np.pi) / (delta**2 + broadening**2)
+                dos = projections @ lorentzians / len(bz_grid.k_points)
+                self.plot_view.ax.plot(
+                    bin_edges, dos, linestyle="-", color=CF_SKY
+                )
 
             # Draw the canvas
             self.plot_view.canvas.draw()

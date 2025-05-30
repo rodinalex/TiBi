@@ -202,7 +202,7 @@ class BandsPanel(QWidget):
             b.setValue(30)
             b.setButtonSymbols(QSpinBox.NoButtons)
             b.setEnabled(False)
-
+        self.num_bins_spinbox.setRange(2, 1000)
         self.num_bins_spinbox.setValue(20)
         self.num_bins_spinbox.setButtonSymbols(QSpinBox.NoButtons)
         self.broadening_spinbox.setDecimals(3)

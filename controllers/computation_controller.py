@@ -152,3 +152,15 @@ class ComputationController(QObject):
         Get the projection indices from the projection combo.
         """
         return self.bands_controller.get_projection_indices()
+
+    def get_dos_properties(self):
+        """
+        Get the DOS properties for the plots.
+
+        Returns
+        -------
+        tuple[int, int]
+            Number of bins/points to be used in the plot and the plot type
+            (0 for a histogram, 1 for Lorentzian)
+        """
+        return self.bands_controller.get_dos_properties()

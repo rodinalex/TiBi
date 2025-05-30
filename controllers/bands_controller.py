@@ -90,6 +90,13 @@ class BandsController(QObject):
                 else None
             )
         )
+        # Toggle between Histogram and Lorentzian
+        self.bands_panel.presentation_choice_group.buttonToggled.connect(
+            lambda _, checked: (
+                self.dos_plot_requested.emit() if checked else None
+            )
+        )
+        # TRIGGER DOS PLOTS WHEN CHANGING BROADENING OR BIN NUMBER
 
     def _compute_bands(self):
         """
@@ -315,9 +322,17 @@ class BandsController(QObject):
         """
         return self.bands_panel.proj_combo.checked_items()
 
-    # def get_dos_properties(self):
-    #     """
-    #     Get the DOS properties for the plots.
+    def get_dos_properties(self):
+        """
+        Get the DOS properties for the plots.
 
-    #     """
-    #     num_bins =
+        Returns
+        -------
+        tuple[int, int, np.float64]
+            Number of bins/points to be used in the plot, the plot type
+            (0 for a histogram, 1 for Lorentzian), and Lorentzian broadening
+        """
+        num_bins = self.bands_panel.num_bins_spinbox.value()
+        plot_type = self.bands_panel.presentation_choice_group.checkedId()
+        broadening = self.bands_panel.broadening_spinbox.value()
+        return (num_bins, plot_type, broadening)
