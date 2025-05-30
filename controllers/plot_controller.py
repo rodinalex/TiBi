@@ -3,7 +3,7 @@ import numpy as np
 import uuid
 
 from models import Selection, UnitCell
-from ui.constants import CF_BLUE, CF_SKY, CF_VERMILLION, DEFAULT_SCATTER_RADIUS
+from ui import CF_BLUE, CF_SKY, CF_VERMILLION, DEFAULT_SCATTER_RADIUS
 from views.plot_view import PlotView
 
 

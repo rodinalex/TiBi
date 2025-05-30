@@ -10,7 +10,7 @@ from logic.serialization.serialization import (
     deserialize_unit_cells,
 )
 from models import Selection, UnitCell
-from ui.actions.action_manager import ActionManager
+from ui.actions import ActionManager
 from views.menu_bar_view import MenuBarView
 from views.main_toolbar_view import MainToolbarView
 from views.main_window import MainWindow

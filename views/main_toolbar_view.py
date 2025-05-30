@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QToolBar, QWidget, QLabel, QSpinBox, QHBoxLayout
 
-from ui.actions.action_manager import ActionManager
+from ui.actions import ActionManager
 
 
 class MainToolbarView(QToolBar):
