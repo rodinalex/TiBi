@@ -5,7 +5,7 @@ import pyqtgraph.opengl as gl
 import uuid
 
 from models import Selection, UnitCell
-from ui.constants import CF_YELLOW, DEFAULT_SITE_SCALING
+from ui import CF_YELLOW, DEFAULT_SITE_SCALING
 from views.uc_plot_view import UnitCellPlotView
 
 

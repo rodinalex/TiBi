@@ -6,7 +6,7 @@ import uuid
 
 from logic.commands import SaveHoppingsCommand
 from models import Selection, UnitCell
-from ui.styles.button_styles import (
+from ui.styles import (
     BUTTON_STYLE_DEFAULT,
     BUTTON_STYLE_HAS_HOPPING,
     BUTTON_STYLE_NONHERMITIAN,

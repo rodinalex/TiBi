@@ -14,7 +14,7 @@ from models import Selection, UnitCell
 from models.factories import bz_point_lists_init, bz_point_selection_init
 from views.bz_plot_view import BrillouinZonePlotView
 from views.computation_view import ComputationView
-from ui.constants import CF_RED
+from ui import CF_RED
 
 
 class BrillouinZonePlotController(QObject):
