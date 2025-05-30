@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -12,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from ui.utilities import divider_line
-from ..widgets import CheckableComboBox
+from ..widgets import CheckableComboBox, EnterKeySpinBox, EnterKeyIntSpinBox
 
 
 class BandsPanel(QWidget):
@@ -190,8 +189,8 @@ class BandsPanel(QWidget):
         self.v1_points_spinbox = QSpinBox()
         self.v2_points_spinbox = QSpinBox()
         self.v3_points_spinbox = QSpinBox()
-        self.num_bins_spinbox = QSpinBox()
-        self.broadening_spinbox = QDoubleSpinBox()
+        self.num_bins_spinbox = EnterKeyIntSpinBox()
+        self.broadening_spinbox = EnterKeySpinBox()
 
         for b in [
             self.v1_points_spinbox,
