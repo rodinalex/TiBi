@@ -80,10 +80,14 @@ class BandsController(QObject):
         )
         # Toggle whether to show bands or DOS:
         self.bands_panel.radio_group.buttonToggled.connect(
-            lambda _: (
-                self.bands_plot_requested.emit()
-                if (self.bands_panel.radio_group.checkedId() == 0)
-                else self.dos_plot_requested.emit()
+            lambda _, checked: (
+                (
+                    self.bands_plot_requested.emit()
+                    if (self.bands_panel.radio_group.checkedId() == 0)
+                    else self.dos_plot_requested.emit()
+                )
+                if checked
+                else None
             )
         )
 
@@ -303,5 +307,17 @@ class BandsController(QObject):
     def get_projection_indices(self):
         """
         Get the indices of the selected states from the projection menu.
+
+        Returns
+        -------
+        list[int]
+            Indices of the selected states
         """
         return self.bands_panel.proj_combo.checked_items()
+
+    # def get_dos_properties(self):
+    #     """
+    #     Get the DOS properties for the plots.
+
+    #     """
+    #     num_bins =
