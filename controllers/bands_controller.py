@@ -80,8 +80,38 @@ class BandsController(QObject):
         )
         # Toggle whether to show bands or DOS:
         self.bands_panel.radio_group.buttonToggled.connect(
-            lambda _: (
-                self.bands_plot_requested.emit()
+            lambda _, checked: (
+                (
+                    self.bands_plot_requested.emit()
+                    if (self.bands_panel.radio_group.checkedId() == 0)
+                    else self.dos_plot_requested.emit()
+                )
+                if checked
+                else None
+            )
+        )
+        # Toggle between Histogram and Lorentzian.
+        # Only trigger if DOS is selected
+        self.bands_panel.presentation_choice_group.buttonToggled.connect(
+            lambda _, checked: (
+                self.dos_plot_requested.emit()
+                if (
+                    checked and (self.bands_panel.radio_group.checkedId() == 1)
+                )
+                else None
+            )
+        )
+        # Trigger plots when changing broadening or bin number
+        self.bands_panel.broadening_spinbox.editingConfirmed.connect(
+            lambda: (
+                None
+                if (self.bands_panel.radio_group.checkedId() == 0)
+                else self.dos_plot_requested.emit()
+            )
+        )
+        self.bands_panel.num_bins_spinbox.editingConfirmed.connect(
+            lambda: (
+                None
                 if (self.bands_panel.radio_group.checkedId() == 0)
                 else self.dos_plot_requested.emit()
             )
@@ -303,5 +333,25 @@ class BandsController(QObject):
     def get_projection_indices(self):
         """
         Get the indices of the selected states from the projection menu.
+
+        Returns
+        -------
+        list[int]
+            Indices of the selected states
         """
         return self.bands_panel.proj_combo.checked_items()
+
+    def get_dos_properties(self):
+        """
+        Get the DOS properties for the plots.
+
+        Returns
+        -------
+        tuple[int, int, np.float64]
+            Number of bins/points to be used in the plot, the plot type
+            (0 for a histogram, 1 for Lorentzian), and Lorentzian broadening
+        """
+        num_bins = self.bands_panel.num_bins_spinbox.value()
+        plot_type = self.bands_panel.presentation_choice_group.checkedId()
+        broadening = self.bands_panel.broadening_spinbox.value()
+        return (num_bins, plot_type, broadening)
