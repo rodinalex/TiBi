@@ -1,6 +1,5 @@
 import numpy as np
 import pyqtgraph.opengl as gl
-from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ui import CF_VERMILLION, CF_GREEN, CF_SKY
@@ -27,8 +26,7 @@ class UnitCellPlotView(QWidget):
 
     def __init__(self):
         super().__init__()
-
-        self.setMinimumSize(QSize(350, 350))
+        self.setMinimumHeight(150)
 
         # Setup layout
         layout = QVBoxLayout(self)
