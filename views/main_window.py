@@ -91,7 +91,6 @@ class MainWindow(QMainWindow):
 
         # Store references to UI components
         self.uc = uc
-        # self.hopping = hopping
         self.uc_plot = uc_plot
         self.bz_plot = bz_plot
         self.plot = plot
@@ -105,19 +104,24 @@ class MainWindow(QMainWindow):
 
         # Main Layout
         main_view = QWidget()
-        # main_layout = QSplitter(main_view, orientation=Qt.Horizontal)
         main_layout = QHBoxLayout(main_view)
 
         # Create three column Layouts and wrap them into Widgets
         # UnitCell geometry and Sites
         unit_cell_layout = QVBoxLayout()
+        unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setFixedWidth(240)
+        unit_cell_widget.setFixedWidth(220)
+
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
+        computation_layout.setContentsMargins(0, 0, 0, 0)
+        computation_layout.setSpacing(7)
+
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
+        computation_widget.setFixedWidth(340)
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
         plots_splitter.addWidget(
