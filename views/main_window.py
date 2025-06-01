@@ -1,8 +1,9 @@
-from PySide6.QtCore import QSize, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QMainWindow,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -85,7 +86,8 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.setFixedSize(QSize(1100, 825))
+        self.resize(1100, 825)  # Initial size
+        self.setMinimumSize(1100, 825)
 
         # Store references to UI components
         self.uc = uc
@@ -103,12 +105,33 @@ class MainWindow(QMainWindow):
 
         # Main Layout
         main_view = QWidget()
+        # main_layout = QSplitter(main_view, orientation=Qt.Horizontal)
         main_layout = QHBoxLayout(main_view)
 
-        # Create three column layouts
-        unit_cell_layout = QVBoxLayout()  # UnitCell geometry and Sites
-        computation_layout = QVBoxLayout()  # Computation controls
-        plots_layout = QVBoxLayout()  # UC 3D plot and 2D plots
+        # Create three column Layouts and wrap them into Widgets
+        # UnitCell geometry and Sites
+        unit_cell_layout = QVBoxLayout()
+        unit_cell_widget = QWidget()
+        unit_cell_widget.setLayout(unit_cell_layout)
+        unit_cell_widget.setFixedWidth(240)
+        # Computation controls and BZ
+        computation_layout = QVBoxLayout()
+        computation_widget = QWidget()
+        computation_widget.setLayout(computation_layout)
+        # UC 3D plot and results plots
+        plots_splitter = QSplitter(Qt.Vertical)
+        plots_splitter.addWidget(
+            self.frame_widget(self.uc_plot)
+        )  # Top 3D plot
+        plots_splitter.addWidget(
+            self.frame_widget(self.plot)
+        )  # Bottom 2D plot
+
+        # Set initial size ratio
+        plots_splitter.setSizes([1, 1])
+        # Prevent the panels from collapsing
+        plots_splitter.setCollapsible(0, False)
+        plots_splitter.setCollapsible(1, False)
 
         unit_cell_layout.addWidget(self.frame_widget(self.uc), stretch=3)
 
@@ -118,13 +141,10 @@ class MainWindow(QMainWindow):
         computation_layout.addWidget(
             self.frame_widget(self.computation_view), stretch=3
         )
-        plots_layout.addWidget(self.frame_widget(self.uc_plot), stretch=1)
-        plots_layout.addWidget(self.frame_widget(self.plot), stretch=1)
 
-        main_layout.addLayout(unit_cell_layout, stretch=1)
-        main_layout.addLayout(computation_layout, stretch=2)
-        main_layout.addLayout(plots_layout, stretch=3)
-
+        main_layout.addWidget(unit_cell_widget)
+        main_layout.addWidget(computation_widget, stretch=2)
+        main_layout.addWidget(plots_splitter, 3)
         # Set as central widget
         self.setCentralWidget(main_view)
 

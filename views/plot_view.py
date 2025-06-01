@@ -32,7 +32,7 @@ class PlotView(QWidget):
         empty until data is provided by the controller.
         """
         super().__init__()
-        self.setMinimumSize(QSize(400, 300))
+        self.setMinimumHeight(150)
 
         # Setup layout
         layout = QVBoxLayout(self)
