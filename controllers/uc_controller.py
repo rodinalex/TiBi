@@ -282,28 +282,6 @@ class UnitCellController(QObject):
             )
         )
         # New Site button
-        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddSiteCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                )
-            )
-        )
-        # New State button. Adding states emits a signal requiring
-        # the system to redraw the hopping matrix and update the
-        # projection dropdown.
-        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddStateCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                    signal=self.hopping_projection_update_requested,
-                )
-            )
-        )
         # Delete button--deletes the highlighted tree item
         self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
             lambda: self.undo_stack.push(

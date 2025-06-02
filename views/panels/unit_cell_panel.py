@@ -66,9 +66,7 @@ class UnitCellPanel(QWidget):
 
         # Add Site and Reduce UC (LLL algorithm) buttons
         button_layout = QHBoxLayout()
-        self.new_site_btn = QPushButton("+ Site")
         self.reduce_btn = QPushButton("Reduce")
-        button_layout.addWidget(self.new_site_btn)
         button_layout.addWidget(self.reduce_btn)
 
         # Assemble the panel

@@ -74,10 +74,7 @@ class SitePanel(QWidget):
         grid_layout.addWidget(self.c3, 2, 2)
         grid_layout.setVerticalSpacing(2)
 
-        self.new_state_btn = QPushButton("+ State")
-
         layout.addWidget(panel_header)
         layout.addLayout(appearance_layout)
         layout.addWidget(header)
         layout.addLayout(grid_layout)
-        layout.addWidget(self.new_state_btn)
