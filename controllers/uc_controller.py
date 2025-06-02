@@ -139,7 +139,7 @@ class UnitCellController(QObject):
         )
 
         # Triggered when a tree item's name is changed by double clicking on it
-        self.tree_view_panel.delegate.name_edit_finished.connect(
+        self.tree_view_panel.name_edit_finished.connect(
             lambda x: self.undo_stack.push(
                 RenameTreeItemCommand(
                     unit_cells=self.unit_cells,
@@ -147,25 +147,6 @@ class UnitCellController(QObject):
                     tree_view=self.tree_view,
                     signal=self.hopping_projection_update_requested,
                     item=self.tree_model.itemFromIndex(x),
-                )
-            )
-        )
-        # Triggered when the user presses Del or Backspace while
-        # a tree item is highlighted, or clicks the Delete button
-        # The signal is emitted by the command only when there are states
-        # that are deleted(either directly or as part of a site).
-        # If a state is deleted, derived quantities (bands, BZ grid, etc.)
-        # are discarded due to being stale.
-        # If a unit cell is deleted,
-        # the signal is not emitted as the unit cell deletion changes the
-        # selection, which is handled separately.
-        self.tree_view_panel.delegate.delete_requested.connect(
-            lambda: self.undo_stack.push(
-                DeleteItemCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                    signal=self.hopping_projection_update_requested,
                 )
             )
         )
@@ -179,9 +160,34 @@ class UnitCellController(QObject):
         # If a unit cell is deleted,
         # the signal is not emitted as the unit cell deletion changes the
         # selection, which is handled separately.
-        self.unit_cell_view.tree_view_panel.delete_requested.connect(
+        self.tree_view_panel.delete_requested.connect(
             lambda: self.undo_stack.push(
                 DeleteItemCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
+                )
+            )
+        )
+        # New item creation using the tree delegate.
+        # The adding of the command is wrapped into a QTimer function
+        # to delay the execution by 0ms AFTER the delegate finishes handling
+        # the event. Otherwise, the delegate retains the selection of the
+        # item tree even though the selection model is updated in the course
+        # of item addition/deletion.
+        self.tree_view_panel.new_site_requested.connect(
+            lambda: self.undo_stack.push(
+                AddSiteCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                )
+            )
+        )
+        self.tree_view_panel.new_state_requested.connect(
+            lambda: self.undo_stack.push(
+                AddStateCommand(
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,

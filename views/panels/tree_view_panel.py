@@ -1,5 +1,5 @@
 import os
-from PySide6.QtCore import QEvent, QRect, Qt, Signal
+from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -13,16 +13,20 @@ from PySide6.QtWidgets import (
 from ..widgets import SystemTree
 
 
-class EnterOnlyDelegate(QStyledItemDelegate):
+class TreeDelegate(QStyledItemDelegate):
     """
     A delegate that requires the user to commit changes to tree item names by
     pressing "Enter". Clicking away/defocusing resets the tree item name to
     its pre-edit form. The purpose is to handle the Qt default behavior,
     where defocusing keeps the new display name in the tree but does not send
     an updated signal so that the data can be updated internally.
+    Additionally, the delegate draws rectangular "Delete" and "Add" buttons
+    next to the item names.
     """
 
     name_edit_finished = Signal(object)  # Emits QModelIndex
+    new_site_requested = Signal()
+    new_state_requested = Signal()
     delete_requested = Signal()
 
     def __init__(self, parent=None):
@@ -106,9 +110,15 @@ class EnterOnlyDelegate(QStyledItemDelegate):
                     return True
                 # If it wasn't selected before, the click selects the item
                 return False
-            # elif rects["edit"].contains(event.pos()):
-            #     self.edit_clicked.emit(index)
-            #     return True
+            elif ("add" in rects) and rects["add"].contains(event.pos()):
+                # Only trigger delete if the item was already selected
+                if self._was_selected_before_click:
+                    if self._get_item_level(index) == 0:
+                        self.new_site_requested.emit()
+                    elif self._get_item_level(index) == 1:
+                        self.new_state_requested.emit()
+                    return True
+                return False
         return super().editorEvent(event, model, option, index)
 
     def eventFilter(self, editor, event):
@@ -158,6 +168,9 @@ class TreeViewPanel(QWidget):
     """
 
     # Define signals
+    name_edit_finished = Signal(object)  # Emits QModelIndex
+    new_site_requested = Signal()
+    new_state_requested = Signal()
     delete_requested = Signal()
 
     def __init__(self):
@@ -167,7 +180,7 @@ class TreeViewPanel(QWidget):
         self.tree_view = SystemTree()
 
         # Set the delegate to save the data only on Enter-press
-        self.delegate = EnterOnlyDelegate(self.tree_view)
+        self.delegate = TreeDelegate(self.tree_view)
         self.tree_view.setItemDelegate(self.delegate)
 
         button_layout = QHBoxLayout()
@@ -194,4 +207,24 @@ class TreeViewPanel(QWidget):
         )
         self.backspace_shortcut.activated.connect(
             lambda: self.delete_requested.emit()
+        )
+
+        # Relay delegate signals
+        self.delegate.delete_requested.connect(
+            lambda: QTimer.singleShot(0, lambda: self.delete_requested.emit())
+        )
+        self.delegate.new_site_requested.connect(
+            lambda: QTimer.singleShot(
+                0, lambda: self.new_site_requested.emit()
+            )
+        )
+        self.delegate.new_state_requested.connect(
+            lambda: QTimer.singleShot(
+                0, lambda: self.new_state_requested.emit()
+            )
+        )
+        self.delegate.name_edit_finished.connect(
+            lambda x: QTimer.singleShot(
+                0, lambda x=x: self.name_edit_finished.emit(x)
+            )
         )
