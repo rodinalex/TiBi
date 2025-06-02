@@ -1,15 +1,14 @@
 import os
 from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
-from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
+from PySide6.QtGui import QColor, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QPushButton,
     QStyle,
     QStyledItemDelegate,
     QVBoxLayout,
     QWidget,
 )
 
+from ui import CF_SKY
 from ..widgets import SystemTree
 
 
@@ -25,6 +24,7 @@ class TreeDelegate(QStyledItemDelegate):
     """
 
     name_edit_finished = Signal(object)  # Emits QModelIndex
+    new_unit_cell_requested = Signal()
     new_site_requested = Signal()
     new_state_requested = Signal()
     delete_requested = Signal()
@@ -84,15 +84,53 @@ class TreeDelegate(QStyledItemDelegate):
         return editor
 
     def paint(self, painter, option, index):
-        super().paint(painter, option, index)
-        # Only show the delete icon for selected items
-        if option.state & QStyle.State_Selected:
-            rects = self._button_rects(option, index)
-            painter.drawPixmap(rects["delete"], self.delete_icon)
-            if "add" in rects:
-                painter.drawPixmap(rects["add"], self.add_icon)
+        if index.data(Qt.UserRole) == "ADD_UNIT_CELL":
+            # Custom paint for "Add Unit Cell" item
+            painter.save()
+
+            # Get the full width of the viewport (the whole row)
+            tree = self.parent()
+            full_rect = QRect(
+                0,
+                option.rect.y(),
+                tree.viewport().width(),
+                option.rect.height(),
+            )
+
+            # Draw background across the full width
+            painter.fillRect(full_rect, QColor(50, 50, 50))
+
+            # Text formatting
+            painter.setPen(
+                QColor(CF_SKY[0] * 255, CF_SKY[1] * 255, CF_SKY[2] * 255)
+            )
+            font = painter.font()
+            painter.setFont(font)
+
+            # Adjust text inside the original rect (with padding)
+            text_rect = option.rect.adjusted(8, 0, -8, 0)
+            painter.drawText(text_rect, Qt.AlignVCenter, "+ Add Unit Cell")
+
+            painter.restore()
+
+        else:
+            super().paint(painter, option, index)
+            # Only show the delete icon for selected items
+            if option.state & QStyle.State_Selected:
+                rects = self._button_rects(option, index)
+                painter.drawPixmap(rects["delete"], self.delete_icon)
+                if "add" in rects:
+                    painter.drawPixmap(rects["add"], self.add_icon)
 
     def editorEvent(self, event, model, option, index):
+        # Handle special "Add Unit Cell" item
+        if index.data(Qt.UserRole) == "ADD_UNIT_CELL":
+            if event.type() == QEvent.MouseButtonRelease:
+                if option.rect.contains(event.pos()):
+                    self.new_unit_cell_requested.emit()
+                    return True
+            return False
+
         rects = self._button_rects(option, index)
 
         if event.type() == QEvent.MouseButtonPress:
@@ -169,6 +207,7 @@ class TreeViewPanel(QWidget):
 
     # Define signals
     name_edit_finished = Signal(object)  # Emits QModelIndex
+    new_unit_cell_requested = Signal()
     new_site_requested = Signal()
     new_state_requested = Signal()
     delete_requested = Signal()
@@ -183,17 +222,9 @@ class TreeViewPanel(QWidget):
         self.delegate = TreeDelegate(self.tree_view)
         self.tree_view.setItemDelegate(self.delegate)
 
-        button_layout = QHBoxLayout()
-        self.new_uc_btn = QPushButton("+ UC")
-        self.delete_btn = QPushButton("Delete")
-
-        button_layout.addWidget(self.new_uc_btn)
-        button_layout.addWidget(self.delete_btn)
-
         # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.tree_view)
-        layout.addLayout(button_layout)
 
         # Set up Delete shortcut
         self.delete_shortcut = QShortcut(QKeySequence("Del"), self.tree_view)
@@ -212,6 +243,11 @@ class TreeViewPanel(QWidget):
         # Relay delegate signals
         self.delegate.delete_requested.connect(
             lambda: QTimer.singleShot(0, lambda: self.delete_requested.emit())
+        )
+        self.delegate.new_unit_cell_requested.connect(
+            lambda: QTimer.singleShot(
+                0, lambda: self.new_unit_cell_requested.emit()
+            )
         )
         self.delegate.new_site_requested.connect(
             lambda: QTimer.singleShot(

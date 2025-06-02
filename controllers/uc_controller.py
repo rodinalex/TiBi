@@ -171,6 +171,14 @@ class UnitCellController(QObject):
             )
         )
         # New item creation using the tree delegate.
+        self.tree_view_panel.new_unit_cell_requested.connect(
+            lambda: self.undo_stack.push(
+                AddUnitCellCommand(
+                    unit_cells=self.unit_cells, tree_view=self.tree_view
+                )
+            )
+        )
+
         self.tree_view_panel.new_site_requested.connect(
             lambda: self.undo_stack.push(
                 AddSiteCommand(
@@ -273,26 +281,6 @@ class UnitCellController(QObject):
         )
 
         # Button signals
-        # New UC button
-        self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddUnitCellCommand(
-                    unit_cells=self.unit_cells, tree_view=self.tree_view
-                )
-            )
-        )
-        # New Site button
-        # Delete button--deletes the highlighted tree item
-        self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                DeleteItemCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                    signal=self.hopping_projection_update_requested,
-                )
-            )
-        )
         # Reduce button--LLL argorithm to obtain the primitive cell.
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             lambda: self.undo_stack.push(
