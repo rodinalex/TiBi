@@ -339,9 +339,10 @@ class DeleteItemCommand(QUndoCommand):
                 self.unit_cells[self.uc_id].bz_grid.clear()
             # If the site has states, request a redraw of the hopping matrix
             if self.unit_cells[self.uc_id].sites[self.site_id].states:
+                del self.unit_cells[self.uc_id].sites[self.site_id]
                 self.signal.emit()
-            # Delete the selected site from the unit cell
-            del self.unit_cells[self.uc_id].sites[self.site_id]
+            else:
+                del self.unit_cells[self.uc_id].sites[self.site_id]
         # No site selected, therefore remove the unit cell from the model
         elif self.uc_id:
             del self.unit_cells[self.uc_id]

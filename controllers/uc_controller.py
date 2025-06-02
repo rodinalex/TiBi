@@ -171,11 +171,6 @@ class UnitCellController(QObject):
             )
         )
         # New item creation using the tree delegate.
-        # The adding of the command is wrapped into a QTimer function
-        # to delay the execution by 0ms AFTER the delegate finishes handling
-        # the event. Otherwise, the delegate retains the selection of the
-        # item tree even though the selection model is updated in the course
-        # of item addition/deletion.
         self.tree_view_panel.new_site_requested.connect(
             lambda: self.undo_stack.push(
                 AddSiteCommand(
