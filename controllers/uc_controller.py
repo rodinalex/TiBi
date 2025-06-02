@@ -139,7 +139,7 @@ class UnitCellController(QObject):
         )
 
         # Triggered when a tree item's name is changed by double clicking on it
-        self.tree_view_panel.delegate.name_edit_finished.connect(
+        self.tree_view_panel.name_edit_finished.connect(
             lambda x: self.undo_stack.push(
                 RenameTreeItemCommand(
                     unit_cells=self.unit_cells,
@@ -160,9 +160,37 @@ class UnitCellController(QObject):
         # If a unit cell is deleted,
         # the signal is not emitted as the unit cell deletion changes the
         # selection, which is handled separately.
-        self.unit_cell_view.tree_view_panel.delete_requested.connect(
+        self.tree_view_panel.delete_requested.connect(
             lambda: self.undo_stack.push(
                 DeleteItemCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
+                )
+            )
+        )
+        # New item creation using the tree delegate.
+        self.tree_view_panel.new_unit_cell_requested.connect(
+            lambda: self.undo_stack.push(
+                AddUnitCellCommand(
+                    unit_cells=self.unit_cells, tree_view=self.tree_view
+                )
+            )
+        )
+
+        self.tree_view_panel.new_site_requested.connect(
+            lambda: self.undo_stack.push(
+                AddSiteCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                )
+            )
+        )
+        self.tree_view_panel.new_state_requested.connect(
+            lambda: self.undo_stack.push(
+                AddStateCommand(
                     unit_cells=self.unit_cells,
                     selection=self.selection,
                     tree_view=self.tree_view,
@@ -253,48 +281,6 @@ class UnitCellController(QObject):
         )
 
         # Button signals
-        # New UC button
-        self.unit_cell_view.tree_view_panel.new_uc_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddUnitCellCommand(
-                    unit_cells=self.unit_cells, tree_view=self.tree_view
-                )
-            )
-        )
-        # New Site button
-        self.unit_cell_view.unit_cell_panel.new_site_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddSiteCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                )
-            )
-        )
-        # New State button. Adding states emits a signal requiring
-        # the system to redraw the hopping matrix and update the
-        # projection dropdown.
-        self.unit_cell_view.site_panel.new_state_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                AddStateCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                    signal=self.hopping_projection_update_requested,
-                )
-            )
-        )
-        # Delete button--deletes the highlighted tree item
-        self.unit_cell_view.tree_view_panel.delete_btn.clicked.connect(
-            lambda: self.undo_stack.push(
-                DeleteItemCommand(
-                    unit_cells=self.unit_cells,
-                    selection=self.selection,
-                    tree_view=self.tree_view,
-                    signal=self.hopping_projection_update_requested,
-                )
-            )
-        )
         # Reduce button--LLL argorithm to obtain the primitive cell.
         self.unit_cell_view.unit_cell_panel.reduce_btn.clicked.connect(
             lambda: self.undo_stack.push(

@@ -76,6 +76,12 @@ class SystemTree(QTreeView):
         self.tree_model.clear()
         self.root_node = self.tree_model.invisibleRootItem()
 
+        # Add special "add" item at the top
+        add_item = QStandardItem("+ Add Unit Cell")
+        add_item.setData("ADD_UNIT_CELL", Qt.UserRole)  # Special marker
+        add_item.setFlags(Qt.ItemIsEnabled)  # Not selectable, but clickable
+        self.root_node.appendRow(add_item)
+
         # Add unit cells
         for uc_id, unit_cell in unit_cells.items():
             unit_cell_item = self._create_tree_item(
