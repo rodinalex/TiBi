@@ -150,6 +150,25 @@ class UnitCellController(QObject):
                 )
             )
         )
+        # Triggered when the user presses Del or Backspace while
+        # a tree item is highlighted, or clicks the Delete button
+        # The signal is emitted by the command only when there are states
+        # that are deleted(either directly or as part of a site).
+        # If a state is deleted, derived quantities (bands, BZ grid, etc.)
+        # are discarded due to being stale.
+        # If a unit cell is deleted,
+        # the signal is not emitted as the unit cell deletion changes the
+        # selection, which is handled separately.
+        self.tree_view_panel.delegate.delete_requested.connect(
+            lambda: self.undo_stack.push(
+                DeleteItemCommand(
+                    unit_cells=self.unit_cells,
+                    selection=self.selection,
+                    tree_view=self.tree_view,
+                    signal=self.hopping_projection_update_requested,
+                )
+            )
+        )
 
         # Triggered when the user presses Del or Backspace while
         # a tree item is highlighted, or clicks the Delete button

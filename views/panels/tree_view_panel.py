@@ -1,8 +1,10 @@
-from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QKeySequence, QShortcut
+import os
+from PySide6.QtCore import QEvent, QRect, Qt, Signal
+from PySide6.QtGui import QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
+    QStyle,
     QStyledItemDelegate,
     QVBoxLayout,
     QWidget,
@@ -21,10 +23,32 @@ class EnterOnlyDelegate(QStyledItemDelegate):
     """
 
     name_edit_finished = Signal(object)  # Emits QModelIndex
+    delete_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._editing_index = None
+        self.delete_icon = QPixmap(
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../assets/icons/trash.png",
+            )
+        )
+
+    def _button_rects(self, option):
+        size = 16
+        margin = 4
+        right = option.rect.right() - margin
+        delete_rect = QRect(
+            right - size, option.rect.center().y() - size // 2, size, size
+        )
+        edit_rect = QRect(
+            right - 2 * size - margin,
+            option.rect.center().y() - size // 2,
+            size,
+            size,
+        )
+        return {"delete": delete_rect, "edit": edit_rect}
 
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
@@ -33,6 +57,36 @@ class EnterOnlyDelegate(QStyledItemDelegate):
         )  # Save the original name
         self._editing_index = index
         return editor
+
+    def paint(self, painter, option, index):
+        super().paint(painter, option, index)
+        # Only show the delete icon for selected items
+        if option.state & QStyle.State_Selected:
+            rects = self._button_rects(option)
+            painter.drawPixmap(rects["delete"], self.delete_icon)
+
+    def editorEvent(self, event, model, option, index):
+        rects = self._button_rects(option)
+
+        if event.type() == QEvent.MouseButtonPress:
+            # Store whether the item was selected before this click
+            self._was_selected_before_click = (
+                self.parent().selectionModel().isSelected(index)
+            )
+            return super().editorEvent(event, model, option, index)
+
+        elif event.type() == QEvent.MouseButtonRelease:
+            if rects["delete"].contains(event.pos()):
+                # Only trigger delete if the item was already selected
+                if self._was_selected_before_click:
+                    self.delete_requested.emit()
+                    return True
+                # If it wasn't selected before, the click selects the item
+                return False
+            # elif rects["edit"].contains(event.pos()):
+            #     self.edit_clicked.emit(index)
+            #     return True
+        return super().editorEvent(event, model, option, index)
 
     def eventFilter(self, editor, event):
         if event.type() == QEvent.FocusOut:
