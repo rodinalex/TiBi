@@ -34,21 +34,42 @@ class EnterOnlyDelegate(QStyledItemDelegate):
                 "../../assets/icons/trash.png",
             )
         )
+        self.add_icon = QPixmap(
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../assets/icons/plus.png",
+            )
+        )
 
-    def _button_rects(self, option):
+    def _button_rects(self, option, index):
+        """Regions defining the item buttons."""
         size = 16
         margin = 4
         right = option.rect.right() - margin
-        delete_rect = QRect(
+
+        buttons = {}
+        buttons["delete"] = QRect(
             right - size, option.rect.center().y() - size // 2, size, size
         )
-        edit_rect = QRect(
-            right - 2 * size - margin,
-            option.rect.center().y() - size // 2,
-            size,
-            size,
-        )
-        return {"delete": delete_rect, "edit": edit_rect}
+        if self._get_item_level(index) < 2:
+            buttons["add"] = QRect(
+                right - 2 * size - margin,
+                option.rect.center().y() - size // 2,
+                size,
+                size,
+            )
+        return buttons
+
+    def _get_item_level(self, index):
+        """
+        Determine the tree level of the item (0=UnitCell, 1=Site, 2=State)
+        """
+        level = 0
+        current = index
+        while current.parent().isValid():
+            level += 1
+            current = current.parent()
+        return level
 
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
@@ -62,11 +83,13 @@ class EnterOnlyDelegate(QStyledItemDelegate):
         super().paint(painter, option, index)
         # Only show the delete icon for selected items
         if option.state & QStyle.State_Selected:
-            rects = self._button_rects(option)
+            rects = self._button_rects(option, index)
             painter.drawPixmap(rects["delete"], self.delete_icon)
+            if "add" in rects:
+                painter.drawPixmap(rects["add"], self.add_icon)
 
     def editorEvent(self, event, model, option, index):
-        rects = self._button_rects(option)
+        rects = self._button_rects(option, index)
 
         if event.type() == QEvent.MouseButtonPress:
             # Store whether the item was selected before this click
