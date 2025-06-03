@@ -28,8 +28,8 @@ QPushButton:pressed {
 }
 
 QPushButton:disabled {
-    background-color: $ON_SURFACE_VARIANT;
-    color: $ON_PRIMARY;
+    background-color: $OUTLINE_VARIANT;
+    color: $SURFACE;
 }
 
 

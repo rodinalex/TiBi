@@ -78,6 +78,12 @@ class BandsController(QObject):
                 else self.dos_plot_requested.emit()
             )
         )
+        self.bands_panel.select_all_btn.clicked.connect(
+            self.bands_panel.proj_combo.select_all
+        )
+        self.bands_panel.clear_all_btn.clicked.connect(
+            self.bands_panel.proj_combo.clear_selection
+        )
         # Toggle whether to show bands or DOS:
         self.bands_panel.radio_group.buttonToggled.connect(
             lambda _, checked: (
