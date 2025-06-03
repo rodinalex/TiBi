@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
-        computation_widget.setFixedWidth(340)
+        computation_widget.setFixedWidth(320)
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
         plots_splitter.addWidget(

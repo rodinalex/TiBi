@@ -23,16 +23,17 @@ class BandsPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.bands_grid = QGridLayout()
         self.proj_layout = QVBoxLayout()
-        self.dos_grid = QGridLayout()
+        self.dos_layout = QVBoxLayout()
         layout.addLayout(self.bands_grid, stretch=1)
         layout.addWidget(divider_line())
         layout.addLayout(self.proj_layout)
         layout.addWidget(divider_line())
-        layout.addLayout(self.dos_grid, stretch=1)
+        layout.addLayout(self.dos_layout, stretch=1)
 
         # Bands Section
         self.bands_grid.setContentsMargins(10, 5, 15, 5)
         path_label = QLabel("Brillouin Zone Path")
+        path_label.setProperty("style", "bold")
         path_label.setAlignment(
             Qt.AlignCenter
         )  # This centers the text within the label
@@ -40,7 +41,6 @@ class BandsPanel(QWidget):
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
         self.bands_grid.addWidget(self.add_gamma_btn, 1, 1)
-
         # Vertex selection controls
         self.prev_vertex_btn = QPushButton("←")
         self.next_vertex_btn = QPushButton("→")
@@ -130,8 +130,15 @@ class BandsPanel(QWidget):
             self.add_face_btn,
         ]
 
+        for row in range(5):  # Rows 0 to 4 in bands_grid
+            self.bands_grid.setRowMinimumHeight(
+                row, 25
+            )  # Choose a consistent height
+            self.bands_grid.setRowStretch(row, 1)  # Ensure equal stretching
+
         # Projection panel
         projection_label = QLabel("State Projection")
+        projection_label.setProperty("style", "bold")
         projection_label.setAlignment(Qt.AlignCenter)
         projection_tools = QHBoxLayout()
 
@@ -172,20 +179,25 @@ class BandsPanel(QWidget):
         proj_right.addWidget(self.dos_radio)
 
         # DOS Section
-        self.dos_grid.setContentsMargins(10, 5, 15, 5)
-        dos_grid_label = QLabel("Brillouin Zone Grid")
-        dos_grid_label.setAlignment(Qt.AlignCenter)
-        self.dos_grid.addWidget(dos_grid_label, 0, 0, 1, 2)
-        dos_presentation_label = QLabel("DOS Visualization")
-        dos_presentation_label.setAlignment(Qt.AlignCenter)
-        self.dos_grid.addWidget(dos_presentation_label, 5, 0, 1, 2)
-        # Grid points controls
-        v1_points_layout = QHBoxLayout()
-        v2_points_layout = QHBoxLayout()
-        v3_points_layout = QHBoxLayout()
-        num_bins_layout = QHBoxLayout()
-        broadening_layout = QHBoxLayout()
+        self.bz_grid = QGridLayout()
+        self.dos_visualization_grid = QGridLayout()
+        self.dos_layout.addLayout(self.bz_grid)
+        self.dos_layout.addLayout(self.dos_visualization_grid)
+        self.dos_layout.setContentsMargins(10, 5, 15, 5)
 
+        bz_grid_label = QLabel("Brillouin Zone Grid")
+        bz_grid_label.setProperty("style", "bold")
+        bz_grid_label.setAlignment(Qt.AlignCenter)
+        self.bz_grid.addWidget(bz_grid_label, 0, 0, 1, 3)
+
+        dos_presentation_label = QLabel("DOS Visualization")
+        dos_presentation_label.setProperty("style", "bold")
+        dos_presentation_label.setAlignment(Qt.AlignCenter)
+        self.dos_visualization_grid.addWidget(
+            dos_presentation_label, 0, 0, 1, 3
+        )
+
+        # Grid points controls
         self.v1_points_spinbox = QSpinBox()
         self.v2_points_spinbox = QSpinBox()
         self.v3_points_spinbox = QSpinBox()
@@ -202,6 +214,7 @@ class BandsPanel(QWidget):
             b.setFixedWidth(30)
             b.setButtonSymbols(QSpinBox.NoButtons)
             b.setEnabled(False)
+
         self.num_bins_spinbox.setRange(2, 1000)
         self.num_bins_spinbox.setValue(20)
         self.num_bins_spinbox.setButtonSymbols(QSpinBox.NoButtons)
@@ -210,24 +223,19 @@ class BandsPanel(QWidget):
         self.broadening_spinbox.setValue(0.001)
         self.broadening_spinbox.setButtonSymbols(QSpinBox.NoButtons)
 
-        v1_points_layout.addWidget(QLabel("v<sub>1</sub> points:"))
-        v2_points_layout.addWidget(QLabel("v<sub>2</sub> points:"))
-        v3_points_layout.addWidget(QLabel("v<sub>3</sub> points:"))
-        num_bins_layout.addWidget(QLabel("Bin number:"))
-        broadening_layout.addWidget(QLabel("Broadening:"))
+        self.bz_grid.addWidget(QLabel("v<sub>1</sub> points:"), 1, 0)
+        self.bz_grid.addWidget(QLabel("v<sub>2</sub> points:"), 2, 0)
+        self.bz_grid.addWidget(QLabel("v<sub>3</sub> points:"), 3, 0)
 
-        v1_points_layout.addWidget(self.v1_points_spinbox)
-        v2_points_layout.addWidget(self.v2_points_spinbox)
-        v3_points_layout.addWidget(self.v3_points_spinbox)
-        num_bins_layout.addWidget(self.num_bins_spinbox)
-        broadening_layout.addWidget(self.broadening_spinbox)
+        self.bz_grid.addWidget(self.v1_points_spinbox, 1, 1)
+        self.bz_grid.addWidget(self.v2_points_spinbox, 2, 1)
+        self.bz_grid.addWidget(self.v3_points_spinbox, 3, 1)
 
-        self.dos_grid.addLayout(v1_points_layout, 1, 0)
-        self.dos_grid.addLayout(v2_points_layout, 2, 0)
-        self.dos_grid.addLayout(v3_points_layout, 3, 0)
-        self.dos_grid.setRowMinimumHeight(4, 10)  # Spacer row
-        self.dos_grid.addLayout(num_bins_layout, 6, 0)
-        self.dos_grid.addLayout(broadening_layout, 7, 0)
+        self.dos_visualization_grid.addWidget(QLabel("Bin number:"), 1, 0)
+        self.dos_visualization_grid.addWidget(QLabel("Broadening:"), 2, 0)
+
+        self.dos_visualization_grid.addWidget(self.num_bins_spinbox, 1, 1)
+        self.dos_visualization_grid.addWidget(self.broadening_spinbox, 2, 1)
 
         self.compute_grid_btn = QPushButton("Compute")
         self.compute_grid_btn.setEnabled(False)
@@ -248,10 +256,9 @@ class BandsPanel(QWidget):
         self.presentation_choice_group.addButton(self.lorentzian_radio, id=1)
         self.histogram_radio.setChecked(True)
 
-        self.dos_grid.addWidget(self.MP_radio, 1, 1)
-        self.dos_grid.addWidget(self.Gamma_radio, 2, 1)
-        self.dos_grid.addWidget(self.compute_grid_btn, 3, 1)
+        self.bz_grid.addWidget(self.MP_radio, 1, 2)
+        self.bz_grid.addWidget(self.Gamma_radio, 2, 2)
+        self.bz_grid.addWidget(self.compute_grid_btn, 3, 2)
 
-        self.dos_grid.addWidget(self.histogram_radio, 6, 1)
-        self.dos_grid.addWidget(self.lorentzian_radio, 7, 1)
-        self.dos_grid.setVerticalSpacing(2)
+        self.dos_visualization_grid.addWidget(self.histogram_radio, 1, 2)
+        self.dos_visualization_grid.addWidget(self.lorentzian_radio, 2, 2)

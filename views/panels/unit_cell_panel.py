@@ -38,6 +38,7 @@ class UnitCellPanel(QWidget):
         grid_layout = QGridLayout()
 
         panel_header = QLabel("Unit Cell Parameters")
+        panel_header.setProperty("style", "bold")
         panel_header.setAlignment(Qt.AlignCenter)
 
         dimensionality_header = QLabel("Dimensionality")
