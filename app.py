@@ -1,5 +1,7 @@
+from pathlib import Path
 from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QApplication
+from string import Template
 import sys
 import uuid
 
@@ -29,6 +31,7 @@ from controllers import (
 
 # Models and factories
 from models import Selection, UnitCell
+from ui.styles import THEME_SETTINGS
 
 
 class TiBiApplication:
@@ -72,7 +75,17 @@ class TiBiApplication:
         """
         # Create the Qt application
         self.app = QApplication(sys.argv)
+        self.app.setStyle("Fusion")
 
+        # Load and apply the global stylesheet
+        qss_path = Path(__file__).parent / "ui" / "styles" / "main_theme.qss"
+        if qss_path.exists():
+            with qss_path.open("r") as f:
+                qss_template = Template(f.read())
+            styled_qss = qss_template.substitute(THEME_SETTINGS)
+            self.app.setStyleSheet(styled_qss)
+        else:
+            print(f"Warning: QSS file not found at {qss_path}")
         # Create an undo stack
         self.undo_stack = QUndoStack()
         self.undo_stack.setUndoLimit(100)

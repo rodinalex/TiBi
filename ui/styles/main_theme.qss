@@ -1,0 +1,67 @@
+/* main_theme.qss */
+
+/* ===== General Application ===== */
+QWidget {
+    font-family: "Helvetica Neue", "Arial", sans-serif;
+    font-size: 14pt;
+    color: $ON_SURFACE;
+    /* background-color: #537ba3; */
+    background-color: $SURFACE_CONTAINER;
+}
+
+/* ===== Push Buttons ===== */
+
+QPushButton {
+    background-color: $PRIMARY;
+    /* border: 1px solid $PRIMARY_CONTAINER; */
+    border-radius: 6px;
+    padding: 5px 12px;
+    color: $ON_PRIMARY;
+}
+
+QPushButton:hover {
+    background-color: $PRIMARY_HOVER;
+}
+
+QPushButton:pressed {
+    background-color: $PRIMARY_PRESSED;
+}
+
+QPushButton:disabled {
+    background-color: $ON_SURFACE_VARIANT;
+    color: $ON_PRIMARY;
+}
+
+
+/* ===== Tree View ===== */
+
+QTreeView {
+    border: none;
+    background-color: $SURFACE;
+}
+
+QTreeView::item {
+    background-color: $SURFACE;
+    color: $ON_SURFACE;
+}
+/* QTreeView::item:hover {
+    background-color: #e6f2ff;
+} */
+
+QTreeView::item:selected {
+    background-color: $PRIMARY_CONTAINER;
+    color: $ON_PRIMARY_CONTAINER;
+}
+
+/* ===== Line Edits / Inputs ===== */
+QDoubleSpinBox, QSpinBox {
+    background: $PRIMARY_CONTAINER;
+    color: $ON_PRIMARY_CONTAINER;
+    /* border-radius: 2px; */
+
+}
+QDoubleSpinBox:disabled, QSpinBox:disabled {
+    background: $SURFACE;
+    color: $OUTLINE_VARIANT;
+}
+
