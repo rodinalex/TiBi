@@ -89,7 +89,7 @@ class UnitCellPanel(QWidget):
             for coord in [x, y, z]:
                 coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
-                coord.setFixedWidth(40)
+                coord.setFixedWidth(45)
                 coord.setDecimals(3)
 
             # Vector components are stacked vertically

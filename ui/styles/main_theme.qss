@@ -55,8 +55,8 @@ QTreeView::item:selected {
 
 /* ===== Line Edits / Inputs ===== */
 QDoubleSpinBox, QSpinBox {
-    background: $PRIMARY_CONTAINER;
-    color: $ON_PRIMARY_CONTAINER;
+    background: $SECONDARY_CONTAINER;
+    color: $ON_SECONDARY_CONTAINER;
     /* border-radius: 2px; */
 
 }

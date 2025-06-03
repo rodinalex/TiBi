@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
         unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setFixedWidth(220)
+        unit_cell_widget.setFixedWidth(200)
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()

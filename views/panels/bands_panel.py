@@ -199,6 +199,7 @@ class BandsPanel(QWidget):
         ]:
             b.setRange(2, 200)
             b.setValue(30)
+            b.setFixedWidth(30)
             b.setButtonSymbols(QSpinBox.NoButtons)
             b.setEnabled(False)
         self.num_bins_spinbox.setRange(2, 1000)
