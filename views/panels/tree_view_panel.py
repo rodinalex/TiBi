@@ -1,12 +1,12 @@
 import os
 from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QKeySequence, QPixmap, QShortcut
-from PySide6.QtWidgets import (
-    QStyle,
-    QStyledItemDelegate,
-    QVBoxLayout,
-    QWidget,
+from PySide6.QtGui import (
+    QColor,
+    QKeySequence,
+    QPixmap,
+    QShortcut,
 )
+from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
 from ui import CF_SKY
 from ..widgets import SystemTree
@@ -87,7 +87,6 @@ class TreeDelegate(QStyledItemDelegate):
         if index.data(Qt.UserRole) == "ADD_UNIT_CELL":
             # Custom paint for "Add Unit Cell" item
             painter.save()
-
             # Get the full width of the viewport (the whole row)
             tree = self.parent()
             full_rect = QRect(
