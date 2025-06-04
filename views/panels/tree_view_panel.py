@@ -8,7 +8,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
-from ui import CF_SKY
+from ui.styles import hex_to_rgb, THEME_SETTINGS
 from ..widgets import SystemTree
 
 
@@ -97,12 +97,13 @@ class TreeDelegate(QStyledItemDelegate):
             )
 
             # Draw background across the full width
-            painter.fillRect(full_rect, QColor(50, 50, 50))
+            painter.fillRect(
+                full_rect,
+                QColor(*hex_to_rgb(THEME_SETTINGS["PRIMARY_HEX"])),
+            )
 
             # Text formatting
-            painter.setPen(
-                QColor(CF_SKY[0] * 255, CF_SKY[1] * 255, CF_SKY[2] * 255)
-            )
+            painter.setPen(QColor(*hex_to_rgb(THEME_SETTINGS["ON_PRIMARY"])))
             font = painter.font()
             painter.setFont(font)
 

@@ -43,8 +43,8 @@ QTreeView::item {
 }
 
 QTreeView::item:selected {
-    background-color: $PRIMARY_CONTAINER;
-    color: $ON_PRIMARY_CONTAINER;
+    background-color: $SECONDARY_CONTAINER;
+    color: $ON_SECONDARY_CONTAINER;
 }
 
 /* ===== Line Edits / Inputs ===== */
