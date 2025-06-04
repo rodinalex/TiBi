@@ -30,6 +30,7 @@ class SitePanel(QWidget):
         layout = QVBoxLayout(self)
 
         panel_header = QLabel("Site Parameters")
+        panel_header.setProperty("style", "bold")
         panel_header.setAlignment(Qt.AlignCenter)
 
         header = QLabel("Site Coordinates")

@@ -1,4 +1,4 @@
-# Button style constants
+# Hopping button style constants
 BUTTON_STYLE_DEFAULT = """
     QPushButton {
         background-color: #e0e0e0;
@@ -10,7 +10,6 @@ BUTTON_STYLE_DEFAULT = """
         border: 1px solid #777777;
     }
 """
-
 BUTTON_STYLE_HAS_HOPPING = """
     QPushButton {
         background-color: #56b4e9;

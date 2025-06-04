@@ -38,6 +38,7 @@ class UnitCellPanel(QWidget):
         grid_layout = QGridLayout()
 
         panel_header = QLabel("Unit Cell Parameters")
+        panel_header.setProperty("style", "bold")
         panel_header.setAlignment(Qt.AlignCenter)
 
         dimensionality_header = QLabel("Dimensionality")
@@ -89,7 +90,7 @@ class UnitCellPanel(QWidget):
             for coord in [x, y, z]:
                 coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
-                coord.setFixedWidth(40)
+                coord.setFixedWidth(45)
                 coord.setDecimals(3)
 
             # Vector components are stacked vertically

@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
         unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setFixedWidth(220)
+        unit_cell_widget.setFixedWidth(200)
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
-        computation_widget.setFixedWidth(340)
+        computation_widget.setFixedWidth(320)
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
         plots_splitter.addWidget(

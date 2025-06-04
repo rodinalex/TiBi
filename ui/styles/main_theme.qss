@@ -5,17 +5,14 @@ QWidget {
     font-family: "Helvetica Neue", "Arial", sans-serif;
     font-size: 14pt;
     color: $ON_SURFACE;
-    /* background-color: #537ba3; */
     background-color: $SURFACE_CONTAINER;
 }
 
 /* ===== Push Buttons ===== */
-
 QPushButton {
     background-color: $PRIMARY;
-    /* border: 1px solid $PRIMARY_CONTAINER; */
     border-radius: 6px;
-    padding: 5px 12px;
+    padding: 2px 8px;
     color: $ON_PRIMARY;
 }
 
@@ -44,9 +41,6 @@ QTreeView::item {
     background-color: $SURFACE;
     color: $ON_SURFACE;
 }
-/* QTreeView::item:hover {
-    background-color: #e6f2ff;
-} */
 
 QTreeView::item:selected {
     background-color: $PRIMARY_CONTAINER;
@@ -55,9 +49,8 @@ QTreeView::item:selected {
 
 /* ===== Line Edits / Inputs ===== */
 QDoubleSpinBox, QSpinBox {
-    background: $PRIMARY_CONTAINER;
-    color: $ON_PRIMARY_CONTAINER;
-    /* border-radius: 2px; */
+    background: $SECONDARY_CONTAINER;
+    color: $ON_SECONDARY_CONTAINER;
 
 }
 QDoubleSpinBox:disabled, QSpinBox:disabled {
@@ -65,3 +58,12 @@ QDoubleSpinBox:disabled, QSpinBox:disabled {
     color: $OUTLINE_VARIANT;
 }
 
+/* ===== Labels ===== */
+
+QLabel[style="bold"] {
+    font-weight: bold;
+}
+
+QLabel[style="normal"] {
+    font-weight: normal;
+}

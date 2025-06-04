@@ -43,6 +43,7 @@ class HoppingMatrix(QWidget):
         self.scroll_area.setFrameStyle(QFrame.NoFrame)
 
         title_label = QLabel("Coupling Matrix")
+        title_label.setProperty("style", "bold")
         title_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         title_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         layout.addWidget(title_label)
