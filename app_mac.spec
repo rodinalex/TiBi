@@ -1,16 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import os
 import pathlib
 app_dir = pathlib.Path.cwd() / "TiBi"
 
 datas = [
     (os.path.join(app_dir, "assets"), "TiBi/assets"),
-    (os.path.join(app_dir, "controllers"), "TiBi/controllers"),
-    (os.path.join(app_dir, "core"), "TiBi/core"),
-    (os.path.join(app_dir, "logic"), "TiBi/logic"),
-    (os.path.join(app_dir, "models"), "TiBi/models"),
-    (os.path.join(app_dir, "ui"), "TiBi/ui"),
-    (os.path.join(app_dir, "views"), "TiBi/views"),
+    (os.path.join(app_dir, "ui", "styles"), "TiBi/ui/styles"),
 ]
 
 a = Analysis(
