@@ -1,0 +1,14 @@
+name: TiBi-env
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - sympy
+  - scipy
+  - matplotlib
+  - pip
+  - pip:
+    - PySide6
+    - PyOpenGL
+    - pyqtgraph
