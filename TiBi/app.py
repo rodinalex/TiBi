@@ -1,4 +1,5 @@
 from pathlib import Path
+import platform
 from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QApplication
 from string import Template
@@ -32,6 +33,20 @@ from TiBi.controllers import (
 # Models and factories
 from TiBi.models import Selection, UnitCell
 from TiBi.ui.styles import THEME_SETTINGS
+
+
+def get_platform_qss_path():
+    base_path = "ui/styles/main_theme"
+    system = platform.system().lower()
+
+    if system == "darwin":
+        return f"{base_path}_mac.qss"
+    elif system == "linux":
+        return f"{base_path}_linux.qss"
+    elif system == "windows":
+        return f"{base_path}_win.qss"
+    else:
+        return f"{base_path}.qss"  # fallback
 
 
 def get_resource_path(relative_path):
@@ -88,7 +103,9 @@ class TiBiApplication:
         self.app.setStyle("Fusion")
 
         # Load and apply the global stylesheet
-        qss_path = get_resource_path("ui/styles/main_theme.qss")
+        qss_path = get_resource_path(
+            get_resource_path(get_platform_qss_path())
+        )
         if qss_path.exists():
             with qss_path.open("r") as f:
                 qss_template = Template(f.read())
