@@ -34,6 +34,16 @@ from TiBi.models import Selection, UnitCell
 from TiBi.ui.styles import THEME_SETTINGS
 
 
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    if hasattr(sys, "_MEIPASS"):
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        return Path(sys._MEIPASS) / "TiBi" / relative_path
+    else:
+        # Development environment
+        return Path(__file__).parent / relative_path
+
+
 class TiBiApplication:
     """
     Main application class that initializes and connects all components.
@@ -78,7 +88,7 @@ class TiBiApplication:
         self.app.setStyle("Fusion")
 
         # Load and apply the global stylesheet
-        qss_path = Path(__file__).parent / "ui" / "styles" / "main_theme.qss"
+        qss_path = get_resource_path("ui/styles/main_theme.qss")
         if qss_path.exists():
             with qss_path.open("r") as f:
                 qss_template = Template(f.read())
