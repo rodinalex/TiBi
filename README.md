@@ -4,95 +4,180 @@ Welcome! This README guides you through setting up, building, and running **TiBi
 
 ---
 
+## What is TiBi?
+
+TiBi is an app that performs **Ti**ght **Bi**nding calculations. It allows the User to construct the system using graphical means with no coding.
+
+---
+
 ## Supported Platforms
 
-- macOS
-- Windows (in progress)
-- Linux
+- ✅ macOS (Apple Silicon & Intel)
+- 🚧 Windows (in progress)
+- ✅ Linux
 
 ---
 
 ## Prerequisites
 
-- **Python 3.12**
+- **Python 3.12** or higher
 - [PyInstaller](https://www.pyinstaller.org/)
 - Git (to clone the repo)
 
 ---
 
-## Setup Instructions
+## Quick Start
 
 ### 1. Clone the Repository
 
-### 2. Create a Python Environment
-We recommend using Conda to create a clean environment with the necessary dependencies:
+```bash
+git clone git@github.com:rodinalex/TiBi.git
+cd TiBi
+```
 
+### 2. Set Up Python Environment
+
+**Option A: Using Conda (Recommended)**
 ```bash
 conda env create -f environment.yml
 conda activate TiBi-env
 ```
 
-If you don't have Conda, you can use venv and pip:
-
-```
+**Option B: Using venv**
+```bash
 python -m venv venv
-source venv/bin/activate         # On Windows: venv\Scripts\activate
+
+# Activate the environment:
+source venv/bin/activate         # macOS/Linux
+# OR
+venv\Scripts\activate           # Windows
+
 pip install -r requirements.txt
 ```
 
-### 3. Build the Application
-Use the PyInstaller spec file tailored for your platform:
+### 3. Run from Source
 
-macOS (Apple Silicon / Intel):
+**macOS/Linux:**
+```bash
+python3 -m TiBi.app
 ```
+
+**Windows:**
+```cmd
+python -m TiBi.app
+```
+
+---
+
+## Building the Application
+
+Use the PyInstaller spec file for your platform:
+
+**macOS:**
+```bash
 pyinstaller app_mac.spec
 ```
 
-Windows:
-```
+**Windows:**
+```cmd
 pyinstaller app_win.spec
 ```
 
-Linux:
-```
+**Linux:**
+```bash
 pyinstaller app_linux.spec
 ```
 
-This will create a bundled app inside the dist/ directory.
+This creates a bundled application in the `dist/` directory.
 
-### 4. Run the Application
-On macOS:
-```
+---
+
+## Running the Built Application
+
+### macOS
+```bash
 ./dist/TiBi.app/Contents/MacOS/TiBi
 ```
-Or navigate to /dist and double click on the app icon.
+*Or navigate to `dist/` and double-click the TiBi.app icon*
 
-On Windows:
-Double-click dist\TiBi.exe or run:
-```
+### Windows
+```cmd
 dist\TiBi.exe
 ```
-On Linux:
-```
+*Or double-click `dist\TiBi.exe`*
+
+### Linux
+```bash
 ./dist/TiBi/TiBi
 ```
 
-### Notes
+---
 
-If you encounter issues with missing packages, double-check your environment and try reinstalling dependencies.
-The .spec files are platform-specific to ensure correct bundling.
-If you need help, please open an issue in this repo.
+## Troubleshooting
+
+### Common Issues
+
+**"Module not found" errors:**
+- Ensure your virtual environment is activated
+- Try reinstalling dependencies: `pip install -r requirements.txt --upgrade`
+
+**PyInstaller build fails:**
+- Check that you're using the correct spec file for your platform
+- Ensure all dependencies are installed in your environment
+
+**App won't start after building:**
+- Try running from terminal to see error messages (see commands above)
+- Check that all required files are included in your spec file
+
+---
+
+## Development
 
 ### Updating Dependencies
 
-If dependencies are updated:
-
-For Conda environments:
-```
+**For Conda environments:**
+```bash
 conda env update -f environment.yml
 ```
-For pip environments:
-```
+
+**For pip environments:**
+```bash
 pip install -r requirements.txt --upgrade
 ```
-Thank you for testing **TiBi**! Your feedback is appreciated.
+
+### Project Structure
+```
+TiBi/
+├── TiBi/                 # Main package
+│   ├── app.py            # Entry point
+│   ├── assets/           # Styling resources
+│   ├── controllers/      # Application controllers
+│   ├── core/             # Physics functions
+│   ├── logic/            # App commands and data serialization
+│   ├── models/           # Data models
+│   ├── ui/               # UI resources (styles, etc.)
+│   └── views/            # UI views
+├── app_mac.spec          # macOS build config
+├── app_win.spec          # Windows build config
+├── app_linux.spec        # Linux build config
+├── environment.yml       # Conda dependencies
+├── requirements.txt      # pip dependencies
+└── README.md
+```
+
+---
+
+## Support
+
+If you encounter issues:
+1. Check the [Troubleshooting](#troubleshooting) section above
+2. Search existing [issues](https://github.com/rodinalex/TiBi/issues)
+3. Open a new issue with:
+   - Your operating system
+   - Python version (`python --version`)
+   - Error message (if any)
+   - Steps to reproduce
+
+---
+
+Thank you for trying **TiBi**! Your feedback helps make it better.
