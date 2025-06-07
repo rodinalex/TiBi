@@ -24,11 +24,6 @@ Welcome! This README guides you through setting up, building, and running **TiBi
 
 ### 1. Clone the Repository
 
-```bash
-git clone https://github.com/yourusername/TiBi.git
-cd TiBi
-```
-
 ### 2. Create a Python Environment
 We recommend using Conda to create a clean environment with the necessary dependencies:
 
