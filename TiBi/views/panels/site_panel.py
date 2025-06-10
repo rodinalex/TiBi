@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from TiBi.ui import set_spinbox_digit_width
 from ..widgets import EnterKeySpinBox
 
 
@@ -46,6 +47,7 @@ class SitePanel(QWidget):
             c.setRange(0.0, 1.0)
             c.setDecimals(3)
             c.setButtonSymbols(EnterKeySpinBox.NoButtons)
+            set_spinbox_digit_width(c, 5)
 
         # Color picker button
         self.color_picker_btn = QPushButton()

@@ -6,11 +6,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
 from TiBi.models import BasisVector
+from TiBi.ui import set_spinbox_digit_width
 from TiBi.ui.constants import CF_VERMILLION, CF_GREEN, CF_SKY
 from ..widgets import EnterKeySpinBox
 
@@ -90,7 +92,7 @@ class UnitCellPanel(QWidget):
             for coord in [x, y, z]:
                 coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
-                coord.setFixedWidth(45)
+                set_spinbox_digit_width(coord, 5)
                 coord.setDecimals(3)
 
             # Vector components are stacked vertically
@@ -132,6 +134,11 @@ class UnitCellPanel(QWidget):
             grid_layout.addWidget(label, 1 + ii, 0)
 
         grid_layout.setVerticalSpacing(2)
+        grid_layout.setColumnStretch(0,0)
+        grid_layout.setColumnStretch(1,1)
+        grid_layout.setColumnStretch(2,1)
+        grid_layout.setColumnStretch(3,1)
+        self.setSizePolicy(QSizePolicy.Minimum,QSizePolicy.Expanding)
 
     def set_basis_vectors(
         self, v1: BasisVector, v2: BasisVector, v3: BasisVector

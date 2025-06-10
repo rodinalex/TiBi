@@ -63,9 +63,9 @@ class UnitCellView(QWidget):
         self.site_stack.addWidget(self.site_panel)
 
         # Create the interface
-        # Top panen contains the tree view
+        # Top panel contains the tree view
         top_panel = QVBoxLayout()
-        top_panel.addWidget(self.tree_view_panel, stretch=4)
+        top_panel.addWidget(self.tree_view_panel)
 
         # Bottom panel contains the unit cell/state editable fields
         bottom_panel = QVBoxLayout()

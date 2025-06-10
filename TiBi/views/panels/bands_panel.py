@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from TiBi.ui.utilities import divider_line
+from TiBi.ui.utilities import divider_line, set_spinbox_digit_width
 from ..widgets import CheckableComboBox, EnterKeySpinBox, EnterKeyIntSpinBox
 
 
@@ -211,17 +211,20 @@ class BandsPanel(QWidget):
         ]:
             b.setRange(2, 200)
             b.setValue(30)
-            b.setFixedWidth(30)
+            set_spinbox_digit_width(b,3)
             b.setButtonSymbols(QSpinBox.NoButtons)
             b.setEnabled(False)
 
         self.num_bins_spinbox.setRange(2, 1000)
         self.num_bins_spinbox.setValue(20)
         self.num_bins_spinbox.setButtonSymbols(QSpinBox.NoButtons)
+        set_spinbox_digit_width(self.num_bins_spinbox, 5)
+
         self.broadening_spinbox.setDecimals(3)
         self.broadening_spinbox.setRange(0.001, 10.0)
         self.broadening_spinbox.setValue(0.001)
         self.broadening_spinbox.setButtonSymbols(QSpinBox.NoButtons)
+        set_spinbox_digit_width(self.broadening_spinbox, 5)
 
         self.bz_grid.addWidget(QLabel("v<sub>1</sub> points:"), 1, 0)
         self.bz_grid.addWidget(QLabel("v<sub>2</sub> points:"), 2, 0)
