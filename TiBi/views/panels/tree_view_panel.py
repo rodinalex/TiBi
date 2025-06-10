@@ -3,9 +3,9 @@ from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QKeySequence,
-    QPixmap,
     QShortcut,
 )
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
 from TiBi.ui.styles import hex_to_rgb, THEME_SETTINGS
@@ -32,16 +32,16 @@ class TreeDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._editing_index = None
-        self.delete_icon = QPixmap(
+        self.delete_renderer = QSvgRenderer(
             os.path.join(
                 os.path.dirname(__file__),
-                "../../assets/icons/trash.png",
+                "../../assets/icons/trash.svg",
             )
         )
-        self.add_icon = QPixmap(
+        self.add_renderer = QSvgRenderer(
             os.path.join(
                 os.path.dirname(__file__),
-                "../../assets/icons/plus.png",
+                "../../assets/icons/plus.svg",
             )
         )
 
@@ -118,9 +118,10 @@ class TreeDelegate(QStyledItemDelegate):
             # Only show the delete icon for selected items
             if option.state & QStyle.State_Selected:
                 rects = self._button_rects(option, index)
-                painter.drawPixmap(rects["delete"], self.delete_icon)
+                self.delete_renderer.render(painter, rects["delete"])
                 if "add" in rects:
-                    painter.drawPixmap(rects["add"], self.add_icon)
+                    # painter.drawPixmap(rects["add"], self.add_icon)
+                    self.add_renderer.render(painter, rects["add"])
 
     def editorEvent(self, event, model, option, index):
         # Handle special "Add Unit Cell" item
