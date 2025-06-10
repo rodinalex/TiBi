@@ -1,4 +1,3 @@
-import os
 from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
@@ -8,6 +7,7 @@ from PySide6.QtGui import (
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
+from TiBi.ui import get_resource_path
 from TiBi.ui.styles import hex_to_rgb, THEME_SETTINGS
 from ..widgets import SystemTree
 
@@ -33,16 +33,10 @@ class TreeDelegate(QStyledItemDelegate):
         super().__init__(parent)
         self._editing_index = None
         self.delete_renderer = QSvgRenderer(
-            os.path.join(
-                os.path.dirname(__file__),
-                "../../assets/icons/trash.svg",
-            )
+            str(get_resource_path("assets/icons/trash.svg"))
         )
         self.add_renderer = QSvgRenderer(
-            os.path.join(
-                os.path.dirname(__file__),
-                "../../assets/icons/plus.svg",
-            )
+            str(get_resource_path("assets/icons/plus.svg"))
         )
 
     def _button_rects(self, option, index):

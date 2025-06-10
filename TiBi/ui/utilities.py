@@ -1,5 +1,6 @@
-from PySide6.QtGui import QGuiApplication
+from pathlib import Path
 from PySide6.QtWidgets import QFrame
+import sys
 
 
 def divider_line():
@@ -18,22 +19,12 @@ def divider_line():
     return line
 
 
-def mm_to_pixels(mm: float) -> int:
-    """
-    Convert millimeters to pixels.
-
-    The conversion takes into account the screen resolution of the device.
-
-    Parameters
-    ----------
-    mm : float
-        Length in millimiters.
-
-    Returns
-    -------
-    int
-        Length in pixels.
-    """
-    screen = QGuiApplication.primaryScreen()
-    dpi = screen.logicalDotsPerInch()
-    return int((mm / 25.4) * dpi)
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "TiBi" / relative_path
+    else:
+        tibi_package_dir = Path(
+            __file__
+        ).parent.parent  # Go up from ui/ to TiBi/
+        return tibi_package_dir / relative_path

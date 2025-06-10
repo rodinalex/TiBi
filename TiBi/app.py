@@ -1,4 +1,3 @@
-from pathlib import Path
 import platform
 from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QApplication
@@ -32,6 +31,7 @@ from TiBi.controllers import (
 
 # Models and factories
 from TiBi.models import Selection, UnitCell
+from TiBi.ui import get_resource_path
 from TiBi.ui.styles import THEME_SETTINGS
 
 
@@ -47,16 +47,6 @@ def get_platform_qss_path():
         return f"{base_path}_win.qss"
     else:
         return f"{base_path}.qss"  # fallback
-
-
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    if hasattr(sys, "_MEIPASS"):
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        return Path(sys._MEIPASS) / "TiBi" / relative_path
-    else:
-        # Development environment
-        return Path(__file__).parent / relative_path
 
 
 class TiBiApplication:

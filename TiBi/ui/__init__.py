@@ -10,7 +10,7 @@ from .constants import (
     CF_SKY,
     CF_BLUE,
 )
-from .utilities import divider_line
+from .utilities import divider_line, get_resource_path
 
 __all__ = [
     "DEFAULT_SCATTER_RADIUS",
@@ -24,4 +24,5 @@ __all__ = [
     "CF_SKY",
     "CF_BLUE",
     "divider_line",
+    "get_resource_path",
 ]  # noqa: F401
