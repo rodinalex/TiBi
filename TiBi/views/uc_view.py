@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
+    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -57,10 +58,12 @@ class UnitCellView(QWidget):
         self.uc_stack = QStackedWidget()
         self.uc_stack.addWidget(self.uc_info_label)
         self.uc_stack.addWidget(self.unit_cell_panel)
+        self.uc_stack.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.site_stack = QStackedWidget()
         self.site_stack.addWidget(self.site_info_label)
         self.site_stack.addWidget(self.site_panel)
+        self.site_stack.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         # Create the interface
         # Top panel contains the tree view
@@ -69,9 +72,9 @@ class UnitCellView(QWidget):
 
         # Bottom panel contains the unit cell/state editable fields
         bottom_panel = QVBoxLayout()
-        bottom_panel.addWidget(self.uc_stack, stretch=2)
+        bottom_panel.addWidget(self.uc_stack)
         bottom_panel.addWidget(divider_line())
-        bottom_panel.addWidget(self.site_stack, stretch=1)
+        bottom_panel.addWidget(self.site_stack)
 
         layout.setSpacing(0)
 

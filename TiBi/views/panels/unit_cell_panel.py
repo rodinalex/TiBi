@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -140,7 +139,6 @@ class UnitCellPanel(QWidget):
         grid_layout.setColumnStretch(1, 1)
         grid_layout.setColumnStretch(2, 1)
         grid_layout.setColumnStretch(3, 1)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
     def set_basis_vectors(
         self, v1: BasisVector, v2: BasisVector, v3: BasisVector

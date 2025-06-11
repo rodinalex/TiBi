@@ -96,6 +96,9 @@ class MainWindow(QMainWindow):
         self.bz_plot = bz_plot
         self.plot = plot
         self.computation_view = computation_view
+        # self.computation_view.setSizePolicy(
+        #     QSizePolicy.Fixed, QSizePolicy.Fixed
+        # )
         # Set menu bar
         self.setMenuBar(menu_bar)
         # Add toolbar
@@ -113,7 +116,9 @@ class MainWindow(QMainWindow):
         unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        unit_cell_widget.setSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Expanding
+        )
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -122,7 +127,9 @@ class MainWindow(QMainWindow):
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
-        computation_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        computation_widget.setSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Expanding
+        )
 
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
@@ -139,18 +146,14 @@ class MainWindow(QMainWindow):
         plots_splitter.setCollapsible(0, False)
         plots_splitter.setCollapsible(1, False)
 
-        unit_cell_layout.addWidget(self.frame_widget(self.uc), stretch=3)
+        unit_cell_layout.addWidget(self.frame_widget(self.uc))
 
-        computation_layout.addWidget(
-            self.frame_widget(self.bz_plot), stretch=1
-        )
-        computation_layout.addWidget(
-            self.frame_widget(self.computation_view), stretch=3
-        )
+        computation_layout.addWidget(self.frame_widget(self.bz_plot))
+        computation_layout.addWidget(self.frame_widget(self.computation_view))
 
         main_layout.addWidget(unit_cell_widget)
-        main_layout.addWidget(computation_widget, stretch=2)
-        main_layout.addWidget(plots_splitter, 3)
+        main_layout.addWidget(computation_widget)
+        main_layout.addWidget(plots_splitter)
         # Set as central widget
         self.setCentralWidget(main_view)
 
