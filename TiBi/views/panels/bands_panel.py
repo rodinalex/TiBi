@@ -131,10 +131,12 @@ class BandsPanel(QWidget):
         ]
 
         for row in range(5):  # Rows 0 to 4 in bands_grid
-            self.bands_grid.setRowMinimumHeight(
-                row, 25
-            )  # Choose a consistent height
-            self.bands_grid.setRowStretch(row, 1)  # Ensure equal stretching
+            self.bands_grid.setRowMinimumHeight(row, 25)
+            # self.bands_grid.setRowStretch(row, 1)  # Ensure equal stretching
+
+        # Approximate output size label
+        self.approximate_band_size = QLabel("Approximate output size: 0 kB")
+        self.bands_grid.addWidget(self.approximate_band_size, 5, 0, 1, 5)
 
         # Projection panel
         projection_label = QLabel("State Projection")
@@ -182,6 +184,7 @@ class BandsPanel(QWidget):
         self.bz_grid = QGridLayout()
         self.dos_visualization_grid = QGridLayout()
         self.dos_layout.addLayout(self.bz_grid)
+        self.dos_layout.addWidget(divider_line())
         self.dos_layout.addLayout(self.dos_visualization_grid)
         self.dos_layout.setContentsMargins(10, 5, 15, 5)
 
@@ -211,7 +214,7 @@ class BandsPanel(QWidget):
         ]:
             b.setRange(2, 200)
             b.setValue(30)
-            set_spinbox_digit_width(b,3)
+            set_spinbox_digit_width(b, 3)
             b.setButtonSymbols(QSpinBox.NoButtons)
             b.setEnabled(False)
 
@@ -233,6 +236,10 @@ class BandsPanel(QWidget):
         self.bz_grid.addWidget(self.v1_points_spinbox, 1, 1)
         self.bz_grid.addWidget(self.v2_points_spinbox, 2, 1)
         self.bz_grid.addWidget(self.v3_points_spinbox, 3, 1)
+
+        # Approximate output size label
+        self.approximate_BZ_grid_size = QLabel("Approximate output size: 0 kB")
+        self.bz_grid.addWidget(self.approximate_BZ_grid_size, 4, 0, 1, 3)
 
         self.dos_visualization_grid.addWidget(QLabel("Bin number:"), 1, 0)
         self.dos_visualization_grid.addWidget(QLabel("Broadening:"), 2, 0)

@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6.QtCore import QObject, Signal
 import uuid
 
@@ -121,6 +122,71 @@ class BandsController(QObject):
                 if (self.bands_panel.radio_group.checkedId() == 0)
                 else self.dos_plot_requested.emit()
             )
+        )
+        # Update the approximate output sizes
+        self.bands_panel.n_points_spinbox.valueChanged.connect(
+            self._set_approximate_band_output
+        )
+        self.bands_panel.v1_points_spinbox.valueChanged.connect(
+            self._set_approximate_BZ_output
+        )
+        self.bands_panel.v2_points_spinbox.valueChanged.connect(
+            self._set_approximate_BZ_output
+        )
+        self.bands_panel.v3_points_spinbox.valueChanged.connect(
+            self._set_approximate_BZ_output
+        )
+        self.selection.selection_changed.connect(
+            self._set_approximate_band_output
+        )
+
+        self.selection.selection_changed.connect(
+            self._set_approximate_BZ_output
+        )
+
+    def _set_approximate_band_output(self, _=None):
+        """
+        Update the approximate output size label.
+        """
+        n_pts = self.bands_panel.n_points_spinbox.value()
+        if self.selection.unit_cell:
+            n_states = len(
+                self.unit_cells[self.selection.unit_cell].get_states()[0]
+            )
+            # The multiplication by 10 is due to JSON overheat
+            # (not being binary)
+            res = n_pts * (16 * n_states**2 + 8 * n_states) * 10
+        else:
+            res = 0
+        self.bands_panel.approximate_band_size.setText(
+            f"Approximate output size: {res // 1000} kB"
+        )
+
+    def _set_approximate_BZ_output(self, _=None):
+        """
+        Update the approximate output size label.
+        """
+        n_pts = np.prod(
+            [
+                x.value() if x.isEnabled() else 1
+                for x in [
+                    self.bands_panel.v1_points_spinbox,
+                    self.bands_panel.v2_points_spinbox,
+                    self.bands_panel.v3_points_spinbox,
+                ]
+            ]
+        )
+        if self.selection.unit_cell:
+            n_states = len(
+                self.unit_cells[self.selection.unit_cell].get_states()[0]
+            )
+            # The multiplication by 10 is due to JSON overheat
+            # (not being binary)
+            res = n_pts * (16 * n_states**2 + 8 * n_states) * 10
+        else:
+            res = 0
+        self.bands_panel.approximate_BZ_grid_size.setText(
+            f"Approximate output size: {res // 1000} kB"
         )
 
     def _compute_bands(self):
@@ -315,6 +381,10 @@ class BandsController(QObject):
 
         # Update the projection combo
         self.update_combo()
+
+        # Update the approximate output size labels
+        self._set_approximate_band_output()
+        self._set_approximate_BZ_output()
 
     def update_combo(self):
         """

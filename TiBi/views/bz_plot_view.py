@@ -1,6 +1,5 @@
 import numpy as np
 from PySide6.QtWidgets import QVBoxLayout, QWidget
-from PySide6.QtCore import QSize
 import pyqtgraph.opengl as gl
 from TiBi.ui import (
     CF_VERMILLION,
@@ -32,7 +31,7 @@ class BrillouinZonePlotView(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setMinimumSize(QSize(300, 200))
+        self.setMinimumHeight(200)
 
         # Colors
         self.point_color = CF_BLUE
