@@ -38,6 +38,7 @@ class TreeDelegate(QStyledItemDelegate):
         self.add_renderer = QSvgRenderer(
             str(get_resource_path("assets/icons/plus.svg"))
         )
+
     def _button_rects(self, option, index):
         """Regions defining the item buttons."""
         size = 16

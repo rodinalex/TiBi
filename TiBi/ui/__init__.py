@@ -25,5 +25,5 @@ __all__ = [
     "CF_BLUE",
     "divider_line",
     "get_resource_path",
-    "set_spinbox_digit_width"
+    "set_spinbox_digit_width",
 ]  # noqa: F401

@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontMetrics, QIcon
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -12,6 +13,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from TiBi.ui.utilities import get_resource_path
 
 
 class HoppingMatrix(QWidget):
@@ -69,12 +72,29 @@ class HoppingTable(QWidget):
         self.table_title = QLabel("")
         self.table_title.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
-        # Table manipulation buttons at the top
-        table_buttons_layout = QHBoxLayout()
+        # Table manipulation buttons on the right
+        table_buttons_layout = QVBoxLayout()
 
-        self.add_row_btn = QPushButton("Add")
-        self.remove_row_btn = QPushButton("Remove")
-        self.save_btn = QPushButton("Save")
+        self.add_row_btn = QPushButton()
+        self.add_row_btn.setIcon(
+            QIcon(str(get_resource_path("assets/icons/plus_hopping.svg")))
+        )
+        self.add_row_btn.setFixedSize(30, 30)
+        self.add_row_btn.setIconSize(self.add_row_btn.sizeHint())
+
+        self.remove_row_btn = QPushButton()
+        self.remove_row_btn.setIcon(
+            QIcon(str(get_resource_path("assets/icons/trash_hopping.svg")))
+        )
+        self.remove_row_btn.setFixedSize(30, 30)
+        self.remove_row_btn.setIconSize(self.remove_row_btn.sizeHint())
+
+        self.save_btn = QPushButton()
+        self.save_btn.setIcon(
+            QIcon(str(get_resource_path("assets/icons/save_hopping.svg")))
+        )
+        self.save_btn.setFixedSize(30, 30)
+        self.save_btn.setIconSize(self.save_btn.sizeHint())
 
         table_buttons_layout.addWidget(self.add_row_btn)
         table_buttons_layout.addWidget(self.remove_row_btn)
@@ -87,16 +107,38 @@ class HoppingTable(QWidget):
         self.hopping_table.setHorizontalHeaderLabels(
             ["d₁", "d₂", "d₃", "Re(t)", "Im(t)"]
         )
+        # self.hopping_table.horizontalHeader().setStretchLastSection(False)
 
-        self.hopping_table.setColumnWidth(0, 40)  # d₁
-        self.hopping_table.setColumnWidth(1, 40)  # d₂
-        self.hopping_table.setColumnWidth(2, 40)  # d₃
-        self.hopping_table.setColumnWidth(3, 60)  # Real amplitude part
-        self.hopping_table.setColumnWidth(4, 60)  # Imaginary amplitude part
+        # Get font metrics for the spinbox's current font
+        font_metrics = QFontMetrics(self.hopping_table.font())
 
+        # Add some padding for margins, borders, and spin buttons
+        padding = 10  # Adjust as needed
+
+        self.hopping_table.setColumnWidth(
+            0, font_metrics.horizontalAdvance("0" * 2) + padding
+        )  # d₁
+        self.hopping_table.setColumnWidth(
+            1, font_metrics.horizontalAdvance("0" * 2) + padding
+        )  # d₂
+        self.hopping_table.setColumnWidth(
+            2, font_metrics.horizontalAdvance("0" * 2) + padding
+        )  # d₃
+        self.hopping_table.setColumnWidth(
+            3, font_metrics.horizontalAdvance("0" * 5) + padding
+        )  # Real amplitude part
+        self.hopping_table.setColumnWidth(
+            4, font_metrics.horizontalAdvance("0" * 5) + padding
+        )  # Imaginary amplitude part
+
+        # Table and buttons layout
+        control_layout = QHBoxLayout()
+        control_layout.addWidget(self.hopping_table)
+        control_layout.addLayout(table_buttons_layout)
         layout.addWidget(self.table_title)
-        layout.addLayout(table_buttons_layout)
-        layout.addWidget(self.hopping_table)
+        layout.addLayout(control_layout)
+        # layout.addLayout(table_buttons_layout)
+        # layout.addWidget(self.hopping_table)
 
 
 class HoppingPanel(QWidget):
