@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
-    QSizePolicy,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -58,12 +57,10 @@ class UnitCellView(QWidget):
         self.uc_stack = QStackedWidget()
         self.uc_stack.addWidget(self.uc_info_label)
         self.uc_stack.addWidget(self.unit_cell_panel)
-        self.uc_stack.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.site_stack = QStackedWidget()
         self.site_stack.addWidget(self.site_info_label)
         self.site_stack.addWidget(self.site_panel)
-        self.site_stack.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         # Create the interface
         # Top panel contains the tree view
@@ -81,3 +78,6 @@ class UnitCellView(QWidget):
         layout.addLayout(top_panel)
         layout.addWidget(divider_line())
         layout.addLayout(bottom_panel)
+        layout.setStretch(0, 1)
+        layout.setStretch(1, 0)
+        layout.setStretch(2, 0)

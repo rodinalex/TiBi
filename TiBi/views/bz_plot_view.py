@@ -31,7 +31,7 @@ class BrillouinZonePlotView(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(200)
+        self.setMinimumHeight(150)
 
         # Colors
         self.point_color = CF_BLUE

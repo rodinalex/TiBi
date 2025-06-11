@@ -87,8 +87,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.resize(1100, 825)  # Initial size
-        self.setMinimumSize(1100, 825)
+        # self.setMinimumSize(1100, 825)
 
         # Store references to UI components
         self.uc = uc
@@ -96,9 +95,7 @@ class MainWindow(QMainWindow):
         self.bz_plot = bz_plot
         self.plot = plot
         self.computation_view = computation_view
-        # self.computation_view.setSizePolicy(
-        #     QSizePolicy.Fixed, QSizePolicy.Fixed
-        # )
+
         # Set menu bar
         self.setMenuBar(menu_bar)
         # Add toolbar
@@ -119,6 +116,7 @@ class MainWindow(QMainWindow):
         unit_cell_widget.setSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding
         )
+        unit_cell_layout.addWidget(self.frame_widget(self.uc))
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -130,6 +128,15 @@ class MainWindow(QMainWindow):
         computation_widget.setSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding
         )
+
+        # Set fixed height for computation_view
+        fixed_computation_height = self.computation_view.sizeHint().height()
+        self.computation_view.setFixedHeight(fixed_computation_height)
+        computation_layout.addWidget(self.frame_widget(self.bz_plot))
+        computation_layout.addWidget(self.frame_widget(self.computation_view))
+        # Add stretch below to allow bz_plot to stretch
+        computation_layout.setStretch(0, 1)  # bz_plot expands
+        computation_layout.setStretch(1, 0)  # computation_view stays fixed
 
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
@@ -145,11 +152,6 @@ class MainWindow(QMainWindow):
         # Prevent the panels from collapsing
         plots_splitter.setCollapsible(0, False)
         plots_splitter.setCollapsible(1, False)
-
-        unit_cell_layout.addWidget(self.frame_widget(self.uc))
-
-        computation_layout.addWidget(self.frame_widget(self.bz_plot))
-        computation_layout.addWidget(self.frame_widget(self.computation_view))
 
         main_layout.addWidget(unit_cell_widget)
         main_layout.addWidget(computation_widget)
