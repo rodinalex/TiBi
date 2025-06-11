@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QMainWindow,
+    QSizePolicy,
     QSplitter,
     QVBoxLayout,
     QWidget,
@@ -112,7 +113,7 @@ class MainWindow(QMainWindow):
         unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setFixedWidth(200)
+        unit_cell_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -121,7 +122,8 @@ class MainWindow(QMainWindow):
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
-        computation_widget.setFixedWidth(320)
+        computation_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
         plots_splitter.addWidget(

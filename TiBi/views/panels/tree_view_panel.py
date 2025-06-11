@@ -212,6 +212,7 @@ class TreeViewPanel(QWidget):
 
         # Create and configure tree view
         self.tree_view = SystemTree()
+        self.setMaximumWidth(220)
 
         # Set the delegate to save the data only on Enter-press
         self.delegate = TreeDelegate(self.tree_view)

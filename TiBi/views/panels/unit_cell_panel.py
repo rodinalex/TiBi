@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QButtonGroup,
     QGridLayout,
@@ -6,11 +7,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
 from TiBi.models import BasisVector
+from TiBi.ui import set_spinbox_digit_width, get_resource_path
 from TiBi.ui.constants import CF_VERMILLION, CF_GREEN, CF_SKY
 from ..widgets import EnterKeySpinBox
 
@@ -66,20 +69,21 @@ class UnitCellPanel(QWidget):
         radio_layout.addWidget(self.radio3D)
 
         # Add Site and Reduce UC (LLL algorithm) buttons
-        button_layout = QHBoxLayout()
-        self.reduce_btn = QPushButton("Reduce")
-        button_layout.addWidget(self.reduce_btn)
+        self.reduce_btn = QPushButton()
+        self.reduce_btn.setFixedSize(20, 20)
 
         # Assemble the panel
-
         layout.addWidget(panel_header)
         layout.addWidget(dimensionality_header)
         layout.addLayout(radio_layout)
         layout.addLayout(grid_layout)
-        layout.addLayout(button_layout)
 
         # Populate the basis vector grid
-        grid_layout.addWidget(basis_header, 0, 1, 1, 3)
+        grid_layout.addWidget(basis_header, 0, 0, 1, 4)
+        grid_layout.addWidget(self.reduce_btn, 1, 0)
+        self.reduce_btn.setIcon(
+            QIcon(str(get_resource_path("assets/icons/grid.svg")))
+        )
 
         # Function to create a row with (x, y, z) input fields
         def create_vector_column(n):
@@ -90,7 +94,7 @@ class UnitCellPanel(QWidget):
             for coord in [x, y, z]:
                 coord.setButtonSymbols(EnterKeySpinBox.NoButtons)
                 coord.setRange(-1e308, 1e308)
-                coord.setFixedWidth(45)
+                set_spinbox_digit_width(coord, 5)
                 coord.setDecimals(3)
 
             # Vector components are stacked vertically
@@ -132,6 +136,11 @@ class UnitCellPanel(QWidget):
             grid_layout.addWidget(label, 1 + ii, 0)
 
         grid_layout.setVerticalSpacing(2)
+        grid_layout.setColumnStretch(0, 0)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(2, 1)
+        grid_layout.setColumnStretch(3, 1)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
     def set_basis_vectors(
         self, v1: BasisVector, v2: BasisVector, v3: BasisVector
