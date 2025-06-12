@@ -44,6 +44,8 @@ conda activate TiBi-env
 ```
 
 **Option B: Using venv**
+If Option A does not work (the app does not start or crashes), Option B may resolve the issue.
+
 ```bash
 python -m venv venv
 
