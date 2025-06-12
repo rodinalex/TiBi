@@ -153,7 +153,7 @@ class BandsController(QObject):
             n_states = len(
                 self.unit_cells[self.selection.unit_cell].get_states()[0]
             )
-            # The multiplication by 10 is due to JSON overheat
+            # The multiplication by 10 is due to JSON overhead
             # (not being binary)
             res = n_pts * (16 * n_states**2 + 8 * n_states) * 10
         else:
@@ -166,21 +166,28 @@ class BandsController(QObject):
         """
         Update the approximate output size label.
         """
-        n_pts = np.prod(
-            [
-                x.value() if x.isEnabled() else 1
+
+        n_pts = [
+            y
+            for y in [
+                x.value() * x.isEnabled()
                 for x in [
                     self.bands_panel.v1_points_spinbox,
                     self.bands_panel.v2_points_spinbox,
                     self.bands_panel.v3_points_spinbox,
                 ]
             ]
-        )
+            if y > 0
+        ]
+        if len(n_pts) == 0:
+            n_pts = 0
+        else:
+            n_pts = np.prod(n_pts)
         if self.selection.unit_cell:
             n_states = len(
                 self.unit_cells[self.selection.unit_cell].get_states()[0]
             )
-            # The multiplication by 10 is due to JSON overheat
+            # The multiplication by 10 is due to JSON overhead
             # (not being binary)
             res = n_pts * (16 * n_states**2 + 8 * n_states) * 10
         else:
