@@ -1,14 +1,15 @@
 import numpy as np
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal
 import uuid
 
 from TiBi.core.band_structure import (
-    diagonalize_hamitonian,
     get_BZ_grid,
     interpolate_k_path,
 )
 from TiBi.models import Selection, UnitCell
+from TiBi.views import ProgressDialog
 from TiBi.views.panels import BandsPanel
+from TiBi.logic.workers import DiagonalizationWorker
 
 
 class BandsController(QObject):
@@ -231,14 +232,57 @@ class BandsController(QObject):
         k_path = interpolate_k_path(
             unit_cell.bandstructure.special_points, num_points
         )
-        self.status_updated.emit("Computing the bands")
 
-        eigenvalues, eigenvectors = diagonalize_hamitonian(
-            hamiltonian_func, k_path
+        # Perform calculation on a separate thread
+        self.worker = DiagonalizationWorker(hamiltonian_func, k_path)
+        self.thread = QThread()
+
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.do_work)
+        self.worker.task_finished.connect(self._handle_band_results)
+
+        self.dialog = ProgressDialog()
+        self.worker.progress_updated.connect(self.dialog.update_progress)
+        self.worker.task_finished.connect(self.dialog.accept)
+        self.worker.task_aborted.connect(self.dialog.reject)
+        self.dialog.cancel_requested.connect(
+            self.worker.request_abort, Qt.DirectConnection
         )
-        self.status_updated.emit("Bands computation complete")
 
-        # Update the band structure
+        # Cleanup
+        self.worker.task_finished.connect(self.thread.quit)
+        self.worker.task_aborted.connect(self.thread.quit)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+        # Only show the dialog after a delay if it's still running
+        self._show_timer = QTimer(self)
+        self._show_timer.setSingleShot(True)
+
+        def maybe_show_dialog():
+            if self.thread.isRunning():
+                self.dialog.show()
+
+        self._show_timer.timeout.connect(maybe_show_dialog)
+        self._show_timer.start(150)  # Delay in ms
+
+        # Wait for the thread to finish and kill the timer if needed
+        self.thread.finished.connect(self._show_timer.stop)
+
+    def _handle_band_results(self, res):
+        """
+        Handle the results of the band structure calculation.
+
+        Parameters
+        ----------
+        res : tuple[list[NDArray[np.float64]], \
+            list[NDArray[np.float64]], list[NDArray[np.float64]]]
+            Contains the eigenvalues, eigenvectors, and k-points
+        """
+        uc_id = self.selection.unit_cell
+        unit_cell = self.unit_cells[uc_id]
+
+        eigenvalues, eigenvectors, k_path = res
         unit_cell.bandstructure.eigenvalues = eigenvalues
         unit_cell.bandstructure.eigenvectors = eigenvectors
         unit_cell.bandstructure.path = k_path
@@ -281,13 +325,57 @@ class BandsController(QObject):
         hamiltonian_func = unit_cell.get_hamiltonian_function()
 
         self.status_updated.emit("Computing the grid")
+        # Perform calculation on a separate thread
+        self.worker = DiagonalizationWorker(hamiltonian_func, k_points)
+        self.thread = QThread()
 
-        eigenvalues, eigenvectors = diagonalize_hamitonian(
-            hamiltonian_func, k_points
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.do_work)
+        self.worker.task_finished.connect(self._handle_grid_results)
+
+        self.dialog = ProgressDialog()
+        self.worker.progress_updated.connect(self.dialog.update_progress)
+        self.worker.task_finished.connect(self.dialog.accept)
+        self.worker.task_aborted.connect(self.dialog.reject)
+        self.dialog.cancel_requested.connect(
+            self.worker.request_abort, Qt.DirectConnection
         )
-        self.status_updated.emit("Grid computation complete")
 
-        # Update the BZ grid
+        # Cleanup
+        self.worker.task_finished.connect(self.thread.quit)
+        self.worker.task_aborted.connect(self.thread.quit)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+        # Only show the dialog after a delay if it's still running
+        self._show_timer = QTimer(self)
+        self._show_timer.setSingleShot(True)
+
+        def maybe_show_dialog():
+            if self.thread.isRunning():
+                self.dialog.show()
+
+        self._show_timer.timeout.connect(maybe_show_dialog)
+        self._show_timer.start(150)  # Delay in ms
+
+        # Wait for the thread to finish and kill the timer if needed
+        self.thread.finished.connect(self._show_timer.stop)
+
+    def _handle_grid_results(self, res):
+        """
+        Handle the results of the BZ grid calculation.
+
+        Parameters
+        ----------
+        res : tuple[list[NDArray[np.float64]], \
+            list[NDArray[np.float64]], list[NDArray[np.float64]]]
+            Contains the eigenvalues, eigenvectors, and k-points
+        """
+        uc_id = self.selection.unit_cell
+        unit_cell = self.unit_cells[uc_id]
+
+        eigenvalues, eigenvectors, k_points = res
+
         unit_cell.bz_grid.grid_divs = (
             self.bands_panel.v1_points_spinbox.value(),
             self.bands_panel.v2_points_spinbox.value(),
