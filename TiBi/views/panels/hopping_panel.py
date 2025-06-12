@@ -116,30 +116,35 @@ class HoppingTable(QWidget):
         padding = 10  # Adjust as needed
 
         self.hopping_table.setColumnWidth(
-            0, font_metrics.horizontalAdvance("0" * 2) + padding
+            0, font_metrics.horizontalAdvance("0" * 3) + padding
         )  # d₁
         self.hopping_table.setColumnWidth(
-            1, font_metrics.horizontalAdvance("0" * 2) + padding
+            1, font_metrics.horizontalAdvance("0" * 3) + padding
         )  # d₂
         self.hopping_table.setColumnWidth(
-            2, font_metrics.horizontalAdvance("0" * 2) + padding
+            2, font_metrics.horizontalAdvance("0" * 3) + padding
         )  # d₃
         self.hopping_table.setColumnWidth(
-            3, font_metrics.horizontalAdvance("0" * 5) + padding
+            3, font_metrics.horizontalAdvance("0" * 6) + padding
         )  # Real amplitude part
         self.hopping_table.setColumnWidth(
-            4, font_metrics.horizontalAdvance("0" * 5) + padding
+            4, font_metrics.horizontalAdvance("0" * 6) + padding
         )  # Imaginary amplitude part
 
         # Table and buttons layout
         control_layout = QHBoxLayout()
         control_layout.addWidget(self.hopping_table)
         control_layout.addLayout(table_buttons_layout)
-        layout.addWidget(self.table_title)
-        layout.addLayout(control_layout)
-        # layout.addLayout(table_buttons_layout)
-        # layout.addWidget(self.hopping_table)
 
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.table_title)
+        scroll_area.setFrameStyle(QFrame.NoFrame)
+        content_height = self.table_title.sizeHint().height()
+        scroll_area.setMaximumHeight(content_height + 20)
+
+        layout.addWidget(scroll_area)
+        layout.addLayout(control_layout)
 
 class HoppingPanel(QWidget):
     """

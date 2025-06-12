@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import (
-    QSizePolicy,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -27,15 +26,8 @@ class ComputationView(QWidget):
         self.tabs.addTab(self.bands_panel, "Bands")
         self.tabs.setTabPosition(QTabWidget.East)
         self.tabs.setDocumentMode(True)
-        # Set size policy to make the tab widget expand
-        self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
         # Add the tab widget to the layout
         layout.addWidget(self.tabs)
 
         # Set the layout for this widget
         self.setLayout(layout)
-
-        # Ensure the TabView itself expands properly
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.setMinimumSize(QSize(300, 200))

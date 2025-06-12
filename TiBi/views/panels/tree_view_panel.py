@@ -163,8 +163,11 @@ class TreeDelegate(QStyledItemDelegate):
             self.closeEditor.emit(editor, QStyledItemDelegate.RevertModelCache)
             return True
 
-        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            # User manually pressed Enter — accept the edit
+        if event.type() == QEvent.KeyPress and event.key() in (
+            Qt.Key_Return,
+            Qt.Key_Enter,
+        ):
+            # User manually pressed Enter or Return — accept the edit
             self.commitData.emit(editor)
             self.closeEditor.emit(editor, QStyledItemDelegate.NoHint)
             if self._editing_index is not None:

@@ -87,8 +87,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.setWindowTitle("TiBi")
-        self.resize(1100, 825)  # Initial size
-        self.setMinimumSize(1100, 825)
+        # self.setMinimumSize(1100, 825)
 
         # Store references to UI components
         self.uc = uc
@@ -96,6 +95,7 @@ class MainWindow(QMainWindow):
         self.bz_plot = bz_plot
         self.plot = plot
         self.computation_view = computation_view
+
         # Set menu bar
         self.setMenuBar(menu_bar)
         # Add toolbar
@@ -113,7 +113,10 @@ class MainWindow(QMainWindow):
         unit_cell_layout.setContentsMargins(0, 0, 0, 0)
         unit_cell_widget = QWidget()
         unit_cell_widget.setLayout(unit_cell_layout)
-        unit_cell_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        unit_cell_widget.setSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Expanding
+        )
+        unit_cell_layout.addWidget(self.frame_widget(self.uc))
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -122,7 +125,18 @@ class MainWindow(QMainWindow):
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
-        computation_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        computation_widget.setSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Expanding
+        )
+
+        # Set fixed height for computation_view
+        fixed_computation_height = self.computation_view.sizeHint().height()
+        self.computation_view.setFixedHeight(fixed_computation_height)
+        computation_layout.addWidget(self.frame_widget(self.bz_plot))
+        computation_layout.addWidget(self.frame_widget(self.computation_view))
+        # Add stretch below to allow bz_plot to stretch
+        computation_layout.setStretch(0, 1)  # bz_plot expands
+        computation_layout.setStretch(1, 0)  # computation_view stays fixed
 
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
@@ -139,18 +153,9 @@ class MainWindow(QMainWindow):
         plots_splitter.setCollapsible(0, False)
         plots_splitter.setCollapsible(1, False)
 
-        unit_cell_layout.addWidget(self.frame_widget(self.uc), stretch=3)
-
-        computation_layout.addWidget(
-            self.frame_widget(self.bz_plot), stretch=1
-        )
-        computation_layout.addWidget(
-            self.frame_widget(self.computation_view), stretch=3
-        )
-
         main_layout.addWidget(unit_cell_widget)
-        main_layout.addWidget(computation_widget, stretch=2)
-        main_layout.addWidget(plots_splitter, 3)
+        main_layout.addWidget(computation_widget)
+        main_layout.addWidget(plots_splitter)
         # Set as central widget
         self.setCentralWidget(main_view)
 

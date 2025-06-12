@@ -69,12 +69,15 @@ class UnitCellView(QWidget):
 
         # Bottom panel contains the unit cell/state editable fields
         bottom_panel = QVBoxLayout()
-        bottom_panel.addWidget(self.uc_stack, stretch=2)
+        bottom_panel.addWidget(self.uc_stack)
         bottom_panel.addWidget(divider_line())
-        bottom_panel.addWidget(self.site_stack, stretch=1)
+        bottom_panel.addWidget(self.site_stack)
 
         layout.setSpacing(0)
 
         layout.addLayout(top_panel)
         layout.addWidget(divider_line())
         layout.addLayout(bottom_panel)
+        layout.setStretch(0, 1)
+        layout.setStretch(1, 0)
+        layout.setStretch(2, 0)
