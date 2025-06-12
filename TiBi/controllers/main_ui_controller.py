@@ -339,7 +339,6 @@ class MainUIController(QObject):
 
         Request a redrawing of the unit cell plot with/without the wireframe.
         """
-        self.update_status("Wireframe...")
         # Implementation will be added later
         self.unit_cell_update_requested.emit()
 

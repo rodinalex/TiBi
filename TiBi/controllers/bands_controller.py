@@ -222,7 +222,7 @@ class BandsController(QObject):
                 "Computation halted: the system is non-Hermitian"
             )
             return
-
+        self.status_updated.emit("Band structure calculation started...")
         num_points = self.bands_panel.n_points_spinbox.value()
 
         # Get Hamiltonian function
@@ -279,6 +279,8 @@ class BandsController(QObject):
             list[NDArray[np.float64]], list[NDArray[np.float64]]]
             Contains the eigenvalues, eigenvectors, and k-points
         """
+        self.status_updated.emit("Band structure calculation completed.")
+
         uc_id = self.selection.unit_cell
         unit_cell = self.unit_cells[uc_id]
 
@@ -312,7 +314,7 @@ class BandsController(QObject):
                 "Computation halted: the system is non-Hermitian"
             )
             return
-
+        self.status_updated.emit("BZ grid calculation started...")
         k_points = get_BZ_grid(
             unit_cell=unit_cell,
             n1=self.bands_panel.v1_points_spinbox.value(),
@@ -371,6 +373,7 @@ class BandsController(QObject):
             list[NDArray[np.float64]], list[NDArray[np.float64]]]
             Contains the eigenvalues, eigenvectors, and k-points
         """
+        self.status_updated.emit("BZ grid calculation completed.")
         uc_id = self.selection.unit_cell
         unit_cell = self.unit_cells[uc_id]
 

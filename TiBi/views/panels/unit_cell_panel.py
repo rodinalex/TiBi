@@ -70,6 +70,10 @@ class UnitCellPanel(QWidget):
         # Add Site and Reduce UC (LLL algorithm) buttons
         self.reduce_btn = QPushButton()
         self.reduce_btn.setFixedSize(20, 20)
+        self.reduce_btn.setToolTip("Reduce Unit Cell")
+        self.reduce_btn.setStatusTip(
+            "Reduce Unit Cell basis using Lenstra–Lenstra–Lovász algorithm"
+        )
 
         # Assemble the panel
         layout.addWidget(panel_header)

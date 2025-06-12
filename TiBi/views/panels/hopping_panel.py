@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStackedWidget,
     QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -81,6 +82,8 @@ class HoppingTable(QWidget):
         )
         self.add_row_btn.setFixedSize(30, 30)
         self.add_row_btn.setIconSize(self.add_row_btn.sizeHint())
+        self.add_row_btn.setToolTip("New Hopping")
+        self.add_row_btn.setStatusTip("Add a new hopping integral.")
 
         self.remove_row_btn = QPushButton()
         self.remove_row_btn.setIcon(
@@ -88,6 +91,10 @@ class HoppingTable(QWidget):
         )
         self.remove_row_btn.setFixedSize(30, 30)
         self.remove_row_btn.setIconSize(self.remove_row_btn.sizeHint())
+        self.remove_row_btn.setToolTip("Delete Hopping")
+        self.remove_row_btn.setStatusTip(
+            "Delete the selected hopping integral."
+        )
 
         self.save_btn = QPushButton()
         self.save_btn.setIcon(
@@ -95,6 +102,8 @@ class HoppingTable(QWidget):
         )
         self.save_btn.setFixedSize(30, 30)
         self.save_btn.setIconSize(self.save_btn.sizeHint())
+        self.save_btn.setToolTip("Save Hoppings")
+        self.save_btn.setStatusTip("Save the Hopping table.")
 
         table_buttons_layout.addWidget(self.add_row_btn)
         table_buttons_layout.addWidget(self.remove_row_btn)
@@ -104,10 +113,31 @@ class HoppingTable(QWidget):
         self.hopping_table = QTableWidget(
             0, 5
         )  # 5 columns: d1, d2, d3, Re(amplitude), Im(amplitude)
-        self.hopping_table.setHorizontalHeaderLabels(
-            ["d₁", "d₂", "d₃", "Re(t)", "Im(t)"]
-        )
-        # self.hopping_table.horizontalHeader().setStretchLastSection(False)
+
+        headers = ["d₁", "d₂", "d₃", "Re(t)", "Im(t)"]
+        tooltips = [
+            "Displacement along v₁",
+            "Displacement along v₂",
+            "Displacement along v₃",
+            "Real part",
+            "Imaginary part",
+        ]
+        statustips = [
+            "Number of v₁'s from the origin site to the destination site",
+            "Number of v₂'s from the origin site to the destination site",
+            "Number of v₃'s from the origin site to the destination site",
+            "Real part of hopping amplitude",
+            "Imaginary part of hopping amplitude",
+        ]
+
+        # Assign headers with tooltips
+        for i, (label, tip, status) in enumerate(
+            zip(headers, tooltips, statustips)
+        ):
+            item = QTableWidgetItem(label)
+            item.setToolTip(tip)
+            item.setStatusTip(status)
+            self.hopping_table.setHorizontalHeaderItem(i, item)
 
         # Get font metrics for the spinbox's current font
         font_metrics = QFontMetrics(self.hopping_table.font())
@@ -145,6 +175,7 @@ class HoppingTable(QWidget):
 
         layout.addWidget(scroll_area)
         layout.addLayout(control_layout)
+
 
 class HoppingPanel(QWidget):
     """
