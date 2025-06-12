@@ -5,6 +5,7 @@ from .main_window import MainWindow
 from .menu_bar_view import MenuBarView
 from .placeholder import PlaceholderWidget
 from .plot_view import PlotView
+from .progress_dialog import ProgressDialog
 from .status_bar_view import StatusBarView
 from .uc_plot_view import UnitCellPlotView
 from .uc_view import UnitCellView
@@ -18,6 +19,7 @@ __all__ = [
     "MenuBarView",
     "PlaceholderWidget",
     "PlotView",
+    "ProgressDialog",
     "StatusBarView",
     "UnitCellPlotView",
     "UnitCellView",
