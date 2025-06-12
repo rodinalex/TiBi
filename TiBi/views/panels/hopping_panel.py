@@ -135,9 +135,16 @@ class HoppingTable(QWidget):
         control_layout = QHBoxLayout()
         control_layout.addWidget(self.hopping_table)
         control_layout.addLayout(table_buttons_layout)
-        layout.addWidget(self.table_title)
-        layout.addLayout(control_layout)
 
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.table_title)
+        scroll_area.setFrameStyle(QFrame.NoFrame)
+        content_height = self.table_title.sizeHint().height()
+        scroll_area.setMaximumHeight(content_height + 20)
+
+        layout.addWidget(scroll_area)
+        layout.addLayout(control_layout)
 
 class HoppingPanel(QWidget):
     """
