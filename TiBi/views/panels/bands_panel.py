@@ -34,31 +34,31 @@ class BandsPanel(QWidget):
 
         # Bands Section
         self.bands_grid.setContentsMargins(10, 5, 15, 5)
-        path_label = QLabel("Brillouin Zone Path")
+        path_label = QLabel("Band Calculations")
         path_label.setProperty("style", "bold")
         path_label.setAlignment(
             Qt.AlignCenter
         )  # This centers the text within the label
-        self.bands_grid.addWidget(path_label, 0, 0, 1, 5)
+        self.bands_grid.addWidget(path_label, 0, 0, 1, 8)
 
         # Icons
         left_arrow_icon = QIcon()
         left_arrow_icon.addFile(
-            str(get_resource_path("assets/icons/left_arrow.svg")),
+            str(get_resource_path("assets/icons/down_arrow.svg")),
             mode=QIcon.Mode.Normal,
         )
         left_arrow_icon.addFile(
-            str(get_resource_path("assets/icons/left_arrow_disabled.svg")),
+            str(get_resource_path("assets/icons/down_arrow_disabled.svg")),
             mode=QIcon.Mode.Disabled,
         )
 
         right_arrow_icon = QIcon()
         right_arrow_icon.addFile(
-            str(get_resource_path("assets/icons/right_arrow.svg")),
+            str(get_resource_path("assets/icons/up_arrow.svg")),
             mode=QIcon.Mode.Normal,
         )
         right_arrow_icon.addFile(
-            str(get_resource_path("assets/icons/right_arrow_disabled.svg")),
+            str(get_resource_path("assets/icons/up_arrow_disabled.svg")),
             mode=QIcon.Mode.Disabled,
         )
 
@@ -67,7 +67,7 @@ class BandsPanel(QWidget):
         self.add_gamma_btn.setToolTip("Gamma Point")
         self.add_gamma_btn.setStatusTip("Add the Gamma Point to the path.")
         self.add_gamma_btn.setFixedSize(30, 30)
-        self.bands_grid.addWidget(self.add_gamma_btn, 1, 1)
+        self.bands_grid.addWidget(self.add_gamma_btn, 2, 0)
         # Vertex selection controls
         self.prev_vertex_btn = QPushButton()
         self.prev_vertex_btn.setToolTip("Previous")
@@ -90,9 +90,9 @@ class BandsPanel(QWidget):
         self.next_vertex_btn.setFixedSize(30, 30)
         self.add_vertex_btn.setFixedSize(30, 30)
 
-        self.bands_grid.addWidget(self.next_vertex_btn, 2, 2)
+        self.bands_grid.addWidget(self.next_vertex_btn, 1, 1)
         self.bands_grid.addWidget(self.add_vertex_btn, 2, 1)
-        self.bands_grid.addWidget(self.prev_vertex_btn, 2, 0)
+        self.bands_grid.addWidget(self.prev_vertex_btn, 3, 1)
 
         # Edge midpoint selection controls
         self.prev_edge_btn = QPushButton()
@@ -114,9 +114,9 @@ class BandsPanel(QWidget):
         self.next_edge_btn.setFixedSize(30, 30)
         self.add_edge_btn.setFixedSize(30, 30)
 
-        self.bands_grid.addWidget(self.next_edge_btn, 3, 2)
-        self.bands_grid.addWidget(self.add_edge_btn, 3, 1)
-        self.bands_grid.addWidget(self.prev_edge_btn, 3, 0)
+        self.bands_grid.addWidget(self.next_edge_btn, 1, 2)
+        self.bands_grid.addWidget(self.add_edge_btn, 2, 2)
+        self.bands_grid.addWidget(self.prev_edge_btn, 3, 2)
 
         # Face center selection controls
         self.prev_face_btn = QPushButton()
@@ -138,9 +138,9 @@ class BandsPanel(QWidget):
         self.next_face_btn.setFixedSize(30, 30)
         self.add_face_btn.setFixedSize(30, 30)
 
-        self.bands_grid.addWidget(self.next_face_btn, 4, 2)
-        self.bands_grid.addWidget(self.add_face_btn, 4, 1)
-        self.bands_grid.addWidget(self.prev_face_btn, 4, 0)
+        self.bands_grid.addWidget(self.next_face_btn, 1, 3)
+        self.bands_grid.addWidget(self.add_face_btn, 2, 3)
+        self.bands_grid.addWidget(self.prev_face_btn, 3, 3)
 
         # Path controls
         self.remove_last_btn = QPushButton()
@@ -182,6 +182,7 @@ class BandsPanel(QWidget):
         self.n_points_spinbox.setRange(1, 10000)
         self.n_points_spinbox.setValue(100)
         self.n_points_spinbox.setButtonSymbols(QSpinBox.NoButtons)
+        set_spinbox_digit_width(self.n_points_spinbox, 5)
 
         self.compute_bands_btn = QPushButton()
         compute_icon = QIcon()
@@ -199,26 +200,25 @@ class BandsPanel(QWidget):
         self.compute_bands_btn.setToolTip("Compute")
         self.compute_bands_btn.setStatusTip("Compute the Bands.")
 
-        self.compute_bands_btn.setEnabled(
-            False
-        )  # Disabled until path has at least two points
-
-        self.bands_grid.addWidget(self.remove_last_btn, 1, 4)
+        self.bands_grid.addWidget(self.remove_last_btn, 1, 5)
         self.remove_last_btn.setEnabled(
             False
         )  # Disabled until path has points
 
-        self.bands_grid.addWidget(self.clear_path_btn, 2, 4)
+        self.bands_grid.addWidget(self.clear_path_btn, 1, 6)
         self.clear_path_btn.setEnabled(False)  # Disabled until path has points
 
-        kpoints_layout.addWidget(QLabel("k points:"))
+        self.bands_grid.addWidget(self.compute_bands_btn, 1, 7)
+        self.compute_bands_btn.setEnabled(
+            False
+        )  # Disabled until path has at least two points
+
+        kpoints_layout.addWidget(QLabel("Points:"))
         kpoints_layout.addWidget(self.n_points_spinbox)
-        self.bands_grid.addLayout(kpoints_layout, 3, 4)
+        self.bands_grid.addLayout(kpoints_layout, 2, 5, 1, 3)
 
-        self.bands_grid.addWidget(self.compute_bands_btn, 4, 4)
-
-        self.bands_grid.setVerticalSpacing(2)
-        self.bands_grid.setHorizontalSpacing(2)
+        self.bands_grid.setVerticalSpacing(5)
+        self.bands_grid.setHorizontalSpacing(5)
 
         # Initially disable all selection buttons
         btns = [
@@ -253,13 +253,12 @@ class BandsPanel(QWidget):
             self.add_face_btn,
         ]
 
-        for row in range(5):  # Rows 0 to 4 in bands_grid
+        for row in range(4):  # Rows 0 to 4 in bands_grid
             self.bands_grid.setRowMinimumHeight(row, 25)
-            # self.bands_grid.setRowStretch(row, 1)  # Ensure equal stretching
 
         # Approximate output size label
         self.approximate_band_size = QLabel("Approximate output size: 0 kB")
-        self.bands_grid.addWidget(self.approximate_band_size, 5, 0, 1, 5)
+        self.bands_grid.addWidget(self.approximate_band_size, 4, 0, 1, 8)
 
         # Projection panel
         projection_label = QLabel("State Projection")
