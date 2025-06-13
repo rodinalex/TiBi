@@ -274,7 +274,13 @@ class BandsPanel(QWidget):
         self.proj_combo = CheckableComboBox()
         self.project_btn = QPushButton("Project")
         self.select_all_btn = QPushButton("All")
+        self.select_all_btn.setToolTip("Select All")
+        self.select_all_btn.statusTip("Select all States for Projection.")
         self.clear_all_btn = QPushButton("None")
+        self.clear_all_btn.setToolTip("Clear Selection")
+        self.clear_all_btn.statusTip(
+            "Deselect all States and show only the Bands."
+        )
         self.select_all_btn.setEnabled(False)
         self.clear_all_btn.setEnabled(False)
 
