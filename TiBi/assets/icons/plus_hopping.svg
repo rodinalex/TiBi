@@ -6,5 +6,5 @@
     </linearGradient>
   </defs>
   <rect id="backgr" width="256" height="256" fill="none" rx="60"></rect>
-  <path d="M128 64v128m-64 -64h128" stroke="currentColor" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" id="my-path" transform="translate(0,0) scale(1)"></path>
+  <path d="M128 64v128m-64 -64h128" stroke="#003640" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" id="my-path" transform="translate(0,0) scale(1)"></path>
 </svg>
