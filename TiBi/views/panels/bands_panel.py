@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QButtonGroup,
     QGridLayout,
@@ -10,6 +11,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from TiBi.ui import get_resource_path
 from TiBi.ui.utilities import divider_line, set_spinbox_digit_width
 from ..widgets import CheckableComboBox, EnterKeySpinBox, EnterKeyIntSpinBox
 
@@ -38,36 +40,142 @@ class BandsPanel(QWidget):
             Qt.AlignCenter
         )  # This centers the text within the label
         self.bands_grid.addWidget(path_label, 0, 0, 1, 5)
+
+        # Icons
+        left_arrow_icon = QIcon()
+        left_arrow_icon.addFile(
+            str(get_resource_path("assets/icons/left_arrow.svg")),
+            mode=QIcon.Mode.Normal,
+        )
+        left_arrow_icon.addFile(
+            str(get_resource_path("assets/icons/left_arrow_disabled.svg")),
+            mode=QIcon.Mode.Disabled,
+        )
+
+        right_arrow_icon = QIcon()
+        right_arrow_icon.addFile(
+            str(get_resource_path("assets/icons/right_arrow.svg")),
+            mode=QIcon.Mode.Normal,
+        )
+        right_arrow_icon.addFile(
+            str(get_resource_path("assets/icons/right_arrow_disabled.svg")),
+            mode=QIcon.Mode.Disabled,
+        )
+
         # Gamma point controls (Γ - origin of reciprocal space)
         self.add_gamma_btn = QPushButton("Γ")
+        self.add_gamma_btn.setToolTip("Gamma Point")
+        self.add_gamma_btn.setStatusTip("Add the Gamma Point to the path.")
+        self.add_gamma_btn.setFixedSize(30, 30)
         self.bands_grid.addWidget(self.add_gamma_btn, 1, 1)
         # Vertex selection controls
-        self.prev_vertex_btn = QPushButton("←")
-        self.next_vertex_btn = QPushButton("→")
+        self.prev_vertex_btn = QPushButton()
+        self.prev_vertex_btn.setToolTip("Previous")
+        self.prev_vertex_btn.setStatusTip("Select the previous Vertex.")
+        self.prev_vertex_btn.setIcon(left_arrow_icon)
+        self.prev_vertex_btn.setIconSize(self.prev_vertex_btn.sizeHint())
+
+        self.next_vertex_btn = QPushButton()
+        self.next_vertex_btn.setToolTip("Next")
+        self.next_vertex_btn.setStatusTip("Select the next Vertex.")
+        self.next_vertex_btn.setIcon(right_arrow_icon)
+        self.next_vertex_btn.setIconSize(self.next_vertex_btn.sizeHint())
+
         self.add_vertex_btn = QPushButton("V")
+        self.add_vertex_btn.setToolTip("Vertex")
+        self.add_vertex_btn.setStatusTip(
+            "Add the selected Vertex to the path."
+        )
+        self.prev_vertex_btn.setFixedSize(30, 30)
+        self.next_vertex_btn.setFixedSize(30, 30)
+        self.add_vertex_btn.setFixedSize(30, 30)
+
         self.bands_grid.addWidget(self.next_vertex_btn, 2, 2)
         self.bands_grid.addWidget(self.add_vertex_btn, 2, 1)
         self.bands_grid.addWidget(self.prev_vertex_btn, 2, 0)
 
         # Edge midpoint selection controls
-        self.prev_edge_btn = QPushButton("←")
-        self.next_edge_btn = QPushButton("→")
+        self.prev_edge_btn = QPushButton()
+        self.prev_edge_btn.setToolTip("Previous")
+        self.prev_edge_btn.setStatusTip("Select the previous Edge.")
+        self.prev_edge_btn.setIcon(left_arrow_icon)
+        self.prev_edge_btn.setIconSize(self.prev_edge_btn.sizeHint())
+
+        self.next_edge_btn = QPushButton()
+        self.next_edge_btn.setToolTip("Next")
+        self.next_edge_btn.setStatusTip("Select the next Edge.")
+        self.next_edge_btn.setIcon(right_arrow_icon)
+        self.next_edge_btn.setIconSize(self.next_edge_btn.sizeHint())
+
         self.add_edge_btn = QPushButton("E")
+        self.add_edge_btn.setToolTip("Edge")
+        self.add_edge_btn.setStatusTip("Add the selected Edge to the path.")
+        self.prev_edge_btn.setFixedSize(30, 30)
+        self.next_edge_btn.setFixedSize(30, 30)
+        self.add_edge_btn.setFixedSize(30, 30)
+
         self.bands_grid.addWidget(self.next_edge_btn, 3, 2)
         self.bands_grid.addWidget(self.add_edge_btn, 3, 1)
         self.bands_grid.addWidget(self.prev_edge_btn, 3, 0)
 
         # Face center selection controls
-        self.prev_face_btn = QPushButton("←")
-        self.next_face_btn = QPushButton("→")
+        self.prev_face_btn = QPushButton()
+        self.prev_face_btn.setToolTip("Previous")
+        self.prev_face_btn.setStatusTip("Select the previous Face.")
+        self.prev_face_btn.setIcon(left_arrow_icon)
+        self.prev_face_btn.setIconSize(self.prev_face_btn.sizeHint())
+
+        self.next_face_btn = QPushButton()
+        self.next_face_btn.setToolTip("Next")
+        self.next_face_btn.setStatusTip("Select the next Face.")
+        self.next_face_btn.setIcon(right_arrow_icon)
+        self.next_face_btn.setIconSize(self.next_face_btn.sizeHint())
+
         self.add_face_btn = QPushButton("F")
+        self.add_face_btn.setToolTip("Face")
+        self.add_face_btn.setStatusTip("Add the selected Face to the path.")
+        self.prev_face_btn.setFixedSize(30, 30)
+        self.next_face_btn.setFixedSize(30, 30)
+        self.add_face_btn.setFixedSize(30, 30)
+
         self.bands_grid.addWidget(self.next_face_btn, 4, 2)
         self.bands_grid.addWidget(self.add_face_btn, 4, 1)
         self.bands_grid.addWidget(self.prev_face_btn, 4, 0)
 
         # Path controls
-        self.remove_last_btn = QPushButton("Remove Last")
-        self.clear_path_btn = QPushButton("Clear Path")
+        self.remove_last_btn = QPushButton()
+        remove_last = QIcon()
+        remove_last.addFile(
+            str(get_resource_path("assets/icons/remove_last.svg")),
+            mode=QIcon.Mode.Normal,
+        )
+        remove_last.addFile(
+            str(get_resource_path("assets/icons/remove_last_disabled.svg")),
+            mode=QIcon.Mode.Disabled,
+        )
+        self.remove_last_btn.setIcon(remove_last)
+        self.remove_last_btn.setFixedSize(30, 30)
+        self.remove_last_btn.setIconSize(self.remove_last_btn.sizeHint())
+        self.remove_last_btn.setToolTip("Remove Last")
+        self.remove_last_btn.setStatusTip(
+            "Remove the last added point from the Brillouin Zone path."
+        )
+
+        self.clear_path_btn = QPushButton()
+        clear_path_icon = QIcon()
+        clear_path_icon.addFile(
+            str(get_resource_path("assets/icons/trash_hopping.svg")),
+            mode=QIcon.Mode.Normal,
+        )
+        clear_path_icon.addFile(
+            str(get_resource_path("assets/icons/trash_hopping_disabled.svg")),
+            mode=QIcon.Mode.Disabled,
+        )
+        self.clear_path_btn.setIcon(clear_path_icon)
+        self.clear_path_btn.setFixedSize(30, 30)
+        self.clear_path_btn.setIconSize(self.clear_path_btn.sizeHint())
+        self.clear_path_btn.setToolTip("Clear")
+        self.clear_path_btn.setStatusTip("Clear the Brillouin Zone path.")
 
         kpoints_layout = QHBoxLayout()
         self.n_points_spinbox = QSpinBox()
@@ -75,7 +183,22 @@ class BandsPanel(QWidget):
         self.n_points_spinbox.setValue(100)
         self.n_points_spinbox.setButtonSymbols(QSpinBox.NoButtons)
 
-        self.compute_bands_btn = QPushButton("Compute")
+        self.compute_bands_btn = QPushButton()
+        compute_icon = QIcon()
+        compute_icon.addFile(
+            str(get_resource_path("assets/icons/computer.svg")),
+            mode=QIcon.Mode.Normal,
+        )
+        compute_icon.addFile(
+            str(get_resource_path("assets/icons/computer_disabled.svg")),
+            mode=QIcon.Mode.Disabled,
+        )
+        self.compute_bands_btn.setIcon(compute_icon)
+        self.compute_bands_btn.setFixedSize(30, 30)
+        self.compute_bands_btn.setIconSize(self.compute_bands_btn.sizeHint())
+        self.compute_bands_btn.setToolTip("Compute")
+        self.compute_bands_btn.setStatusTip("Compute the Bands.")
+
         self.compute_bands_btn.setEnabled(
             False
         )  # Disabled until path has at least two points
@@ -247,7 +370,12 @@ class BandsPanel(QWidget):
         self.dos_visualization_grid.addWidget(self.num_bins_spinbox, 1, 1)
         self.dos_visualization_grid.addWidget(self.broadening_spinbox, 2, 1)
 
-        self.compute_grid_btn = QPushButton("Compute")
+        self.compute_grid_btn = QPushButton()
+        self.compute_grid_btn.setIcon(compute_icon)
+        self.compute_grid_btn.setFixedSize(30, 30)
+        self.compute_grid_btn.setIconSize(self.compute_grid_btn.sizeHint())
+        self.compute_grid_btn.setToolTip("Compute")
+        self.compute_grid_btn.setStatusTip("Compute the Brillouin Zone grid.")
         self.compute_grid_btn.setEnabled(False)
 
         # Grid type choice
