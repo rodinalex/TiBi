@@ -313,13 +313,13 @@ class BandsPanel(QWidget):
         bz_grid_label = QLabel("Brillouin Zone Grid")
         bz_grid_label.setProperty("style", "bold")
         bz_grid_label.setAlignment(Qt.AlignCenter)
-        self.bz_grid.addWidget(bz_grid_label, 0, 0, 1, 3)
+        self.bz_grid.addWidget(bz_grid_label, 0, 0, 1, 4)
 
         dos_presentation_label = QLabel("DOS Visualization")
         dos_presentation_label.setProperty("style", "bold")
         dos_presentation_label.setAlignment(Qt.AlignCenter)
         self.dos_visualization_grid.addWidget(
-            dos_presentation_label, 0, 0, 1, 3
+            dos_presentation_label, 0, 0, 1, 4
         )
 
         # Grid points controls
@@ -361,7 +361,7 @@ class BandsPanel(QWidget):
 
         # Approximate output size label
         self.approximate_BZ_grid_size = QLabel("Approximate output size: 0 kB")
-        self.bz_grid.addWidget(self.approximate_BZ_grid_size, 4, 0, 1, 3)
+        self.bz_grid.addWidget(self.approximate_BZ_grid_size, 4, 0, 1, 4)
 
         self.dos_visualization_grid.addWidget(QLabel("Bin number:"), 1, 0)
         self.dos_visualization_grid.addWidget(QLabel("Broadening:"), 2, 0)
@@ -393,9 +393,9 @@ class BandsPanel(QWidget):
         self.presentation_choice_group.addButton(self.lorentzian_radio, id=1)
         self.histogram_radio.setChecked(True)
 
-        self.bz_grid.addWidget(self.MP_radio, 1, 2)
-        self.bz_grid.addWidget(self.Gamma_radio, 2, 2)
-        self.bz_grid.addWidget(self.compute_grid_btn, 3, 2)
+        self.bz_grid.addWidget(self.MP_radio, 1, 3)
+        self.bz_grid.addWidget(self.Gamma_radio, 2, 3)
+        self.bz_grid.addWidget(self.compute_grid_btn, 3, 3)
 
-        self.dos_visualization_grid.addWidget(self.histogram_radio, 1, 2)
-        self.dos_visualization_grid.addWidget(self.lorentzian_radio, 2, 2)
+        self.dos_visualization_grid.addWidget(self.histogram_radio, 1, 3)
+        self.dos_visualization_grid.addWidget(self.lorentzian_radio, 2, 3)
