@@ -308,7 +308,7 @@ class BrillouinZonePlotController(QObject):
 
     def _make_point(self, vertex_size=0.20):
         """Create a sphere mesh item for a point in the BZ."""
-        vertex_size = 1 / (self.unit_cell.volume()) ** (1 / 3) / 4
+        # vertex_size = 1 / (self.unit_cell.volume()) ** (1 / 3) / 4
         return gl.GLMeshItem(
             meshdata=gl.MeshData.sphere(rows=10, cols=10, radius=vertex_size),
             smooth=True,
