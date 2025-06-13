@@ -278,9 +278,7 @@ class BandsPanel(QWidget):
         self.select_all_btn.setStatusTip("Select all States for Projection.")
         self.clear_all_btn = QPushButton("None")
         self.clear_all_btn.setToolTip("Clear Selection")
-        self.clear_all_btn.setStatusTip(
-            "Deselect all States and show only the Bands."
-        )
+        self.clear_all_btn.setStatusTip("Deselect all States.")
         self.select_all_btn.setEnabled(False)
         self.clear_all_btn.setEnabled(False)
 
