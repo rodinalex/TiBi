@@ -28,12 +28,19 @@ TiBi is an app that performs **Ti**ght **Bi**nding calculations. It allows the U
 
 ## Quick Start
 
-### 1. Clone the Repository
+### 1. Get the Source code
+
+**Option A: Clone the Repository**
 
 ```bash
 git clone git@github.com:rodinalex/TiBi.git
 cd TiBi
 ```
+
+**Option B: Download a release**
+
+Get a compressed source folder [here](https://github.com/rodinalex/TiBi/releases)
+
 
 ### 2. Set Up Python Environment
 
