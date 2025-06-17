@@ -12,7 +12,7 @@ TiBi is an app that performs **Ti**ght **Bi**nding calculations. It allows the U
 
 ## Supported Platforms
 
-- ✅ macOS (Apple Silicon & Intel)
+- ✅ macOS (Apple Silicon & Intel): binary available
 - 🚧 Windows (in progress)
 - ✅ Linux
 
@@ -41,6 +41,9 @@ cd TiBi
 
 Get a compressed source folder [here](https://github.com/rodinalex/TiBi/releases)
 
+**Option C: Download a binary**
+
+Get the OS-appropriate binary [here](https://github.com/rodinalex/TiBi/releases)
 
 ### 2. Set Up Python Environment
 
