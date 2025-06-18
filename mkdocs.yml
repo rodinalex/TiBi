@@ -1,0 +1,46 @@
+site_name: TiBi
+repo_url: https://github.com/rodinalex/TiBi
+site_url: https://rodinalex.github.io/TiBi/
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+  features:
+    - navigation.tabs
+    - navigation.sections
+    # - navigation.instant
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - User Guide: 
+      - Installation: user_guide/install.md
+      - Creating a system: user_guide/creation.md
+      - Band structure and DOS: user_guide/bands.md
+  - Developer Guide:
+      - Architecture: dev/architecture.md
+      - API Reference: dev/api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["TiBi"]
+          options:
+            docstring_style: google
+  - autorefs
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+
