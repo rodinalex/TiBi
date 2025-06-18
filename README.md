@@ -1,3 +1,6 @@
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://rodinalex.github.io/TiBi/)
+
+
 # TiBi
 
 Welcome! This README guides you through setting up, building, and running **TiBi** on your machine.
