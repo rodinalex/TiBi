@@ -1,16 +1,29 @@
 # Installation
 
-Presently, there are two ways of running the app: using the binary or from the source. In the future, installers will also be provided. 
+There are currently two ways to run the app: using a prebuilt binary or directly from source. In the future, standalone installers will also be provided.
 
-To run the app using the binary, the OS-appropriate binary can be downloaded [here](https://github.com/rodinalex/TiBi/releases), if available. In this case, no further installations are necessary and the app can be launched by double clicking on the executable. If the binary is not available, it is possible to build it locally using [PyInstaller](https://www.pyinstaller.org/) and the source obtained from the same [link](https://github.com/rodinalex/TiBi/releases) or run the source code directly.
+---
 
-## Running from the Source
+## Option 1: Run the Binary
+
+Prebuilt binaries (if available) can be downloaded from the [Releases page](https://github.com/rodinalex/TiBi/releases). No installation is necessary—just download and double-click the executable for your operating system.
+
+If no binary is available for your platform, you can either build one yourself using [PyInstaller](https://www.pyinstaller.org/) or run the app directly from source (see below).
+
+---
+
+## Option 2: Run from Source
 
 ### 1. Download the Source
 
-Get a compressed source folder [here](https://github.com/rodinalex/TiBi/releases).
+Download and extract the source archive from the [Releases page](https://github.com/rodinalex/TiBi/releases), or clone the repository directly:
 
-### 2. Set Up Python Environment
+```bash
+git clone https://github.com/rodinalex/TiBi.git
+cd TiBi
+```
+
+### 2. Set up the Python Environment
 
 **Option A: Using Conda (Recommended)**
 
@@ -19,9 +32,9 @@ conda env create -f environment.yml
 conda activate TiBi-env
 ```
 
-**Option B: Using venv**
+**Option B: Using venv (if Conda causes issues)**
 
-If Option A does not work (the app does not start or crashes), Option B may resolve the issue. For macOS or Linux, run
+macOS/Linux:
 
 ```bash
 python -m venv venv
@@ -32,8 +45,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-For Windows, run
-
+Windows:
 
 ```cmd
 python -m venv venv
@@ -55,10 +67,13 @@ python3 -m TiBi.app
 ```cmd
 python -m TiBi.app
 ```
+If the app does not launch, ensure that your virtual environment is activated and all dependencies are installed correctly.
 
-## Building the Application
+---
 
-Use the PyInstaller spec file for your platform:
+## Building a Standalone Binary
+
+To build the app as a self-contained binary, use the appropriate PyInstaller `.spec` file:
 
 **macOS:**
 ```bash
@@ -75,23 +90,33 @@ pyinstaller app_win.spec
 pyinstaller app_linux.spec
 ```
 
-This creates a bundled application in the `dist/` directory.
+This will generate a bundled application in the `dist/` directory.
+
+---
 
 ## Running the Built Application
 
-### macOS
+**macOS**
 ```bash
 ./dist/TiBi.app/Contents/macOS/TiBi
 ```
-Or navigate to `dist/` and double-click the TiBi.app icon
+Or double-click `TiBi.app` in the `dist/` folder.
 
-### Windows
+**Windows**
 ```cmd
 dist\TiBi.exe
 ```
-Or double-click `dist\TiBi.exe`
+Or double-click the executable in your file browser.
 
-### Linux
+**Linux**
 ```bash
 ./dist/TiBi/TiBi
 ```
+Or launch from your file browser or terminal.
+
+---
+
+## Notes
+
+* Python 3.12+ is supported, but older systems may require Python 3.10 or 3.11.
+* If you encounter issues with fonts, OpenGL, or window display, please open an issue on GitHub.
