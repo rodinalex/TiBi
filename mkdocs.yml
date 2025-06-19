@@ -43,4 +43,8 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.tilde
+  - pymdownx.caret
+  - attr_list
+  - md_in_html
 
