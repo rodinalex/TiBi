@@ -17,7 +17,7 @@ nav:
   - Home: index.md
   - User Guide: 
       - Installation: user_guide/install.md
-      - Creating a system: user_guide/creation.md
+      - Getting Started: user_guide/getting_started.md
       - Band structure and DOS: user_guide/bands.md
   - Developer Guide:
       - Architecture: dev/architecture.md
@@ -45,6 +45,11 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.tilde
   - pymdownx.caret
+  - pymdownx.arithmatex:
+      generic: true
   - attr_list
   - md_in_html
 
+extra_javascript:
+  # - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
