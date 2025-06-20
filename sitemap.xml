@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/dev/api/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/dev/architecture/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/user_guide/bands/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/user_guide/getting_started/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+    <url>
+         <loc>https://rodinalex.github.io/TiBi/user_guide/install/</loc>
+         <lastmod>2025-06-20</lastmod>
+    </url>
+</urlset>
