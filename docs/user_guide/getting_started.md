@@ -2,6 +2,8 @@
 
 This page describes the structure of a TiBi **project** and explains how to create, modify, and interpret its core components — **systems**, **unit cells**, **sites**, and **states**. It also explains how to build a tight-binding Hamiltonian that can be used for calculating various quantities of interest.
 
+---
+
 ## Project Structure
 
 In TiBi, a single **project** can contain multiple **systems**. A **system** consists of a **unit cell** with **sites** (atoms). Each **site** can have an arbitrary number of **states** (orbitals).
@@ -96,9 +98,10 @@ Clicking on a button in the coupling matrix brings up a table with 5 columns. Ea
     Clicking on the hopping buttons shows the existing hoppings in the 3D system plot making it easier to spot mistakes in the displacement columns of the hopping table.
 
 
-There are two details one should be aware of:
+!!! note
+    There are two details one should be aware of:
 
-* If multiple hopping elements in the same table have the same displacement triplet, clicking **Save** will collect them into a single element.
-* If a non-periodic vector has a non-zero entry in the displacement column, clicking **Save** will set it to zero.
+    * If multiple hopping elements in the same table have the same displacement triplet, clicking **Save** will collect them into a single element.
+    * If a non-periodic vector has a non-zero entry in the displacement column, clicking **Save** will set it to zero.
 
 ---
