@@ -16,9 +16,11 @@ from .site import Site
 @dataclass
 class UnitCell:
     """
-    A crystalline unit cell with sites, states, and hopping parameters.
+    The funtamental object describing a crystal.
 
-    The `UnitCell` is defined by three`BasisVector`s and contains `Site`s.
+    The `UnitCell` is defined by three `BasisVector`s and contains `Site`s
+    and hopping terms between `State`s. Additionally, `UnitCell` carries
+    the calculated `BandStructure` and `BrillouinZoneGrid` objects.
 
     Attributes
     ----------
@@ -34,11 +36,11 @@ class UnitCell:
         Keys are pairs of state UUIDs (destination_state_id,
         source_state_id).
         Values are lists of (displacement, amplitude) pairs where:
+
         - displacement is a tuple of three integers (n1,n2,n3) indicating
         which periodic image of the unit cell is involved
         (0,0,0 means within the same unit cell)
-        - amplitude is a complex number representing the hopping strength
-        and phase
+        - amplitude is a complex number
     bandstructure : BandStructure
         Band structure object for the `UnitCell`
     bz_grid: BrillouinZoneGrid
@@ -276,7 +278,7 @@ class UnitCell:
 
         Returns
         -------
-        Tuple[NDArray[NDArray[np.float64]],\
+        tuple[NDArray[NDArray[np.float64]],\
             NDArray[NDArray[NDArray[np.float64]]]]
             The first element of the tuple gives the BZ vertex coordinates.
             The second element gives a list of faces, where each face is
@@ -354,7 +356,7 @@ class UnitCell:
                     # their indices
                     face = vor.vertices[ridge_vertices]
                     bz_faces.append(face)
-            # bz_faces = np.array(bz_faces)
+            bz_faces = np.array(bz_faces)
         return bz_vertices, bz_faces
 
     def get_hamiltonian_function(self):

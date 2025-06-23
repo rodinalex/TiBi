@@ -22,7 +22,7 @@ class BasisVector:
     Methods
     -------
     as_array()
-       Convert the `BasisVector` to a NumPy array with 3 elements.
+        Convert the `BasisVector` to a NumPy array with 3 elements.
     """
 
     x: float

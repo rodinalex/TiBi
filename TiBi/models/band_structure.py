@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 @dataclass
 class BandStructure:
     """
-    An object containing a system's band structure.
+    A `UnitCell` attribute containing a system's band structure.
 
     Attributes
     ----------
@@ -15,20 +15,20 @@ class BandStructure:
     special_points : list[NDArray[np.float64]]
         A list of high-symmetry point coordinates used for the path.
     eigenvalues : list[NDArray[np.float64]]
-        A list of arrays, where each array contains eigenvalues
+        A list of arrays, where each array contains eigenvalues (energies)
         corresponding to each point on the path.
     eigenvectors : list[NDArray[np.float64]]
-        A list of 2D arrays, where each array contains the eigenvectors
-        corresponding to each point on the path. The dimensionality of
-        the square 2D arrays is given by the number of states in the unit cell.
+        A list of square 2D arrays, where each array contains the eigenvectors
+        corresponding to each point on the path. The
+        eigenvectors are the columns of the 2D arrays.
 
     Methods
     -------
     clear()
-        Reset the band structure to the initial state.
+        Reset the `BandStructure` to the initial state.
     reset_bands()
-        Reset the band structure by clearing the path, eigenvalues, and
-        eigenvectors.
+        Reset the `BandStructure` by clearing the path, eigenvalues, and
+        eigenvectors, but keeping the special points.
     add_point(point: NDArray[np.float64])
         Add a point to the special points path. Reset all other fields.
     remove_point()
@@ -42,14 +42,14 @@ class BandStructure:
     eigenvectors: list[NDArray[np.float64]] = field(default_factory=list)
 
     def clear(self):
-        """Reset the band structure to the initial state."""
+        """Reset the `BandStructure` to the initial state."""
         self.special_points.clear()
         self.reset_bands()
 
     def reset_bands(self):
         """
-        Reset the band structure by clearing the path, eigenvalues, and
-        eigenvectors.
+        Reset the `BandStructure` by clearing the path, eigenvalues, and
+        eigenvectors, but keeping the special points.
         """
         self.path.clear()
         self.eigenvalues.clear()
