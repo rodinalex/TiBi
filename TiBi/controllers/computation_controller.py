@@ -24,35 +24,39 @@ class ComputationController(QObject):
         Child controller in charge of the hopping panel of the computation UI
     bands_controller : BandsController
         Child controller in charge of the bands panel of the computation UI
-
-    Methods
-    -------
-    get_pair_selection()
-        Get the selected state pair from the hopping matrix, if any.
-    update_hopping_panel()
-        Redraw the hoppings panel.
-
-    Signals
-    -------
-    status_updated
+    status_updated : Signal(str)
         Signal emitted to update the status of the computation
-    bands_plot_requested
+    bands_plot_requested : Signal
         Request bands plot.
         Re-emitting signal from `BandsController`
-    dos_plot_requested
-        Request bands plot.
+    dos_plot_requested : Signal
+        Request DOS plot.
         Re-emitting signal from `BandsController`
-    hopping_segments_requested
+    hopping_segments_requested : Signal
         Signal requesting the plotting of hopping segments in the
         unit cell plot. Re-emitting signal for the `HoppingController`
         when the user selects a pair of sites from the hopping matrix.
-    selection_requested
+    selection_requested : Signal(object, object, object)
         Signal requesting a programmatic selection. Re-emitting signal for
         the `HoppingController`.
+
+    Methods
+    -------
+    get_dos_properties()
+        Get the number of bins/points, plot type, and broadening.
+    get_pair_selection()
+        Get the selected state pair from the hopping matrix, if any.
+    get_projection_indices()
+        Get the projection indices from the projection combo.
+    update_bands_panel()
+        Update the bands UI panel.
+    update_hopping_panel()
+        Redraw the hoppings UI panel.
+    update_projection_combo()
+        Update the projection combo in the bands panel.
     """
 
     status_updated = Signal(str)
-
     # Hopping controller signals to relay
     hopping_segments_requested = Signal()
     selection_requested = Signal(object, object, object)
@@ -67,20 +71,6 @@ class ComputationController(QObject):
         computation_view: ComputationView,
         undo_stack: QUndoStack,
     ):
-        """
-        Initialize the computation controller.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        computation_view : ComputationView
-            UI object containing the computation view
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        """
         super().__init__()
         self.computation_view = computation_view
         self.undo_stack = undo_stack
@@ -143,7 +133,7 @@ class ComputationController(QObject):
 
     def update_projection_combo(self):
         """
-        Update the projection combo.
+        Update the projection combo in the bands panel.
         """
         self.bands_controller.update_combo()
 
@@ -155,7 +145,7 @@ class ComputationController(QObject):
 
     def get_dos_properties(self):
         """
-        Get the DOS properties for the plots.
+        Get the number of bins/points, plot type, and broadening.
 
         Returns
         -------

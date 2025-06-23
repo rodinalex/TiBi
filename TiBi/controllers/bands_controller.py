@@ -2,10 +2,7 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal
 import uuid
 
-from TiBi.core.band_structure import (
-    get_BZ_grid,
-    interpolate_k_path,
-)
+from TiBi.core import get_BZ_grid, interpolate_k_path
 from TiBi.models import Selection, UnitCell
 from TiBi.views import ProgressDialog
 from TiBi.views.panels import BandsPanel
@@ -24,24 +21,23 @@ class BandsController(QObject):
         Model tracking the currently selected unit cell, site, and state
     bands_panel : BandsPanel
         Main panel for bands and BZ grid calculations
+    bands_plot_requested : Signal
+        Request band plots update.
+    dos_plot_requested : Signal
+        Request DOS plots update.
+    status_updated : Signal(str)
+        Update the status bar information.
 
     Methods
     -------
-    update_bands_panel()
-        Update the `BandsPanel`.
-    set_combo()
-        Populate the projection dropdown menu with state labels.
+    get_dos_properties()
+        Get the DOS properties for the plots.
     get_projection_indices()
         Get the states selected for projection from the dropdown menu.
-
-    Signals
-    -------
-    bands_plot_requested
-        Request band plots update.
-    dos_plot_requested
-        Request dos plots update.
-    status_updated
-        Update the status bar information.
+    update_bands_panel()
+        Update the `BandsPanel`.
+    update_combo()
+        Update the states in the combo box.
     """
 
     bands_plot_requested = Signal()
@@ -54,18 +50,6 @@ class BandsController(QObject):
         selection: Selection,
         bands_panel: BandsPanel,
     ):
-        """
-        Initialize the BandsController.
-
-        Parameters
-        ----------
-        unit_cells : dict[UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        bands_panel : BandsPanel
-            Main panel for bands and BZ grid calculations
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection

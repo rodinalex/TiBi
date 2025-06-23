@@ -49,29 +49,26 @@ class HoppingController(QObject):
         The keys are `State` UUID tuples. The values are lists of hoppings.
         Each hopping is a tuple of a displacement tuple, given in
         terms of lattice vectors, and a complex amplitude.
-
-    Methods
-    -------
-    update_unit_cell()
-        Updates the hopping data model with the `UnitCell`'s hoppings
-
-    Signals
-    -------
-    btn_clicked
+    btn_clicked : Signal(object, object)
         Emitted when a hopping button is clicked. The Signal carries the source
         and destination state info following the
         (site_name, site_id, state_name, state_id) format.
-    hoppings_changed
+    hoppings_changed : Signal(object, object, object, object, object)
         Emitted by the command when couplings are modified.
         The signal carries the information about the current item selection,
         as well as the selection of the state pair. It triggers
         a table and matrix update.
-    hopping_segments_requested
+    hopping_segments_requested : Signal
         Emitted when the coupling table is updated, triggering an
         update of hopping segments.
-    selection_requested
+    selection_requested : Signal(object, object, object)
         Emitted when the selection change in the tree is required,
         carrying the unit cell, site, and state IDs.
+
+    Methods
+    -------
+    update_unit_cell()
+        Update the hopping data model with the `UnitCell`'s hoppings
     """
 
     btn_clicked = Signal(object, object)
@@ -86,20 +83,6 @@ class HoppingController(QObject):
         hopping_view: HoppingPanel,
         undo_stack: QUndoStack,
     ):
-        """
-        Initialize the hopping controller.
-
-        Parameters
-        ----------
-        unit_cells : dict[UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        hopping_view : HoppingPanel
-            The main view component
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
@@ -168,7 +151,7 @@ class HoppingController(QObject):
 
     def _refresh_matrix(self):
         """
-        Refresh the matrix grid.
+        Redraw the hopping matrix.
 
         Button colors are updated based on whether hoppings
         exist between states.

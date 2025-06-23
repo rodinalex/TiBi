@@ -44,6 +44,10 @@ class MainUIController(QObject):
         Status bar at the bottom of the application window
     undo_stack : QUndoStack
         Stack for 'undo-able' actions
+    project_refresh_requested : Signal
+        Request to refresh the project view after loading or creating a new one
+    unit_cell_update_requested : Signal
+        Request to update the unit cell plot with new parameters
 
     Methods
     -------
@@ -51,11 +55,8 @@ class MainUIController(QObject):
         Get the unit cell visualization properties.
     set_spinbox_status()
         Activate/deactivate unit cell spinboxes.
-
-    Signals
-    -------
-    unit_cell_update_requested : Signal
-        Request to update the unit cell plot with new parameters
+    update_status(message : str)
+        Display a message in the status bar.
     """
 
     unit_cell_update_requested = Signal()
@@ -75,29 +76,6 @@ class MainUIController(QObject):
         status_bar_view: StatusBarView,
         undo_stack: QUndoStack,
     ):
-        """
-        Initialize the main UI controller.
-
-        Parameters
-        ----------
-        project_path : str | None
-            The file to which the dictionary containing the unit
-            cell objects is saved
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        main_window : MainWindow
-            Subclass of QMainWindow containing the application's main view
-        menu_bar_view : MenuBarView
-            Standard menu bar
-        toolbar_view : MainToolbarView
-            Toolbar at the top of the application window
-        status_bar_view : StatusBarView
-            Status bar at the bottom of the application window
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        """
         super().__init__()
         self.project_path = project_path
         self.unit_cells = unit_cells

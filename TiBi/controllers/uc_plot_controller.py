@@ -29,6 +29,15 @@ class UnitCellPlotController(QObject):
         The unit cell currently being visualized
     uc_plot_items : dict
         Dictionary to store plot items
+
+    Methods
+    -------
+    update_hopping_segments(pair_selection: \
+        tuple[tuple[str, uuid.UUID, str, uuid.UUID],\
+            tuple[str, uuid.UUID, str, uuid.UUID]])
+        Draw segments to indicate hopping connections.
+    update_unit_cell(wireframe_shown: bool, n1: int, n2: int, n3: int)
+        Draw the selected `UnitCell` in the 3D view.
     """
 
     def __init__(
@@ -37,18 +46,6 @@ class UnitCellPlotController(QObject):
         selection: Selection,
         uc_plot_view: UnitCellPlotView,
     ):
-        """
-        Initialize the unit cell plot controller.
-
-        Parameters
-        ----------
-        unit_cells: dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection: Selection
-            Model tracking the currently selected unit cell, site, and state
-        uc_plot_view: UnitCellPlotView
-            The view component for the 3D visualization
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
@@ -58,9 +55,11 @@ class UnitCellPlotController(QObject):
         self.unit_cell = None  # Unit cell being plotted
         self.uc_plot_items = {}  # Dictionary to store plot items
 
-    def update_unit_cell(self, wireframe_shown, n1, n2, n3):
+    def update_unit_cell(
+        self, wireframe_shown: bool, n1: int, n2: int, n3: int
+    ):
         """
-        Set or update the unit cell to be displayed in the 3D view.
+        Draw the selected `UnitCell` in the 3D view.
 
         Parameters
         ----------
@@ -123,7 +122,7 @@ class UnitCellPlotController(QObject):
 
     def _plot_sites(self, a1, a2, a3):
         """
-        Plot all `Site`s within the `UnitCell` at a1*v1 + a2*v2 + a3*v3.
+        Plot all `Site`s within the `UnitCell` at (a1,a2,a3).
 
         Each site is represented as a colored sphere positioned according to
         its fractional coordinates within the unit cell. Sites can be selected

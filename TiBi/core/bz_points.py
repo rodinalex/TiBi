@@ -98,34 +98,3 @@ def get_BZ_grid(
         k_points.append(k[0:dim])
 
     return k_points
-
-
-def diagonalize_hamitonian(hamiltonian, points):
-    """
-    Compute electronic for the collection of points.
-
-    Parameters
-    ----------
-    hamiltonian
-        Function that generates a Hamiltonian matrix for a given k-point
-    points : NDArray[NDArray[np.float64]]
-        Array of k-points along which to calculate bands
-
-    Returns
-    -------
-    eigenvalues : list[NDArray[np.float64]]
-        Array of shape (n_kpoints, n_bands) containing the energy
-        eigenvalues at each k-point
-    eigenvectors : list[NDArray[np.float64]]
-        Array of shape (n_kpoints, n_bands, n_bands) containing the
-        eigenvectors at each k-point
-    """
-    eigenvalues = []
-    eigenvectors = []
-
-    for k in points:
-        H = hamiltonian(k)
-        solution = np.linalg.eigh(H)
-        eigenvalues.append(solution[0])
-        eigenvectors.append(solution[1])
-    return eigenvalues, eigenvectors
