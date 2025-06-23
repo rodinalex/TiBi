@@ -356,7 +356,7 @@ class UnitCell:
                     # their indices
                     face = vor.vertices[ridge_vertices]
                     bz_faces.append(face)
-            # bz_faces = np.array(bz_faces)
+            bz_faces = np.array(bz_faces)
         return bz_vertices, bz_faces
 
     def get_hamiltonian_function(self):
