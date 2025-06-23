@@ -5,7 +5,8 @@ class Selection(QObject):
     """
     Currently selected item.
 
-    The item is characterized by a series of uuid.UUID's.
+    The item is characterized by a series of uuid.UUID's
+    that can be viewed as a hierarchical address.
 
     Attributes
     ----------
@@ -15,24 +16,21 @@ class Selection(QObject):
         ID of the selected `Site`
     state : uuid.UUID | None
         ID of the selected `State`
+    unit_cell_updated : Signal
+        Emitted when a new `UnitCell` is selected.
+    site_updated : Signal
+        Emitted when a new `Site` is selected.
+    state_updated : Signal
+        Emitted when a new `State` is selected.
+    selection_changed : Signal
+        Emitted when the selection changes, in addition
+        to the specific signal.
 
     Methods
     -------
     set_selection(uc_id : uuid.UUID | None, site_id : uuid.UUID | None,\
           state_id : uuid.UUID | None)
-       Update the selection and emit an appropriate signal.
-
-    Signals
-    -------
-    unit_cell_updated
-        Emitted when a new `UnitCell` is selected.
-    site_updated
-        Emitted when a new `Site` is selected.
-    state_updated
-        Emitted when a new `State` is selected.
-    selection_changed
-        Emitted when the selection changes, in addition
-        to the specific signal.
+        Update the selection and emit an appropriate signal.
     """
 
     unit_cell_updated = Signal()
@@ -41,7 +39,6 @@ class Selection(QObject):
     selection_changed = Signal()
 
     def __init__(self):
-        """Initialize the Selection object."""
         super().__init__()
 
         self.unit_cell = None

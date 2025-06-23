@@ -5,7 +5,7 @@ import uuid
 @dataclass
 class State:
     """
-    A quantum state within a `Site`.
+    A quantum state (orbital) within a `Site`.
 
     Each `State` has a `name` and belongs to a `Site` in the `UnitCell`.
     `State`s are the fundamental entities between which hopping can occur.
