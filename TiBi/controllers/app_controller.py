@@ -38,25 +38,6 @@ class AppController(QObject):
         Controller in charge of `UnitCell` creation/editing
     uc_plot_controller : UnitCellPlotController
         Controller of the `UnitCell` graphical component
-
-    Methods
-    -------
-    _relay_status(msg: str)
-        Send a message to the status bar.
-    _update_panels()
-        Perform a full redraw of plots and panels.
-    _handle_hopping_segments_requested()
-        Draw hopping segments connecting the selected state pair.
-    _handle_hopping_projection_update()
-        Redraw the hopping panels and the projection dropbox.
-    _handle_project_refresh_requested()
-        Reset the selection and the tree, and do a full redraw.
-    _update_unit_cell_plot()
-        Redraw the unit cell plot.
-    _plot_bands()
-        Plot the bands for the selected `UnitCell`.
-    _plot_dos()
-        Plot the dos for the selected `UnitCell`.
     """
 
     def __init__(

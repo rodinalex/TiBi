@@ -25,17 +25,19 @@ class BandsController(QObject):
         Request band plots update.
     dos_plot_requested : Signal
         Request DOS plots update.
-    status_updated : Signal
+    status_updated : Signal(str)
         Update the status bar information.
 
     Methods
     -------
-    update_bands_panel()
-        Update the `BandsPanel`.
-    set_combo()
-        Populate the projection dropdown menu with state labels.
+    get_dos_properties()
+        Get the DOS properties for the plots.
     get_projection_indices()
         Get the states selected for projection from the dropdown menu.
+    update_bands_panel()
+        Update the `BandsPanel`.
+    update_combo()
+        Update the states in the combo box.
     """
 
     bands_plot_requested = Signal()

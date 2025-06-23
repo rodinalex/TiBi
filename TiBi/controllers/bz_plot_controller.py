@@ -52,13 +52,15 @@ class BrillouinZonePlotController(QObject):
         Indices of the selected high-symmetry points in the BZ
     bz_point_lists : dict
         Lists of high-symmetry points, grouped by type
-
-    Signals
-    -------
     bz_path_updated : Signal
         Emitted when the BZ special points path is updated
         by adding or removing points. Triggers a redraw of
         the path in the plot.
+
+    Methods
+    -------
+    update_brillouin_zone()
+        Draw the Brillouin zone of the selected `UnitCell`.
     """
 
     bz_path_updated = Signal()
@@ -71,23 +73,6 @@ class BrillouinZonePlotController(QObject):
         computation_view: ComputationView,
         undo_stack: QUndoStack,
     ):
-        """
-        Initialize the Brillouin zone plot controller.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        bz_plot_view : BrillouinZonePlotView
-            The view component for displaying the Brillouin zone
-        computation_view : ComputationView
-            The view component that contains controls for creating
-            a path in the BZ
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        """
         super().__init__()
 
         self.unit_cells = unit_cells
@@ -151,7 +136,7 @@ class BrillouinZonePlotController(QObject):
 
     def update_brillouin_zone(self):
         """
-        Update the Brillouin zone visualization.
+        Draw the Brillouin zone of the selected `UnitCell`.
 
         This method is the core rendering function that:
         1. Clears any existing visualization
@@ -337,7 +322,7 @@ class BrillouinZonePlotController(QObject):
 
     def _select_point(self, step, typ):
         """
-        Select a point in the Brillouin zone based on its type and
+        Select a point in the Brillouin zone based on type and
         step direction.
 
         This method implements the navigation through different types

@@ -32,16 +32,12 @@ class UnitCellPlotController(QObject):
 
     Methods
     -------
-    _get_unit_cell_edges(a1: int, a2: int, a3: int)
-        Get the edges of the unit cell parallelepiped.
-    _plot_sites(a1: int, a2: int, a3: int)
-        Plot all `Site`s within the `UnitCell` at (a1,a2,a3).
-    update_unit_cell(wireframe_shown: bool, n1: int, n2: int, n3: int)
-        Set or update the unit cell to be displayed in the 3D view.
     update_hopping_segments(pair_selection: \
         tuple[tuple[str, uuid.UUID, str, uuid.UUID],\
             tuple[str, uuid.UUID, str, uuid.UUID]])
         Draw segments to indicate hopping connections.
+    update_unit_cell(wireframe_shown: bool, n1: int, n2: int, n3: int)
+        Draw the selected `UnitCell` in the 3D view.
     """
 
     def __init__(
@@ -63,7 +59,7 @@ class UnitCellPlotController(QObject):
         self, wireframe_shown: bool, n1: int, n2: int, n3: int
     ):
         """
-        Set or update the unit cell to be displayed in the 3D view.
+        Draw the selected `UnitCell` in the 3D view.
 
         Parameters
         ----------

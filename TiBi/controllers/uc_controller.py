@@ -44,32 +44,29 @@ class UnitCellController(QObject):
         The tree view component
     tree_model : QStandardItemModel
         The model backing the tree view
-
-    Methods
-    -------
-    refresh_tree()
-        Refresh the system tree using the current state.
-    select_item(uuid.UUID, uuid.UUID, uuid.UUID):
-        Select a tree item using the ID's.
-
-    Signals
-    -------
-    unit_cell_parameter_changed
+    unit_cell_parameter_changed : Signal
         Signal emitted when a unit cell parameter is changed.
         This triggers a redraw of the panels orchestrated by
         the app_controller. Whenever unit cell parameter changes,
         the derived quantities (band structure, BZ grid, etc),
         are discarded due to being stale. The clearing is handled
-        by the associated commands
-    site_parameter_changed
+        by the associated commands.
+    site_parameter_changed : Signal
         Signal emitted when a site parameter is changed.
         This triggers a redraw only of the unit cell plot.
         Changing site parameters does not invalidate the derived quantities
         since the site parameters are purely cosmetic.
-    hopping_projection_update_requested
+    hopping_projection_update_requested : Signal
         Signal emitted when a tree item is renamed or the structure of the
         unit cell changes (adding/removing states), requiring
         an update of the hopping matrix and the projection selection.
+
+    Methods
+    -------
+    refresh_tree()
+        Redraw the system tree using the current system state.
+    select_item(uc_id: uuid.UUID, site_id: uuid.UUID, state_id: uuid.UUID):
+        Select a tree item using the ID's.
     """
 
     unit_cell_parameter_changed = Signal()
@@ -83,20 +80,6 @@ class UnitCellController(QObject):
         unit_cell_view: UnitCellView,
         undo_stack: QUndoStack,
     ):
-        """
-        Initialize the controller and connect UI signals to handler methods.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        unit_cell_view : UnitCellView
-            The main view component
-        undo_stack : QUndoStack
-            `QUndoStack` to hold "undo-able" commands
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
@@ -437,7 +420,7 @@ class UnitCellController(QObject):
 
     def refresh_tree(self):
         """
-        Refresh the system tree using the current state.
+        Redraw the system tree using the current system state.
         """
         self.tree_view.refresh_tree(self.unit_cells)
 

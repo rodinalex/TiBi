@@ -19,6 +19,14 @@ class PlotController(QObject):
         Model tracking the currently selected unit cell, site, and state
     plot_view : PlotView
         2D plot for displaying computed results.
+
+    Methods
+    -------
+    plot_band_structure(states: list[int])
+        Plot the band structure for the selected unit cell.
+    plot_dos(num_bins: int, states: list[int], plot_type: int,\
+             broadening: np.float64)
+        Plot the density of states for the selected unit cell.
     """
 
     def __init__(

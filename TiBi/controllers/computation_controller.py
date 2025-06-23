@@ -42,22 +42,21 @@ class ComputationController(QObject):
 
     Methods
     -------
-    get_pair_selection()
-        Get the selected state pair from the hopping matrix, if any.
-    update_hopping_panel()
-        Redraw the hoppings UI panel.
-    update_bands_panel()
-        Update the bands UI panel.
-    update_projection_combo()
-        Update the projection combo in the bands panel.
-    get_projection_indices()
-        Get the projection indices from the projection combo.
     get_dos_properties()
         Get the number of bins/points, plot type, and broadening.
+    get_pair_selection()
+        Get the selected state pair from the hopping matrix, if any.
+    get_projection_indices()
+        Get the projection indices from the projection combo.
+    update_bands_panel()
+        Update the bands UI panel.
+    update_hopping_panel()
+        Redraw the hoppings UI panel.
+    update_projection_combo()
+        Update the projection combo in the bands panel.
     """
 
     status_updated = Signal(str)
-
     # Hopping controller signals to relay
     hopping_segments_requested = Signal()
     selection_requested = Signal(object, object, object)
