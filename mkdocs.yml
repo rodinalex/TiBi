@@ -21,6 +21,7 @@ nav:
       - Band structure and DOS: user_guide/bands.md
   - Developer Guide:
       - Architecture: dev/architecture.md
+      - Controllers: dev/controllers.md
       - Models: dev/models.md
 
 plugins:
@@ -32,6 +33,7 @@ plugins:
           options:
             docstring_style: numpy
             show_root_heading: true  # <-- adds class name as a visible header
+            # members: true
   - autorefs
 
 markdown_extensions:

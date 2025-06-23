@@ -27,18 +27,6 @@ class PlotController(QObject):
         selection: Selection,
         plot_view: PlotView,
     ):
-        """
-        Initialize the band structure plot controller.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        plot_view : PlotView
-            2D plot for displaying computed results.
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection

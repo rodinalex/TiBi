@@ -5,6 +5,19 @@ from TiBi.ui.constants import DEFAULT_SITE_SIZE
 
 # Model initialization factories.
 def bz_point_selection_init():
+    """
+    Initialize the selection dictonary for points in the Brillouin zone.
+
+    Each key corresponds to a point type (vertex, edge, face), while
+    the entries give the cardinal indices of the selected points.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys 'vertex', 'edge', and 'face', each initialized
+        to None. During use, the entries are set to the indices
+        of the selected points.
+    """
     return {
         "vertex": None,
         "edge": None,
@@ -13,6 +26,19 @@ def bz_point_selection_init():
 
 
 def bz_point_lists_init():
+    """
+    Initialize the dictonary of points in the Brillouin zone.
+
+    Each key corresponds to a point type (vertex, edge, face), while
+    the entries are lists of high-symmetry points in the Brillouin zone.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys 'vertex', 'edge', and 'face', each initialized
+        to empty lists. During use, the entries are set to the lists of
+        of the high-symmetry points.
+    """
     return {
         "vertex": [],
         "edge": [],

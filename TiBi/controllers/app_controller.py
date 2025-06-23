@@ -27,7 +27,7 @@ class AppController(QObject):
     selection : Selection
         Model tracking the currently selected unit cell, site, and state
     bz_plot_controller : BrillouinZonePlotController
-        Controller of the BZ graphical component
+        Controller of the Broullouin zone graphical component
     computation_controller : ComputationController
         Controller orchestrating computations
     main_ui_controller : MainUIController
@@ -38,6 +38,25 @@ class AppController(QObject):
         Controller in charge of `UnitCell` creation/editing
     uc_plot_controller : UnitCellPlotController
         Controller of the `UnitCell` graphical component
+
+    Methods
+    -------
+    _relay_status(msg: str)
+        Send a message to the status bar.
+    _update_panels()
+        Perform a full redraw of plots and panels.
+    _handle_hopping_segments_requested()
+        Draw hopping segments connecting the selected state pair.
+    _handle_hopping_projection_update()
+        Redraw the hopping panels and the projection dropbox.
+    _handle_project_refresh_requested()
+        Reset the selection and the tree, and do a full redraw.
+    _update_unit_cell_plot()
+        Redraw the unit cell plot.
+    _plot_bands()
+        Plot the bands for the selected `UnitCell`.
+    _plot_dos()
+        Plot the dos for the selected `UnitCell`.
     """
 
     def __init__(
@@ -51,28 +70,6 @@ class AppController(QObject):
         uc_controller: UnitCellController,
         uc_plot_controller: UnitCellPlotController,
     ):
-        """
-        Initialize the application controller.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        bz_plot_controller : BrillouinZonePlotController
-            Controller of the BZ graphical component
-        computation_controller : ComputationController
-            Controller orchestrating computations
-        main_ui_controller : MainUIController
-            Controller in charge of menus and toolbars
-        plot_controller : PlotController
-            Controller of the results graphical component
-        uc_controller : UnitCellController
-            Controller in charge of `UnitCell` creation/editing
-        uc_plot_controller : UnitCellPlotController
-            Controller of the `UnitCell` graphical component
-        """
         super().__init__()
         self.unit_cells = unit_cells
         self.selection = selection
@@ -139,12 +136,17 @@ class AppController(QObject):
     def _relay_status(self, msg):
         """
         Send a message to the status bar.
+
+        Parameters
+        ----------
+        msg : str
+            Message to be show in the status bar
         """
         self.main_ui_controller.update_status(msg)
 
     def _update_panels(self):
         """
-        Handle requests to update plots and panels.
+        Perform a full redraw of plots and panels.
 
         This major update is called when the `UnitCell` selection changes,
         `UnitCell` parameter changes or `Site` parameter changes.
@@ -175,7 +177,7 @@ class AppController(QObject):
 
     def _handle_hopping_segments_requested(self):
         """
-        Handle the request to draw hopping segments.
+        Draw hopping segments connecting the selected state pair.
 
         After a pair of states is selected from the hopping button matrix,
         this function passes them to the update_hopping_segments function
@@ -199,7 +201,7 @@ class AppController(QObject):
 
     def _handle_project_refresh_requested(self):
         """
-        Handle a project refresh request.
+        Reset the selection and the tree, and do a full redraw.
 
         The unit cell dictionary and
         the project path have already been updated.
@@ -234,7 +236,7 @@ class AppController(QObject):
 
     def _plot_dos(self):
         """
-        Plot the dos for the selected `UnitCell`.
+        Plot the DOS for the selected `UnitCell`.
         """
         idx = self.computation_controller.get_projection_indices()
         num_bins, plot_type, broadening = (
