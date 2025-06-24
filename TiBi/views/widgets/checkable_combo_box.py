@@ -9,22 +9,23 @@ class CheckableComboBox(QComboBox):
 
     Selected items are denoted by ticks.
 
+    Attributes
+    ----------
+    selection_changed : Signal(object)
+        Emitted when the selection changes. Even if multiple items
+        are selected/deselected, the signal is emitted once. The signal
+        carries a list of indices of the selected items.
+
     Methods
     -------
-    refresh_combo : list[str]
-        Reset the menu with a new list of items.
     checked_items
         Get the indices of the selected items.
     clear_selection
         Deselect all items.
+    refresh_combo(list[str])
+        Reset the menu with a new list of items.
     select_all
         Select all items.
-
-    Signals
-    -------
-    selection_changed
-        Emitted when the selection changes. Even if multiple items
-    are selected/deselected, the signal is emitted once.
     """
 
     selection_changed = Signal(object)
@@ -41,8 +42,12 @@ class CheckableComboBox(QComboBox):
 
     def refresh_combo(self, items: list[str]):
         """
-        refresh_combo : list[str]
-            Reset the menu with a new list of items.
+        Reset the combo box with a new list of items.
+
+        Parameters
+        ----------
+        items : list[str]
+            New list of items to be added to the menu.
         """
         self.combo_model.clear()
         for idx in range(len(items)):
@@ -57,8 +62,7 @@ class CheckableComboBox(QComboBox):
 
     def checked_items(self):
         """
-        checked_items
-            Get the indices of the selected items.
+        Get the indices of the selected items.
 
         Returns
         -------
@@ -74,7 +78,6 @@ class CheckableComboBox(QComboBox):
 
     def clear_selection(self):
         """
-        clear_selection
         Deselect all items.
         """
         self.combo_model.blockSignals(True)
@@ -86,7 +89,6 @@ class CheckableComboBox(QComboBox):
 
     def select_all(self):
         """
-        select_all
         Select all items.
         """
         self.combo_model.blockSignals(True)

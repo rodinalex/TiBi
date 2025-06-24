@@ -9,10 +9,14 @@ class MenuBarView(QMenuBar):
     into menus, providing a standard way to access all functionality.
 
     It does not create actions itself, receiving them from an action manager.
+
+    Methods
+    -------
+    set_actions(action_manager: ActionManager)
+        Set actions from the action manager to the appropriate menus.
     """
 
     def __init__(self):
-        """Initialize the menu bar with empty menus."""
         super().__init__()
 
         # Create empty menus
@@ -33,8 +37,10 @@ class MenuBarView(QMenuBar):
         """
         Set actions from the action manager to the appropriate menus.
 
-        Args:
-            action_manager: ActionManager instance containing all actions
+        Parameters
+        ----------
+        action_manager : ActionManager
+            ActionManager instance containing all actions to be added.
         """
         # Populate File menu
         self.file_menu.addAction(action_manager.file_actions["new_project"])

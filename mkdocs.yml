@@ -9,6 +9,7 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.expand
     # - navigation.instant
     - search.highlight
     - content.code.copy
@@ -23,6 +24,7 @@ nav:
       - Architecture: dev/architecture.md
       - Controllers: dev/controllers.md
       - Models: dev/models.md
+      - Views: dev/views.md
 
 plugins:
   - search
@@ -35,10 +37,12 @@ plugins:
             show_root_heading: true  # <-- adds class name as a visible header
             # members: true
   - autorefs
+  # - awesome-pages
 
 markdown_extensions:
   - toc:
       permalink: true
+      baselevel: 2
   - admonition
   - pymdownx.superfences
   - pymdownx.details

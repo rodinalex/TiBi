@@ -17,20 +17,9 @@ class PlotView(QWidget):
     This widget creates a matplotlib figure embedded in a Qt widget to display
     data as 2D plots. It includes navigation controls for zooming, panning,
     and saving the plot.
-
-    The actual plotting logic is handled by the PlotController,
-    keeping this view focused solely on UI components. This separation follows
-    the MVC pattern, allowing for easier testing and maintenance.
     """
 
     def __init__(self):
-        """
-        Initialize the plot view.
-
-        Sets up the matplotlib figure, canvas, and toolbar for band structure
-        visualization. Initial axes and labels are created, but the plot is
-        empty until data is provided by the controller.
-        """
         super().__init__()
         self.setMinimumHeight(150)
 

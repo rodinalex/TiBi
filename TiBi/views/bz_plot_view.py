@@ -23,10 +23,6 @@ class BrillouinZonePlotView(QWidget):
     - BZ visualization with wireframe boundaries
     - High-symmetry points displayed as colored spheres
     - Selected high-symmetry points highlighted with a different color
-
-    This view is purely presentational and contains no business logic,
-    following the MVC pattern. The controller is responsible for updating
-    the visualization based on model changes.
     """
 
     def __init__(self):

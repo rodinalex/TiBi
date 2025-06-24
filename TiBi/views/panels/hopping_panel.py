@@ -182,6 +182,7 @@ class HoppingPanel(QWidget):
     View for editing hopping parameters between quantum states.
 
     This widget combines two main components:
+
     1. A matrix grid where each button represents a possible hopping connection
        between two states [rows (columns) are destination (target) states]
     2. A table for editing specific hopping parameters when a connection
@@ -190,9 +191,12 @@ class HoppingPanel(QWidget):
     The view uses a stacked widget approach to show different panels based on
     the current selection state (no unit cell, no states, or states selected).
 
-    This component follows the MVC pattern and doesn't contain business logic.
-    Instead, it provides UI elements that the controller can connect to
-    and manipulate.
+    Attributes
+    ----------
+    matrix_panel : HoppingMatrix
+        The panel displaying the hopping matrix as a grid of buttons.
+    table_panel : HoppingTable
+        The panel displaying the hopping parameters in a table format.
     """
 
     def __init__(self):

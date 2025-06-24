@@ -1,5 +1,3 @@
-# Models
-
 This page provides the documentation for the data models used by the Application, as well as relevant factories.
 
 ::: TiBi.models.BandStructure

@@ -7,7 +7,7 @@ from TiBi.ui import CF_VERMILLION, CF_GREEN, CF_SKY
 
 class UnitCellPlotView(QWidget):
     """
-    A 3D visualization panel for Unit Cells using PyQtGraph's OpenGL support.
+    A 3D visualization panel for `UnitCell` using PyQtGraph's OpenGL support.
 
     Displays a unit cell as a wireframe parallelepiped with sites as spheres.
     The visualization supports rotation and zooming.
@@ -18,10 +18,6 @@ class UnitCellPlotView(QWidget):
     - Unit cell visualization with wireframe parallelepiped
     - Sites displayed as colored spheres at their fractional positions
     - Selected sites highlighted with an increased size
-
-    This view is purely presentational and contains no business logic,
-    following the MVC pattern. The controller is responsible for updating
-    the visualization based on model changes.
     """
 
     def __init__(self):

@@ -3,7 +3,6 @@ from .computation_view import ComputationView
 from .main_toolbar_view import MainToolbarView
 from .main_window import MainWindow
 from .menu_bar_view import MenuBarView
-from .placeholder import PlaceholderWidget
 from .plot_view import PlotView
 from .progress_dialog import ProgressDialog
 from .status_bar_view import StatusBarView
@@ -17,7 +16,6 @@ __all__ = [
     "MainToolbarView",
     "MainWindow",
     "MenuBarView",
-    "PlaceholderWidget",
     "PlotView",
     "ProgressDialog",
     "StatusBarView",

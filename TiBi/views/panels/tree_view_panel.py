@@ -14,13 +14,28 @@ from ..widgets import SystemTree
 
 class TreeDelegate(QStyledItemDelegate):
     """
-    A delegate that requires the user to commit changes to tree item names by
+    A custom item delegate for the `SystemTree` widget.
+
+    This delegate requires the user to commit changes to tree item names by
     pressing "Enter". Clicking away/defocusing resets the tree item name to
     its pre-edit form. The purpose is to handle the Qt default behavior,
     where defocusing keeps the new display name in the tree but does not send
     an updated signal so that the data can be updated internally.
     Additionally, the delegate draws rectangular "Delete" and "Add" buttons
     next to the item names.
+
+    Attributes
+    ----------
+    name_edit_finished : Signal(object)
+        Emitted when the user finishes editing an item name.
+    new_unit_cell_requested : Signal
+        Emitted when the user clicks the "Add Unit Cell" button.
+    new_site_requested : Signal
+        Emitted when the user adds a new `Site`.
+    new_state_requested : Signal
+        Emitted when the user adds a new `State`.
+    delete_requested : Signal
+        Emitted when the user clicks the "Delete" button next to an item.
     """
 
     name_edit_finished = Signal(object)  # Emits QModelIndex
@@ -182,25 +197,47 @@ class TreeViewPanel(QWidget):
     """
     Tree view panel for displaying and selecting the unit cell hierarchy.
 
-    This panel displays a hierarchical tree showing unit cells, their sites,
-    and the states at each site. It handles selection events and emits signals
-    when different types of nodes are selected, allowing other components to
-    respond appropriately.
+    This panel displays a hierarchical tree showing `UnitCell`s, their `Site`s,
+    and the `State`s at each `Site`.
+    It handles selection events and emits signals when different types
+    of nodes are selected, allowing other components to respond appropriately.
 
     The tree has three levels:
-    1. Unit cells
-    2. Sites within a unit cell
-    3. States within a site
+
+    1. `UnitCell`s
+    2. `Sites` within a `UnitCell`
+    3. `State`s within a `Site`
 
     Features:
+
     - Hierarchical display of unit cells, sites, and states
     - Single selection mode for focused editing
     - Double-click to edit names directly in the tree
     - Keyboard shortcuts for deletion (Del and Backspace)
     - Signal emission on deletion requests
 
-    This panel is designed to work with a controller that will handle the
-    data modifications in response to UI actions.
+    Attributes
+    ----------
+    delegate : TreeDelegate
+        Custom tree delegate for handling item editing and button actions.
+    tree_view : SystemTree
+        The tree view widget displaying the unit cell hierarchy.
+    name_edit_finished : Signal(object)
+        Emitted when the user finishes editing an item name.
+        Re-emitting signal from the `TreeDelegate`.`
+    new_unit_cell_requested : Signal
+        Emitted when the user clicks the "Add Unit Cell" button.
+        Re-emitting signal from the `TreeDelegate`.`
+    new_site_requested : Signal
+        Emitted when the user adds a new `Site`.
+        Re-emitting signal from the `TreeDelegate`.`
+    new_state_requested : Signal
+        Emitted when the user adds a new `State`.
+        Re-emitting signal from the `TreeDelegate`.`
+    delete_requested : Signal
+        Emitted when the user presses the Delete/Backspace key.
+        Also acts as a re-emitting signal for deletion requests
+        from the `TreeDelegate`.
     """
 
     # Define signals

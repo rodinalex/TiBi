@@ -4,25 +4,23 @@ from PySide6.QtCore import Signal
 
 class ProgressDialog(QDialog):
     """
-    A dialog that displays a progress bar and a cancel button.
+    A modal that displays a progress bar and a cancel button.
+
+    Attributes
+    ----------
+    cancel_requested : Signal
+        Signal emitted when the cancel button is clicked.
 
     Methods
     -------
     update_progress(value: int)
         Updates the progress bar with the given value.
-
-    Signals
-    -------
-    cancel_requested
-        Emitted when the cancel button is clicked.
     """
 
     cancel_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        """Initialize the progress dialog.
-        """
         self.setWindowTitle("Working...")
         self.setModal(True)
 
