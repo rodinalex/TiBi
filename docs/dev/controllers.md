@@ -1,5 +1,3 @@
-# Controllers
-
 This page provides the documentation for the controllers used by the Application.
 
 ::: TiBi.controllers.AppController

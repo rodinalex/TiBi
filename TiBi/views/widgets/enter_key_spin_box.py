@@ -9,6 +9,11 @@ class EnterKeySpinBox(QDoubleSpinBox):
 
     On defocus, the value is reset to the original value and no signal
     is emitted.
+
+    Attributes
+    ----------
+    editingConfirmed : Signal
+        Signal emitted when the Enter key is pressed and the value has changed.
     """
 
     editingConfirmed = Signal()

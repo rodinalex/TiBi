@@ -17,6 +17,15 @@ from ..widgets import CheckableComboBox, EnterKeySpinBox, EnterKeyIntSpinBox
 
 
 class BandsPanel(QWidget):
+    """
+    A panel for managing band structure calculations and projections.
+
+    This panel allows users to define a path in the Brillouin zone, compute
+    band structures, and project states onto various basis states.
+    The panel also includes options for configuring
+    the Brillouin zone grid and DOS calculations.
+    """
+
     def __init__(self):
         super().__init__()
 

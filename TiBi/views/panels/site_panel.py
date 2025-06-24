@@ -17,11 +17,10 @@ class SitePanel(QWidget):
     Form panel for editing site properties.
 
     This panel provides a form interface for editing a site's properties:
+
     - Radius for the site marker
     - Color for the site marker
     - Fractional coordinates (c1, c2, c3) within the unit cell
-
-    It uses reactive data binding to keep the UI and model in sync.
     """
 
     def __init__(self):

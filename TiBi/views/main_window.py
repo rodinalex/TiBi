@@ -37,16 +37,13 @@ class MainWindow(QMainWindow):
         Unit cell editor view
     uc_plot : UnitCellPlotView
         Unit cell 3D visualization view
-    bz_plot : BrillouinonePlotView)
+    bz_plot : BrillouinZonePlotView
         Brillouin zone 3D visualization view
     plot : PlotView
         2D plot view
     computation : ComputationView
         Multi-tab view used to set up calculations
-
-    Signals
-    -------
-    window_closed
+    window_closed : Signal
         Signals the main app to run the cleanup procedure
     """
 
@@ -63,28 +60,6 @@ class MainWindow(QMainWindow):
         toolbar: MainToolbarView,
         status_bar: StatusBarView,
     ):
-        """
-        Initialize the main window with views for different components.
-
-        Parameters
-        ----------
-        uc : UnitCellView
-            Unit cell editor view
-        uc_plot : UnitCellPlotView
-            Unit cell 3D visualization view
-        bz_plot : BrillouinonePlotView)
-            Brillouin zone 3D visualization view
-        plot : PlotView
-            2D plot view
-        computation : ComputationView
-            Multi-tab view used to set up calculations
-        menu_bar : MenuBarView
-            Menu bar view
-        toolbar : MainToolbarView
-            Main toolbar view
-        status_bar : StatusBarView)
-            Status bar view
-        """
         super().__init__()
         self.setWindowTitle("TiBi")
         # self.setMinimumSize(1100, 825)
@@ -116,7 +91,7 @@ class MainWindow(QMainWindow):
         unit_cell_widget.setSizePolicy(
             QSizePolicy.Fixed, QSizePolicy.Expanding
         )
-        unit_cell_layout.addWidget(self.frame_widget(self.uc))
+        unit_cell_layout.addWidget(self._frame_widget(self.uc))
 
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
@@ -132,8 +107,8 @@ class MainWindow(QMainWindow):
         # Set fixed height for computation_view
         fixed_computation_height = self.computation_view.sizeHint().height()
         self.computation_view.setFixedHeight(fixed_computation_height)
-        computation_layout.addWidget(self.frame_widget(self.bz_plot))
-        computation_layout.addWidget(self.frame_widget(self.computation_view))
+        computation_layout.addWidget(self._frame_widget(self.bz_plot))
+        computation_layout.addWidget(self._frame_widget(self.computation_view))
         # Add stretch below to allow bz_plot to stretch
         computation_layout.setStretch(0, 1)  # bz_plot expands
         computation_layout.setStretch(1, 0)  # computation_view stays fixed
@@ -141,10 +116,10 @@ class MainWindow(QMainWindow):
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)
         plots_splitter.addWidget(
-            self.frame_widget(self.uc_plot)
+            self._frame_widget(self.uc_plot)
         )  # Top 3D plot
         plots_splitter.addWidget(
-            self.frame_widget(self.plot)
+            self._frame_widget(self.plot)
         )  # Bottom 2D plot
 
         # Set initial size ratio
@@ -160,11 +135,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_view)
 
     def closeEvent(self, event):
-        """Override the parent class closeEvent to emit a signal on closing."""
+        # Override the parent class closeEvent to emit a signal on closing.
         self.window_closed.emit()
         super().closeEvent(event)
 
-    def frame_widget(self, widget: QWidget) -> QFrame:
+    def _frame_widget(self, widget: QWidget) -> QFrame:
         """
         Enclose a widget in a frame.
 

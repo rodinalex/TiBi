@@ -7,10 +7,23 @@ from .panels import BandsPanel, HoppingPanel
 
 
 class ComputationView(QWidget):
-    """ """
+    """
+    A multi-tab view for setting up and managing computations.
+
+    This view contains the following panels:
+
+    - HoppintPanel: For managing hopping parameters
+    - BandsPanel: For managing band structure and Brillouin grid calculations
+
+    Attributes
+    ----------
+    hopping_panel : HoppingPanel
+        Panel for editing hopping parameters between states.
+    bands_panel : BandsPanel
+        Panel for managing band and Brillouin grid calculations.
+    """
 
     def __init__(self):
-        """ """
         super().__init__()
 
         # Create a layout for the TabView itself

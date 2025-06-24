@@ -20,19 +20,20 @@ class UnitCellView(QWidget):
     between the tree view and detail panels.
 
     The UI consists of several main parts:
+
     1. Tree view panel showing the hierarchy of unit cells, sites, and states
     2. Button panel with actions for creating, deleting, and modifying items
     3. Form panels that change depending on what is selected in the tree
     4. Dimensionality controls for setting periodic boundary conditions
 
-    Following the MVC pattern, this view is responsible for:
-    - Displaying the UI elements and their layout
-    - Providing controls for user interaction
-    - Emitting signals when user actions occur
-
-    However, it doesn't contain business logic - that's handled by the
-    controller, which connects to these signals and interacts with
-    the data models.
+    Attributes
+    ----------
+    unit_cell_panel : UnitCellPanel
+        Panel for editing `UnitCell` properties.
+    site_panel : SitePanel
+        Panel for editing `Site` properties.
+    tree_view_panel : TreeViewPanel
+        Panel displaying the tree view of `UnitCell`s, `Site`s, and `State`s.
     """
 
     def __init__(self):

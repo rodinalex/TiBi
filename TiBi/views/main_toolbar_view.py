@@ -8,14 +8,12 @@ class MainToolbarView(QToolBar):
     Main toolbar view that contains application-wide actions.
 
     This class is a view component that provides a toolbar with common actions
-    such as creating new unit cells, saving/loading projects, and accessing
-    computation options.
+    such as creating new unit cells, saving/loading projects, etc.
 
     It does not create actions itself, receiving them from an action manager.
     """
 
     def __init__(self):
-        """Initialize the main toolbar without actions."""
         super().__init__("Main Toolbar")
 
         # Allow the toolbar to be moved by the user
@@ -25,8 +23,10 @@ class MainToolbarView(QToolBar):
         """
         Set actions from the action manager to the toolbar.
 
-        Args:
-            action_manager: ActionManager instance containing all actions
+        Parameters
+        ----------
+        action_manager : ActionManager
+            ActionManager instance containing all actions to be added.
         """
         # Add File actions
         self.addAction(action_manager.file_actions["new_project"])

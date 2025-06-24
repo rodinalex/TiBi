@@ -24,12 +24,20 @@ class SystemTree(QTreeView):
         The model used to populate the tree view.
     root_node : QStandardItem
         The root item of the tree model, representing the tree's top level.
-
-    Signals
-    --------
     tree_selection_changed : Signal
         Emitted when the selection in the tree changes. The signal carries
         a dictionary with the selected `UnitCell`, `Site`, and `State` IDs.
+
+    Methods
+    -------
+    add_tree_item(name, uc_id, site_id=None, state_id=None)
+        Add and select a tree item without rebuilding the entire tree.
+    find_item_by_id(self, uc_id, site_id=None, state_id=None)
+        Find a tree item by its ID.
+    refresh_tree(unit_cells: dict[uuid.UUID, UnitCell])
+        Rebuilds the entire tree from the current data model.
+    remove_tree_item(uc_id, site_id=None, state_id=None)
+        Remove an item from the tree.
     """
 
     tree_selection_changed = Signal(object)

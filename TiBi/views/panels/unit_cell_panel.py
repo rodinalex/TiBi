@@ -22,12 +22,14 @@ class UnitCellPanel(QWidget):
     Form panel for editing unit cell properties.
 
     This panel provides a form interface for editing a unit cell's properties:
+
     - System dimensionality
     - Three basis vectors (v1, v2, v3) with x, y, z components
 
-    The panel uses a reactive data binding approach, where UI components are
-    automatically updated when the model changes, and model updates trigger
-    appropriate UI refreshes.
+    Methods
+    -------
+    set_basis_vectors(v1: BasisVector, v2: BasisVector, v3: BasisVector)
+        Set the basis vectors in the UI.
     """
 
     def __init__(self):
@@ -150,10 +152,14 @@ class UnitCellPanel(QWidget):
         """
         Set the basis vectors in the UI.
 
-        Args:
-            v1 (BasisVector): Basis vector 1.
-            v2 (BasisVector): Basis vector 2.
-            v3 (BasisVector): Basis vector 3.
+        Parameters
+        ----------
+        v1 : BasisVector
+            Basis vector 1.
+        v2 : BasisVector
+            Basis vector 2.
+        v3 : BasisVector
+            Basis vector 3.
         """
         for ii, coord in enumerate("xyz"):
             self.v1[ii].setValue(getattr(v1, coord))
