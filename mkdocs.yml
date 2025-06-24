@@ -10,7 +10,7 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.expand
-    # - navigation.instant
+    - navigation.instant
     - search.highlight
     - content.code.copy
 
@@ -23,7 +23,10 @@ nav:
   - Developer Guide:
       - Architecture: dev/architecture.md
       - Controllers: dev/controllers.md
+      - Core: dev/core.md
+      - Logic: dev/logic.md
       - Models: dev/models.md
+      - UI: dev/ui.md
       - Views: dev/views.md
 
 plugins:
@@ -34,10 +37,8 @@ plugins:
           paths: ["."]
           options:
             docstring_style: numpy
-            show_root_heading: true  # <-- adds class name as a visible header
-            # members: true
+            show_root_heading: true
   - autorefs
-  # - awesome-pages
 
 markdown_extensions:
   - toc:

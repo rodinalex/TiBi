@@ -72,6 +72,11 @@ def get_BZ_grid(
         Number of points along each reciprocal vector
     typ : int
         0 or 1, with 0 corresponding to the MP and 1 to Gamma-centered grids.
+
+    Returns
+    -------
+    NDArray[NDArray[np.float64]]
+        Array of k-points comprising the grid.
     """
     reciprocal_vectors = unit_cell.reciprocal_vectors()
     dim = (

@@ -39,16 +39,6 @@ class AddUnitCellCommand(QUndoCommand):
     def __init__(
         self, unit_cells: dict[uuid.UUID, UnitCell], tree_view: SystemTree
     ):
-        """
-        Initialize the AddUnitCellCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        tree_view : SystemTree
-            UI object containing the tree view
-        """
         super().__init__("Add Unit Cell")
         self.unit_cells = unit_cells
         self.tree_view = tree_view
@@ -99,18 +89,6 @@ class AddSiteCommand(QUndoCommand):
         selection: Selection,
         tree_view: SystemTree,
     ):
-        """
-        Initialize the AddSiteCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Dictionary containing the current selection
-        tree_view : SystemTree
-            UI object containing the tree view
-        """
         super().__init__("Add Site")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -167,20 +145,6 @@ class AddStateCommand(QUndoCommand):
         tree_view: SystemTree,
         signal: Signal,
     ):
-        """
-        Initialize the AddStateCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Dictionary containing the current selection
-        tree_view : SystemTree
-            UI object containing the tree view
-        signal : Signal
-            Signal emitted when the state is added/removed
-        """
         super().__init__("Add State")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -256,20 +220,6 @@ class DeleteItemCommand(QUndoCommand):
         tree_view: SystemTree,
         signal: Signal,
     ):
-        """
-        Initialize the DeleteItemCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-                Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Dictionary containing the current selection
-        tree_view : SystemTree
-            UI object containing the tree view
-        signal : Signal
-            Signal emitted when a state is added/removed
-        """
         super().__init__("Delete Item")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -423,22 +373,6 @@ class RenameTreeItemCommand(QUndoCommand):
         signal: Signal,
         item: QStandardItem,
     ):
-        """
-        Initialize the RenameTreeItemCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Dictionary containing the current selection
-        tree_view : SystemTree
-            UI object containing the tree view
-        signal : Signal
-            Signal to be emitted when the command is executed
-        item : QStandardItem
-            The item in the tree view that was changed
-        """
         super().__init__("Rename Tree Item")
 
         self.unit_cells = unit_cells

@@ -15,17 +15,6 @@ class DiagonalizationWorker(Worker):
     """
 
     def __init__(self, hamiltonian_func, k_points):
-        """
-        Initialize the DiagonalizationWorker.
-
-        Parameters
-        ----------
-        hamiltonian_func : callable
-            Function that takes a k-point and returns the Hamiltonian matrix.
-
-        k_points : list
-            List of k-points at which to diagonalize the Hamiltonian.
-        """
         super().__init__()
         self.hamiltonian_func = hamiltonian_func
         self.k_points = k_points
