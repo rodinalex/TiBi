@@ -5,7 +5,7 @@ from PySide6.QtGui import QUndoStack
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 import uuid
 
-from TiBi.logic.serialization.serialization import (
+from TiBi.logic.serialization import (
     serialize_unit_cells,
     deserialize_unit_cells,
 )

@@ -9,6 +9,12 @@ class Worker(QObject):
     ----------
     _abort : bool
         Flag indicating whether the worker should abourt its task.
+    progress_updated : Signal
+        Emitted to update the progress of the task.
+    task_finished : Signal
+        Emitted when the task is completed successfully.
+    task_aborted : Signal
+        Emitted when the task is aborted by the user.
 
     Methods
     -------
@@ -16,15 +22,6 @@ class Worker(QObject):
         Abstract method implemented by subclasses to perform the actual work.
     request_abort() -> None
         Set the abort flag to True, signaling the worker to stop its task.
-
-    Signals
-    -------
-    progress_updated : Signal
-        Emitted to update the progress of the task.
-    task_finished : Signal
-        Emitted when the task is completed successfully.
-    task_aborted : Signal
-        Emitted when the task is aborted by the user.
     """
 
     progress_updated = Signal(int)
@@ -32,9 +29,6 @@ class Worker(QObject):
     task_aborted = Signal()
 
     def __init__(self):
-        """
-        Initialize the Worker and sets the abort flag to False.
-        """
         super().__init__()
         self._abort = False
 

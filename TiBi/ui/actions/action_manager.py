@@ -23,21 +23,11 @@ class ActionManager(QObject):
         Undo and Redo actions
     unit_cell_actions : dict[str, QAction]
         Actions to control the unit cell visualization
-        (toggling the unit cell wireframe on/off and )
+        (toggling the unit cell wireframe on/off)
     """
 
     def __init__(self, undo_stack: QUndoStack, parent=None):
-        """
-        Initialize the action manager with groups of actions.
 
-
-        Parameters
-        ----------
-        undo_stack : QUndoStack
-            Application-wide undo stack
-        parent  : QObject
-            Parent QObject; in this case, its MainUIController
-        """
         super().__init__(parent)
         self.undo_stack = undo_stack
         # Initialize action dictionaries for different categories

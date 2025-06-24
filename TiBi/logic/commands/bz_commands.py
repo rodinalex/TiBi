@@ -34,20 +34,6 @@ class AddBZPointCommand(QUndoCommand):
         computation_view: ComputationView,
         signal: Signal,
     ):
-        """
-        Initialize the AddBZPointCommand.
-
-        Parameters
-        ----------
-        unit_cell : UnitCell
-            `UnitCell` to which the point will be addeed
-        point : NDArray[np.float64]
-            The point to be added
-        computation_view : ComputationView
-            UI object containing the computation view
-        signal : Signal
-            Signal to be emitted to trigger a redraw of the BZ path
-        """
         super().__init__("Add BZ Path Point")
         self.unit_cell = unit_cell
         self.point = point
@@ -108,18 +94,6 @@ class RemoveBZPointCommand(QUndoCommand):
         computation_view: ComputationView,
         signal: Signal,
     ):
-        """
-        Initialize the RemoveBZPointCommand.
-
-        Parameters
-        ----------
-        unit_cell : UnitCell
-            `UnitCell` from which the point will be removed
-        computation_view : ComputationView
-            UI object containing the computation view
-        signal : Signal
-            Signal to be emitted to trigger a redraw of the BZ path
-        """
         super().__init__("Remove BZ Path Point")
         self.unit_cell = unit_cell
         self.computation_view = computation_view
@@ -181,18 +155,6 @@ class ClearBZPathCommand(QUndoCommand):
         computation_view: ComputationView,
         signal: Signal,
     ):
-        """
-        Initialize the ClearBZPathCommand.
-
-        Parameters
-        ----------
-        unit_cell : UnitCell
-            `UnitCell `whose path will be cleared
-        computation_view : ComputationView
-            UI object containing the computation view
-        signal : Signal
-            Signal to be emitted to trigger a redraw of the BZ path
-        """
         super().__init__("Add BZ Path Point")
         self.unit_cell = unit_cell
         self.computation_view = computation_view

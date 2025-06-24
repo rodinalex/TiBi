@@ -46,25 +46,6 @@ class UpdateUnitCellParameterCommand(QUndoCommand):
         spinbox: QDoubleSpinBox,
         signal: Signal,
     ):
-        """
-        Initialize the UpdateUnitCellParameterCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        vector : str
-            The vector to be updated (v1, v2, or v3)
-        coordinate : str
-            The coordinate to be updated (x, y, or z)
-        spinbox : QDoubleSpinBox
-            The spinbox widget used to input the new value
-        signal : Signal
-            Signal to be emitted when the command is executed,
-            requesting a plot update
-        """
         super().__init__("Update Unit Cell Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -143,21 +124,6 @@ class ReduceBasisCommand(QUndoCommand):
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
-        """
-        Initialize the ReduceBasisCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        unit_cell_view : UnitCellView
-            UI object containing the unit cell view
-        signal : Signal
-            Signal to be emitted when the command is executed,
-            requesting a plot update
-        """
         super().__init__("Reduce Basis")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -273,27 +239,6 @@ class ChangeDimensionalityCommand(QUndoCommand):
         dim: int,
         buttons: list[QRadioButton],
     ):
-        """
-        Initialize the ChangeDimensionalityCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        param : str
-            The parameter to be updated (radius, color, etc.)
-        unit_cell_view : UnitCellView
-            Unit cell editing panel
-        signal : Signal
-            Signal to be emitted when the command is executed,
-            requesting a plot update
-        dim : int
-            New dimensionality
-        buttons : list[QRadioButton]
-            Dimensionality radio buttons
-        """
         super().__init__("Change dimensionality")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -454,23 +399,6 @@ class UpdateSiteParameterCommand(QUndoCommand):
         spinbox: QDoubleSpinBox,
         signal: Signal,
     ):
-        """
-        Initialize the UpdateSiteParameterCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        param : str
-            The parameter to be updated (radius, color, etc.)
-        spinbox : QDoubleSpinBox
-            The spinbox widget used to input the new value
-        signal : Signal
-            Signal to be emitted when the command is executed,
-            requesting a plot update
-        """
         super().__init__("Update Site Parameter")
         self.unit_cells = unit_cells
         self.selection = selection
@@ -536,25 +464,6 @@ class ChangeSiteColorCommand(QUndoCommand):
         unit_cell_view: UnitCellView,
         signal: Signal,
     ):
-        """
-        Initialize the ChangeSiteColorCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Dictionary mapping UUIDs to `UnitCell` objects
-        selection : Selection
-            Model tracking the currently selected unit cell, site, and state
-        new_color : QColor
-            The new color to be set for the site
-        old_color : QColor
-            The old color of the site before the change
-        unit_cell_view : UnitCellView
-            UI object containing the unit cell view
-        signal : Signal
-            Signal to be emitted when the command is executed,
-            requesting a plot update
-        """
         super().__init__("Change Site Color")
         self.unit_cells = unit_cells
         self.selection = selection

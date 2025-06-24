@@ -52,25 +52,6 @@ class SaveHoppingsCommand(QUndoCommand):
         new_hoppings: list[Tuple[Tuple[int, int, int], np.complex128]],
         signal: Signal,
     ):
-        """
-        Initialize the SaveHoppingsCommand.
-
-        Parameters
-        ----------
-        unit_cells : dict[uuid.UUID, UnitCell]
-            Reference to the dictionary mapping UUIDs to UnitCell objects
-        selection : Selection
-            Reference to the dictionary containing the current selection
-        pair_selection : list[Tuple[str, uuid.UUID, str, uuid.UUID]]
-            Reference to the list of selected `State`s
-            command was issued
-        new_hoppings : list[Tuple[Tuple[int, int, int], np.complex128]]
-            List of new hoppings to be added to the `hoppings` dictionary
-        signal : Signal
-            Signal to be emitted when the command is executed. The signal
-            carries the information about the selected `UnitCell`, `Site`,
-            `State`, and the selected pair of `State`s.
-        """
         super().__init__("Modify Hoppings")
         self.unit_cells = unit_cells
         self.selection = selection
