@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from TiBi.models import BasisVector
 from TiBi.ui import set_spinbox_digit_width, get_resource_path
+from TiBi.ui.utilities import set_button_size
 from TiBi.ui.constants import CF_VERMILLION, CF_GREEN, CF_SKY
 from ..widgets import EnterKeySpinBox
 
@@ -71,11 +72,11 @@ class UnitCellPanel(QWidget):
 
         # Add Site and Reduce UC (LLL algorithm) buttons
         self.reduce_btn = QPushButton()
-        self.reduce_btn.setFixedSize(20, 20)
         self.reduce_btn.setToolTip("Reduce Unit Cell")
         self.reduce_btn.setStatusTip(
             "Reduce Unit Cell basis using Lenstra–Lenstra–Lovász algorithm"
         )
+        set_button_size(self.reduce_btn, "small")
 
         # Assemble the panel
         layout.addWidget(panel_header)

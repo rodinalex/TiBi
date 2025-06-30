@@ -11,6 +11,7 @@ from TiBi.ui.styles import (
     BUTTON_STYLE_HAS_HOPPING,
     BUTTON_STYLE_NONHERMITIAN,
 )
+from TiBi.ui.utilities import set_button_size
 from TiBi.views.panels import HoppingPanel
 
 
@@ -170,7 +171,7 @@ class HoppingController(QObject):
         for ii in range(len(self.state_info)):
             for jj in range(len(self.state_info)):
                 btn = QPushButton("")
-                btn.setFixedSize(20, 20)
+                set_button_size(btn, "small")
                 btn.setContextMenuPolicy(Qt.CustomContextMenu)
                 btn.customContextMenuRequested.connect(
                     lambda _, row=ii, col=jj, b=btn: self._add_context_menu(
