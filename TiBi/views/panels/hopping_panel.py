@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFontMetrics, QIcon
 from PySide6.QtWidgets import (
     QFrame,
@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from TiBi.ui.utilities import get_resource_path
+from TiBi.ui.utilities import get_resource_path, set_button_size
 
 
 class HoppingMatrix(QWidget):
@@ -80,8 +80,6 @@ class HoppingTable(QWidget):
         self.add_row_btn.setIcon(
             QIcon(str(get_resource_path("assets/icons/plus_hopping.svg")))
         )
-        self.add_row_btn.setFixedSize(30, 30)
-        self.add_row_btn.setIconSize(self.add_row_btn.sizeHint())
         self.add_row_btn.setToolTip("New Hopping")
         self.add_row_btn.setStatusTip("Add a new hopping integral.")
 
@@ -89,8 +87,6 @@ class HoppingTable(QWidget):
         self.remove_row_btn.setIcon(
             QIcon(str(get_resource_path("assets/icons/trash_hopping.svg")))
         )
-        self.remove_row_btn.setFixedSize(30, 30)
-        self.remove_row_btn.setIconSize(self.remove_row_btn.sizeHint())
         self.remove_row_btn.setToolTip("Delete Hopping")
         self.remove_row_btn.setStatusTip(
             "Delete the selected hopping integral."
@@ -100,8 +96,6 @@ class HoppingTable(QWidget):
         self.save_btn.setIcon(
             QIcon(str(get_resource_path("assets/icons/save_hopping.svg")))
         )
-        self.save_btn.setFixedSize(30, 30)
-        self.save_btn.setIconSize(self.save_btn.sizeHint())
         self.save_btn.setToolTip("Save Hoppings")
         self.save_btn.setStatusTip("Save the Hopping table.")
 
@@ -175,6 +169,15 @@ class HoppingTable(QWidget):
 
         layout.addWidget(scroll_area)
         layout.addLayout(control_layout)
+        # Format the buttons
+        icon_size = QSize(20, 20)
+        for btn in [
+            self.add_row_btn,
+            self.remove_row_btn,
+            self.save_btn,
+        ]:
+            set_button_size(btn, "compact")
+            btn.setIconSize(icon_size)
 
 
 class HoppingPanel(QWidget):

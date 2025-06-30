@@ -10,7 +10,12 @@ from .constants import (
     CF_SKY,
     CF_BLUE,
 )
-from .utilities import divider_line, get_resource_path, set_spinbox_digit_width
+from .utilities import (
+    divider_line,
+    get_resource_path,
+    set_button_size,
+    set_spinbox_digit_width,
+)
 
 __all__ = [
     "DEFAULT_SCATTER_RADIUS",
@@ -25,5 +30,6 @@ __all__ = [
     "CF_BLUE",
     "divider_line",
     "get_resource_path",
+    "set_button_size",
     "set_spinbox_digit_width",
 ]  # noqa: F401

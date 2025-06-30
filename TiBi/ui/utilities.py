@@ -45,3 +45,10 @@ def set_spinbox_digit_width(spinbox, num_digits):
     total_width = digit_width + padding
 
     spinbox.setFixedWidth(total_width)
+
+
+def set_button_size(button, size):
+    """Set button size variant and refresh styling."""
+    button.setProperty("buttonSize", size)
+    button.style().unpolish(button)
+    button.style().polish(button)

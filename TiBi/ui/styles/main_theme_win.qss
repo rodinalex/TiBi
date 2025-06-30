@@ -29,6 +29,24 @@ QPushButton:disabled {
     color: $SURFACE;
 }
 
+/* ===== Size Variants ===== */
+QPushButton[buttonSize="compact"] {
+    padding: 2px;
+    min-width: 26px;
+    max-width: 26px;
+    min-height: 26px;
+    max-height: 26px;
+    border-radius: 6px;
+}
+
+QPushButton[buttonSize="small"] {
+    padding: 1px;
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+    max-height: 18px;
+    border-radius: 3px;
+}
 
 /* ===== Tree View ===== */
 
