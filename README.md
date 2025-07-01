@@ -15,7 +15,7 @@ Please consult the [documentation](https://rodinalex.github.io/TiBi/) on how to 
 ## Supported Platforms
 
 - ✅ macOS (Apple Silicon & Intel): binary available
-- 🚧 Windows (in progress): should work, but the visuals need more testing
+- ✅ Windows (in progress)
 - ✅ Linux
 
 ---

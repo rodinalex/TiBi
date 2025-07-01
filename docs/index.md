@@ -9,7 +9,7 @@ TiBi is an app that performs **Ti**ght **Bi**nding calculations. It allows the U
 ## Supported Platforms
 
 - ✅ macOS (Apple Silicon & Intel): binary available
-- 🚧 Windows (in progress)
+- ✅ Windows
 - ✅ Linux
 
 ---
