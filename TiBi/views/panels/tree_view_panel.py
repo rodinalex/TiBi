@@ -1,9 +1,5 @@
 from PySide6.QtCore import QEvent, QRect, Qt, QTimer, Signal
-from PySide6.QtGui import (
-    QColor,
-    QKeySequence,
-    QShortcut,
-)
+from PySide6.QtGui import QColor, QKeySequence, QShortcut
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
@@ -252,7 +248,6 @@ class TreeViewPanel(QWidget):
 
         # Create and configure tree view
         self.tree_view = SystemTree()
-        self.setMaximumWidth(220)
 
         # Set the delegate to save the data only on Enter-press
         self.delegate = TreeDelegate(self.tree_view)

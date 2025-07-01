@@ -30,6 +30,7 @@ class HoppingMatrix(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setStyleSheet("QWidget { border: 1px solid red; }")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -66,6 +67,7 @@ class HoppingTable(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setStyleSheet("QWidget { border: 1px solid red; }")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
