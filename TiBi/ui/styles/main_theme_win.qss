@@ -32,10 +32,10 @@ QPushButton:disabled {
 /* ===== Size Variants ===== */
 QPushButton[buttonSize="compact"] {
     padding: 2px;
-    min-width: 26px;
-    max-width: 26px;
-    min-height: 26px;
-    max-height: 26px;
+    min-width: 22px;
+    max-width: 22px;
+    min-height: 22px;
+    max-height: 22px;
     border-radius: 6px;
 }
 

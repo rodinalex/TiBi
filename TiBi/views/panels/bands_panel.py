@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
+    QSizePolicy,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -32,6 +33,7 @@ class BandsPanel(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Main Layout
         layout = QVBoxLayout(self)

@@ -1,4 +1,6 @@
 from PySide6.QtWidgets import (
+    QScrollArea,
+    QSizePolicy,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -33,13 +35,29 @@ class ComputationView(QWidget):
         )  # Remove margins to maximize space
         self.hopping_panel = HoppingPanel()
         self.bands_panel = BandsPanel()
-        # Create main tab widget
+
+        # Wrap each panel in scroll area
+        hopping_scroll = QScrollArea()
+        hopping_scroll.setWidgetResizable(True)
+        hopping_scroll.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        hopping_scroll.setWidget(self.hopping_panel)
+
+        bands_scroll = QScrollArea()
+        bands_scroll.setWidgetResizable(True)
+        bands_scroll.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        bands_scroll.setWidget(self.bands_panel)
+
         self.tabs = QTabWidget()
-        self.tabs.addTab(self.hopping_panel, "Hopping")
-        self.tabs.addTab(self.bands_panel, "Bands")
+        self.tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.tabs.addTab(hopping_scroll, "Hopping")
+        self.tabs.addTab(bands_scroll, "Bands")
         self.tabs.setTabPosition(QTabWidget.East)
         self.tabs.setDocumentMode(True)
-        # Add the tab widget to the layout
+
         layout.addWidget(self.tabs)
 
         # Set the layout for this widget

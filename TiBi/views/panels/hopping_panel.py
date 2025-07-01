@@ -149,7 +149,7 @@ class HoppingTable(QWidget):
             self.hopping_table.verticalScrollBar().sizeHint().width()
         )
 
-        self.hopping_table.setFixedWidth(sum(col_widths) + 2 * scrollbar_width)
+        self.hopping_table.setFixedWidth(sum(col_widths) + 3 * scrollbar_width)
         # Table and buttons layout
         control_layout = QHBoxLayout()
         control_layout.addWidget(self.hopping_table)
@@ -199,6 +199,7 @@ class HoppingPanel(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Initialize the panels
         self.matrix_panel = HoppingMatrix()
