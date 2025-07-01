@@ -1,6 +1,6 @@
 import platform
 from PySide6.QtGui import QUndoStack
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QStyleFactory
 from string import Template
 import sys
 import uuid
@@ -90,7 +90,7 @@ class TiBiApplication:
         """
         # Create the Qt application
         self.app = QApplication(sys.argv)
-        self.app.setStyle("Fusion")
+        self.app.setStyle(QStyleFactory.create("Fusion"))
 
         # Load and apply the global stylesheet
         qss_path = get_resource_path(

@@ -32,7 +32,6 @@ class BandsPanel(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("QWidget { border: 1px solid red; }")
 
         # Main Layout
         layout = QVBoxLayout(self)

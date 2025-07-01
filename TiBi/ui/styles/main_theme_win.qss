@@ -3,7 +3,7 @@
 /* ===== General Application ===== */
 QWidget {
     font-family: "Segoe UI", "Tahoma", "Microsoft Sans Serif", "Arial", sans-serif;
-    font-size: 11pt;
+    font-size: 9pt;
     color: $ON_SURFACE;
     background-color: $SURFACE_CONTAINER;
 }
