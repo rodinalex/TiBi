@@ -47,6 +47,9 @@ class UnitCellView(QWidget):
         self.site_panel = SitePanel()
         self.tree_view_panel = TreeViewPanel()
 
+        # Use the unit_cell_panel to determine the width of the tree view panel
+        tree_view_width = self.unit_cell_panel.sizeHint().width()
+        self.tree_view_panel.setFixedWidth(tree_view_width)
         # Info labels
         self.uc_info_label = QLabel("Add/Select a Unit Cell")
         self.uc_info_label.setAlignment(Qt.AlignCenter)

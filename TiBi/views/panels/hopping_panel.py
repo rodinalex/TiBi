@@ -137,24 +137,19 @@ class HoppingTable(QWidget):
         font_metrics = QFontMetrics(self.hopping_table.font())
 
         # Add some padding for margins, borders, and spin buttons
-        padding = 10  # Adjust as needed
+        padding = 5  # Adjust as needed
 
-        self.hopping_table.setColumnWidth(
-            0, font_metrics.horizontalAdvance("0" * 3) + padding
-        )  # d₁
-        self.hopping_table.setColumnWidth(
-            1, font_metrics.horizontalAdvance("0" * 3) + padding
-        )  # d₂
-        self.hopping_table.setColumnWidth(
-            2, font_metrics.horizontalAdvance("0" * 3) + padding
-        )  # d₃
-        self.hopping_table.setColumnWidth(
-            3, font_metrics.horizontalAdvance("0" * 6) + padding
-        )  # Real amplitude part
-        self.hopping_table.setColumnWidth(
-            4, font_metrics.horizontalAdvance("0" * 6) + padding
-        )  # Imaginary amplitude part
+        col_widths = [
+            (font_metrics.horizontalAdvance("0" * x) + padding)
+            for x in [3, 3, 3, 6, 6]  # d₁, d₂, d₃, Re(t), Im(t)
+        ]
+        for ii, width in enumerate(col_widths):
+            self.hopping_table.setColumnWidth(ii, width)
+        scrollbar_width = (
+            self.hopping_table.verticalScrollBar().sizeHint().width()
+        )
 
+        self.hopping_table.setFixedWidth(sum(col_widths) + 3 * scrollbar_width)
         # Table and buttons layout
         control_layout = QHBoxLayout()
         control_layout.addWidget(self.hopping_table)
@@ -204,6 +199,7 @@ class HoppingPanel(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Initialize the panels
         self.matrix_panel = HoppingMatrix()

@@ -96,7 +96,6 @@ class MainWindow(QMainWindow):
         # Computation controls and BZ
         computation_layout = QVBoxLayout()
         computation_layout.setContentsMargins(0, 0, 0, 0)
-        computation_layout.setSpacing(7)
 
         computation_widget = QWidget()
         computation_widget.setLayout(computation_layout)
@@ -105,13 +104,32 @@ class MainWindow(QMainWindow):
         )
 
         # Set fixed height for computation_view
-        fixed_computation_height = self.computation_view.sizeHint().height()
-        self.computation_view.setFixedHeight(fixed_computation_height)
-        computation_layout.addWidget(self._frame_widget(self.bz_plot))
-        computation_layout.addWidget(self._frame_widget(self.computation_view))
-        # Add stretch below to allow bz_plot to stretch
-        computation_layout.setStretch(0, 1)  # bz_plot expands
-        computation_layout.setStretch(1, 0)  # computation_view stays fixed
+        computation_splitter = QSplitter(Qt.Vertical)
+        inner_height = max(
+            self.computation_view.bands_panel.sizeHint().height(),
+            self.computation_view.hopping_panel.sizeHint().height(),
+        )
+        margin_buffer = 20  # adjust if needed
+        max_height = inner_height + margin_buffer
+
+        computation_view_framed = self._frame_widget(self.computation_view)
+        computation_view_framed.setMaximumHeight(max_height)
+        computation_view_framed.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.Preferred
+        )
+
+        computation_splitter.addWidget(self._frame_widget(self.bz_plot))
+        computation_splitter.addWidget(computation_view_framed)
+
+        # Disable expansion of computation_view
+        computation_splitter.setStretchFactor(0, 1)
+        computation_splitter.setStretchFactor(1, 0)
+
+        computation_splitter.setCollapsible(0, False)
+        computation_splitter.setCollapsible(1, False)
+
+        # Prevent computation_view from growing too large
+        computation_layout.addWidget(computation_splitter)
 
         # UC 3D plot and results plots
         plots_splitter = QSplitter(Qt.Vertical)

@@ -1,4 +1,4 @@
-/* main_theme.qss */
+/* main_theme_mac.qss */
 
 /* ===== General Application ===== */
 QWidget {
