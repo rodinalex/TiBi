@@ -1,4 +1,4 @@
-/* main_theme.qss */
+/* main_theme_win.qss */
 
 /* ===== General Application ===== */
 QWidget {
@@ -41,10 +41,10 @@ QPushButton[buttonSize="compact"] {
 
 QPushButton[buttonSize="small"] {
     padding: 1px;
-    min-width: 18px;
-    max-width: 18px;
-    min-height: 18px;
-    max-height: 18px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
     border-radius: 3px;
 }
 
