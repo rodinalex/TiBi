@@ -15,7 +15,7 @@ Please consult the [documentation](https://rodinalex.github.io/TiBi/) on how to 
 ## Supported Platforms
 
 - ✅ macOS (Apple Silicon & Intel): binary available
-- ✅ Windows (in progress)
+- ✅ Windows
 - ✅ Linux
 
 ---
@@ -33,8 +33,7 @@ Please consult the [documentation](https://rodinalex.github.io/TiBi/) on how to 
 - Ensure all dependencies are installed in your environment
 
 **App won't start after building:**
-- Try running from terminal to see error messages (see commands above)
-- Check that all required files are included in your spec file
+- Try running from terminal to see error messages
 
 ---
 
